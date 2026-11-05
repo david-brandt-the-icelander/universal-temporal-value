@@ -12,6 +12,8 @@ Checks performed:
   4. Every complete UTV JSON example embedded in spec/*.md passes the schema.
   5. Scenario files in conformance/scenarios/ have unique IDs and required fields.
   6. Every falsehood ID in spec/FALSEHOODS-MATRIX.md has a scenario, and vice versa.
+  7. Every value in examples/traditional.json is accepted by the schema exactly when the
+     catalog expects structural status `valid`.
 
 Usage:  python3 tools/validate.py          (from the repository root)
 Requires: jsonschema >= 4.18  (pip install -r tools/requirements.txt)
@@ -51,6 +53,16 @@ def load_json(path: Path):
         return dict(pairs)
 
     return json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=no_duplicates)
+
+
+def load_json_text(text: str):
+    def no_duplicates(pairs):
+        keys = [k for k, _ in pairs]
+        if len(keys) != len(set(keys)):
+            raise ValueError("duplicate keys")
+        return dict(pairs)
+
+    return json.loads(text, object_pairs_hook=no_duplicates)
 
 
 def check_schemas() -> Draft202012Validator:
@@ -127,11 +139,40 @@ def check_scenarios() -> None:
     ok(f"falsehoods matrix and scenarios agree ({len(matrix_ids)} IDs)")
 
 
+def check_traditional_catalog(validator: Draft202012Validator) -> None:
+    print("Traditional examples catalog")
+    catalog = load_json(ROOT / "examples" / "traditional.json")
+    ids: set[str] = set()
+    for entry in catalog["entries"]:
+        eid = entry["id"]
+        if eid in ids:
+            fail(f"traditional.json: duplicate id {eid}")
+        ids.add(eid)
+        if ("value" in entry) == ("text" in entry):
+            fail(f"traditional.json: {eid} must have exactly one of `value` or `text`")
+            continue
+        expected = entry["expect"]["structural"]
+        if "text" in entry:
+            try:
+                value = load_json_text(entry["text"])
+            except ValueError:
+                if expected == "valid":
+                    fail(f"traditional.json: {eid} text does not parse but is expected valid")
+                continue
+        else:
+            value = entry["value"]
+        accepted = validator.is_valid(value)
+        if accepted != (expected == "valid"):
+            fail(f"traditional.json: {eid} schema {'accepts' if accepted else 'rejects'} it, catalog expects {expected}")
+    ok(f"{len(catalog['entries'])} catalog entries agree with the schema")
+
+
 def main() -> int:
     validator = check_schemas()
     check_examples(validator)
     check_spec_examples(validator)
     check_scenarios()
+    check_traditional_catalog(validator)
     print()
     if failures:
         print(f"{len(failures)} failure(s)")
