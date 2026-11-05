@@ -70,7 +70,7 @@ Only ISO 8601 **extended** format and RFC 3339 / RFC 9557 forms:
 | … followed by `±hh:mm[Area/Location]` | `inZone` date-time with `"offsetAssertion": seconds` |
 
 - A year is four digits, or a sign followed by four or more digits (`+275760`, `-0500`). It is stored without leading zeros.
-- A fraction of 1–9 digits becomes `nano`, and `second` is then present.
+- A fraction of 1–9 digits becomes `nano` (omitted when the fraction is all zeros), and `second` is then present.
 - Lower-case `t`/`z` and a space instead of `T` are `invalid`.
 
 Outcomes:

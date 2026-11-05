@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.icelander.utv</groupId>
   <artifactId>utv-core</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <packaging>jar</packaging>
   <properties>
     <maven.compiler.release>17</maven.compiler.release>
@@ -58,7 +58,8 @@
           </execution>
         </executions>
       </plugin>
-      <!-- mvn -q test-compile exec:java  (runs the traditional date/time tour) -->
+      <!-- mvn -q test-compile exec:java@everyday  (the everyday side-by-side example)
+           mvn -q test-compile exec:java            (the traditional catalog tour, also exec:java@traditional) -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
@@ -70,6 +71,23 @@
             <argument>${project.basedir}/../../examples/traditional.json</argument>
           </arguments>
         </configuration>
+        <executions>
+          <execution>
+            <id>everyday</id>
+            <configuration>
+              <mainClass>net.icelander.utv.examples.Everyday</mainClass>
+              <arguments>
+                <argument>${project.basedir}/../../conformance/rules/demo-zones.json</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>traditional</id>
+            <configuration>
+              <mainClass>net.icelander.utv.examples.Traditional</mainClass>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
