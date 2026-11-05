@@ -9,19 +9,18 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsPackable>false</IsPackable>
     <RootNamespace>Utv.Examples</RootNamespace>
-    <!-- conformance/rules/demo-zones.json is read from the repository root, resolved relative to this project. -->
-    <UtvRepositoryRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../../'))</UtvRepositoryRoot>
   </PropertyGroup>
 
   <ItemGroup>
-    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-      <_Parameter1>UtvRepositoryRoot</_Parameter1>
-      <_Parameter2>$(UtvRepositoryRoot)</_Parameter2>
-    </AssemblyAttribute>
+    <ProjectReference Include="../../src/Utv/Utv.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Utv/Utv.csproj" />
+    <!-- The demo zone rules are linked from the repository (never copied into it) and placed next to the program. -->
+    <None Include="$(MSBuildThisFileDirectory)../../../../conformance/rules/demo-zones.json"
+          Link="demo-zones.json"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Update="everyday.expected.txt" CopyToOutputDirectory="Never" />
   </ItemGroup>
 
 </Project>

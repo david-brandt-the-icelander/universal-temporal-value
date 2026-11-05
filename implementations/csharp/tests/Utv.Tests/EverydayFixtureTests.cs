@@ -40,6 +40,13 @@ public class EverydayFixtureTests
     }
 
     [Fact]
+    public void FixturesCarryDiagnosticCodes()
+    {
+        // The runner checks `expect.diagnostics` (library-api.md §5); make sure there is something to check.
+        Assert.Contains(File.Value.Fixtures, f => f.ExpectedCodes.Length > 0);
+    }
+
+    [Fact]
     public void ExpectedValuesAreStructurallyValid()
     {
         foreach (Fixture f in File.Value.Fixtures)
@@ -64,7 +71,7 @@ public class EverydayFixtureTests
         Assert.False(JsonEquality.Equal(a.RootElement, d.RootElement));
     }
 
-    internal sealed record Fixture(string Id, string Op, JsonElement[] Args, string Status, JsonElement[] ExpectedCandidates);
+    internal sealed record Fixture(string Id, string Op, JsonElement[] Args, string Status, JsonElement[] ExpectedCandidates, string[] ExpectedCodes);
 
     internal sealed class FixtureFile
     {
@@ -101,7 +108,10 @@ public class EverydayFixtureTests
                     f.GetProperty("op").GetString()!,
                     f.GetProperty("args").EnumerateArray().Select(a => a.Clone()).ToArray(),
                     expect.GetProperty("status").GetString()!,
-                    candidates);
+                    candidates,
+                    expect.TryGetProperty("diagnostics", out JsonElement codes)
+                        ? codes.EnumerateArray().Select(c => c.GetString()!).ToArray()
+                        : Array.Empty<string>());
             }).ToArray();
             return new FixtureFile(fixtures, rules);
         }
@@ -129,6 +139,11 @@ public class EverydayFixtureTests
             {
                 string expected = "[" + string.Join(",", f.ExpectedCandidates.Select(c => c.GetRawText())) + "]";
                 return $"expected candidates {expected}, got {actual}";
+            }
+            string[] missing = f.ExpectedCodes.Where(code => !result.Diagnostics.Any(d => d.Code == code)).ToArray();
+            if (missing.Length > 0)
+            {
+                return $"expected diagnostic code(s) {string.Join(", ", missing)}, got [{string.Join(", ", result.Diagnostics.Select(d => d.Code))}]";
             }
             return null;
         }

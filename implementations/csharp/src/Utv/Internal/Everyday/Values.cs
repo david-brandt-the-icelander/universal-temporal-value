@@ -82,13 +82,28 @@ internal static class Values
     {
         if (value.ValueKind != JsonValueKind.Object)
         {
-            throw OpFailure.Invalid("not-an-object", "", Invariant($"{argument} must be a UTV JSON object"));
+            throw OpFailure.Invalid("malformed-value", "", Invariant($"{argument} must be a UTV JSON object"));
         }
         UtvResult structural = UtvValidator.ValidateStructural(value.GetRawText());
         if (structural.Status != UtvStatus.Valid)
         {
-            throw new OpFailure(structural.Status, structural.Diagnostics);
+            throw new OpFailure(structural.Status, WithMalformed(structural));
         }
+    }
+
+    /// <summary>
+    /// Structural diagnostics, led by <c>malformed-value</c> when the JSON has the wrong shape (library-api.md §5);
+    /// an unsupported specification version is not malformed.
+    /// </summary>
+    public static IReadOnlyList<Diagnostic> WithMalformed(UtvResult structural)
+    {
+        if (structural.Status != UtvStatus.Invalid)
+        {
+            return structural.Diagnostics;
+        }
+        var all = new List<Diagnostic> { Diagnostic.Error("malformed-value", "", "the JSON is not a well-formed UTV value") };
+        all.AddRange(structural.Diagnostics);
+        return all;
     }
 
     public static string KindOf(JsonElement value) => value.GetProperty("kind").GetString()!;
@@ -174,7 +189,7 @@ internal static class Values
                 return (int)d;
             }
         }
-        throw OpFailure.Invalid("out-of-range", path, Invariant($"{e.GetRawText()} is not an integer in range"));
+        throw OpFailure.Invalid("malformed-value", path, Invariant($"{e.GetRawText()} is not an integer in range"));
     }
 
     public static void RequireGregorian(CivilRead c, string path = "/value/calendar")
@@ -191,7 +206,7 @@ internal static class Values
     {
         if (c.Year is null || c.Month is null || c.Day is null)
         {
-            throw OpFailure.Invalid("missing-field", "/value/fields",
+            throw OpFailure.Invalid("malformed-value", "/value/fields",
                 Invariant($"a `{c.Form}` needs `year`, `month` and `day`"));
         }
         RequireMonth(c.Month.Value);
@@ -208,7 +223,7 @@ internal static class Values
     {
         if (c.Year is null || c.Month is null)
         {
-            throw OpFailure.Invalid("missing-field", "/value/fields", "a `year-month` needs `year` and `month`");
+            throw OpFailure.Invalid("malformed-value", "/value/fields", "a `year-month` needs `year` and `month`");
         }
         RequireMonth(c.Month.Value);
         return (c.Year.Value, c.Month.Value);
@@ -230,27 +245,27 @@ internal static class Values
     {
         if (c.Hour is null || c.Minute is null)
         {
-            throw OpFailure.Invalid("missing-field", "/value/fields", Invariant($"a `{c.Form}` needs `hour` and `minute`"));
+            throw OpFailure.Invalid("malformed-value", "/value/fields", Invariant($"a `{c.Form}` needs `hour` and `minute`"));
         }
         if (c.Hour is < 0 or > 23)
         {
-            throw OpFailure.Invalid("hour-out-of-range", "/value/fields/hour", Invariant($"hour {c.Hour} is not in 0..23"));
+            throw OpFailure.Invalid("field-out-of-range", "/value/fields/hour", Invariant($"hour {c.Hour} is not in 0..23"));
         }
         if (c.Minute is < 0 or > 59)
         {
-            throw OpFailure.Invalid("minute-out-of-range", "/value/fields/minute", Invariant($"minute {c.Minute} is not in 0..59"));
+            throw OpFailure.Invalid("field-out-of-range", "/value/fields/minute", Invariant($"minute {c.Minute} is not in 0..59"));
         }
         if (c.Second is < 0 or > 60)
         {
-            throw OpFailure.Invalid("second-out-of-range", "/value/fields/second", Invariant($"second {c.Second} is not in 0..60"));
+            throw OpFailure.Invalid("field-out-of-range", "/value/fields/second", Invariant($"second {c.Second} is not in 0..60"));
         }
         if (c.Nano is < 0 or > 999_999_999)
         {
-            throw OpFailure.Invalid("nano-out-of-range", "/value/fields/nano", Invariant($"nano {c.Nano} is not in 0..999999999"));
+            throw OpFailure.Invalid("field-out-of-range", "/value/fields/nano", Invariant($"nano {c.Nano} is not in 0..999999999"));
         }
         if (c.Nano is not null && c.Second is null)
         {
-            throw OpFailure.Invalid("missing-field", "/value/fields/second", "`nano` needs `second`");
+            throw OpFailure.Invalid("malformed-value", "/value/fields/second", "`nano` needs `second`");
         }
         if (c.Second == 60)
         {
@@ -267,7 +282,7 @@ internal static class Values
         RequirePosix(value.GetProperty("system"), "/value/system", argument);
         if (!value.TryGetProperty("ticks", out JsonElement ticks))
         {
-            throw OpFailure.Unsupported("unsupported-coordinate", "/value/coordinate",
+            throw OpFailure.Unsupported("unsupported-operand", "/value/coordinate",
                 Invariant($"{argument}: instants given as a `coordinate` are not implemented; use `ticks`"));
         }
         Rational t = Rational.FromInteger(BigInteger.Parse(ticks.GetString()!, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture));
@@ -287,7 +302,7 @@ internal static class Values
     {
         if (!IsPosix(ruleRef))
         {
-            throw OpFailure.Unsupported("unsupported-timescale", path,
+            throw OpFailure.Unsupported("unsupported-operand", path,
                 Invariant($"{argument}: only the `{PosixSystem}` `{PosixId}` version `{PosixVersion}` timescale is implemented"));
         }
     }
@@ -373,7 +388,7 @@ internal static class Values
         Rational local = t + Rational.FromInteger(offsetSeconds);
         if (!local.TryGetNanoOfSecond(out int nano))
         {
-            throw OpFailure.Unsupported("sub-nanosecond", path,
+            throw OpFailure.Unsupported("implementation-limit", path,
                 Invariant($"the instant's fraction {local.FractionalPart()} is not a whole number of nanoseconds"));
         }
         BigInteger seconds = local.Floor();
@@ -415,6 +430,61 @@ internal static class Values
     {
         using JsonDocument doc = JsonDocument.Parse(number.ToString(CultureInfo.InvariantCulture));
         return doc.RootElement.Clone();
+    }
+
+    /// <summary>JSON equality ignoring object key order; numbers compare by value.</summary>
+    public static bool JsonEquals(JsonNode? a, JsonNode? b) =>
+        a is null || b is null ? a is null && b is null : JsonEquals(ToElement(a), ToElement(b));
+
+    /// <summary>JSON equality ignoring object key order; numbers compare by value.</summary>
+    public static bool JsonEquals(JsonElement a, JsonElement b)
+    {
+        if (a.ValueKind != b.ValueKind)
+        {
+            return false;
+        }
+        switch (a.ValueKind)
+        {
+            case JsonValueKind.Object:
+                var pa = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+                foreach (JsonProperty p in a.EnumerateObject())
+                {
+                    pa[p.Name] = p.Value;
+                }
+                int count = 0;
+                foreach (JsonProperty p in b.EnumerateObject())
+                {
+                    count++;
+                    if (!pa.TryGetValue(p.Name, out JsonElement v) || !JsonEquals(v, p.Value))
+                    {
+                        return false;
+                    }
+                }
+                return count == pa.Count;
+            case JsonValueKind.Array:
+                if (a.GetArrayLength() != b.GetArrayLength())
+                {
+                    return false;
+                }
+                using (var ea = a.EnumerateArray().GetEnumerator())
+                using (var eb = b.EnumerateArray().GetEnumerator())
+                {
+                    while (ea.MoveNext() && eb.MoveNext())
+                    {
+                        if (!JsonEquals(ea.Current, eb.Current))
+                        {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            case JsonValueKind.String:
+                return a.GetString() == b.GetString();
+            case JsonValueKind.Number:
+                return a.TryGetDecimal(out decimal da) && b.TryGetDecimal(out decimal db) ? da == db : a.GetRawText() == b.GetRawText();
+            default:
+                return true;
+        }
     }
 
     /// <summary>A mutable copy of a JSON element.</summary>

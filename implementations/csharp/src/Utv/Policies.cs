@@ -51,8 +51,22 @@ public enum OverlapPolicy
 /// <param name="Overlap">Overlap policy; default <see cref="OverlapPolicy.Reject"/>.</param>
 public sealed record ResolutionPolicy(GapPolicy Gap = GapPolicy.Reject, OverlapPolicy Overlap = OverlapPolicy.Reject)
 {
+    /// <summary>
+    /// A policy from the typed-layer names: <c>new ResolutionPolicy(Gap.ShiftForward, Overlap.Earliest)</c>.
+    /// </summary>
+    public ResolutionPolicy(Utv.Gap gap, Utv.Overlap overlap)
+        : this(gap.ToPolicy(), overlap.ToPolicy())
+    {
+    }
+
     /// <summary><c>{"gap":"reject","overlap":"reject"}</c>.</summary>
     public static ResolutionPolicy Default { get; } = new();
+
+    /// <summary>Reject gaps and overlaps (the default): use it whenever exactly one instant is required.</summary>
+    public static ResolutionPolicy Strict => Default;
+
+    /// <summary>Report every candidate: a gap is <c>none</c>, an overlap <c>multiple</c> without a diagnostic.</summary>
+    public static ResolutionPolicy AllCandidates { get; } = new(GapPolicy.Reject, OverlapPolicy.All);
 
     /// <summary>
     /// Reads a JSON <c>{"gap": …, "overlap": …}</c> object. A missing member defaults to <c>reject</c>.

@@ -35,8 +35,11 @@
   <ItemGroup>
     <!-- The catalog checker of the Traditional example, compiled in so `dotnet test` checks examples/traditional.json. -->
     <Compile Include="../../examples/Traditional/TraditionalCatalog.cs" Link="Examples/TraditionalCatalog.cs" />
-    <!-- The Everyday example's sections, compiled in so `dotnet test` runs the example. -->
-    <Compile Include="../../examples/Everyday/EverydayTour.cs" Link="Examples/EverydayTour.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The Everyday example, run in-process by the snapshot test (EverydayExampleTests). -->
+    <ProjectReference Include="../../examples/Everyday/Everyday.csproj" />
   </ItemGroup>
 
 </Project>

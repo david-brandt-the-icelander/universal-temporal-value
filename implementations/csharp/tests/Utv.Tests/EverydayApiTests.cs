@@ -281,7 +281,7 @@ public class EverydayApiTests
         Assert.Equal(1, Calendar.DaysBetween(paris5, paris6).GetInt64());
         UtvResult mixed = Calendar.DaysBetween(paris5, plain6);
         Assert.Equal(UtvStatus.Unsupported, mixed.Status);
-        Assert.Equal("mixed-zones", Assert.Single(mixed.Diagnostics).Code);
+        Assert.Equal("different-zones", Assert.Single(mixed.Diagnostics).Code);
         Assert.Equal("definitely", Ranges.Contains(Build.Interval(paris5, Build.InZone(Build.Date(2026, 12, 1), "Europe/Paris")), paris6).GetString());
         Assert.Equal(UtvStatus.Unsupported, Ranges.Contains(Build.Interval(Build.Date(2026, 11, 1), Build.Date(2026, 12, 1)), paris6).Status);
         Assert.Equal(UtvStatus.Unsupported, Ranges.Overlaps(Build.Interval(IntervalBound.Included(paris5), IntervalBound.Unbounded), Build.Interval(IntervalBound.Included(plain6), IntervalBound.Unbounded)).Status);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text.Json;
@@ -47,6 +48,20 @@ public sealed class ZoneRules
 
     /// <summary>The zone identifiers in the bundle, in ordinal order.</summary>
     public IReadOnlyList<string> ZoneIds { get; }
+
+    /// <summary>
+    /// Reads a rule bundle from a file, for example <c>ZoneRules.Load("conformance/rules/demo-zones.json")</c>.
+    /// The path is the caller's choice; nothing is looked up on the host.
+    /// </summary>
+    /// <exception cref="FormatException">The file is not a well-formed rule bundle.</exception>
+    public static ZoneRules Load(string path)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(path);
+        return Parse(File.ReadAllText(path));
+    }
+
+    /// <summary>No zones at all: enough for fixed-offset date-times, which need no rules.</summary>
+    internal static ZoneRules Empty { get; } = new("utv.none", "none", "0", BigInteger.Zero, BigInteger.One, new Dictionary<string, ZoneTimeline>(StringComparer.Ordinal));
 
     /// <summary>Parses a rule bundle from JSON text.</summary>
     /// <exception cref="FormatException">The text is not a well-formed rule bundle.</exception>

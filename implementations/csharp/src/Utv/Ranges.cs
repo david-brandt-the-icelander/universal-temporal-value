@@ -69,7 +69,7 @@ public static class Ranges
         IntervalRead y = ReadInterval(b, "b", zones);
         if (x.Domain != y.Domain)
         {
-            throw OpFailure.Unsupported("mixed-domains", "/value/domain", Invariant($"cannot relate a `{x.Domain}` interval to a `{y.Domain}` interval"));
+            throw OpFailure.Unsupported("unsupported-operand", "/value/domain", Invariant($"cannot relate a `{x.Domain}` interval to a `{y.Domain}` interval"));
         }
         if (x.Domain == "civil/gregory")
         {
@@ -128,17 +128,17 @@ public static class Ranges
         string kind = Values.KindOf(interval);
         if (kind != "interval")
         {
-            throw OpFailure.Unsupported("unsupported-kind", "/kind", Invariant($"{argument}: expected an `interval`, not `{kind}`"));
+            throw OpFailure.Unsupported("unsupported-operand", "/kind", Invariant($"{argument}: expected an `interval`, not `{kind}`"));
         }
         JsonElement v = interval.GetProperty("value");
         string domain = v.GetProperty("domain").GetString()!;
         if (domain is not ("civil/gregory" or "physical"))
         {
-            throw OpFailure.Unsupported("unsupported-domain", "/value/domain", Invariant($"{argument}: domain `{domain}` is not implemented"));
+            throw OpFailure.Unsupported("unsupported-operand", "/value/domain", Invariant($"{argument}: domain `{domain}` is not implemented"));
         }
         if (v.TryGetProperty("construction", out JsonElement construction) && construction.GetString() != "start-end")
         {
-            throw OpFailure.Unsupported("unsupported-construction", "/value/construction",
+            throw OpFailure.Unsupported("unsupported-operand", "/value/construction",
                 Invariant($"{argument}: only `start-end` intervals are implemented"));
         }
         bool empty = v.TryGetProperty("empty", out JsonElement e) && e.GetBoolean();
@@ -162,13 +162,13 @@ public static class Ranges
         {
             if (kind != "instant")
             {
-                throw OpFailure.Unsupported("mixed-domains", "/kind", Invariant($"{argument}: a `physical` interval holds instants, not `{kind}` values"));
+                throw OpFailure.Unsupported("unsupported-operand", "/kind", Invariant($"{argument}: a `physical` interval holds instants, not `{kind}` values"));
             }
             return Values.ReadPosixInstant(point, argument);
         }
         if (kind != "civil")
         {
-            throw OpFailure.Unsupported("mixed-domains", "/kind", Invariant($"{argument}: a `civil/gregory` interval holds dates, not `{kind}` values"));
+            throw OpFailure.Unsupported("unsupported-operand", "/kind", Invariant($"{argument}: a `civil/gregory` interval holds dates, not `{kind}` values"));
         }
         return Rational.FromInteger(Calendar.DayNumber(point, argument, zones));
     }

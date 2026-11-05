@@ -34,7 +34,7 @@ public static class Calendar
         CivilRead c = RequireCivil(value, "value");
         if (c.Form is not ("date" or "datetime"))
         {
-            throw OpFailure.Unsupported("unsupported-form", "/value/form", Invariant($"`fields` applies to `date` and `datetime`, not `{c.Form}`"));
+            throw OpFailure.Unsupported("unsupported-operand", "/value/form", Invariant($"`fields` applies to `date` and `datetime`, not `{c.Form}`"));
         }
         Values.RequireGregorian(c);
         (BigInteger y, int m, int d) = Values.RequireDate(c);
@@ -76,7 +76,7 @@ public static class Calendar
         Values.RequireStructural(amount, "amount");
         if (Values.KindOf(amount) != "amount")
         {
-            throw OpFailure.Invalid("not-an-amount", "/kind", Invariant($"the second argument of `add` must be an `amount`, not `{Values.KindOf(amount)}`"));
+            throw OpFailure.Invalid("kind-mismatch", "/kind", Invariant($"the second argument of `add` must be an `amount`, not `{Values.KindOf(amount)}`"));
         }
         JsonElement a = amount.GetProperty("value");
         string basis = a.GetProperty("basis").GetString()!;
@@ -84,7 +84,7 @@ public static class Calendar
         {
             "instant" => AddToInstant(value, a, basis),
             "civil" => AddToCivil(Values.ReadCivil(value), a, basis, monthEnd),
-            string kind => throw OpFailure.Unsupported("unsupported-kind", "/kind", Invariant($"`add` is not implemented for kind `{kind}`")),
+            string kind => throw OpFailure.Unsupported("unsupported-operand", "/kind", Invariant($"`add` is not implemented for kind `{kind}`")),
         };
     });
 
@@ -113,7 +113,7 @@ public static class Calendar
         }
         else
         {
-            throw OpFailure.Unsupported("incomparable", "", Invariant($"cannot compare `{ka}` with `{kb}`"));
+            throw OpFailure.Unsupported("unsupported-operand", "", Invariant($"cannot compare `{ka}` with `{kb}`"));
         }
         return Op.Unique("compare", order < 0 ? "before" : order > 0 ? "after" : "equal");
     });
@@ -145,7 +145,7 @@ public static class Calendar
         string kind = Values.KindOf(value);
         if (kind != "civil")
         {
-            throw OpFailure.Unsupported("unsupported-kind", "/kind", Invariant($"{argument}: expected a `civil` value, not `{kind}`"));
+            throw OpFailure.Unsupported("unsupported-operand", "/kind", Invariant($"{argument}: expected a `civil` value, not `{kind}`"));
         }
         return Values.ReadCivil(value);
     }
@@ -156,7 +156,7 @@ public static class Calendar
         string kind = Values.KindOf(value);
         if (kind != "instant")
         {
-            throw OpFailure.Unsupported("unsupported-kind", "/kind", Invariant($"{argument}: expected an `instant`, not `{kind}`"));
+            throw OpFailure.Unsupported("unsupported-operand", "/kind", Invariant($"{argument}: expected an `instant`, not `{kind}`"));
         }
         return Values.ReadPosixInstant(value, argument);
     }
@@ -167,7 +167,7 @@ public static class Calendar
         CivilRead c = RequireCivil(value, argument);
         if (c.Form != "date")
         {
-            throw OpFailure.Unsupported("unsupported-form", "/value/form", Invariant($"{argument}: expected a `date`, not `{c.Form}`"));
+            throw OpFailure.Unsupported("unsupported-operand", "/value/form", Invariant($"{argument}: expected a `date`, not `{c.Form}`"));
         }
         Values.RequireGregorian(c);
         zones.Add(c, argument);
@@ -188,16 +188,16 @@ public static class Calendar
     {
         if (a.Zone is ZoneKind.Iana or ZoneKind.Other || b.Zone is ZoneKind.Iana or ZoneKind.Other)
         {
-            throw OpFailure.Unsupported("resolve-first", "/value/zone",
+            throw OpFailure.Unsupported("needs-zone-rules", "/value/zone",
                 "ordering values in a named zone depends on zone rules; `resolve` them to instants first");
         }
         if (a.Zone != b.Zone)
         {
-            throw OpFailure.Unsupported("incomparable", "/value/zone", "cannot compare a fixed-offset value with an unzoned one");
+            throw OpFailure.Unsupported("unsupported-operand", "/value/zone", "cannot compare a fixed-offset value with an unzoned one");
         }
         if (a.Form != b.Form)
         {
-            throw OpFailure.Unsupported("incomparable", "/value/form", Invariant($"cannot compare a `{a.Form}` with a `{b.Form}`"));
+            throw OpFailure.Unsupported("unsupported-operand", "/value/form", Invariant($"cannot compare a `{a.Form}` with a `{b.Form}`"));
         }
         Values.RequireGregorian(a);
         Values.RequireGregorian(b);
@@ -205,7 +205,7 @@ public static class Calendar
         {
             if (a.Form != "datetime")
             {
-                throw OpFailure.Unsupported("unsupported-form", "/value/form", Invariant($"cannot compare fixed-offset `{a.Form}` values"));
+                throw OpFailure.Unsupported("unsupported-operand", "/value/form", Invariant($"cannot compare fixed-offset `{a.Form}` values"));
             }
             Rational ta = WallSeconds(a) - Rational.FromInteger(a.ZoneSeconds);
             Rational tb = WallSeconds(b) - Rational.FromInteger(b.ZoneSeconds);
@@ -217,7 +217,7 @@ public static class Calendar
             "year-month" => CompareYearMonths(Values.RequireYearMonth(a), Values.RequireYearMonth(b)),
             "time" => Values.RequireTime(a).CompareTo(Values.RequireTime(b)),
             "datetime" => WallSeconds(a).CompareTo(WallSeconds(b)),
-            _ => throw OpFailure.Unsupported("unsupported-form", "/value/form", Invariant($"cannot compare `{a.Form}` values")),
+            _ => throw OpFailure.Unsupported("unsupported-operand", "/value/form", Invariant($"cannot compare `{a.Form}` values")),
         };
     }
 
@@ -241,21 +241,21 @@ public static class Calendar
             case "clock-ticks":
                 if (!amount.TryGetProperty("rules", out JsonElement rules) || !Values.IsPosix(rules))
                 {
-                    throw OpFailure.Unsupported("unsupported-timescale", "/value/rules", "only POSIX clock-tick amounts can be added to a POSIX instant");
+                    throw OpFailure.Unsupported("unsupported-operand", "/value/rules", "only POSIX clock-tick amounts can be added to a POSIX instant");
                 }
                 if (!amount.TryGetProperty("seconds", out JsonElement seconds))
                 {
-                    throw OpFailure.Invalid("missing-property", "/value/seconds", "a clock-tick amount needs `seconds`");
+                    throw OpFailure.Invalid("malformed-value", "/value/seconds", "a clock-tick amount needs `seconds`");
                 }
                 return Op.Unique("add", Values.Instant(t + Values.ReadRational(seconds)));
             case "elapsed":
                 throw OpFailure.Unsupported("needs-leap-seconds", "/value/basis",
                     "adding SI (elapsed) seconds to a POSIX instant needs a leap-second table, which this library does not ship; use POSIX seconds");
             case "calendar":
-                throw OpFailure.Invalid("calendar-on-instant", "/value/basis",
+                throw OpFailure.Invalid("kind-mismatch", "/value/basis",
                     "a calendar amount has no meaning on an instant; convert to a civil date-time in a zone first");
             default:
-                throw OpFailure.Unsupported("unsupported-amount", "/value/basis", Invariant($"`{basis}` amounts are not implemented"));
+                throw OpFailure.Unsupported("unsupported-operand", "/value/basis", Invariant($"`{basis}` amounts are not implemented"));
         }
     }
 
@@ -263,7 +263,7 @@ public static class Calendar
     {
         if (basis != "calendar")
         {
-            throw OpFailure.Invalid("wrong-amount", "/value/basis",
+            throw OpFailure.Invalid("kind-mismatch", "/value/basis",
                 Invariant($"a `{basis}` amount cannot be added to a civil value; use a calendar period"));
         }
         Dictionary<string, BigInteger> parts = ReadComponents(amount);
@@ -273,11 +273,11 @@ public static class Calendar
 
         if (c.Form == "time")
         {
-            throw OpFailure.Unsupported("time-wraps", "/value/form", "adding to a time of day wraps past midnight and loses the day; use a `datetime`");
+            throw OpFailure.Unsupported("unsupported-operand", "/value/form", "adding to a time of day wraps past midnight and loses the day; use a `datetime`");
         }
         if (c.Form is not ("date" or "year-month" or "datetime"))
         {
-            throw OpFailure.Unsupported("unsupported-form", "/value/form", Invariant($"`add` is not implemented for `{c.Form}`"));
+            throw OpFailure.Unsupported("unsupported-operand", "/value/form", Invariant($"`add` is not implemented for `{c.Form}`"));
         }
         Values.RequireGregorian(c);
 
@@ -287,7 +287,7 @@ public static class Calendar
             (BigInteger y0, int m0) = Values.RequireYearMonth(c);
             if (hasTime || hasDays)
             {
-                throw OpFailure.Invalid("wrong-component", "/value/components", "a `year-month` accepts only years and months");
+                throw OpFailure.Invalid("kind-mismatch", "/value/components", "a `year-month` accepts only years and months");
             }
             (BigInteger ny, int nm) = AddMonths(y0, m0, totalMonths);
             return Op.Unique("add", WithFields(c, new JsonObject { ["year"] = Values.FormatYear(ny), ["month"] = nm }, out var notes), notes);
@@ -301,7 +301,7 @@ public static class Calendar
         }
         else if (hasTime)
         {
-            throw OpFailure.Invalid("wrong-component", "/value/components", "a `date` does not accept hours, minutes or seconds; use a `datetime`");
+            throw OpFailure.Invalid("kind-mismatch", "/value/components", "a `date` does not accept hours, minutes or seconds; use a `datetime`");
         }
 
         (BigInteger year, int month) = AddMonths(y, m, totalMonths);
@@ -314,7 +314,7 @@ public static class Calendar
                 return new UtvResult("add", UtvStatus.None, new[]
                 {
                     new Diagnostic("month-end", DiagnosticSeverity.Warning, "/value/fields/day",
-                        Invariant($"day {d} does not exist in {Values.FormatYear(year)}-{month:00}; pass MonthEndPolicy.Constrain to clamp to day {limit}")),
+                        Invariant($"{Values.FormatYear(year)}-{month:00} has no day {d}")),
                 });
             }
             day = limit;
@@ -343,31 +343,31 @@ public static class Calendar
         return (MathUtil.FloorDiv(index, 12), (int)MathUtil.FloorMod(index, 12) + 1);
     }
 
-    private static Dictionary<string, BigInteger> ReadComponents(JsonElement amount)
+    internal static Dictionary<string, BigInteger> ReadComponents(JsonElement amount)
     {
         var parts = new Dictionary<string, BigInteger>(StringComparer.Ordinal);
         if (!amount.TryGetProperty("components", out JsonElement components))
         {
-            throw OpFailure.Invalid("missing-property", "/value/components", "a calendar amount needs `components`");
+            throw OpFailure.Invalid("malformed-value", "/value/components", "a calendar amount needs `components`");
         }
         foreach (JsonProperty p in components.EnumerateObject())
         {
             string path = "/value/components/" + p.Name;
             if (!ComponentNames.Contains(p.Name))
             {
-                throw OpFailure.Unsupported("unsupported-component", path, Invariant($"component `{p.Name}` is not implemented"));
+                throw OpFailure.Unsupported("unsupported-operand", path, Invariant($"component `{p.Name}` is not implemented"));
             }
             string text = p.Value.ValueKind switch
             {
                 JsonValueKind.String => p.Value.GetString()!,
                 JsonValueKind.Number => p.Value.GetRawText(),
-                _ => throw OpFailure.Invalid("wrong-type", path, "a component is a decimal string"),
+                _ => throw OpFailure.Invalid("malformed-value", path, "a component is a decimal string"),
             };
             if (!BigInteger.TryParse(text, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out BigInteger n))
             {
                 throw decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out _)
-                    ? OpFailure.Unsupported("fractional-component", path, Invariant($"fractional component `{text}` is not implemented"))
-                    : OpFailure.Invalid("wrong-type", path, Invariant($"`{text}` is not a decimal integer"));
+                    ? OpFailure.Unsupported("unsupported-operand", path, Invariant($"fractional component `{text}` is not implemented"))
+                    : OpFailure.Invalid("malformed-value", path, Invariant($"`{text}` is not a decimal integer"));
             }
             parts[p.Name] = n;
         }
@@ -414,7 +414,7 @@ internal sealed class ZoneAgreement
         _first ??= key;
         if (_first != key)
         {
-            throw OpFailure.Unsupported("mixed-zones", "/value/zone",
+            throw OpFailure.Unsupported("different-zones", "/value/zone",
                 Invariant($"{argument}: dates must be all unzoned or all in the same zone; found {_first} and {key}"));
         }
     }

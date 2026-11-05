@@ -2,6 +2,15 @@
 
 Status: **design plan** for the C# library after 0.1.0. Nothing here is implemented yet beyond validation. The interface below compiles against .NET 8 with nullable reference types and warnings as errors; it was checked that way when this plan was written.
 
+> **What 0.3 realizes (note added in 0.3.0; the plan below is unchanged).** Library 0.3 implements a first slice of this plan, shaped by the shared contract in [`docs/library-api.md`](../../../docs/library-api.md) rather than by this sketch:
+>
+> - **Part of M2 (typed model):** immutable `sealed record` types with representation equality for the everyday kinds only (`CivilDate`, `CivilYearMonth`, `CivilTime`, `CivilDateTime`, `FixedOffsetDateTime`, `ZonedIntent`, `Instant`, `Period`, `PosixSeconds`, `ElapsedSeconds`, `Interval<T>`), with `Parse`/`FromJson`/`ToJson`. Not the 26 kinds, and no RFC 8785 canonical JSON.
+> - **Decision 3, in a different form:** answers to partial questions are `Outcome<T>` (an `abstract record` with `Unique`, `Multiple`, `None`, `Unsupported` and `Invalid` cases) rather than `UtvResult<T>`. Total operations return plain values. `TryGetUnique` exists as planned; `Single()` throws `OutcomeException` by design.
+> - **Decision 5:** `Truth` (`Definitely`, `Possibly`, `Impossible`) for `Contains` and `Overlaps`.
+> - **Decision 7, in part:** `TemporalContext` holds the zone rules once. It has no reference observation, location or budget yet, and there is no `ITemporalEngine`.
+> - **Decisions 10 and 12:** `ResolutionPolicy.Strict` and `ResolutionPolicy.AllCandidates`; typed .NET interop where the target type names the intent.
+> - **Decision 1 is relaxed:** typed values do carry rule-free operations (`AddDays`, `CompareTo` on types whose order needs no rules). Anything needing rules still takes them explicitly (`zoned.Resolve(ctx)`), and `ZonedIntent` has no comparison operators.
+
 The questions this interface answers, and why each one needs care, are catalogued language-neutrally in [`docs/operations.md`](../../../docs/operations.md). This document is the C# shape of that catalog.
 
 ## Design decisions

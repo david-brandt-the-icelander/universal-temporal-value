@@ -89,7 +89,7 @@ public static class Zones
         // 1. Form and leap second.
         if (c.Form != "datetime")
         {
-            throw OpFailure.Unsupported("unsupported-form", "/value/form", Invariant($"`resolve` takes a `datetime`, not a `{c.Form}`"));
+            throw OpFailure.Unsupported("unsupported-operand", "/value/form", Invariant($"`resolve` takes a `datetime`, not a `{c.Form}`"));
         }
         if (c.Second == 60)
         {
@@ -109,7 +109,7 @@ public static class Zones
             case ZoneKind.FixedOffset: // 3.
                 return Op.Unique("resolve", Values.Instant(wall - Rational.FromInteger(c.ZoneSeconds)));
             case ZoneKind.Other:
-                throw OpFailure.Unsupported("unsupported-zone", "/value/zone/type", Invariant($"zone type `{c.ZoneType}` is not implemented"));
+                throw OpFailure.Unsupported("unsupported-operand", "/value/zone/type", Invariant($"zone type `{c.ZoneType}` is not implemented"));
         }
 
         // 4. Named zone in the bundle.
@@ -168,15 +168,17 @@ public static class Zones
             case 1:
                 return Op.Unique("resolve", Values.Instant(candidates[0].Time));
             case 0:
+                (BigInteger At, int Before, int After)? gapTransition = FindTransition(zone, wall, lo, hi, gap: true);
                 if (chosen.Gap == GapPolicy.ShiftForwardByGap)
                 {
-                    int before = OffsetBeforeGap(zone, wall, lo, hi);
-                    return Op.Unique("resolve", Values.Instant(wall - Rational.FromInteger(before)));
+                    int shiftBy = gapTransition?.Before ?? zone.OffsetAt(lo);
+                    return Op.Unique("resolve", Values.Instant(wall - Rational.FromInteger(shiftBy)));
                 }
                 return new UtvResult("resolve", UtvStatus.None, new[]
                 {
-                    new Diagnostic("gap", DiagnosticSeverity.Warning, "/value/fields",
-                        Invariant($"this wall time is skipped in {c.ZoneId} (a gap); pass GapPolicy.ShiftForwardByGap to move forward by the gap")),
+                    new Diagnostic("gap", DiagnosticSeverity.Warning, "/value/fields", gapTransition is { } jump
+                        ? Invariant($"clocks jump from {WallClock(jump.At + jump.Before)} to {WallClock(jump.At + jump.After)} in {c.ZoneId}")
+                        : Invariant($"clocks in {c.ZoneId} skip this wall time")),
                 });
             default:
                 IEnumerable<JsonElement> all = candidates.Select(x => Values.ToElement(Values.Instant(x.Time)));
@@ -188,14 +190,19 @@ public static class Zones
                     _ => new UtvResult("resolve", UtvStatus.Multiple, new[]
                     {
                         new Diagnostic("ambiguous", DiagnosticSeverity.Warning, "/value/fields",
-                            Invariant($"this wall time occurs {candidates.Count} times in {c.ZoneId} (an overlap); pass OverlapPolicy.Earliest or Latest to pick one")),
+                            FindTransition(zone, wall, lo, hi, gap: false) is { } back
+                                ? Invariant($"clocks go back from {WallClock(back.At + back.Before)} to {WallClock(back.At + back.After)} in {c.ZoneId}")
+                                : Invariant($"this wall time happens {candidates.Count} times in {c.ZoneId}")),
                     }, all),
                 };
         }
     }
 
-    /// <summary>The offset in force before the transition whose skipped wall-clock range contains <paramref name="wall"/>.</summary>
-    private static int OffsetBeforeGap(ZoneTimeline zone, Rational wall, BigInteger lo, BigInteger hi)
+    /// <summary>
+    /// The transition whose skipped (<paramref name="gap"/>) or repeated wall-clock range contains
+    /// <paramref name="wall"/>: its POSIX second and the offsets before and after it.
+    /// </summary>
+    private static (BigInteger At, int Before, int After)? FindTransition(ZoneTimeline zone, Rational wall, BigInteger lo, BigInteger hi, bool gap)
     {
         foreach ((BigInteger at, int after) in zone.Transitions)
         {
@@ -204,14 +211,24 @@ public static class Zones
                 continue;
             }
             int before = zone.OffsetBefore(at);
-            if (after > before
-                && wall >= Rational.FromInteger(at + before)
-                && wall < Rational.FromInteger(at + after))
+            (int low, int high) = gap ? (before, after) : (after, before);
+            if (low < high
+                && wall >= Rational.FromInteger(at + low)
+                && wall < Rational.FromInteger(at + high))
             {
-                return before;
+                return (at, before, after);
             }
         }
-        return zone.OffsetAt(lo);
+        return null;
+    }
+
+    /// <summary>The time of day of a POSIX second read as wall time: <c>02:00</c>, or <c>02:00:30</c>.</summary>
+    private static string WallClock(BigInteger localSeconds)
+    {
+        int s = (int)MathUtil.FloorMod(localSeconds, Day);
+        return s % 60 == 0
+            ? Invariant($"{s / 3600:00}:{s / 60 % 60:00}")
+            : Invariant($"{s / 3600:00}:{s / 60 % 60:00}:{s % 60:00}");
     }
 
     private static ResolutionPolicy? ValuePolicy(CivilRead c)
@@ -222,7 +239,7 @@ public static class Zones
         }
         return ResolutionPolicy.TryParse(json, out ResolutionPolicy parsed)
             ? parsed
-            : throw OpFailure.Invalid("bad-policy", "/value/resolutionPolicy", "`resolutionPolicy` is not a valid policy");
+            : throw OpFailure.Invalid("malformed-value", "/value/resolutionPolicy", "`resolutionPolicy` is not a valid policy");
     }
 
     private static OpFailure UnknownZone(string zoneId, ZoneRules rules) =>
@@ -230,6 +247,6 @@ public static class Zones
             Invariant($"zone `{zoneId}` is not in rule set `{rules.RuleSetId}` ({string.Join(", ", rules.ZoneIds)})"));
 
     private static OpFailure OutsideWindow(ZoneRules rules) =>
-        OpFailure.Unsupported("outside-rules", "/value",
+        OpFailure.Unsupported("outside-rule-window", "/value",
             Invariant($"rule set `{rules.RuleSetId}` is valid only from POSIX {rules.ValidFrom} to {rules.ValidUntil}; it is never extrapolated"));
 }

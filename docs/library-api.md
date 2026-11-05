@@ -169,6 +169,7 @@ Diagnostics are `{code, severity, path, message}`. The **codes** below are share
 | `precision-loss` | warning | a conversion dropped precision (interop, lossy mode) |
 | `zone-dropped` | warning | a conversion kept the offset and dropped the zone (interop, lossy mode) |
 | `offset-assertion-dropped` | info | `add` removed an asserted offset |
+| `offset-not-known` | info | an instant converted to a native type that needs an offset was given +00:00 (interop) |
 
 ## 6. Naming
 
@@ -189,6 +190,7 @@ Names never stutter: `Parse`/`Format`, not `ParseIso`/`FormatIso`. The 0.2 names
 Where a name collides with the language itself, each library records the deviation in its README:
 - **Python:** `Period.of_days` / `of_months` / … because a `days` classmethod would clash with the `days` component; `TemporalContext(rules)` / `TemporalContext.with_rules(rules)` because `with` is a keyword.
 - **Java:** `TemporalValue.parse(text)` because `Utv.parse(String)` is the 0.2 JSON parser.
+- **C#:** `Temporal.Parse(text)` because `Utv` is the namespace; period components are read as `period.Components.Days`, because a static `Period.Days(30)` and an instance `Days` can't share a name.
 - **Rust:** no overloads, so the total forms are separate methods, `add_months_constrained(n)` / `add_years_constrained(n)`, and `add_with(Period, MonthEnd)` takes a policy.
 
 ## 7. Examples (all five languages)

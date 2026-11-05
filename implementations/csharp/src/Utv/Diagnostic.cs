@@ -35,6 +35,9 @@ public static class DiagnosticSeverityExtensions
 /// <param name="Message">Human-readable explanation (English, culture-invariant).</param>
 public sealed record Diagnostic(string Code, DiagnosticSeverity Severity, string Path, string Message)
 {
+    /// <summary>The message followed by the code, for example <c>2026-02 has no day 31 (month-end)</c>.</summary>
+    public override string ToString() => Message.Length == 0 ? Code : Message + " (" + Code + ")";
+
     internal static Diagnostic Error(string code, string path, string message) =>
         new(code, DiagnosticSeverity.Error, path, message);
 }

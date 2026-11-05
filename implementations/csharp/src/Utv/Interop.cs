@@ -146,7 +146,7 @@ public static class Interop
         CivilRead c = RequireForm(value, "datetime");
         if (c.Zone != ZoneKind.Floating)
         {
-            throw OpFailure.Unsupported("zone-not-representable", "/value/zone",
+            throw OpFailure.Unsupported("unsupported-operand", "/value/zone",
                 "a DateTime cannot hold a zone or offset; use ToDateTimeOffset, or Zones.Resolve to an instant first");
         }
         return Ok(new DateTime(WallTicks(c), DateTimeKind.Unspecified));
@@ -181,10 +181,10 @@ public static class Interop
                         Invariant($"DateTimeOffset keeps the offset but not the zone `{c.ZoneId}`; adding time to it will not follow the zone's rules")),
                 });
             case ZoneKind.Iana:
-                throw OpFailure.Unsupported("offset-unknown", "/value/zone",
+                throw OpFailure.Unsupported("needs-zone-rules", "/value/zone",
                     "a zoned date-time without an asserted offset needs zone rules; use Zones.Resolve first");
             default:
-                throw OpFailure.Unsupported("offset-unknown", "/value/zone",
+                throw OpFailure.Unsupported("needs-zone-rules", "/value/zone",
                     "an unzoned date-time has no offset; use ToDateTime, or bind a zone or offset first");
         }
     });
@@ -198,20 +198,20 @@ public static class Interop
         Values.RequireStructural(amount, "amount");
         if (Values.KindOf(amount) != "amount")
         {
-            throw OpFailure.Unsupported("unsupported-kind", "/kind", "expected an `amount`");
+            throw OpFailure.Unsupported("unsupported-operand", "/kind", "expected an `amount`");
         }
         JsonElement v = amount.GetProperty("value");
         string basis = v.GetProperty("basis").GetString()!;
         if (basis != "clock-ticks" || !v.TryGetProperty("rules", out JsonElement rules) || !Values.IsPosix(rules) || !v.TryGetProperty("seconds", out JsonElement s))
         {
-            throw OpFailure.Unsupported("not-posix-seconds", "/value/basis",
+            throw OpFailure.Unsupported("unsupported-operand", "/value/basis",
                 Invariant($"only POSIX-second amounts convert to TimeSpan; a `{basis}` amount has no fixed length in .NET ticks"));
         }
         Rational seconds = Values.ReadRational(s);
         BigInteger scaled = seconds.Numerator * TicksPerSecond;
         if (!(scaled % seconds.Denominator).IsZero)
         {
-            throw OpFailure.Unsupported("sub-tick-precision", "/value/seconds", Invariant($"{seconds} s is not a whole number of 100 ns ticks"));
+            throw OpFailure.Unsupported("out-of-native-range", "/value/seconds", Invariant($"{seconds} s is not a whole number of 100 ns ticks"));
         }
         BigInteger ticks = scaled / seconds.Denominator;
         if (ticks < TimeSpan.MinValue.Ticks || ticks > TimeSpan.MaxValue.Ticks)
@@ -247,7 +247,7 @@ public static class Interop
         CivilRead c = Calendar.RequireCivil(value, "value");
         if (c.Form != form)
         {
-            throw OpFailure.Unsupported("unsupported-form", "/value/form", Invariant($"expected a `{form}`, not a `{c.Form}`"));
+            throw OpFailure.Unsupported("unsupported-operand", "/value/form", Invariant($"expected a `{form}`, not a `{c.Form}`"));
         }
         Values.RequireGregorian(c);
         return c;
@@ -267,7 +267,7 @@ public static class Interop
     {
         if (nano % 100 != 0)
         {
-            throw OpFailure.Unsupported("sub-tick-precision", "/value/fields/nano",
+            throw OpFailure.Unsupported("out-of-native-range", "/value/fields/nano",
                 Invariant($"{nano} ns is not a multiple of .NET's 100 ns tick"));
         }
         return nano / 100;
@@ -286,7 +286,7 @@ public static class Interop
         BigInteger scaled = t.Numerator * TicksPerSecond;
         if (!(scaled % t.Denominator).IsZero)
         {
-            throw OpFailure.Unsupported("sub-tick-precision", "/value/subTick", "the instant is not a whole number of 100 ns ticks");
+            throw OpFailure.Unsupported("out-of-native-range", "/value/subTick", "the instant is not a whole number of 100 ns ticks");
         }
         BigInteger ticks = scaled / t.Denominator + UnixEpochTicks;
         if (ticks < DateTime.MinValue.Ticks || ticks > DateTime.MaxValue.Ticks)
@@ -300,7 +300,7 @@ public static class Interop
     {
         if (offsetSeconds % 60 != 0 || Math.Abs(offsetSeconds) > 14 * 3600)
         {
-            throw OpFailure.Unsupported("offset-not-representable", path,
+            throw OpFailure.Unsupported("out-of-native-range", path,
                 Invariant($"DateTimeOffset holds whole-minute offsets within ±14:00, not {offsetSeconds} s"));
         }
         long utc = wallTicks - offsetSeconds * TicksPerSecond;

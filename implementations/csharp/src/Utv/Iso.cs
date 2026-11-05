@@ -53,7 +53,7 @@ public static partial class Iso
 
     // An IANA time zone name: one or more parts separated by '/'.
     [GeneratedRegex(@"\A[A-Za-z_][A-Za-z0-9_+\-.]*(?:/[A-Za-z0-9_+\-.]+)*\z", RegexOptions.CultureInvariant)]
-    private static partial Regex ZoneNamePattern();
+    internal static partial Regex ZoneNamePattern();
 
     [GeneratedRegex(@"\A[+-][0-9]{2}(?::?[0-9]{2})?\z", RegexOptions.CultureInvariant)]
     private static partial Regex OffsetAnnotationPattern();
@@ -93,7 +93,7 @@ public static partial class Iso
 
     // ------------------------------------------------------------------ parsing
 
-    private static JsonNode Parse(string text)
+    internal static JsonNode Parse(string text)
     {
         Match m;
         if ((m = DatePattern().Match(text)).Success)
@@ -133,7 +133,7 @@ public static partial class Iso
         {
             if (off.Length != 6 || off[3] != ':')
             {
-                throw OpFailure.Unsupported("basic-format", "", Invariant($"offset `{off}` is not in extended `±hh:mm` form"));
+                throw OpFailure.Unsupported("unsupported-form", "", Invariant($"offset `{off}` is not in extended `±hh:mm` form"));
             }
             int oh = Int(off.AsSpan(1, 2));
             int om = Int(off.AsSpan(4, 2));
@@ -176,7 +176,7 @@ public static partial class Iso
         }
         if (utc && zone is not null)
         {
-            throw OpFailure.Unsupported("utc-with-zone", "",
+            throw OpFailure.Unsupported("unsupported-annotation", "",
                 Invariant($"`{off}` followed by `[{zone}]` is not handled by this profile"));
         }
 
@@ -238,25 +238,25 @@ public static partial class Iso
         string f = m.Groups["f"].Value;
         if (mi > 59)
         {
-            throw OpFailure.Invalid("minute-out-of-range", "", Invariant($"minute {mi} is not in 0..59"));
+            throw OpFailure.Invalid("field-out-of-range", "", Invariant($"minute {mi} is not in 0..59"));
         }
         if (s > 60)
         {
-            throw OpFailure.Invalid("second-out-of-range", "", Invariant($"second {s} is not in 0..60"));
+            throw OpFailure.Invalid("field-out-of-range", "", Invariant($"second {s} is not in 0..60"));
         }
         if (h > 24 || (h == 24 && (mi != 0 || s is > 0 || f.Trim('0').Length > 0)))
         {
-            throw OpFailure.Invalid("hour-out-of-range", "", Invariant($"hour {h} is not in 0..23 (24 only as 24:00)"));
+            throw OpFailure.Invalid("field-out-of-range", "", Invariant($"hour {h} is not in 0..23 (24 only as 24:00)"));
         }
         if (m.Groups["sep"].Value == ",")
         {
             CheckTimeSupported(h, s);
-            throw OpFailure.Unsupported("comma-fraction", "", "a decimal comma is valid ISO 8601 but this profile reads only `.`");
+            throw OpFailure.Unsupported("unsupported-form", "", "a decimal comma is valid ISO 8601 but this profile reads only `.`");
         }
         if (f.Length > 9)
         {
             CheckTimeSupported(h, s);
-            throw OpFailure.Unsupported("sub-nanosecond", "", Invariant($"a {f.Length}-digit fraction is finer than a nanosecond"));
+            throw OpFailure.Unsupported("implementation-limit", "", Invariant($"a {f.Length}-digit fraction is finer than a nanosecond"));
         }
         int? nano = f.Length == 0 ? null : Int(f.PadRight(9, '0'));
         return (h, mi, s, nano);
@@ -281,28 +281,28 @@ public static partial class Iso
             int week = Int(w.Groups["w"].ValueSpan);
             bool dayOk = !w.Groups["wd"].Success || Int(w.Groups["wd"].ValueSpan) is >= 1 and <= 7;
             return week is >= 1 and <= 53 && dayOk
-                ? OpFailure.Unsupported("week-date", "", "ISO week dates are valid ISO 8601 but not handled by this profile")
-                : OpFailure.Invalid("not-iso", "", Invariant($"`{text}` is not a valid week date"));
+                ? OpFailure.Unsupported("unsupported-form", "", "ISO week dates are valid ISO 8601 but not handled by this profile")
+                : OpFailure.Invalid("syntax", "", Invariant($"`{text}` is not a valid week date"));
         }
         if (OrdinalDatePattern().Match(text) is { Success: true } o)
         {
             int ordinal = Int(o.Groups["o"].ValueSpan);
             int days = GregorianCivil.IsLeapYear(ParseYear(o.Groups["y"].Value)) ? 366 : 365;
             return ordinal >= 1 && ordinal <= days
-                ? OpFailure.Unsupported("ordinal-date", "", "ISO ordinal dates are valid ISO 8601 but not handled by this profile")
-                : OpFailure.Invalid("not-iso", "", Invariant($"`{text}` is not a valid ordinal date"));
+                ? OpFailure.Unsupported("unsupported-form", "", "ISO ordinal dates are valid ISO 8601 but not handled by this profile")
+                : OpFailure.Invalid("syntax", "", Invariant($"`{text}` is not a valid ordinal date"));
         }
         if (BasicDatePattern().Match(text) is { Success: true } b)
         {
             int mo = Int(b.Groups["m"].ValueSpan);
             int d = Int(b.Groups["d"].ValueSpan);
             return CivilMath.IsValidDate(ParseYear(b.Groups["y"].Value), mo, d)
-                ? OpFailure.Unsupported("basic-format", "", "ISO 8601 basic format is valid but this profile reads only extended format")
-                : OpFailure.Invalid("not-iso", "", Invariant($"`{text}` is not a valid basic-format date"));
+                ? OpFailure.Unsupported("unsupported-form", "", "ISO 8601 basic format is valid but this profile reads only extended format")
+                : OpFailure.Invalid("syntax", "", Invariant($"`{text}` is not a valid basic-format date"));
         }
         if (YearOnlyPattern().IsMatch(text))
         {
-            return OpFailure.Unsupported("reduced-precision", "", "a year on its own is valid ISO 8601 but not handled by this profile");
+            return OpFailure.Unsupported("unsupported-form", "", "a year on its own is valid ISO 8601 but not handled by this profile");
         }
         if (TimeWithDesignatorOrOffsetPattern().Match(text) is { Success: true } t)
         {
@@ -319,10 +319,10 @@ public static partial class Iso
             {
                 // Unsupported for another reason; report the form below.
             }
-            return OpFailure.Unsupported("time-with-offset", "",
+            return OpFailure.Unsupported("unsupported-form", "",
                 "a time of day with `T` or with an offset is valid ISO 8601 but not handled by this profile");
         }
-        return OpFailure.Invalid("not-iso", "", Invariant($"`{text}` is not ISO 8601 extended format or RFC 3339 / RFC 9557"));
+        return OpFailure.Invalid("syntax", "", Invariant($"`{text}` is not ISO 8601 extended format or RFC 3339 / RFC 9557"));
     }
 
     private static BigInteger ParseYear(string text)
@@ -335,12 +335,17 @@ public static partial class Iso
 
     // ------------------------------------------------------------------ formatting
 
-    private static string Format(JsonElement value)
+    internal static string Format(JsonElement value)
     {
         string kind = Values.KindOf(value);
         if (kind == "instant")
         {
             Rational t = Values.ReadPosixInstant(value, "value");
+            if (!t.TryGetNanoOfSecond(out _))
+            {
+                throw OpFailure.Unsupported("no-text-form", "/value/subTick",
+                    Invariant($"the fraction {t.FractionalPart()} s is not a whole number of nanoseconds, so it has no ISO 8601 text"));
+            }
             JsonObject f = Values.WallFields(t, 0, "/value/subTick");
             var sb = new StringBuilder();
             AppendDate(sb, BigInteger.Parse((string)f["year"]!, CultureInfo.InvariantCulture), (int)f["month"]!, (int)f["day"]!);
@@ -350,7 +355,7 @@ public static partial class Iso
         }
         if (kind != "civil")
         {
-            throw OpFailure.Unsupported("unsupported-kind", "/kind", Invariant($"kind `{kind}` has no ISO 8601 text in this profile"));
+            throw OpFailure.Unsupported("unsupported-operand", "/kind", Invariant($"kind `{kind}` has no ISO 8601 text in this profile"));
         }
 
         CivilRead c = Values.ReadCivil(value);
@@ -387,14 +392,14 @@ public static partial class Iso
                 break;
             }
             default:
-                throw OpFailure.Unsupported("unsupported-form", "/value/form", Invariant($"form `{c.Form}` has no ISO 8601 text in this profile"));
+                throw OpFailure.Unsupported("unsupported-operand", "/value/form", Invariant($"form `{c.Form}` has no ISO 8601 text in this profile"));
         }
 
         if (c.Form is "date" or "year-month" or "time")
         {
             if (c.Zone != ZoneKind.Floating)
             {
-                throw OpFailure.Unsupported("unsupported-zone", "/value/zone", Invariant($"a zoned `{c.Form}` has no ISO 8601 text in this profile"));
+                throw OpFailure.Unsupported("unsupported-operand", "/value/zone", Invariant($"a zoned `{c.Form}` has no ISO 8601 text in this profile"));
             }
             return text.ToString();
         }
@@ -418,7 +423,7 @@ public static partial class Iso
                 text.Append('[').Append(c.ZoneId).Append(']');
                 break;
             default:
-                throw OpFailure.Unsupported("unsupported-zone", "/value/zone/type", Invariant($"zone type `{c.ZoneType}` has no ISO 8601 text"));
+                throw OpFailure.Unsupported("unsupported-operand", "/value/zone/type", Invariant($"zone type `{c.ZoneType}` has no ISO 8601 text"));
         }
         return text.ToString();
     }
@@ -458,7 +463,7 @@ public static partial class Iso
     {
         if (seconds % 60 != 0)
         {
-            throw OpFailure.Unsupported("sub-minute-offset", path, Invariant($"offset {seconds} s has no `±hh:mm` form"));
+            throw OpFailure.Unsupported("no-text-form", path, Invariant($"offset {seconds} s has no `±hh:mm` form"));
         }
         int abs = Math.Abs(seconds);
         sb.Append(seconds < 0 ? '-' : '+').Append(Two(abs / 3600)).Append(':').Append(Two(abs / 60 % 60));
