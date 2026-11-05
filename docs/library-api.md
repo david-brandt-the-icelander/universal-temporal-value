@@ -36,7 +36,12 @@ These rules apply to every type:
 - **Text output.** `ToString()` (`__str__`, `Display`, `toString`) returns the [text form](text-form.md):
   - `PosixSeconds` and `ElapsedSeconds` have no text form, so they return a display string instead: `3600.75 s (POSIX)`, `86400 s (SI)`. Terminating fractions print as decimals; others as a fraction, `1/3 s (POSIX)`.
   - The debugger view (`[DebuggerDisplay]`, `__repr__`, `Debug`) is `CivilDate(2026-11-05)`.
-- **JSON at the edges.** `ToJson()` gives the UTV JSON. `T.FromJson(json)` returns `Outcome<T>`, and wrong kinds or forms give `invalid` (`kind-mismatch`).
+- **JSON at the edges.** `ToJson()` gives the UTV JSON. `T.FromJson(json)` returns `Outcome<T>`.
+  - Wrong kinds or forms give `invalid` (`kind-mismatch`).
+  - A valid UTV value that no typed type can hold gives `unsupported` (`unsupported-operand`). Examples are a zoned `date`, or a floating date-time carrying a `resolutionPolicy`. The JSON layer still handles such values.
+- **Intervals are valid by construction too.** A reversed interval (end before start) is a constructor error with `reversed-interval`. So is an interval with no point at all, such as `Interval.Of(Bound.Unbounded, Bound.Unknown)`: there's nothing to fix its domain.
+- **`Instant.Nanoseconds`** is the floor of the sub-second part in nanoseconds. The exact rational stays in the JSON, and `Instant.SubSecond` returns it exactly as a rational.
+- **Hashing.** Where a language has no hash protocol (JavaScript), value semantics means `equals()` plus immutability.
 - **Text input.** `T.Parse(text)` returns `Outcome<T>`.
   - `Utv.Parse(text)` parses any text-form value. Its result is the language's union of the types above: in C# an `ITemporalValue`; in TypeScript a union type; in Python the union of the classes; in Rust an `enum Value`.
   - Parsing never raises for bad input; bad text is an `Outcome`.
@@ -128,6 +133,7 @@ Diagnostics are `{code, severity, path, message}`. The **codes** below are share
 | Code | Status | Meaning |
 |---|---|---|
 | `syntax` | invalid | text doesn't match the grammar |
+| `malformed-value` | invalid | JSON that isn't a well-formed value of the expected shape: wrong JSON types, missing or unexpected fields, a non-integer where an integer is required, a malformed rules bundle. Structural-validation codes from 0.1, such as `duplicate-key`, may appear alongside it |
 | `day-out-of-range` | invalid | the day doesn't exist in that month |
 | `month-out-of-range` | invalid | month outside 1–12 |
 | `field-out-of-range` | invalid | hour, minute, second or nanosecond out of range |
@@ -143,7 +149,7 @@ Diagnostics are `{code, severity, path, message}`. The **codes** below are share
 | `needs-leap-seconds` | unsupported | SI seconds on a POSIX coordinate |
 | `needs-zone-rules` | unsupported | order depends on zone rules that weren't supplied |
 | `unsupported-form` | unsupported | valid notation outside this profile (week dates, ordinal dates, basic format, decimal period components, EDTF qualifiers) |
-| `unsupported-annotation` | unsupported | RFC 9557 annotation other than one `[Area/Location]` |
+| `unsupported-annotation` | unsupported | RFC 9557 annotation other than one `[Area/Location]`, including any `[zone]` after `Z` or `-00:00` |
 | `unsupported-operand` | unsupported | the operation doesn't handle this kind or form |
 | `unsupported-calendar` | unsupported | non-Gregorian calendar |
 | `unsupported-policy` | unsupported | policy value not implemented |
