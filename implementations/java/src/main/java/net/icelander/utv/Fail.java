@@ -7,11 +7,25 @@ import java.util.function.Supplier;
 final class Fail extends RuntimeException {
     final Status status;
     final transient Diagnostic diagnostic;
+    /** The diagnostic first, then any that go with it (a 0.1 structural code beside {@code malformed-value}). */
+    final transient List<Diagnostic> diagnostics;
 
     Fail(Status status, String code, String path, String message) {
+        this(status, code, path, message, List.of());
+    }
+
+    Fail(Status status, String code, String path, String message, List<Diagnostic> also) {
         super(message, null, false, false);
         this.status = status;
         this.diagnostic = new Diagnostic(code, "error", path, message);
+        java.util.ArrayList<Diagnostic> all = new java.util.ArrayList<>(List.of(diagnostic));
+        all.addAll(also);
+        this.diagnostics = List.copyOf(all);
+    }
+
+    /** {@code invalid} with {@code malformed-value}: JSON that isn't a well-formed value of the expected shape. */
+    static Fail malformed(String path, String message) {
+        return invalid("malformed-value", path, message);
     }
 
     static Fail invalid(String code, String path, String message) {
@@ -27,7 +41,7 @@ final class Fail extends RuntimeException {
         try {
             return body.get();
         } catch (Fail f) {
-            return new UtvResult(op, f.status, List.of(f.diagnostic));
+            return new UtvResult(op, f.status, f.diagnostics);
         } catch (RuntimeException e) {
             return new UtvResult(op, Status.ERROR, List.of(new Diagnostic("utv.error", "error", "", String.valueOf(e))));
         }

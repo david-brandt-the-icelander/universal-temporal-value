@@ -16,13 +16,13 @@ final class Instants {
 
     static Rational decode(JsonNode node, String what) {
         Civil.structural(node, what);
-        if (!isInstant(node)) throw Fail.unsupported("utv.kind", "/kind", what + " must be an instant");
+        if (!isInstant(node)) throw Fail.unsupported("unsupported-operand", "/kind", what + " must be an instant");
         JsonNode v = node.get("value");
         if (!Json.isPosix(v.get("system"))) {
-            throw Fail.unsupported("utv.timescale", "/value/system", "only the unix-posix timescale is implemented");
+            throw Fail.unsupported("unsupported-operand", "/value/system", "only the unix-posix timescale is implemented");
         }
         if (v.has("coordinate") || v.has("quality")) {
-            throw Fail.unsupported("utv.instant.quality", "/value", "instants with coordinate or quality are not handled");
+            throw Fail.unsupported("unsupported-operand", "/value", "instants with coordinate or quality are not handled");
         }
         BigInteger ticks = integer(v.get("ticks"), "/value/ticks");
         Rational t = Rational.of(ticks);
@@ -31,7 +31,7 @@ final class Instants {
             BigInteger n = integer(sub.get("numerator"), "/value/subTick/numerator");
             BigInteger d = integer(sub.get("denominator"), "/value/subTick/denominator");
             if (d.signum() <= 0 || n.signum() < 0 || n.compareTo(d) >= 0) {
-                throw Fail.invalid("utv.instant.subtick", "/value/subTick", "subTick must be in [0, 1) with a positive denominator");
+                throw Fail.invalid("malformed-value", "/value/subTick", "subTick must be in [0, 1) with a positive denominator");
             }
             t = t.add(Rational.of(n, d));
         }
@@ -40,7 +40,7 @@ final class Instants {
 
     static BigInteger integer(JsonNode n, String path) {
         if (n == null || !n.isTextual() || !INTEGER.matcher(n.textValue()).matches()) {
-            throw Fail.invalid("utv.integer", path, "must be an integer decimal string");
+            throw Fail.invalid("malformed-value", path, "must be an integer decimal string");
         }
         return new BigInteger(n.textValue());
     }
@@ -48,18 +48,18 @@ final class Instants {
     /** Exact seconds of a {@code posixSeconds} amount ({@code clock-ticks} on unix-posix). */
     static Rational posixAmount(JsonNode amount, String what) {
         Civil.structural(amount, what);
-        if (!"amount".equals(amount.path("kind").asText(null))) throw Fail.unsupported("utv.kind", "/kind", what + " must be an amount");
+        if (!"amount".equals(amount.path("kind").asText(null))) throw Fail.unsupported("unsupported-operand", "/kind", what + " must be an amount");
         JsonNode v = amount.get("value");
         String basis = v.path("basis").asText("");
         if (!basis.equals("clock-ticks")) {
-            throw Fail.unsupported("utv.amount.basis", "/value/basis", what + " must be a posixSeconds (clock-ticks) amount");
+            throw Fail.unsupported("unsupported-operand", "/value/basis", what + " must be a posixSeconds (clock-ticks) amount");
         }
-        if (!Json.isPosix(v.get("rules"))) throw Fail.unsupported("utv.timescale", "/value/rules", "only unix-posix clock ticks are implemented");
+        if (!Json.isPosix(v.get("rules"))) throw Fail.unsupported("unsupported-operand", "/value/rules", "only unix-posix clock ticks are implemented");
         JsonNode s = v.get("seconds");
-        if (s == null) throw Fail.invalid("utv.amount.seconds", "/value/seconds", "clock-ticks amount needs seconds");
+        if (s == null) throw Fail.invalid("malformed-value", "/value/seconds", "clock-ticks amount needs seconds");
         BigInteger n = integer(s.get("numerator"), "/value/seconds/numerator");
         BigInteger d = integer(s.get("denominator"), "/value/seconds/denominator");
-        if (d.signum() <= 0) throw Fail.invalid("utv.amount.seconds", "/value/seconds/denominator", "denominator must be positive");
+        if (d.signum() <= 0) throw Fail.invalid("malformed-value", "/value/seconds/denominator", "denominator must be positive");
         return Rational.of(n, d);
     }
 }

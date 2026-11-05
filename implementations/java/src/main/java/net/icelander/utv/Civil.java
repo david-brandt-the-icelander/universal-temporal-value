@@ -40,12 +40,15 @@ record Civil(String form, BigInteger year, Integer month, Integer day, Integer h
     /** Checks that node is a structurally valid UTV value, or throws the structural outcome. */
     static void structural(JsonNode node, String what) {
         if (node == null || node.isNull() || node.isMissingNode()) {
-            throw Fail.invalid("utv.argument.missing", "", what + " is missing");
+            throw Fail.invalid("malformed-value", "", what + " is missing");
         }
         UtvResult r = Utv.validateStructural(node);
         if (r.status() != Status.VALID) {
             Diagnostic d = r.diagnostics().isEmpty()
                     ? new Diagnostic("utv.structural", "error", "", "not a valid UTV value") : r.diagnostics().get(0);
+            if (r.status() == Status.INVALID) {
+                throw new Fail(Status.INVALID, "malformed-value", d.path(), what + ": " + d.message(), r.diagnostics());
+            }
             throw new Fail(r.status(), d.code(), d.path(), what + ": " + d.message());
         }
     }
@@ -53,39 +56,43 @@ record Civil(String form, BigInteger year, Integer month, Integer day, Integer h
     /** Decodes and validates a civil value, throwing {@code invalid} or {@code unsupported}. */
     static Civil decode(JsonNode node, String what) {
         structural(node, what);
-        if (!isCivil(node)) throw Fail.unsupported("utv.kind", "/kind", what + " must be a civil value");
+        if (!isCivil(node)) throw Fail.unsupported("unsupported-operand", "/kind", what + " must be a civil value");
         ObjectNode v = (ObjectNode) node.get("value");
         JsonNode cal = v.get("calendar");
         if (!"gregory".equals(cal.path("id").asText(null)) || !"proleptic".equals(cal.path("chronology").asText(null))) {
-            throw Fail.unsupported("utv.calendar", "/value/calendar", "only the proleptic Gregorian calendar is implemented");
+            throw Fail.unsupported("unsupported-calendar", "/value/calendar", "only the proleptic Gregorian calendar is implemented");
         }
         String form = v.path("form").asText("");
         List<String> allowed = FIELDS.get(form);
-        if (allowed == null) throw Fail.unsupported("utv.civil.form", "/value/form", "form " + form + " is not handled by this operation");
+        if (allowed == null) throw Fail.unsupported("unsupported-operand", "/value/form", "form " + form + " is not handled by this operation");
         JsonNode f = v.get("fields");
-        if (f == null || !f.isObject()) throw Fail.invalid("utv.civil.fields", "/value/fields", "fields must be an object");
+        if (f == null || !f.isObject()) throw Fail.invalid("malformed-value", "/value/fields", "fields must be an object");
         for (Iterator<String> it = f.fieldNames(); it.hasNext(); ) {
             String name = it.next();
-            if (!allowed.contains(name)) throw Fail.invalid("utv.civil.fields", "/value/fields/" + name, name + " is not a field of form " + form);
+            if (!allowed.contains(name)) throw Fail.invalid("malformed-value", "/value/fields/" + name, name + " is not a field of form " + form);
         }
         for (String name : allowed) {
-            if (!OPTIONAL.contains(name) && !f.has(name)) throw Fail.invalid("utv.civil.fields", "/value/fields/" + name, form + " requires " + name);
+            if (!OPTIONAL.contains(name) && !f.has(name)) throw Fail.invalid("malformed-value", "/value/fields/" + name, form + " requires " + name);
         }
         BigInteger year = null;
         if (f.has("year")) {
             JsonNode y = f.get("year");
             if (!y.isTextual() || !INTEGER.matcher(y.textValue()).matches()) {
-                throw Fail.invalid("utv.civil.year", "/value/fields/year", "year must be an integer string");
+                throw Fail.invalid("malformed-value", "/value/fields/year", "year must be an integer string");
             }
             year = new BigInteger(y.textValue());
         }
         Integer month = num(f, "month", 1, 12);
-        Integer day = f.has("day") ? num(f, "day", 1, GregorianCivil.daysInMonth(year, month)) : null;
+        JsonNode d = f.get("day");
+        if (d != null && d.isInt() && (d.intValue() < 1 || d.intValue() > GregorianCivil.daysInMonth(year, month))) {
+            throw Fail.invalid("day-out-of-range", "/value/fields/day", Iso.year(year) + "-" + (month < 10 ? "0" : "") + month + " has no day " + d.intValue());
+        }
+        Integer day = d != null ? num(f, "day", 1, GregorianCivil.daysInMonth(year, month)) : null;
         Integer hour = num(f, "hour", 0, 23);
         Integer minute = num(f, "minute", 0, 59);
         Integer second = num(f, "second", 0, 60);
         Integer nano = num(f, "nano", 0, 999_999_999);
-        if (nano != null && second == null) throw Fail.invalid("utv.civil.nano", "/value/fields/nano", "nano requires second");
+        if (nano != null && second == null) throw Fail.invalid("malformed-value", "/value/fields/nano", "nano requires second");
         Zone zone = Zone.FLOATING;
         JsonNode z = v.get("zone");
         if (z != null) {
@@ -94,26 +101,28 @@ record Civil(String form, BigInteger year, Integer month, Integer day, Integer h
                 case "floating" -> { }
                 case "fixed-offset" -> {
                     JsonNode s = z.get("seconds");
-                    if (s == null || !s.isInt() || Math.abs(s.intValue()) > MAX_OFFSET) {
-                        throw Fail.invalid("utv.zone.offset", "/value/zone/seconds", "offset must be an integer number of seconds within +-18:00");
+                    if (s == null || !s.isInt()) throw Fail.malformed("/value/zone/seconds", "offset seconds must be an integer");
+                    if (Math.abs(s.intValue()) > MAX_OFFSET) {
+                        throw Fail.invalid("offset-out-of-range", "/value/zone/seconds", "offset must be an integer number of seconds within +-18:00");
                     }
                     zone = new Zone(type, s.intValue(), null);
                 }
                 case "iana" -> {
                     JsonNode id = z.get("id");
                     if (id == null || !id.isTextual() || id.textValue().isEmpty()) {
-                        throw Fail.invalid("utv.zone.id", "/value/zone/id", "an iana zone needs an id");
+                        throw Fail.invalid("malformed-value", "/value/zone/id", "an iana zone needs an id");
                     }
                     zone = new Zone(type, 0, id.textValue());
                 }
-                default -> throw Fail.unsupported("utv.zone.type", "/value/zone/type", "zone type " + type + " is not handled");
+                default -> throw Fail.unsupported("unsupported-operand", "/value/zone/type", "zone type " + type + " is not handled");
             }
         }
         Integer assertion = null;
         JsonNode a = v.get("offsetAssertion");
         if (a != null) {
-            if (!a.isInt() || Math.abs(a.intValue()) > MAX_OFFSET) {
-                throw Fail.invalid("utv.zone.offset", "/value/offsetAssertion", "offsetAssertion must be seconds within +-18:00");
+            if (!a.isInt()) throw Fail.malformed("/value/offsetAssertion", "offsetAssertion must be an integer");
+            if (Math.abs(a.intValue()) > MAX_OFFSET) {
+                throw Fail.invalid("offset-out-of-range", "/value/offsetAssertion", "offsetAssertion must be seconds within +-18:00");
             }
             assertion = a.intValue();
         }
@@ -123,11 +132,21 @@ record Civil(String form, BigInteger year, Integer month, Integer day, Integer h
     private static Integer num(JsonNode f, String name, int lo, int hi) {
         JsonNode n = f.get(name);
         if (n == null) return null;
-        if (!n.isInt() || n.intValue() < lo || n.intValue() > hi) {
-            throw Fail.invalid("utv.civil." + name, "/value/fields/" + name,
+        if (!n.isInt()) throw Fail.malformed("/value/fields/" + name, name + " must be an integer");
+        if (n.intValue() < lo || n.intValue() > hi) {
+            throw Fail.invalid(rangeCode(name), "/value/fields/" + name,
                     name.equals("day") ? "day does not exist in that month" : name + " must be " + lo + ".." + hi);
         }
         return n.intValue();
+    }
+
+    /** The shared diagnostic code for an out-of-range civil field. */
+    static String rangeCode(String field) {
+        return switch (field) {
+            case "day" -> "day-out-of-range";
+            case "month" -> "month-out-of-range";
+            default -> "field-out-of-range";
+        };
     }
 
     int secondOr0() { return second == null ? 0 : second; }
@@ -165,7 +184,7 @@ record Civil(String form, BigInteger year, Integer month, Integer day, Integer h
         BigInteger days = Gregorian.floorDiv(secs, BigInteger.valueOf(86400));
         int sod = secs.subtract(days.multiply(BigInteger.valueOf(86400))).intValueExact();
         Rational nanos = local.fraction().multiply(Rational.BILLION);
-        if (!nanos.isInteger()) throw Fail.unsupported("utv.precision", "/value/subTick", "the fraction of a second is finer than a nanosecond");
+        if (!nanos.isInteger()) throw Fail.unsupported("implementation-limit", "/value/subTick", "the fraction of a second is finer than a nanosecond");
         Gregorian.Ymd d = Gregorian.fromEpochDay(days);
         return build("datetime", d.year(), d.month(), d.day(), sod / 3600, sod / 60 % 60, sod % 60, nanos.num.intValueExact());
     }

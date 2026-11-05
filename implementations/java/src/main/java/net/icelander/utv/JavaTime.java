@@ -101,7 +101,7 @@ public final class JavaTime {
      */
     public static UtvResult fromDate(Date d, As as) {
         if (as == As.INSTANT) return UtvResult.unique("fromDate", fromInstant(d.toInstant()));
-        return UtvResult.of("fromDate", Status.UNSUPPORTED, new Diagnostic("utv.native.local-zone", "error", "",
+        return UtvResult.of("fromDate", Status.UNSUPPORTED, new Diagnostic("local-zone", "error", "",
                 "java.util.Date has no zone of its own: its date and time fields come from ZoneId.systemDefault(). "
                         + "Read it As.INSTANT, then pick a zone explicitly."));
     }
@@ -156,12 +156,12 @@ public final class JavaTime {
             if (c.zone().fixed()) return NativeResult.exact(OffsetDateTime.of(t, ZoneOffset.ofTotalSeconds(c.zone().seconds())));
             if (c.zone().iana()) {
                 if (c.offsetAssertion() == null) {
-                    throw Fail.unsupported("utv.native.offset", "/value/offsetAssertion", "a zoned intention has no offset yet: resolve it or use toZone first");
+                    throw Fail.unsupported("unsupported-operand", "/value/offsetAssertion", "a zoned intention has no offset yet: resolve it or use toZone first");
                 }
                 return NativeResult.lossy(OffsetDateTime.of(t, ZoneOffset.ofTotalSeconds(c.offsetAssertion())), "/value/zone",
                         "OffsetDateTime keeps only the offset: the zone " + c.zone().id() + " (and following its future rule changes) was dropped");
             }
-            throw Fail.unsupported("utv.native.offset", "/value/zone", "a floating date-time has no offset; use toLocalDateTime");
+            throw Fail.unsupported("unsupported-operand", "/value/zone", "a floating date-time has no offset; use toLocalDateTime");
         });
     }
 
@@ -176,20 +176,20 @@ public final class JavaTime {
             Civil c = civil(v, "datetime");
             LocalDateTime t = local(c);
             if (c.zone().fixed()) return NativeResult.exact(ZonedDateTime.of(t, ZoneOffset.ofTotalSeconds(c.zone().seconds())));
-            if (!c.zone().iana()) throw Fail.unsupported("utv.native.zone", "/value/zone", "a floating date-time has no zone; use toLocalDateTime");
+            if (!c.zone().iana()) throw Fail.unsupported("unsupported-operand", "/value/zone", "a floating date-time has no zone; use toLocalDateTime");
             if (c.offsetAssertion() == null) {
-                throw Fail.unsupported("utv.native.offset", "/value/offsetAssertion", "no offsetAssertion: resolve the value (or use toZone) first");
+                throw Fail.unsupported("unsupported-operand", "/value/offsetAssertion", "no offsetAssertion: resolve the value (or use toZone) first");
             }
             ZoneId zone;
             try {
                 zone = ZoneId.of(c.zone().id());
             } catch (DateTimeException e) {
-                throw Fail.unsupported("utv.native.zone", "/value/zone/id", "the JDK's tz database has no zone " + c.zone().id());
+                throw Fail.unsupported("unknown-zone", "/value/zone/id", "the JDK's tz database has no zone " + c.zone().id());
             }
             try {
                 return NativeResult.exact(ZonedDateTime.ofStrict(t, ZoneOffset.ofTotalSeconds(c.offsetAssertion()), zone));
             } catch (DateTimeException e) {
-                throw Fail.invalid("utv.native.offset", "/value/offsetAssertion",
+                throw Fail.invalid("offset-mismatch", "/value/offsetAssertion",
                         "the JDK's tz database says the offset " + Iso.offset(c.offsetAssertion()) + " is not valid in " + zone + " at that time");
             }
         });
@@ -209,7 +209,7 @@ public final class JavaTime {
             Civil.structural(v, "amount");
             JsonNode a = v.get("value");
             if (!"amount".equals(v.path("kind").asText(null)) || !"calendar".equals(a.path("basis").asText(null))) {
-                throw Fail.unsupported("utv.native.period", "/value/basis", "a Period holds only a calendar amount");
+                throw Fail.unsupported("unsupported-operand", "/value/basis", "a Period holds only a calendar amount");
             }
             Map<String, BigInteger> k = new java.util.HashMap<>();
             for (String n : List.of("years", "months", "weeks", "days", "hours", "minutes", "seconds")) {
@@ -217,13 +217,13 @@ public final class JavaTime {
                 k.put(n, x == null ? BigInteger.ZERO : Instants.integer(x, "/value/components/" + n));
             }
             for (String n : List.of("hours", "minutes", "seconds")) {
-                if (k.get(n).signum() != 0) throw Fail.unsupported("utv.native.period", "/value/components/" + n, "a Period cannot hold " + n);
+                if (k.get(n).signum() != 0) throw Fail.unsupported("unsupported-operand", "/value/components/" + n, "a Period cannot hold " + n);
             }
             try {
                 return NativeResult.exact(Period.of(k.get("years").intValueExact(), k.get("months").intValueExact(),
                         k.get("weeks").multiply(BigInteger.valueOf(7)).add(k.get("days")).intValueExact()));
             } catch (ArithmeticException e) {
-                throw Fail.unsupported("utv.native.range", "/value/components", "a component is outside Period's int range");
+                throw Fail.unsupported("out-of-native-range", "/value/components", "a component is outside Period's int range");
             }
         });
     }
@@ -239,7 +239,7 @@ public final class JavaTime {
                 return s.multiply(Rational.BILLION).isInteger() ? NativeResult.exact(d)
                         : NativeResult.lossy(d, "/value/seconds", "a fraction finer than a nanosecond was truncated");
             } catch (ArithmeticException e) {
-                throw Fail.unsupported("utv.native.range", "/value/seconds", "outside Duration's range");
+                throw Fail.unsupported("out-of-native-range", "/value/seconds", "outside Duration's range");
             }
         });
     }
@@ -256,19 +256,19 @@ public final class JavaTime {
 
     private static Civil civil(JsonNode v, String form) {
         Civil c = Civil.decode(v, "value");
-        if (!c.form().equals(form)) throw Fail.unsupported("utv.native.form", "/value/form", "expected a " + form + ", got a " + c.form());
+        if (!c.form().equals(form)) throw Fail.unsupported("unsupported-operand", "/value/form", "expected a " + form + ", got a " + c.form());
         return c;
     }
 
     private static int year(Civil c) {
         if (c.year().compareTo(BigInteger.valueOf(LocalDate.MIN.getYear())) < 0 || c.year().compareTo(BigInteger.valueOf(LocalDate.MAX.getYear())) > 0) {
-            throw Fail.unsupported("utv.native.range", "/value/fields/year", "year " + c.year() + " is outside java.time's range");
+            throw Fail.unsupported("out-of-native-range", "/value/fields/year", "year " + c.year() + " is outside java.time's range");
         }
         return c.year().intValue();
     }
 
     private static void noLeapSecond(Civil c) {
-        if (c.secondOr0() == 60) throw Fail.unsupported("utv.leap-second", "/value/fields/second", "java.time cannot hold second 60");
+        if (c.secondOr0() == 60) throw Fail.unsupported("leap-second", "/value/fields/second", "java.time cannot hold second 60");
     }
 
     private static LocalDateTime local(Civil c) {
@@ -280,7 +280,7 @@ public final class JavaTime {
         BigInteger nanos = t.multiply(Rational.BILLION).floor();
         BigInteger secs = Gregorian.floorDiv(nanos, Rational.BILLION);
         if (secs.compareTo(BigInteger.valueOf(Instant.MIN.getEpochSecond())) < 0 || secs.compareTo(BigInteger.valueOf(Instant.MAX.getEpochSecond())) > 0) {
-            throw Fail.unsupported("utv.native.range", "/value/ticks", "outside java.time.Instant's range");
+            throw Fail.unsupported("out-of-native-range", "/value/ticks", "outside java.time.Instant's range");
         }
         Instant i = Instant.ofEpochSecond(secs.longValue(), nanos.subtract(secs.multiply(Rational.BILLION)).longValue());
         return t.multiply(Rational.BILLION).isInteger() ? NativeResult.exact(i)

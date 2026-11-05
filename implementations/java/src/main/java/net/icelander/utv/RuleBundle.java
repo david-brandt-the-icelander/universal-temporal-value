@@ -66,7 +66,7 @@ public final class RuleBundle {
             return new RuleBundle(n.get("ruleSet"), new BigInteger(n.get("validFrom").textValue()),
                     new BigInteger(n.get("validUntil").textValue()), Collections.unmodifiableMap(zones));
         } catch (RuntimeException e) {
-            throw new IllegalArgumentException("malformed rule bundle: " + e, e);
+            throw new IllegalArgumentException("malformed rule bundle (malformed-value): " + e, e);
         }
     }
 

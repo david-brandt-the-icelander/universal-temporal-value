@@ -109,7 +109,7 @@ class JavaTimeTest {
         NativeResult<OffsetDateTime> odt = JavaTime.toOffsetDateTime(zoned);
         assertEquals(Status.UNIQUE, odt.status());
         assertTrue(odt.lossy());
-        assertEquals("utv.loss", odt.diagnostics().get(0).code());
+        assertEquals("zone-dropped", odt.diagnostics().get(0).code());
         assertEquals(OffsetDateTime.parse("2027-06-01T09:00+02:00"), odt.value());
 
         NativeResult<LocalDateTime> ldt = JavaTime.toLocalDateTime(zoned);

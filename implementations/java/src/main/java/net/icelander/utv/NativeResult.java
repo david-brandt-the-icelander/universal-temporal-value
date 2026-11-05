@@ -16,9 +16,11 @@ public record NativeResult<T>(Status status, T value, boolean lossy, List<Diagno
 
     static <T> NativeResult<T> exact(T value) { return new NativeResult<>(Status.UNIQUE, value, false, List.of()); }
 
+    /** A lossy conversion: {@code zone-dropped} when the loss is at a zone path, {@code precision-loss} otherwise. */
     static <T> NativeResult<T> lossy(T value, String path, String whatWasLost) {
-        return new NativeResult<>(Status.UNIQUE, value, true, List.of(new Diagnostic("utv.loss", "warning", path, whatWasLost)));
+        String code = path.endsWith("/zone") ? "zone-dropped" : "precision-loss";
+        return new NativeResult<>(Status.UNIQUE, value, true, List.of(new Diagnostic(code, "warning", path, whatWasLost)));
     }
 
-    static <T> NativeResult<T> failed(Fail f) { return new NativeResult<>(f.status, null, false, List.of(f.diagnostic)); }
+    static <T> NativeResult<T> failed(Fail f) { return new NativeResult<>(f.status, null, false, f.diagnostics); }
 }

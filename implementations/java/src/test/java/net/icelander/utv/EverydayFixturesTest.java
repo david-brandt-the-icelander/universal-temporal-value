@@ -14,7 +14,8 @@ import org.junit.jupiter.api.TestFactory;
 
 /**
  * Runs every fixture in the shared {@code conformance/operations/everyday.json}, read in place from
- * the repository (never a copy). Each fixture is one dynamic test named by its id.
+ * the repository (never a copy). Each fixture is one dynamic test named by its id. The status,
+ * the candidates and the diagnostic codes listed in {@code expect.diagnostics} are all checked.
  */
 class EverydayFixturesTest {
     static final String FIXTURES = "conformance/operations/everyday.json";
@@ -87,6 +88,15 @@ class EverydayFixturesTest {
                 assertEquals(want, got, where);
             }
             default -> assertEquals(List.of(), got, where);
+        }
+        assertDiagnostics(expect, r, where);
+    }
+
+    /** Every code in {@code expect.diagnostics} must appear among the result's diagnostics (others may too). */
+    static void assertDiagnostics(JsonNode expect, UtvResult r, String where) {
+        List<String> codes = r.diagnostics().stream().map(Diagnostic::code).toList();
+        for (JsonNode want : expect.path("diagnostics")) {
+            assertTrue(codes.contains(want.textValue()), "missing diagnostic " + want.textValue() + ": " + where);
         }
     }
 }

@@ -71,7 +71,7 @@ public final class Intervals {
     public static UtvResult overlaps(JsonNode a, JsonNode b) {
         return Fail.run("overlaps", () -> {
             Span x = decode(a, "a"), y = decode(b, "b");
-            if (x.dates != y.dates) throw Fail.unsupported("utv.interval.domain", "/value/domain", "cannot mix civil-date and instant intervals");
+            if (x.dates != y.dates) throw Fail.unsupported("unsupported-operand", "/value/domain", "cannot mix civil-date and instant intervals");
             sameZone(a, b);
             x = x.halfOpen();
             y = y.halfOpen();
@@ -96,30 +96,30 @@ public final class Intervals {
 
     private static Span decode(JsonNode node, String what) {
         Civil.structural(node, what);
-        if (!"interval".equals(node.path("kind").asText(null))) throw Fail.unsupported("utv.kind", "/kind", what + " must be an interval");
+        if (!"interval".equals(node.path("kind").asText(null))) throw Fail.unsupported("unsupported-operand", "/kind", what + " must be an interval");
         JsonNode v = node.get("value");
         String construction = v.path("construction").asText("start-end");
-        if (!construction.equals("start-end")) throw Fail.unsupported("utv.interval.construction", "/value/construction", "only start-end intervals are handled");
+        if (!construction.equals("start-end")) throw Fail.unsupported("unsupported-operand", "/value/construction", "only start-end intervals are handled");
         boolean dates = switch (v.path("domain").asText("")) {
             case "civil/gregory" -> true;
             case "physical" -> false;
-            default -> throw Fail.unsupported("utv.interval.domain", "/value/domain", "only civil/gregory and physical intervals are handled");
+            default -> throw Fail.unsupported("unsupported-operand", "/value/domain", "only civil/gregory and physical intervals are handled");
         };
         return new Span(dates, end(v.get("start"), dates, "/value/start"), end(v.get("end"), dates, "/value/end"),
                 v.path("empty").asBoolean(false));
     }
 
     private static End end(JsonNode e, boolean dates, String path) {
-        if (e == null || !e.isObject()) throw Fail.invalid("utv.interval.endpoint", path, "endpoint must be an object");
+        if (e == null || !e.isObject()) throw Fail.invalid("malformed-value", path, "endpoint must be an object");
         State s = switch (e.path("state").asText("")) {
             case "included" -> State.INCLUDED;
             case "excluded" -> State.EXCLUDED;
             case "unbounded" -> State.UNBOUNDED;
             case "unknown" -> State.UNKNOWN;
-            default -> throw Fail.invalid("utv.interval.endpoint", path + "/state", "unknown endpoint state");
+            default -> throw Fail.invalid("malformed-value", path + "/state", "unknown endpoint state");
         };
         if (s == State.UNBOUNDED || s == State.UNKNOWN) return new End(s, null);
-        if (!e.has("point")) throw Fail.invalid("utv.interval.endpoint", path + "/point", "an included or excluded endpoint needs a point");
+        if (!e.has("point")) throw Fail.invalid("malformed-value", path + "/point", "an included or excluded endpoint needs a point");
         return new End(s, point(e.get("point"), dates, "endpoint"));
     }
 
@@ -128,7 +128,7 @@ public final class Intervals {
         java.util.Set<Civil.Zone> zones = new java.util.HashSet<>();
         for (JsonNode v : values) collectZones(v, zones);
         if (zones.size() > 1) {
-            throw Fail.unsupported("utv.interval.zone", "/value/zone", "dates must be all unzoned or all in the same zone");
+            throw Fail.unsupported("different-zones", "/value/zone", "dates must be all unzoned or all in the same zone");
         }
     }
 
@@ -146,15 +146,15 @@ public final class Intervals {
     private static Rational point(JsonNode p, boolean dates, String what) {
         Civil.structural(p, what);
         if (dates) {
-            if (!Civil.isCivil(p)) throw Fail.unsupported("utv.interval.domain", "/kind", "a civil/gregory interval holds dates");
+            if (!Civil.isCivil(p)) throw Fail.unsupported("unsupported-operand", "/kind", "a civil/gregory interval holds dates");
             Civil c = Civil.decode(p, what);
             if (!c.form().equals("date")) {
-                throw Fail.unsupported("utv.interval.point", "/value/form", "civil intervals are handled for dates only");
+                throw Fail.unsupported("unsupported-operand", "/value/form", "civil intervals are handled for dates only");
             }
             BigInteger d = c.epochDay();
             return Rational.of(d);
         }
-        if (!Instants.isInstant(p)) throw Fail.unsupported("utv.interval.domain", "/kind", "a physical interval holds instants");
+        if (!Instants.isInstant(p)) throw Fail.unsupported("unsupported-operand", "/kind", "a physical interval holds instants");
         return Instants.decode(p, what);
     }
 }

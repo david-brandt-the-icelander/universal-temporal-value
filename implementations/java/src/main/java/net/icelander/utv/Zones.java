@@ -34,31 +34,31 @@ public final class Zones {
 
     private static UtvResult doResolve(JsonNode dateTime, RuleBundle rules, ResolutionPolicy given) {
         Civil.structural(dateTime, "dateTime");
-        if (!Civil.isCivil(dateTime)) throw Fail.unsupported("utv.resolve.kind", "/kind", "resolve takes a civil date-time");
+        if (!Civil.isCivil(dateTime)) throw Fail.unsupported("unsupported-operand", "/kind", "resolve takes a civil date-time");
         Civil c = Civil.decode(dateTime, "dateTime");
         // 1
-        if (!c.form().equals("datetime")) throw Fail.unsupported("utv.resolve.form", "/value/form", "a " + c.form() + " is not one instant");
-        if (c.secondOr0() == 60) throw Fail.unsupported("utv.leap-second", "/value/fields/second", "second 60 needs a leap-second table");
+        if (!c.form().equals("datetime")) throw Fail.unsupported("unsupported-operand", "/value/form", "a " + c.form() + " is not one instant");
+        if (c.secondOr0() == 60) throw Fail.unsupported("leap-second", "/value/fields/second", "second 60 needs a leap-second table");
         Rational local = c.wallSeconds();
         // 2
         if (c.zone().floating()) {
-            return UtvResult.of("resolve", Status.SYMBOLIC, new Diagnostic("utv.resolve.floating", "info", "/value/zone",
+            return UtvResult.of("resolve", Status.SYMBOLIC, new Diagnostic("no-zone", "info", "/value/zone",
                     "no zone is bound, so there is nothing to resolve yet"));
         }
         // 3
         if (c.zone().fixed()) return UtvResult.unique("resolve", Json.instant(local.subtract(Rational.of(c.zone().seconds()))));
         // 4
-        if (rules == null) throw Fail.unsupported("utv.rules.missing", "", "no zone rules were given");
+        if (rules == null) throw Fail.unsupported("needs-zone-rules", "", "no zone rules were given");
         RuleBundle.ZoneData zone = rules.zone(c.zone().id());
-        if (zone == null) throw Fail.unsupported("utv.rules.zone", "/value/zone/id", "zone " + c.zone().id() + " is not in the rule bundle");
+        if (zone == null) throw Fail.unsupported("unknown-zone", "/value/zone/id", "zone " + c.zone().id() + " is not in the rule bundle");
         // 5
         if (local.subtract(DAY).compareTo(Rational.of(rules.validFrom)) < 0 || local.add(DAY).compareTo(Rational.of(rules.validUntil)) >= 0) {
-            throw Fail.unsupported("utv.rules.window", "/value/fields", "the local time is outside the rule bundle's validity window");
+            throw Fail.unsupported("outside-rule-window", "/value/fields", "the local time is outside the rule bundle's validity window");
         }
         ResolutionPolicy policy = given;
         if (policy == null) {
             JsonNode own = c.source().get("resolutionPolicy");
-            policy = own != null && own.isObject() ? ResolutionPolicy.fromJson(own, "/value/resolutionPolicy") : ResolutionPolicy.REJECT;
+            policy = own != null && own.isObject() ? ResolutionPolicy.fromJson(own, "/value/resolutionPolicy") : ResolutionPolicy.STRICT;
         }
 
         // offsets in force within a day of L
@@ -93,18 +93,18 @@ public final class Zones {
 
         if (instants.size() == 1) return UtvResult.unique("resolve", instants.get(0));
         if (instants.isEmpty()) {
-            if (policy.gap() == ResolutionPolicy.Gap.SHIFT_FORWARD_BY_GAP && gapBefore != null) {
+            if (policy.gap() == Gap.SHIFT_FORWARD && gapBefore != null) {
                 return UtvResult.unique("resolve", Json.instant(local.subtract(Rational.of(gapBefore))));
             }
             return UtvResult.of("resolve", Status.NONE, new Diagnostic("gap", "warning", "/value/fields",
-                    "this local time is skipped by a transition in " + c.zone().id()));
+                    "this wall time is skipped in " + c.zone().id()));
         }
         return switch (policy.overlap()) {
             case EARLIEST -> UtvResult.unique("resolve", instants.get(0));
             case LATEST -> UtvResult.unique("resolve", instants.get(instants.size() - 1));
             case ALL -> new UtvResult("resolve", Status.MULTIPLE, List.of(), instants);
             case REJECT -> new UtvResult("resolve", Status.MULTIPLE, List.of(new Diagnostic("ambiguous", "warning", "/value/fields",
-                    "this local time happens " + instants.size() + " times in " + c.zone().id() + "; choose with an overlap policy")), instants);
+                    "this wall time occurs " + (instants.size() == 2 ? "twice" : instants.size() + " times") + " in " + c.zone().id())), instants);
         };
     }
 
@@ -112,10 +112,10 @@ public final class Zones {
     public static UtvResult toZone(JsonNode instant, String zoneId, RuleBundle rules) {
         return Fail.run("toZone", () -> {
             Rational t = Instants.decode(instant, "instant");
-            if (rules == null) throw Fail.unsupported("utv.rules.missing", "", "no zone rules were given");
+            if (rules == null) throw Fail.unsupported("needs-zone-rules", "", "no zone rules were given");
             RuleBundle.ZoneData zone = rules.zone(zoneId);
-            if (zone == null) throw Fail.unsupported("utv.rules.zone", "", "zone " + zoneId + " is not in the rule bundle");
-            if (!rules.covers(t)) throw Fail.unsupported("utv.rules.window", "/value", "the instant is outside the rule bundle's validity window");
+            if (zone == null) throw Fail.unsupported("unknown-zone", "", "zone " + zoneId + " is not in the rule bundle");
+            if (!rules.covers(t)) throw Fail.unsupported("outside-rule-window", "/value", "the instant is outside the rule bundle's validity window");
             int offset = zone.offsetAt(t);
             ObjectNode dt = Values.inZone(Civil.datetimeAt(t.add(Rational.of(offset))), zoneId);
             ((ObjectNode) dt.get("value")).put("offsetAssertion", offset);
@@ -127,7 +127,7 @@ public final class Zones {
     public static UtvResult toOffset(JsonNode instant, int offsetSeconds) {
         return Fail.run("toOffset", () -> {
             Rational t = Instants.decode(instant, "instant");
-            if (Math.abs(offsetSeconds) > Civil.MAX_OFFSET) throw Fail.invalid("utv.zone.offset", "", "offset must be within +-18:00");
+            if (Math.abs(offsetSeconds) > Civil.MAX_OFFSET) throw Fail.invalid("offset-out-of-range", "", "offset must be within +-18:00");
             return UtvResult.unique("toOffset", Values.withOffset(Civil.datetimeAt(t.add(Rational.of(offsetSeconds))), offsetSeconds));
         });
     }

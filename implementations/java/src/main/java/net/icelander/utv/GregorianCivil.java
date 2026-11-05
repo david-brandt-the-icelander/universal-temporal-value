@@ -67,12 +67,12 @@ public final class GregorianCivil {
         } else if (!needsMonth) {
             // year only: nothing more to check
         } else if (!m.isInt() || m.intValue() < 1 || m.intValue() > 12) {
-            d.add(Diagnostic.error("utv.civil.month", "/value/fields/month", "month must be 1..12"));
+            d.add(Diagnostic.error("month-out-of-range", "/value/fields/month", "month must be 1..12"));
         } else if (!needsDay) {
             // year-month: month already checked
         } else if (!dd.isInt() || dd.intValue() < 1
                 || dd.intValue() > daysInMonth(new BigInteger(y.textValue()), m.intValue())) {
-            d.add(Diagnostic.error("utv.civil.day", "/value/fields/day", "day does not exist in that month"));
+            d.add(Diagnostic.error("day-out-of-range", "/value/fields/day", "day does not exist in that month"));
         }
         if (form.equals("datetime") && d.isEmpty()) {
             range(f, "hour", 0, 23, d);
@@ -86,7 +86,7 @@ public final class GregorianCivil {
     private static void range(JsonNode f, String name, int lo, int hi, List<Diagnostic> d) {
         JsonNode n = f.get(name);
         if (n != null && (!n.isInt() || n.intValue() < lo || n.intValue() > hi)) {
-            d.add(Diagnostic.error("utv.civil." + name, "/value/fields/" + name, name + " must be " + lo + ".." + hi));
+            d.add(Diagnostic.error(Civil.rangeCode(name), "/value/fields/" + name, name + " must be " + lo + ".." + hi));
         }
     }
 }

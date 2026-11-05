@@ -5,10 +5,10 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.icelander.utv</groupId>
   <artifactId>utv-core</artifactId>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
   <packaging>jar</packaging>
   <properties>
-    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <dependencies>

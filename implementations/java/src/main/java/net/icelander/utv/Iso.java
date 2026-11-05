@@ -21,7 +21,7 @@ public final class Iso {
     private static final Pattern DATE_TIME = Pattern.compile(
             YEAR + "-(\\d{2})-(\\d{2})T" + TIME + "(Z|[+-]\\d{2}:\\d{2})?((?:\\[[^\\[\\]]*\\])*)");
     private static final Pattern ANNOTATION = Pattern.compile("\\[([^\\[\\]]*)\\]");
-    private static final Pattern ZONE_NAME = Pattern.compile("[A-Za-z._][A-Za-z0-9._+-]*(/[A-Za-z._][A-Za-z0-9._+-]*)*");
+    static final Pattern ZONE_NAME = Pattern.compile("[A-Za-z._][A-Za-z0-9._+-]*(/[A-Za-z._][A-Za-z0-9._+-]*)*");
     private static final Pattern OFFSET = Pattern.compile("([+-])(\\d{2}):(\\d{2})");
     private static final Pattern WEEK_DATE = Pattern.compile(YEAR + "-?W\\d{2}(-?\\d)?(T.*)?");
     private static final Pattern ORDINAL_DATE = Pattern.compile(YEAR + "-\\d{3}(T.*)?");
@@ -37,8 +37,8 @@ public final class Iso {
         return Fail.run("parseIso", () -> UtvResult.unique("parseIso", parse(text)));
     }
 
-    private static ObjectNode parse(String text) {
-        if (text == null) throw Fail.invalid("utv.iso.syntax", "", "no text");
+    static ObjectNode parse(String text) {
+        if (text == null) throw Fail.invalid("syntax", "", "no text");
         Matcher m;
         if ((m = DATE.matcher(text)).matches()) {
             Parts p = new Parts();
@@ -70,20 +70,20 @@ public final class Iso {
                 Matcher om = OFFSET.matcher(offset);
                 om.matches();
                 int hh = Integer.parseInt(om.group(2)), mm = Integer.parseInt(om.group(3));
-                if (mm > 59 || hh * 3600 + mm * 60 > Civil.MAX_OFFSET) p.invalid("utv.iso.offset", "offset beyond +-18:00 or malformed");
+                if (mm > 59 || hh * 3600 + mm * 60 > Civil.MAX_OFFSET) p.invalid("offset-out-of-range", "offset beyond +-18:00 or malformed");
                 offsetSeconds = (om.group(1).equals("-") ? -1 : 1) * (hh * 3600 + mm * 60);
             }
             String zone = null;
             Matcher am = ANNOTATION.matcher(m.group(9));
             while (am.find()) {
                 String a = am.group(1);
-                if (a.startsWith("!")) p.unsupported("utv.iso.critical", "critical annotations [!...] are not handled");
-                else if (a.contains("=")) p.unsupported("utv.iso.annotation", "annotation [" + a + "] is not handled");
-                else if (OFFSET.matcher(a).matches()) p.unsupported("utv.iso.annotation", "an offset as the zone annotation is not handled");
+                if (a.startsWith("!")) p.unsupported("unsupported-annotation", "critical annotations [!...] are not handled");
+                else if (a.contains("=")) p.unsupported("unsupported-annotation", "annotation [" + a + "] is not handled");
+                else if (OFFSET.matcher(a).matches()) p.unsupported("unsupported-annotation", "an offset as the zone annotation is not handled");
                 else if (ZONE_NAME.matcher(a).matches() && zone == null) zone = a;
-                else p.unsupported("utv.iso.annotation", "only a single [Area/Location] annotation is handled, not [" + a + "]");
+                else p.unsupported("unsupported-annotation", "only a single [Area/Location] annotation is handled, not [" + a + "]");
             }
-            if (utc && zone != null) p.unsupported("utv.iso.utc-zone", "Z or -00:00 followed by a [zone] is not handled");
+            if (utc && zone != null) p.unsupported("unsupported-annotation", "Z or -00:00 followed by a [zone] is not handled");
             p.check();
             if (utc) {
                 Rational t = Rational.of(Gregorian.epochDay(p.year, p.month, p.day).multiply(BigInteger.valueOf(86400))
@@ -99,10 +99,10 @@ public final class Iso {
             }
             return offsetSeconds != null ? Values.withOffset(dt, offsetSeconds) : dt;
         }
-        if (WEEK_DATE.matcher(text).matches()) throw Fail.unsupported("utv.iso.week-date", "", "week dates are not handled");
-        if (ORDINAL_DATE.matcher(text).matches()) throw Fail.unsupported("utv.iso.ordinal-date", "", "ordinal dates are not handled");
-        if (BASIC.matcher(text).matches()) throw Fail.unsupported("utv.iso.basic", "", "ISO 8601 basic format is not handled");
-        throw Fail.invalid("utv.iso.syntax", "", "not ISO 8601 extended / RFC 3339 text: " + text);
+        if (WEEK_DATE.matcher(text).matches()) throw Fail.unsupported("unsupported-form", "", "week dates are not handled");
+        if (ORDINAL_DATE.matcher(text).matches()) throw Fail.unsupported("unsupported-form", "", "ordinal dates are not handled");
+        if (BASIC.matcher(text).matches()) throw Fail.unsupported("unsupported-form", "", "ISO 8601 basic format is not handled");
+        throw Fail.invalid("syntax", "", "not ISO 8601 extended / RFC 3339 text: " + text);
     }
 
     private static BigInteger year(String s) {
@@ -123,7 +123,7 @@ public final class Iso {
             month = Integer.parseInt(mo);
             day = Integer.parseInt(d);
             if (month >= 1 && month <= 12 && (day < 1 || day > GregorianCivil.daysInMonth(year, month))) {
-                invalid("utv.civil.day", "day " + day + " does not exist in month " + month);
+                invalid("day-out-of-range", Iso.year(year) + "-" + two(month) + " has no day " + day);
             }
         }
 
@@ -132,22 +132,22 @@ public final class Iso {
             minute = Integer.parseInt(mi);
             second = s == null ? null : Integer.parseInt(s);
             nano = frac == null ? null : Integer.parseInt((frac + "00000000").substring(0, 9));
-            if (minute > 59) invalid("utv.civil.minute", "minute must be 0..59");
-            if (second != null && second > 60) invalid("utv.civil.second", "second must be 0..59");
-            if (second != null && second == 60) unsupported("utv.leap-second", "second 60 needs a leap-second table");
+            if (minute > 59) invalid("field-out-of-range", "minute must be 0..59");
+            if (second != null && second > 60) invalid("field-out-of-range", "second must be 0..59");
+            if (second != null && second == 60) unsupported("leap-second", "second 60 needs a leap-second table");
             if (hour == 24) {
                 if (minute == 0 && (second == null || second == 0) && (nano == null || nano == 0)) {
-                    unsupported("utv.iso.end-of-day", "24:00 needs an end-of-day policy");
+                    unsupported("end-of-day", "24:00 needs an end-of-day policy");
                 } else {
-                    invalid("utv.civil.hour", "hour 24 is only 24:00");
+                    invalid("field-out-of-range", "hour 24 is only 24:00");
                 }
             } else if (hour > 24) {
-                invalid("utv.civil.hour", "hour must be 0..23");
+                invalid("field-out-of-range", "hour must be 0..23");
             }
         }
 
         void check() {
-            if (month != null && (month < 1 || month > 12)) invalid("utv.civil.month", "month must be 1..12");
+            if (month != null && (month < 1 || month > 12)) invalid("month-out-of-range", "month must be 1..12");
             if (!invalid.isEmpty()) throw invalid.get(0);
             if (!unsupported.isEmpty()) throw unsupported.get(0);
         }
@@ -165,7 +165,7 @@ public final class Iso {
         return formatIso(value).value().map(JsonNode::textValue).orElse(null);
     }
 
-    private static String format(JsonNode value) {
+    static String format(JsonNode value) {
         Civil.structural(value, "value");
         if (Instants.isInstant(value)) {
             Rational t = Instants.decode(value, "value");
@@ -176,11 +176,11 @@ public final class Iso {
             return date(d.year(), d.month(), d.day()) + "T" + two(sod / 3600) + ":" + two(sod / 60 % 60) + ":"
                     + two(sod % 60) + fraction(t.fraction()) + "Z";
         }
-        if (!Civil.isCivil(value)) throw Fail.unsupported("utv.format.kind", "/kind", "only civil values and instants have an ISO form");
+        if (!Civil.isCivil(value)) throw Fail.unsupported("unsupported-operand", "/kind", "only civil values and instants have an ISO form");
         Civil c = Civil.decode(value, "value");
-        if (c.second() != null && c.second() == 60) throw Fail.unsupported("utv.leap-second", "/value/fields/second", "second 60 needs a leap-second table");
+        if (c.second() != null && c.second() == 60) throw Fail.unsupported("leap-second", "/value/fields/second", "second 60 needs a leap-second table");
         if (!c.form().equals("datetime") && !c.zone().floating()) {
-            throw Fail.unsupported("utv.format.zone", "/value/zone", "only a date-time can carry a zone in ISO text");
+            throw Fail.unsupported("unsupported-operand", "/value/zone", "only a date-time can carry a zone in ISO text");
         }
         return switch (c.form()) {
             case "year-month" -> year(c.year()) + "-" + two(c.month());
@@ -198,7 +198,7 @@ public final class Iso {
     }
 
     static String offset(int seconds) {
-        if (seconds % 60 != 0) throw Fail.unsupported("utv.format.offset", "/value/zone", "an offset with seconds has no +-hh:mm form");
+        if (seconds % 60 != 0) throw Fail.unsupported("no-text-form", "/value/zone", "an offset with seconds has no +-hh:mm form");
         int a = Math.abs(seconds);
         return (seconds < 0 ? "-" : "+") + two(a / 3600) + ":" + two(a / 60 % 60);
     }
@@ -229,7 +229,7 @@ public final class Iso {
             sb.append(digit);
             r = r.fraction();
         }
-        if (!r.isZero()) throw Fail.unsupported("utv.format.fraction", "/value/subTick", "fraction has no finite decimal form");
+        if (!r.isZero()) throw Fail.unsupported("no-text-form", "/value/subTick", "fraction has no finite decimal form");
         return sb.toString();
     }
 

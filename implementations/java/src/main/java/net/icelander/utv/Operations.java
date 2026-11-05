@@ -20,16 +20,20 @@ public final class Operations {
     private static final Pattern DECIMAL = Pattern.compile("-?[0-9]+\\.[0-9]+");
     private static final List<String> COMPONENTS = List.of("years", "months", "weeks", "days", "hours", "minutes", "seconds");
 
-    /** What {@code add} does when the day does not exist in the resulting month (31 Jan + 1 month). */
+    /**
+     * The 0.2 spelling of {@link net.icelander.utv.MonthEnd}.
+     *
+     * @deprecated since 0.3: use the top-level {@link net.icelander.utv.MonthEnd}.
+     */
+    @Deprecated(since = "0.3")
     public enum MonthEnd {
-        /** The default: status {@code none} with diagnostic {@code month-end}. */
-        REJECT("reject"),
-        /** Clamp to the last day of the month. */
-        CONSTRAIN("constrain");
+        REJECT, CONSTRAIN;
 
-        private final String wire;
-        MonthEnd(String wire) { this.wire = wire; }
-        public String wire() { return wire; }
+        public String wire() { return policy().wire(); }
+
+        net.icelander.utv.MonthEnd policy() {
+            return this == REJECT ? net.icelander.utv.MonthEnd.REJECT : net.icelander.utv.MonthEnd.CONSTRAIN;
+        }
     }
 
     private Operations() {}
@@ -41,7 +45,7 @@ public final class Operations {
         return Fail.run("fields", () -> {
             Civil c = Civil.decode(value, "value");
             if (!c.form().equals("date") && !c.form().equals("datetime")) {
-                throw Fail.unsupported("utv.fields.form", "/value/form", "fields applies to date and datetime values");
+                throw Fail.unsupported("unsupported-operand", "/value/form", "fields applies to date and datetime values");
             }
             BigInteger ed = c.epochDay();
             int dow = Gregorian.dayOfWeek(ed);
@@ -70,34 +74,37 @@ public final class Operations {
 
     // ======================================================================== add
 
-    /** {@code add} with the default {@link MonthEnd#REJECT} policy. */
-    public static UtvResult add(JsonNode value, JsonNode amount) { return add(value, amount, MonthEnd.REJECT); }
+    /** {@code add} with the default {@link net.icelander.utv.MonthEnd#REJECT} policy. */
+    public static UtvResult add(JsonNode value, JsonNode amount) { return add(value, amount, net.icelander.utv.MonthEnd.REJECT); }
+
+    /** @deprecated since 0.3: pass the top-level {@link net.icelander.utv.MonthEnd}. */
+    @Deprecated(since = "0.3")
+    public static UtvResult add(JsonNode value, JsonNode amount, MonthEnd monthEnd) {
+        return add(value, amount, monthEnd == null ? null : monthEnd.policy());
+    }
 
     /**
      * Adds an amount: a calendar amount to a civil value (years and months first, then weeks and
      * days, then wall-clock hours, minutes and seconds), or a posixSeconds amount to an instant.
      */
-    public static UtvResult add(JsonNode value, JsonNode amount, MonthEnd monthEnd) {
-        return Fail.run("add", () -> doAdd(value, amount, monthEnd == null ? MonthEnd.REJECT : monthEnd));
+    public static UtvResult add(JsonNode value, JsonNode amount, net.icelander.utv.MonthEnd monthEnd) {
+        return Fail.run("add", () -> doAdd(value, amount, monthEnd == null ? net.icelander.utv.MonthEnd.REJECT : monthEnd));
     }
 
     /** {@code add} with a JSON policy {@code {"monthEnd": "reject" | "constrain"}}; null means reject. */
     public static UtvResult add(JsonNode value, JsonNode amount, JsonNode policy) {
         return Fail.run("add", () -> {
-            MonthEnd p = MonthEnd.REJECT;
+            net.icelander.utv.MonthEnd p = net.icelander.utv.MonthEnd.REJECT;
             JsonNode me = policy == null || policy.isNull() ? null : policy.get("monthEnd");
             if (me != null) {
-                p = switch (me.asText("")) {
-                    case "reject" -> MonthEnd.REJECT;
-                    case "constrain" -> MonthEnd.CONSTRAIN;
-                    default -> throw Fail.unsupported("utv.policy", "/monthEnd", "unknown monthEnd policy " + me);
-                };
+                p = net.icelander.utv.MonthEnd.fromWire(me.asText(""));
+                if (p == null) throw Fail.unsupported("unsupported-policy", "/monthEnd", "unknown monthEnd policy " + me);
             }
             return doAdd(value, amount, p);
         });
     }
 
-    private static UtvResult doAdd(JsonNode value, JsonNode amount, MonthEnd monthEnd) {
+    private static UtvResult doAdd(JsonNode value, JsonNode amount, net.icelander.utv.MonthEnd monthEnd) {
         UtvResult r = doAddFields(value, amount, monthEnd);
         JsonNode v = r.value().map(x -> x.get("value")).orElse(null);
         if (v != null && v.has("offsetAssertion")) {
@@ -109,39 +116,39 @@ public final class Operations {
         return r;
     }
 
-    private static UtvResult doAddFields(JsonNode value, JsonNode amount, MonthEnd monthEnd) {
+    private static UtvResult doAddFields(JsonNode value, JsonNode amount, net.icelander.utv.MonthEnd monthEnd) {
         Civil.structural(value, "value");
         Civil.structural(amount, "amount");
-        if (!"amount".equals(amount.path("kind").asText(null))) throw Fail.invalid("utv.add.amount", "/kind", "the second argument must be an amount");
+        if (!"amount".equals(amount.path("kind").asText(null))) throw Fail.invalid("kind-mismatch", "/kind", "the second argument must be an amount");
         String basis = amount.get("value").path("basis").asText("");
         if (Instants.isInstant(value)) {
             Rational t = Instants.decode(value, "value");
             return switch (basis) {
-                case "calendar" -> throw Fail.invalid("utv.add.calendar-on-instant", "/value/basis",
+                case "calendar" -> throw Fail.invalid("kind-mismatch", "/value/basis",
                         "a calendar amount has no meaning on an instant: convert to a zone first");
-                case "elapsed" -> throw Fail.unsupported("utv.add.elapsed", "/value/basis",
+                case "elapsed" -> throw Fail.unsupported("needs-leap-seconds", "/value/basis",
                         "SI elapsed seconds on a POSIX instant need a leap-second table");
                 default -> UtvResult.unique("add", Json.instant(t.add(Instants.posixAmount(amount, "amount"))));
             };
         }
         Civil c = Civil.decode(value, "value");
         if (c.form().equals("time")) {
-            throw Fail.unsupported("utv.add.time", "/value/form", "adding to a time of day would wrap past midnight and lose information");
+            throw Fail.unsupported("unsupported-operand", "/value/form", "adding to a time of day would wrap past midnight and lose information");
         }
         if (!basis.equals("calendar")) {
-            throw Fail.unsupported("utv.add.basis", "/value/basis", "only calendar amounts apply to civil values; resolve to an instant for posixSeconds");
+            throw Fail.unsupported("unsupported-operand", "/value/basis", "only calendar amounts apply to civil values; resolve to an instant for posixSeconds");
         }
         Map<String, BigInteger> k = components(amount.get("value").get("components"));
         for (Map.Entry<String, BigInteger> e : k.entrySet()) {
             if (e.getValue().signum() == 0) continue;
             String n = e.getKey();
             boolean timePart = n.equals("hours") || n.equals("minutes") || n.equals("seconds");
-            if (c.form().equals("date") && timePart) throw Fail.invalid("utv.add.component", "/value/components/" + n, "a date has no " + n);
+            if (c.form().equals("date") && timePart) throw Fail.invalid("kind-mismatch", "/value/components/" + n, "a date has no " + n);
             if (c.form().equals("year-month") && !(n.equals("years") || n.equals("months"))) {
-                throw Fail.invalid("utv.add.component", "/value/components/" + n, "a year-month accepts only years and months");
+                throw Fail.invalid("kind-mismatch", "/value/components/" + n, "a year-month accepts only years and months");
             }
         }
-        if (c.second() != null && c.second() == 60) throw Fail.unsupported("utv.leap-second", "/value/fields/second", "second 60 needs a leap-second table");
+        if (c.second() != null && c.second() == 60) throw Fail.unsupported("leap-second", "/value/fields/second", "second 60 needs a leap-second table");
 
         // 1. years and months together
         BigInteger ym = c.year().multiply(B12).add(BigInteger.valueOf(c.month() - 1))
@@ -155,9 +162,9 @@ public final class Operations {
         int day = c.day();
         int dim = GregorianCivil.daysInMonth(year, month);
         if (day > dim) {
-            if (monthEnd == MonthEnd.REJECT) {
+            if (monthEnd == net.icelander.utv.MonthEnd.REJECT) {
                 return UtvResult.of("add", Status.NONE, new Diagnostic("month-end", "warning", "/value/fields/day",
-                        "day " + day + " does not exist in " + Iso.year(year) + "-" + month + "; pass monthEnd constrain to clamp"));
+                        Iso.year(year) + "-" + (month < 10 ? "0" : "") + month + " has no day " + day));
             }
             day = dim;
         }
@@ -187,21 +194,21 @@ public final class Operations {
         return o;
     }
 
-    private static Map<String, BigInteger> components(JsonNode comps) {
-        if (comps == null || !comps.isObject()) throw Fail.invalid("utv.amount.components", "/value/components", "a calendar amount needs components");
+    static Map<String, BigInteger> components(JsonNode comps) {
+        if (comps == null || !comps.isObject()) throw Fail.invalid("malformed-value", "/value/components", "a calendar amount needs components");
         Map<String, BigInteger> m = new LinkedHashMap<>();
         for (String n : COMPONENTS) m.put(n, BigInteger.ZERO);
         for (Iterator<Map.Entry<String, JsonNode>> it = comps.fields(); it.hasNext(); ) {
             Map.Entry<String, JsonNode> e = it.next();
             String path = "/value/components/" + e.getKey();
-            if (!COMPONENTS.contains(e.getKey())) throw Fail.unsupported("utv.amount.component", path, "component " + e.getKey() + " is not handled");
+            if (!COMPONENTS.contains(e.getKey())) throw Fail.unsupported("unsupported-operand", path, "component " + e.getKey() + " is not handled");
             JsonNode v = e.getValue();
             if (v.isTextual() && INTEGER.matcher(v.textValue()).matches()) {
                 m.put(e.getKey(), new BigInteger(v.textValue()));
             } else if (v.isTextual() && DECIMAL.matcher(v.textValue()).matches()) {
-                throw Fail.unsupported("utv.amount.fraction", path, "fractional calendar components are not handled");
+                throw Fail.unsupported("unsupported-form", path, "fractional calendar components are not handled");
             } else {
-                throw Fail.invalid("utv.amount.component", path, "component values are integer decimal strings");
+                throw Fail.invalid("malformed-value", path, "component values are integer decimal strings");
             }
         }
         return m;
@@ -224,21 +231,21 @@ public final class Operations {
             } else if (Civil.isCivil(a) && Civil.isCivil(b)) {
                 Civil x = Civil.decode(a, "a"), y = Civil.decode(b, "b");
                 if (x.zone().iana() || y.zone().iana()) {
-                    throw Fail.unsupported("utv.compare.zone", "/value/zone",
+                    throw Fail.unsupported("needs-zone-rules", "/value/zone",
                             "ordering values in a named zone depends on zone rules: resolve them to instants first");
                 }
-                if (!x.form().equals(y.form())) throw Fail.unsupported("utv.compare.form", "/value/form", "cannot order a " + x.form() + " against a " + y.form());
+                if (!x.form().equals(y.form())) throw Fail.unsupported("unsupported-operand", "/value/form", "cannot order a " + x.form() + " against a " + y.form());
                 if (x.zone().fixed() && y.zone().fixed() && x.form().equals("datetime")) {
-                    if (x.secondOr0() == 60 || y.secondOr0() == 60) throw Fail.unsupported("utv.leap-second", "/value/fields/second", "second 60 needs a leap-second table");
+                    if (x.secondOr0() == 60 || y.secondOr0() == 60) throw Fail.unsupported("leap-second", "/value/fields/second", "second 60 needs a leap-second table");
                     cmp = x.wallSeconds().subtract(Rational.of(x.zone().seconds()))
                             .compareTo(y.wallSeconds().subtract(Rational.of(y.zone().seconds())));
                 } else if (x.zone().floating() && y.zone().floating()) {
                     cmp = civilOrder(x, y);
                 } else {
-                    throw Fail.unsupported("utv.compare.zone", "/value/zone", "cannot order an unzoned value against one with an offset");
+                    throw Fail.unsupported("unsupported-operand", "/value/zone", "cannot order an unzoned value against one with an offset");
                 }
             } else {
-                throw Fail.unsupported("utv.compare.kind", "/kind", "compare needs two civil values or two instants");
+                throw Fail.unsupported("unsupported-operand", "/kind", "compare needs two civil values or two instants");
             }
             return UtvResult.unique("compare", Json.F.textNode(cmp < 0 ? "before" : cmp == 0 ? "equal" : "after"));
         });
@@ -263,10 +270,10 @@ public final class Operations {
         return Fail.run("daysBetween", () -> {
             Civil x = Civil.decode(a, "a"), y = Civil.decode(b, "b");
             if (!x.form().equals("date") || !y.form().equals("date")) {
-                throw Fail.unsupported("utv.days-between.form", "/value/form", "daysBetween takes two dates");
+                throw Fail.unsupported("unsupported-operand", "/value/form", "daysBetween takes two dates");
             }
             if (!x.zone().equals(y.zone())) {
-                throw Fail.unsupported("utv.days-between.zone", "/value/zone", "daysBetween needs two unzoned dates or two dates in the same zone");
+                throw Fail.unsupported("different-zones", "/value/zone", "daysBetween needs two unzoned dates or two dates in the same zone");
             }
             return UtvResult.unique("daysBetween", Json.integer(y.epochDay().subtract(x.epochDay())));
         });

@@ -3,26 +3,18 @@ package net.icelander.utv;
 import com.fasterxml.jackson.databind.JsonNode;
 
 /**
- * How {@link Zones#resolve} treats a local time that a zone skips (gap) or repeats (overlap).
- * The default, {@link #REJECT}, refuses to choose: a gap gives {@code none}, an overlap gives
+ * How resolving treats a wall time that a zone skips ({@link Gap}) or repeats ({@link Overlap}).
+ * The default, {@link #STRICT}, refuses to choose: a gap gives {@code none}, an overlap gives
  * {@code multiple} with both instants.
  */
 public record ResolutionPolicy(Gap gap, Overlap overlap) {
-    public static final ResolutionPolicy REJECT = new ResolutionPolicy(Gap.REJECT, Overlap.REJECT);
-
-    public enum Gap {
-        REJECT("reject"), PRESERVE_UNRESOLVED("preserve-unresolved"), SHIFT_FORWARD_BY_GAP("shift-forward-by-gap");
-        private final String wire;
-        Gap(String wire) { this.wire = wire; }
-        public String wire() { return wire; }
-    }
-
-    public enum Overlap {
-        REJECT("reject"), ALL("all"), EARLIEST("earliest"), LATEST("latest");
-        private final String wire;
-        Overlap(String wire) { this.wire = wire; }
-        public String wire() { return wire; }
-    }
+    /** Reject gaps and overlaps (the default). */
+    public static final ResolutionPolicy STRICT = new ResolutionPolicy(Gap.REJECT, Overlap.REJECT);
+    /** Reject gaps; give every instant of an overlap without a diagnostic. */
+    public static final ResolutionPolicy ALL_CANDIDATES = new ResolutionPolicy(Gap.REJECT, Overlap.ALL);
+    /** @deprecated since 0.3: use {@link #STRICT}. */
+    @Deprecated(since = "0.3")
+    public static final ResolutionPolicy REJECT = STRICT;
 
     public ResolutionPolicy {
         if (gap == null) gap = Gap.REJECT;
@@ -39,14 +31,14 @@ public record ResolutionPolicy(Gap gap, Overlap overlap) {
         if (n.has("gap")) {
             String w = n.get("gap").asText("");
             g = null;
-            for (Gap x : Gap.values()) if (x.wire.equals(w)) g = x;
-            if (g == null) throw Fail.unsupported("utv.policy", path + "/gap", "unknown gap policy " + w);
+            for (Gap x : Gap.values()) if (x.wire().equals(w)) g = x;
+            if (g == null) throw Fail.unsupported("unsupported-policy", path + "/gap", "unknown gap policy " + w);
         }
         if (n.has("overlap")) {
             String w = n.get("overlap").asText("");
             o = null;
-            for (Overlap x : Overlap.values()) if (x.wire.equals(w)) o = x;
-            if (o == null) throw Fail.unsupported("utv.policy", path + "/overlap", "unknown overlap policy " + w);
+            for (Overlap x : Overlap.values()) if (x.wire().equals(w)) o = x;
+            if (o == null) throw Fail.unsupported("unsupported-policy", path + "/overlap", "unknown overlap policy " + w);
         }
         return new ResolutionPolicy(g, o);
     }
