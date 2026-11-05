@@ -36,6 +36,7 @@ Resolving an issue that adds fields or kinds is a **minor** version change (1.1)
 | OI-12 | Executable semantic fixtures. Each scenario in `conformance/scenarios/` needs concrete input values, the evaluation context and manifest, and an expected result envelope. |
 | OI-13 | Field-by-field adapter mappings for RFC 5545 (+ erratum 4271), RFC 7529, RFC 8984, RFC 9557 and ISO 8601-1/-2. ISO 8601-2 grammar must be checked against the licensed normative text. |
 | OI-16 | Example values for the `constraint` and `calendar-rule` kinds in `conformance/examples/valid.json`. These are the only core kinds without one. |
+| OI-17 | Operations needed to answer common questions but not named in RESULT-CONTRACT: `difference`, `contains`, `fields`, `day-bounds`, `truncate`, `set-op`, `as-of`, `append-assertion`, `is-stale`, `format`, `canonicalize`/`digest`, `capabilities`. See `docs/operations.md`. Adding them is a minor change (1.1). |
 
 ## D. Design questions deferred to library APIs
 
