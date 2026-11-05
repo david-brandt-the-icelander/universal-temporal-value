@@ -62,6 +62,8 @@ An operation returns a plain value when it can't fail for valid inputs. Only a p
 | `Period`, `PosixSeconds`, `ElapsedSeconds` | components; `Negate()`; equality | — |
 | `Interval<T>` | `Contains(T)` and `Overlaps(Interval<T>)` return `Truth` (`Definitely` / `Possibly` / `Impossible`); `Start`, `End` | — |
 
+**Policy overloads.** A policy argument can't change the return type, so the total overload `AddMonths(n, monthEnd)` (and `AddYears`) accepts only `Constrain`. Passing `Reject` is a programming error (an argument exception, or `Err` in Rust). The rejecting form is the overload without a policy, which returns an `Outcome`. The same applies to any other policy overload documented as total.
+
 Every operation must agree with the JSON-level everyday API, and so with the fixtures. Implementations should call the 0.2 functions underneath rather than re-implement them.
 
 The type system removes some 0.2 outcomes entirely. For example, there's no `Resolve` on an unzoned `CivilDateTime`, so `symbolic` can't arise, and `Contains` can't be given an instant for a date interval.

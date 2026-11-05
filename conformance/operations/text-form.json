@@ -839,6 +839,29 @@
       }
     },
     {
+      "id": "interval-no-points",
+      "direction": "parse",
+      "text": "(.., ..)",
+      "expect": {
+        "status": "unsupported",
+        "diagnostics": [
+          "unsupported-form"
+        ]
+      },
+      "note": "an interval with no point has no domain"
+    },
+    {
+      "id": "interval-unknown-both",
+      "direction": "parse",
+      "text": "(?, ?)",
+      "expect": {
+        "status": "unsupported",
+        "diagnostics": [
+          "unsupported-form"
+        ]
+      }
+    },
+    {
       "id": "edtf-closed",
       "direction": "parse",
       "text": "2026-11-01/2026-11-30",

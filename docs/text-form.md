@@ -54,6 +54,7 @@ These rules apply:
   - Whitespace after the comma is optional.
   - Reversed endpoints give `invalid` (`reversed-interval`).
   - Points of different kinds or forms give `invalid` (`kind-mismatch`).
+- **No points.** An interval with no point at all, such as `(.., ..)` or `(?, ?)`, has no domain. Parsing it gives `unsupported` (`unsupported-form`).
 - **Construction.** Only `start-end` construction has a text form. `start-amount` and `amount-end` intervals give `unsupported` from `formatText`.
 
 **Why not `a/b`?** In ISO 8601 and EDTF the slash notation doesn't say which ends are included, and EDTF reads it as closed. UTV keeps endpoint state explicit, so it uses brackets for output. `parseText` still **accepts** the EDTF forms and converts them:
