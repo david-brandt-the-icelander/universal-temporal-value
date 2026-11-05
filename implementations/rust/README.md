@@ -28,6 +28,19 @@ Everything else (resolution, zone rules, registries, non-Gregorian calendars,
 semantic validation beyond the above, all evaluation operations) returns `unsupported`
 or is not offered yet.
 
+## Examples
+
+```
+cargo run --example traditional
+```
+
+`examples/traditional.rs` first builds two dates from Rust values (5 November 2026,
+which exists, and 30 February 2026, which is well-formed but doesn't) and shows how a
+caller matches on the result status and reads the diagnostics. It then tours the shared
+catalog [`examples/traditional.json`](../../examples/traditional.json) of 37 traditional
+date/time tasks, printing each one's usual call, the outcome of each check and why the UTV
+form differs. It exits non-zero if any outcome differs from the catalog.
+
 ## Tests
 
 ```
@@ -36,4 +49,6 @@ cargo test
 
 Integration tests read `conformance/examples/valid.json` (every value must be `valid`)
 and `conformance/examples/invalid-structural.json` (every value must be rejected),
-resolved relative to `CARGO_MANIFEST_DIR`.
+resolved relative to `CARGO_MANIFEST_DIR`. `tests/traditional.rs` checks every expectation
+in `examples/traditional.json`, using the same comparison code as the example
+(`examples/catalog/mod.rs`), so the tests fail whenever the library disagrees with the catalog.
