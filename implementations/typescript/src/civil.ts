@@ -54,3 +54,27 @@ export function validateSemantic(text: string): UtvResult {
   if (diags.length > 0) return makeResult("invalid", diags);
   return makeResult("valid", []);
 }
+
+/** Days since 1970-01-01 for a proleptic Gregorian date (exact for any `bigint` year). */
+export function daysFromCivil(year: bigint, month: number, day: number): bigint {
+  const y = month <= 2 ? year - 1n : year;
+  const era = (y >= 0n ? y : y - 399n) / 400n;
+  const yoe = y - era * 400n;
+  const mp = BigInt((month + 9) % 12);
+  const doy = (153n * mp + 2n) / 5n + BigInt(day) - 1n;
+  const doe = yoe * 365n + yoe / 4n - yoe / 100n + doy;
+  return era * 146097n + doe - 719468n;
+}
+
+/** Inverse of {@link daysFromCivil}. */
+export function civilFromDays(days: bigint): { year: bigint; month: number; day: number } {
+  const z = days + 719468n;
+  const era = (z >= 0n ? z : z - 146096n) / 146097n;
+  const doe = z - era * 146097n;
+  const yoe = (doe - doe / 1460n + doe / 36524n - doe / 146096n) / 365n;
+  const doy = doe - (365n * yoe + yoe / 4n - yoe / 100n);
+  const mp = (5n * doy + 2n) / 153n;
+  const day = Number(doy - (153n * mp + 2n) / 5n + 1n);
+  const month = Number(mp < 10n ? mp + 3n : mp - 9n);
+  return { year: yoe + era * 400n + (month <= 2 ? 1n : 0n), month, day };
+}

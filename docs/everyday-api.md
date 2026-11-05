@@ -191,6 +191,16 @@ The output always includes `second`. It includes `nano` only when it's non-zero.
 
 If the zone isn't in the rules, or the instant is outside the bundle's validity window (`validFrom` ≤ t < `validUntil`), the result is `unsupported`.
 
+## Clarifications
+
+These were settled after the first implementation (TypeScript) found the contract silent. The fixtures cover each one.
+
+1. **`add` and `offsetAssertion`.** `add` drops `offsetAssertion` from a zoned input, because the asserted offset can become false; for example, +01:00 in Paris stops being true after the March change. Emit an `info` diagnostic `offset-assertion-dropped`. The zone and `zoneIntent` are kept.
+2. **`resolve` and `offsetAssertion`.** When the value has an `offsetAssertion`, `resolve` keeps only the candidate with that offset. If none matches, the status is **`invalid`**, with diagnostic `offset-mismatch`, because the value contradicts the rules (spec §4). This happens before the gap and overlap policy applies, so an assertion can pick one side of an overlap.
+3. **`parseIso` annotations.** Anything other than a single `[Area/Location]` annotation, such as `[u-ca=…]` or `[+01:00]`, is `unsupported`.
+4. **Dates with zones in other operations.** `daysBetween`, `contains` and `overlaps` accept civil dates only when every one of them is unzoned, or all have the same zone. Anything else is `unsupported`.
+5. **The `operation` field in results.** It carries the everyday operation's name, such as `parseIso`. This extends the list in RESULT-CONTRACT; it is tracked under OI-17.
+
 ## Native interop (per language)
 
 Each library also offers explicit adapters between UTV values and the language's own types. They are tested within each library, not through the shared fixtures. Rules:

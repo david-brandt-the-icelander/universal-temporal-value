@@ -4870,6 +4870,217 @@
           }
         }
       }
+    },
+    {
+      "id": "parse-calendar-annotation-unsupported",
+      "op": "parseIso",
+      "args": [
+        "2026-11-05T14:30[u-ca=hebrew]"
+      ],
+      "expect": {
+        "status": "unsupported"
+      },
+      "note": "only a single [Area/Location] annotation is handled"
+    },
+    {
+      "id": "add-drops-offset-assertion",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 3,
+              "day": 28,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id",
+            "offsetAssertion": 3600
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "days": "1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 3,
+              "day": 29,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        }
+      },
+      "note": "+01:00 would be false after the DST change, so the assertion is dropped"
+    },
+    {
+      "id": "resolve-offset-assertion-selects",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 1,
+              "hour": 1,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id",
+            "offsetAssertion": -18000
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1793514600"
+          }
+        }
+      },
+      "note": "the asserted offset picks one side of the overlap"
+    },
+    {
+      "id": "resolve-offset-assertion-mismatch",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2027",
+              "month": 6,
+              "day": 1,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id",
+            "offsetAssertion": 3600
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "invalid"
+      },
+      "note": "Paris is at +02:00 in June 2027; the value contradicts the rules"
+    },
+    {
+      "id": "days-between-different-zones-unsupported",
+      "op": "daysBetween",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 6
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        }
+      ],
+      "expect": {
+        "status": "unsupported"
+      }
     }
   ]
 }
