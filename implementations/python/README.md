@@ -30,11 +30,26 @@ operations, other calendars, zones, recurrences and canonical round-tripping.
 Such requests, and semantic validation of any kind other than Gregorian `civil` dates,
 return `unsupported`.
 
+## Examples
+
+```
+PYTHONPATH=src python3 examples/traditional.py
+```
+
+[`examples/traditional.py`](examples/traditional.py) first builds two dates by hand
+(5 November 2026, and 30 February 2026, which is well-formed but doesn't exist) and
+shows how a caller matches on the status and reads the diagnostics. It then walks the
+shared catalog [`examples/traditional.json`](../../examples/traditional.json) at the
+repository root: 37 traditional date/time tasks, each with the outcome every UTV
+library must report. It exits with status 1 if any outcome differs. The test suite runs
+the same check (`tests/test_examples.py`).
+
 ## Tests
 
 ```
 PYTHONPATH=src python3 -m unittest discover -s tests
 ```
 
-The tests read `conformance/examples/valid.json` and
-`conformance/examples/invalid-structural.json` from the repository root.
+The tests read `conformance/examples/valid.json`,
+`conformance/examples/invalid-structural.json` and `examples/traditional.json` from
+the repository root.
