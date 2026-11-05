@@ -35,6 +35,20 @@ class GregorianCivilTest {
         assertEquals(Status.INVALID, GregorianCivil.validate(date("2026", 1, 0)).status());
     }
 
+    static String partial(String form, String fields) {
+        return "{\"schema\":\"utv/1.0\",\"kind\":\"civil\",\"value\":{\"form\":\"" + form + "\",\"fields\":{" + fields
+                + "},\"calendar\":{\"id\":\"gregory\",\"chronology\":\"proleptic\"}}}";
+    }
+
+    @Test
+    void yearAndYearMonth() {
+        assertEquals(Status.VALID, GregorianCivil.validate(partial("year", "\"year\":\"1347\"")).status());
+        assertEquals(Status.VALID, GregorianCivil.validate(partial("year-month", "\"year\":\"2026\",\"month\":11")).status());
+        assertEquals(Status.INVALID, GregorianCivil.validate(partial("year-month", "\"year\":\"2026\",\"month\":14")).status());
+        assertEquals(Status.INVALID, GregorianCivil.validate(partial("year-month", "\"year\":\"2026\"")).status());
+        assertEquals(Status.UNSUPPORTED, GregorianCivil.validate(partial("week-date", "\"year\":\"2020\",\"week\":53")).status());
+    }
+
     @Test
     void otherCalendarsUnsupported() {
         String hebrew = date("5786", 1, 1).replace("gregory", "hebrew");

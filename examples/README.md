@@ -26,7 +26,7 @@ Every language library has a runner that walks this catalog, prints a tour and f
 | Rust | `cargo run --example traditional` |
 | Python | `PYTHONPATH=src python3 examples/traditional.py` |
 | TypeScript | `npm run example` |
-| Java | `mvn -q compile exec:java` (see the Java README) |
+| Java | `mvn -q test-compile exec:java` |
 | C# | `dotnet run --project examples/Traditional` |
 
 Each library's normal test command also checks the catalog, so a library can't pass its tests while disagreeing with it.

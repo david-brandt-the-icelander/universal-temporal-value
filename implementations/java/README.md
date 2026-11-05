@@ -11,14 +11,25 @@
   - `schema` must be exactly `utv/1.0`. Any other well-formed `utv/M.N` (matching `^utv/(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`, including newer minors and other majors such as `utv/2.0`) gives `unsupported`. A missing, non-string or malformed identifier (for example `utv/4` or `utv/1`) gives `invalid`.
   - Unknown top-level properties and any `kind` outside the 26 core kinds give `invalid`.
   - For each kind, it checks the value properties the schema requires and rejects unknown ones (generated from `schema/utv-1.0.schema.json`). It also checks the `interval` construction requirements and the kind of `series` samples.
-- `GregorianCivil.validate(String)` runs structural validation and then checks proleptic Gregorian civil `date` and `datetime` values: month and day ranges, the leap-year rule (Feb 29 only in leap years), and time-of-day ranges. Years are arbitrary-precision integer strings.
+- `GregorianCivil.validate(String)` runs structural validation and then checks proleptic Gregorian civil `year`, `year-month`, `date` and `datetime` values: month and day ranges, the leap-year rule (Feb 29 only in leap years), and time-of-day ranges. Years are arbitrary-precision integer strings.
 - `UtvResult` holds a `utv-result/1.0` result with a `Status` (`invalid`, `unsupported`, `indeterminate`, `none`, `unique`, `multiple`, `range`, `symbolic`, `resource-limit`, `error`, `valid`) and `Diagnostic`s (`{code, severity, path, message}`).
 
 Structural validation is **partial**. It does not yet enforce nested value types, enums, `$ref` sub-schemas or `oneOf` alternatives beyond the rules listed above.
 
-Everything else (resolve, compare, add, convert, expand, other calendars, zones, recurrence and so on) is not implemented and returns `unsupported`. `GregorianCivil.validate` returns `unsupported` for any value that is not a proleptic Gregorian civil date or datetime.
+Everything else (resolve, compare, add, convert, expand, other calendars, zones, recurrence and so on) is not implemented and returns `unsupported`. `GregorianCivil.validate` returns `unsupported` for any value that is not a proleptic Gregorian civil year, year-month, date or datetime.
 
 The library never reads the system clock, time zone, locale or network.
+
+## Examples
+
+`net.icelander.utv.examples.Traditional` tours everyday date and time tasks. It builds two dates in code (5 November 2026 and 30 February 2026) and shows how a caller handles each status. Then it walks the shared catalog [`examples/traditional.json`](../../examples/traditional.json), validates every entry and checks the outcome against the catalog. It exits with status 1 if any outcome differs. Run it from this directory:
+
+```
+mvn -q test-compile exec:java
+```
+
+The example source is in `src/examples/java`. `build-helper-maven-plugin` adds it as a *test* source root, so it never ships in the library jar, and the tests reuse it. That's why the command is `test-compile`, not `compile`.
+
 
 ## Testing
 
@@ -26,4 +37,4 @@ The library never reads the system clock, time zone, locale or network.
 cd implementations/java && mvn test
 ```
 
-The tests read `conformance/examples/valid.json` and `conformance/examples/invalid-structural.json` from the repository root, relative to this directory.
+The tests read `conformance/examples/valid.json`, `conformance/examples/invalid-structural.json` and `examples/traditional.json` from the repository root, relative to this directory. `TraditionalTest` checks every catalog expectation with the example's own logic, so it fails on the same two entries as the example.

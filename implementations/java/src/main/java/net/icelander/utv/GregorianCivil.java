@@ -33,7 +33,7 @@ public final class GregorianCivil {
     /**
      * Structural validation followed by Gregorian date validation. Returns {@code valid},
      * {@code invalid}, or {@code unsupported} for anything other than a proleptic-Gregorian
-     * civil date or datetime.
+     * civil {@code year}, {@code year-month}, {@code date} or {@code datetime}.
      */
     public static UtvResult validate(String json) {
         UtvResult structural = Utv.validateStructural(json);
@@ -49,20 +49,27 @@ public final class GregorianCivil {
         String form = v.path("form").asText("");
         JsonNode cal = v.path("calendar");
         if (!"civil".equals(node.get("kind").asText())
-                || !(form.equals("date") || form.equals("datetime"))
+                || !(form.equals("year") || form.equals("year-month") || form.equals("date") || form.equals("datetime"))
                 || !"gregory".equals(cal.path("id").asText(""))
                 || !"proleptic".equals(cal.path("chronology").asText(""))) {
-            d.add(new Diagnostic("utv.unsupported", "error", "", "Only proleptic Gregorian civil date/datetime is implemented"));
+            d.add(new Diagnostic("utv.unsupported", "error", "", "Only proleptic Gregorian civil year, year-month, date and datetime are implemented"));
             return new UtvResult("validate", Status.UNSUPPORTED, d);
         }
         JsonNode f = v.get("fields");
         JsonNode y = f.get("year"), m = f.get("month"), dd = f.get("day");
-        if (y == null || m == null || dd == null) {
-            d.add(Diagnostic.error("utv.civil.fields", "/value/fields", "date requires year, month and day"));
+        boolean needsMonth = !form.equals("year");
+        boolean needsDay = form.equals("date") || form.equals("datetime");
+        if (y == null || (needsMonth && m == null) || (needsDay && dd == null)) {
+            d.add(Diagnostic.error("utv.civil.fields", "/value/fields",
+                    form + " requires " + (needsDay ? "year, month and day" : needsMonth ? "year and month" : "year")));
         } else if (!y.isTextual() || !INTEGER.matcher(y.textValue()).matches()) {
             d.add(Diagnostic.error("utv.civil.year", "/value/fields/year", "year must be an integer string"));
+        } else if (!needsMonth) {
+            // year only: nothing more to check
         } else if (!m.isInt() || m.intValue() < 1 || m.intValue() > 12) {
             d.add(Diagnostic.error("utv.civil.month", "/value/fields/month", "month must be 1..12"));
+        } else if (!needsDay) {
+            // year-month: month already checked
         } else if (!dd.isInt() || dd.intValue() < 1
                 || dd.intValue() > daysInMonth(new BigInteger(y.textValue()), m.intValue())) {
             d.add(Diagnostic.error("utv.civil.day", "/value/fields/day", "day does not exist in that month"));
