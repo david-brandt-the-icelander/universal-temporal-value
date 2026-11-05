@@ -1,0 +1,2207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:utv:schema:1.0",
+  "title": "Universal Temporal Value 1.0 structural schema (not a semantic validator)",
+  "description": "Structural JSON Schema for UTV 1.0 values (26 core kinds). Passing this schema means a value is well-formed, not that it is semantically valid or resolvable; registry-driven semantic validation is separately mandatory. See spec/SPECIFICATION.md.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/instantValue"
+    },
+    {
+      "$ref": "#/$defs/civilValue"
+    },
+    {
+      "$ref": "#/$defs/amountValue"
+    },
+    {
+      "$ref": "#/$defs/intervalValue"
+    },
+    {
+      "$ref": "#/$defs/recurrenceValue"
+    },
+    {
+      "$ref": "#/$defs/uncertainValue"
+    },
+    {
+      "$ref": "#/$defs/setValue"
+    },
+    {
+      "$ref": "#/$defs/clockValue"
+    },
+    {
+      "$ref": "#/$defs/observationValue"
+    },
+    {
+      "$ref": "#/$defs/logical-clockValue"
+    },
+    {
+      "$ref": "#/$defs/relativeValue"
+    },
+    {
+      "$ref": "#/$defs/relationValue"
+    },
+    {
+      "$ref": "#/$defs/assertionValue"
+    },
+    {
+      "$ref": "#/$defs/event-historyValue"
+    },
+    {
+      "$ref": "#/$defs/location-intentValue"
+    },
+    {
+      "$ref": "#/$defs/constraintValue"
+    },
+    {
+      "$ref": "#/$defs/calendar-ruleValue"
+    },
+    {
+      "$ref": "#/$defs/temporal-referenceValue"
+    },
+    {
+      "$ref": "#/$defs/ordinal-positionValue"
+    },
+    {
+      "$ref": "#/$defs/event-relativeValue"
+    },
+    {
+      "$ref": "#/$defs/selectionValue"
+    },
+    {
+      "$ref": "#/$defs/sampleValue"
+    },
+    {
+      "$ref": "#/$defs/seriesValue"
+    },
+    {
+      "$ref": "#/$defs/temporal-graphValue"
+    },
+    {
+      "$ref": "#/$defs/sequenceValue"
+    },
+    {
+      "$ref": "#/$defs/patternValue"
+    }
+  ],
+  "$defs": {
+    "integerString": {
+      "type": "string",
+      "pattern": "^(0|-?[1-9][0-9]*)$"
+    },
+    "nonnegative": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$"
+    },
+    "rational": {
+      "type": "object",
+      "properties": {
+        "numerator": {
+          "$ref": "#/$defs/integerString"
+        },
+        "denominator": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        }
+      },
+      "required": [
+        "numerator",
+        "denominator"
+      ],
+      "additionalProperties": false
+    },
+    "ruleRef": {
+      "type": "object",
+      "properties": {
+        "system": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "system",
+        "id",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "precision": {
+          "type": "string"
+        },
+        "resolution": {
+          "type": "string"
+        },
+        "uncertainty": {
+          "type": "object"
+        },
+        "accuracy": {
+          "type": "object"
+        },
+        "confidence": {
+          "type": "object"
+        },
+        "correlationGroup": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "fields": {
+      "type": "object",
+      "properties": {
+        "year": {
+          "$ref": "#/$defs/integerString"
+        },
+        "eraYear": {
+          "$ref": "#/$defs/integerString"
+        },
+        "month": {
+          "type": "integer"
+        },
+        "day": {
+          "type": "integer"
+        },
+        "hour": {
+          "type": "integer"
+        },
+        "minute": {
+          "type": "integer"
+        },
+        "second": {
+          "type": "integer"
+        },
+        "nano": {
+          "type": "integer"
+        },
+        "week": {
+          "type": "integer"
+        },
+        "weekday": {
+          "type": "integer"
+        },
+        "ordinal": {
+          "type": "integer"
+        },
+        "quarter": {
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "calendar": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "chronology": {
+          "enum": [
+            "proleptic",
+            "historical-jurisdiction",
+            "registered"
+          ]
+        },
+        "rules": {
+          "$ref": "#/$defs/ruleRef"
+        },
+        "jurisdiction": {
+          "type": "string"
+        },
+        "dayBoundary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "chronology"
+      ],
+      "additionalProperties": false
+    },
+    "zone": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "iana"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "seconds": {
+              "type": "integer"
+            },
+            "rules": {
+              "$ref": "#/$defs/ruleRef"
+            }
+          },
+          "required": [
+            "type",
+            "id"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "fixed-offset"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "seconds": {
+              "type": "integer"
+            },
+            "rules": {
+              "$ref": "#/$defs/ruleRef"
+            }
+          },
+          "required": [
+            "type",
+            "seconds"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "custom"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "seconds": {
+              "type": "integer"
+            },
+            "rules": {
+              "$ref": "#/$defs/ruleRef"
+            }
+          },
+          "required": [
+            "type",
+            "rules"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "local-solar"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "seconds": {
+              "type": "integer"
+            },
+            "rules": {
+              "$ref": "#/$defs/ruleRef"
+            }
+          },
+          "required": [
+            "type",
+            "rules"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "floating",
+                "unknown"
+              ]
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "seconds": {
+              "type": "integer"
+            },
+            "rules": {
+              "$ref": "#/$defs/ruleRef"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "boundary": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "enum": [
+                "included",
+                "excluded"
+              ]
+            },
+            "point": {
+              "$ref": "#/$defs/value"
+            }
+          },
+          "required": [
+            "state",
+            "point"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "enum": [
+                "unbounded",
+                "unknown"
+              ]
+            }
+          },
+          "required": [
+            "state"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "instantValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "instant"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "system": {
+              "$ref": "#/$defs/ruleRef"
+            },
+            "ticks": {
+              "$ref": "#/$defs/integerString"
+            },
+            "subTick": {
+              "$ref": "#/$defs/rational"
+            },
+            "coordinate": {
+              "$ref": "#/$defs/rational"
+            },
+            "quality": {
+              "$ref": "#/$defs/quality"
+            }
+          },
+          "required": [
+            "system"
+          ],
+          "additionalProperties": false,
+          "oneOf": [
+            {
+              "required": [
+                "ticks"
+              ],
+              "not": {
+                "required": [
+                  "coordinate"
+                ]
+              }
+            },
+            {
+              "required": [
+                "coordinate"
+              ],
+              "not": {
+                "required": [
+                  "ticks"
+                ]
+              }
+            }
+          ]
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "civilValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "civil"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "form": {
+              "enum": [
+                "date",
+                "time",
+                "datetime",
+                "year",
+                "year-month",
+                "month-day",
+                "week-date",
+                "ordinal-date",
+                "quarter",
+                "season",
+                "calendar-fields",
+                "era-year",
+                "partial-pattern"
+              ]
+            },
+            "fields": {
+              "$ref": "#/$defs/fields"
+            },
+            "calendar": {
+              "$ref": "#/$defs/calendar"
+            },
+            "zone": {
+              "$ref": "#/$defs/zone"
+            },
+            "zoneIntent": {
+              "enum": [
+                "follow-zone-id",
+                "follow-location-law",
+                "fixed-offset",
+                "fixed-instant",
+                "floating-wall",
+                "historical-assertion"
+              ]
+            },
+            "resolutionPolicy": {
+              "type": "object",
+              "properties": {
+                "gap": {
+                  "enum": [
+                    "reject",
+                    "preserve-unresolved",
+                    "shift-forward-by-gap",
+                    "shift-backward-by-gap",
+                    "next-valid-boundary",
+                    "previous-valid-boundary"
+                  ]
+                },
+                "overlap": {
+                  "enum": [
+                    "reject",
+                    "all",
+                    "earliest",
+                    "latest",
+                    "offset-match",
+                    "occurrence-index"
+                  ]
+                }
+              },
+              "required": [],
+              "additionalProperties": false
+            },
+            "offsetAssertion": {
+              "type": "integer"
+            },
+            "location": {
+              "type": "object"
+            },
+            "quality": {
+              "$ref": "#/$defs/quality"
+            }
+          },
+          "required": [
+            "form",
+            "fields",
+            "calendar"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "amountValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "amount"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "basis": {
+              "enum": [
+                "elapsed",
+                "calendar",
+                "business",
+                "clock-ticks",
+                "proper-time",
+                "mixed"
+              ]
+            },
+            "seconds": {
+              "$ref": "#/$defs/rational"
+            },
+            "components": {
+              "type": "object"
+            },
+            "rules": {
+              "$ref": "#/$defs/ruleRef"
+            },
+            "sequence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/value"
+              }
+            }
+          },
+          "required": [
+            "basis"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "intervalValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "interval"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "domain": {
+              "type": "string",
+              "minLength": 1
+            },
+            "start": {
+              "$ref": "#/$defs/boundary"
+            },
+            "end": {
+              "$ref": "#/$defs/boundary"
+            },
+            "empty": {
+              "type": "boolean"
+            },
+            "construction": {
+              "enum": [
+                "start-end",
+                "start-amount",
+                "amount-end"
+              ]
+            },
+            "amount": {
+              "$ref": "#/$defs/value"
+            },
+            "arithmeticPolicy": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "domain"
+          ],
+          "additionalProperties": false,
+          "oneOf": [
+            {
+              "properties": {
+                "construction": {
+                  "const": "start-end"
+                }
+              },
+              "required": [
+                "start",
+                "end",
+                "construction"
+              ]
+            },
+            {
+              "properties": {
+                "construction": {
+                  "const": "start-amount"
+                }
+              },
+              "required": [
+                "start",
+                "amount",
+                "construction"
+              ]
+            },
+            {
+              "properties": {
+                "construction": {
+                  "const": "amount-end"
+                }
+              },
+              "required": [
+                "amount",
+                "end",
+                "construction"
+              ]
+            },
+            {
+              "not": {
+                "required": [
+                  "construction"
+                ]
+              },
+              "required": [
+                "start",
+                "end"
+              ]
+            }
+          ]
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "recurrenceValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "recurrence"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "intent": {
+              "$ref": "#/$defs/value"
+            },
+            "algorithm": {
+              "$ref": "#/$defs/ruleRef"
+            },
+            "rule": {
+              "type": [
+                "object",
+                "string"
+              ]
+            },
+            "resolutionPolicy": {
+              "type": "object"
+            },
+            "zoneRuleBinding": {
+              "type": "object"
+            },
+            "exceptions": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "duration": {
+              "$ref": "#/$defs/value"
+            },
+            "inclusionRules": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "exclusionRules": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "inclusionDates": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/value"
+              }
+            },
+            "exclusionDates": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/value"
+              }
+            },
+            "overrides": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "recurrenceIdentity": {
+              "type": "object"
+            },
+            "adapterEdition": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "intent",
+            "algorithm",
+            "rule"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "uncertainValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "uncertain"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "target": {
+              "$ref": "#/$defs/value"
+            },
+            "model": {
+              "enum": [
+                "unknown",
+                "bounds",
+                "alternatives",
+                "distribution",
+                "fuzzy",
+                "censored",
+                "constraint"
+              ]
+            },
+            "parameters": {
+              "type": "object"
+            },
+            "quality": {
+              "$ref": "#/$defs/quality"
+            }
+          },
+          "required": [
+            "target",
+            "model"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "setValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "set"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "enum": [
+                "alternatives",
+                "union",
+                "intersection",
+                "difference",
+                "complement"
+              ]
+            },
+            "members": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/value"
+              }
+            },
+            "universe": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "members"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "clockValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "clock"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "clockRef": {
+              "$ref": "#/$defs/ruleRef"
+            },
+            "generation": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ticks": {
+              "$ref": "#/$defs/integerString"
+            },
+            "tickUnit": {
+              "$ref": "#/$defs/rational"
+            },
+            "quality": {
+              "$ref": "#/$defs/quality"
+            }
+          },
+          "required": [
+            "clockRef",
+            "generation",
+            "ticks",
+            "tickUnit"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "observationValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "observation"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "type": "string",
+              "minLength": 1
+            },
+            "reading": {
+              "$ref": "#/$defs/value"
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "quality": {
+              "$ref": "#/$defs/quality"
+            },
+            "latency": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "role",
+            "reading",
+            "source"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "logical-clockValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "logical-clock"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "algorithm": {
+              "$ref": "#/$defs/ruleRef"
+            },
+            "actorNamespace": {
+              "type": "string"
+            },
+            "generation": {
+              "type": "string"
+            },
+            "state": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "algorithm",
+            "actorNamespace",
+            "generation",
+            "state"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "relativeValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "relative"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "language": {
+              "$ref": "#/$defs/ruleRef"
+            },
+            "expression": {
+              "type": "string",
+              "minLength": 1
+            },
+            "anchor": {
+              "$ref": "#/$defs/value"
+            },
+            "context": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "language",
+            "expression",
+            "anchor",
+            "context"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "relationValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "relation"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "relation": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "left": {
+              "$ref": "#/$defs/value"
+            },
+            "right": {
+              "$ref": "#/$defs/value"
+            },
+            "domain": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "relation",
+            "left",
+            "right"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "assertionValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "assertion"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "assertionId": {
+              "type": "string"
+            },
+            "subjectId": {
+              "type": "string"
+            },
+            "claimedTime": {
+              "$ref": "#/$defs/value"
+            },
+            "source": {
+              "type": "string"
+            },
+            "recordedAt": {
+              "$ref": "#/$defs/value"
+            }
+          },
+          "required": [
+            "assertionId",
+            "subjectId",
+            "claimedTime",
+            "source"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "event-historyValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "event-history"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "subjectId": {
+              "type": "string"
+            },
+            "revisions": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/value"
+              }
+            }
+          },
+          "required": [
+            "subjectId",
+            "revisions"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "location-intentValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "location-intent"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "authority": {
+              "enum": [
+                "law",
+                "practice",
+                "fixed-zone",
+                "floating"
+              ]
+            },
+            "place": {
+              "type": "object"
+            },
+            "mapping": {
+              "$ref": "#/$defs/ruleRef"
+            },
+            "time": {
+              "$ref": "#/$defs/value"
+            }
+          },
+          "required": [
+            "authority",
+            "place"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "constraintValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "constraint"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "language": {
+              "$ref": "#/$defs/ruleRef"
+            },
+            "variables": {
+              "type": "object"
+            },
+            "expression": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "language",
+            "variables",
+            "expression"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "calendar-ruleValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "calendar-rule"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "rules": {
+              "$ref": "#/$defs/ruleRef"
+            },
+            "intent": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "rules",
+            "intent"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "temporal-referenceValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "temporal-reference"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "reference": {
+              "$ref": "#/$defs/ruleRef"
+            },
+            "coordinate": {
+              "$ref": "#/$defs/rational"
+            },
+            "frame": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "reference",
+            "coordinate"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "value": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/instantValue"
+        },
+        {
+          "$ref": "#/$defs/civilValue"
+        },
+        {
+          "$ref": "#/$defs/amountValue"
+        },
+        {
+          "$ref": "#/$defs/intervalValue"
+        },
+        {
+          "$ref": "#/$defs/recurrenceValue"
+        },
+        {
+          "$ref": "#/$defs/uncertainValue"
+        },
+        {
+          "$ref": "#/$defs/setValue"
+        },
+        {
+          "$ref": "#/$defs/clockValue"
+        },
+        {
+          "$ref": "#/$defs/observationValue"
+        },
+        {
+          "$ref": "#/$defs/logical-clockValue"
+        },
+        {
+          "$ref": "#/$defs/relativeValue"
+        },
+        {
+          "$ref": "#/$defs/relationValue"
+        },
+        {
+          "$ref": "#/$defs/assertionValue"
+        },
+        {
+          "$ref": "#/$defs/event-historyValue"
+        },
+        {
+          "$ref": "#/$defs/location-intentValue"
+        },
+        {
+          "$ref": "#/$defs/constraintValue"
+        },
+        {
+          "$ref": "#/$defs/calendar-ruleValue"
+        },
+        {
+          "$ref": "#/$defs/temporal-referenceValue"
+        },
+        {
+          "$ref": "#/$defs/ordinal-positionValue"
+        },
+        {
+          "$ref": "#/$defs/event-relativeValue"
+        },
+        {
+          "$ref": "#/$defs/selectionValue"
+        },
+        {
+          "$ref": "#/$defs/sampleValue"
+        },
+        {
+          "$ref": "#/$defs/seriesValue"
+        },
+        {
+          "$ref": "#/$defs/temporal-graphValue"
+        },
+        {
+          "$ref": "#/$defs/sequenceValue"
+        },
+        {
+          "$ref": "#/$defs/patternValue"
+        }
+      ]
+    },
+    "ordinal-positionValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "ordinal-position"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "system": {
+              "$ref": "#/$defs/ruleRef"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sourceTerm": {
+              "type": "string",
+              "minLength": 1
+            },
+            "relationContext": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "system",
+            "label"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "event-relativeValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "event-relative"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "anchor": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "class": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "scope": {
+                  "type": "object"
+                }
+              },
+              "anyOf": [
+                {
+                  "required": [
+                    "id"
+                  ]
+                },
+                {
+                  "required": [
+                    "class"
+                  ]
+                }
+              ],
+              "additionalProperties": false
+            },
+            "matching": {
+              "enum": [
+                "each",
+                "same-episode",
+                "nearest-before",
+                "nearest-after",
+                "specified",
+                "registered"
+              ]
+            },
+            "relation": {
+              "enum": [
+                "before",
+                "after",
+                "during",
+                "starts-with",
+                "ends-with",
+                "overlaps",
+                "offset-from-start",
+                "offset-from-end"
+              ]
+            },
+            "offset": {
+              "$ref": "#/$defs/value"
+            },
+            "window": {
+              "$ref": "#/$defs/value"
+            },
+            "fallback": {
+              "type": "object"
+            },
+            "cardinality": {
+              "type": "object"
+            },
+            "referenceContext": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "anchor",
+            "matching",
+            "relation"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "selectionValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "selection"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "$ref": "#/$defs/value"
+            },
+            "predicate": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "expression": {
+                  "type": "object"
+                },
+                "registry": {
+                  "$ref": "#/$defs/ruleRef"
+                }
+              },
+              "anyOf": [
+                {
+                  "required": [
+                    "expression"
+                  ]
+                },
+                {
+                  "required": [
+                    "registry"
+                  ]
+                }
+              ],
+              "additionalProperties": false
+            },
+            "orderBy": {
+              "type": "object"
+            },
+            "take": {
+              "enum": [
+                "first",
+                "last",
+                "nth",
+                "all",
+                "sample",
+                "top-k"
+              ]
+            },
+            "index": {
+              "type": "integer"
+            },
+            "indexBase": {
+              "enum": [
+                0,
+                1
+              ]
+            },
+            "count": {
+              "$ref": "#/$defs/nonnegative"
+            },
+            "cardinality": {
+              "type": "object"
+            },
+            "algorithm": {
+              "$ref": "#/$defs/ruleRef"
+            }
+          },
+          "required": [
+            "source",
+            "predicate",
+            "take"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "sampleValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "sample"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "subject": {
+              "type": "string",
+              "minLength": 1
+            },
+            "phenomenonTime": {
+              "$ref": "#/$defs/value"
+            },
+            "resultTime": {
+              "$ref": "#/$defs/value"
+            },
+            "validTime": {
+              "$ref": "#/$defs/value"
+            },
+            "samplingTime": {
+              "$ref": "#/$defs/value"
+            },
+            "acquisitionTime": {
+              "$ref": "#/$defs/value"
+            },
+            "processingTime": {
+              "$ref": "#/$defs/value"
+            },
+            "publicationTime": {
+              "$ref": "#/$defs/value"
+            },
+            "payload": {},
+            "quality": {
+              "type": "object"
+            },
+            "timeCoordinates": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/value"
+              }
+            },
+            "kindOfSupport": {
+              "enum": [
+                "point",
+                "window",
+                "state",
+                "rate",
+                "counter",
+                "continuous",
+                "event"
+              ]
+            },
+            "metadata": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "subject",
+            "phenomenonTime",
+            "payload"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "seriesValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "series"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "subject": {
+              "type": "string",
+              "minLength": 1
+            },
+            "temporalAxis": {
+              "enum": [
+                "event",
+                "observation",
+                "result",
+                "valid",
+                "logical",
+                "ordinal",
+                "registered"
+              ]
+            },
+            "samples": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/sampleValue"
+              }
+            },
+            "chunks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "uri": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "digest": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "count": {
+                    "$ref": "#/$defs/nonnegative"
+                  },
+                  "schemaRef": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "uri",
+                  "digest"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "measurement": {
+              "type": "object"
+            },
+            "ordering": {
+              "type": "object"
+            },
+            "samplingModel": {
+              "type": "object"
+            },
+            "interpolation": {
+              "type": "object"
+            },
+            "aggregation": {
+              "type": "object"
+            },
+            "missingData": {
+              "type": "object"
+            },
+            "quality": {
+              "type": "object"
+            },
+            "snapshot": {
+              "type": "object"
+            },
+            "watermark": {
+              "$ref": "#/$defs/value"
+            }
+          },
+          "required": [
+            "id",
+            "temporalAxis"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "temporal-graphValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "temporal-graph"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "nodes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "temporal": {
+                    "$ref": "#/$defs/value"
+                  },
+                  "subject": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "edges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "left": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "right": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "relations": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "minItems": 1
+                  },
+                  "evidence": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "left",
+                  "right",
+                  "relations"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "domain": {
+              "type": "string",
+              "minLength": 1
+            },
+            "logic": {
+              "$ref": "#/$defs/ruleRef"
+            }
+          },
+          "required": [
+            "nodes",
+            "edges",
+            "domain"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "sequenceValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "sequence"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "members": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/value"
+              }
+            },
+            "generator": {
+              "$ref": "#/$defs/ruleRef"
+            },
+            "ordering": {
+              "type": "object"
+            },
+            "cardinality": {
+              "type": "object"
+            },
+            "duplicatePolicy": {
+              "enum": [
+                "preserve",
+                "deduplicate-explicitly"
+              ]
+            },
+            "domain": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "ordering",
+            "cardinality"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "patternValue": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "utv/1.0"
+        },
+        "kind": {
+          "const": "pattern"
+        },
+        "value": {
+          "type": "object",
+          "properties": {
+            "frequency": {
+              "type": "object",
+              "properties": {
+                "minimum": {
+                  "$ref": "#/$defs/nonnegative"
+                },
+                "maximum": {
+                  "$ref": "#/$defs/nonnegative"
+                }
+              },
+              "required": [
+                "minimum"
+              ],
+              "additionalProperties": false
+            },
+            "per": {
+              "$ref": "#/$defs/value"
+            },
+            "spacing": {
+              "type": "object"
+            },
+            "window": {
+              "$ref": "#/$defs/value"
+            },
+            "onEvent": {
+              "type": "object"
+            },
+            "completionCriterion": {
+              "type": "object"
+            },
+            "ontology": {
+              "$ref": "#/$defs/ruleRef"
+            },
+            "constraints": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          "required": [
+            "frequency",
+            "per"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

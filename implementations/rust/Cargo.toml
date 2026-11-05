@@ -1,0 +1,11 @@
+[package]
+name = "utv"
+version = "0.1.0"
+edition = "2021"
+description = "Universal Temporal Value (utv/1.0) reader: envelope and structural validation"
+license-file = "../../LICENSE"
+
+[dependencies]
+serde_json = { version = "1", features = ["preserve_order"] }
+serde = "1"
+regex = "1"
