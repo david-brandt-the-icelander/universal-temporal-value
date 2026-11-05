@@ -74,4 +74,20 @@ dotnet test
 The tests read `schema/utv-1.0.schema.json`, `conformance/examples/valid.json` (every value must be `valid`)
 and `conformance/examples/invalid-structural.json` (every value must be `invalid`) from the repository root,
 resolved relative to the test project at build time. They also check that the embedded schema is identical to
-the repository file.
+the repository file. The tests also check every expectation in the shared catalog `examples/traditional.json` (see Examples).
+
+## Examples
+
+```
+cd implementations/csharp
+dotnet run --project examples/Traditional
+```
+
+`examples/Traditional` is a tour of traditional date/time tasks. It first builds two dates from C# values
+with `System.Text.Json.Nodes.JsonObject` (5 November 2026, and 30 February 2026, which is well-formed but does
+not exist) and shows how a caller handles each status with a `switch` and reads the diagnostics. It then walks
+the shared catalog [`examples/traditional.json`](../../examples/traditional.json), located relative to the
+project at build time, printing each entry with its structural and Gregorian outcomes. It ends with
+`37 examples, every outcome as expected.`, or with the number of mismatches and exit code 1.
+The catalog checker (`examples/Traditional/TraditionalCatalog.cs`) is compiled into the test project too,
+so `dotnet test` fails if the library disagrees with the catalog.
