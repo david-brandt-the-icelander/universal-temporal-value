@@ -35,3 +35,17 @@ npm test   # tsc -p . && node --test "dist/test/**/*.test.js"
 `typescript` is the only devDependency (a globally installed `tsc` also works). Tests read the shared
 fixtures `conformance/examples/valid.json` and `conformance/examples/invalid-structural.json` from the
 repository root, resolved relative to this package directory.
+
+## Examples
+
+```sh
+npm run example   # tsc -p . && node dist/examples/traditional.js
+```
+
+[`examples/traditional.ts`](examples/traditional.ts) builds two Gregorian dates from TypeScript values (5 November 2026
+and 30 February 2026), validates them and switches on the result status. It then walks the shared catalog
+[`examples/traditional.json`](../../examples/traditional.json) (37 everyday date and time tasks; see
+[`examples/README.md`](../../examples/README.md)), printing each task's usual library call, this library's
+structural and Gregorian statuses, and why the UTV form differs. Any outcome that differs from the catalog is
+printed as `MISMATCH` and the process exits with code 1. `npm test` runs the same catalog check
+(`test/traditional.test.ts`).

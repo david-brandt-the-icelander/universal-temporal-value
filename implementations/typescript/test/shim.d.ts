@@ -1,4 +1,4 @@
-// Minimal ambient declarations for Node built-ins used by the tests (avoids an @types/node dependency).
+// Minimal ambient declarations for Node built-ins used by the tests and examples (avoids an @types/node dependency).
 declare module "node:test" {
   export function test(name: string, fn: () => void | Promise<void>): void;
 }
@@ -13,3 +13,7 @@ declare module "node:assert/strict" {
 declare module "node:fs" {
   export function readFileSync(path: string | URL, enc: "utf8"): string;
 }
+declare module "node:url" {
+  export function pathToFileURL(path: string): URL;
+}
+declare const process: { argv: string[]; exitCode: number | undefined };
