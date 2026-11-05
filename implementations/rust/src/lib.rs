@@ -1,6 +1,32 @@
-//! Universal Temporal Value (`utv/1.0`) reader: envelope and structural validation.
+//! Universal Temporal Value (`utv/1.0`): validation and the everyday API.
+//!
+//! - Validation (0.1): [`validate_structural`] and [`validate_gregorian_civil`].
+//! - Everyday API (0.2, `docs/everyday-api.md`): builders in [`build`], ISO 8601 text in
+//!   [`iso`], calendar and instant arithmetic in [`ops`], zone rules and resolution in
+//!   [`zones`], and explicit adapters to Rust types in [`interop`].
+//!
+//! Values are UTV JSON values held as [`serde_json::Value`]. Every operation returns a
+//! [`UtvResult`]: a status, diagnostics and candidates. Semantic outcomes (`none`,
+//! `multiple`, `unsupported`, `invalid`, ...) are results, never panics or `Err`s.
 //!
 //! This library never reads the system clock, time zone or locale.
+
+pub mod build;
+pub mod interop;
+pub mod iso;
+pub mod ops;
+pub mod zones;
+
+mod model;
+mod num;
+
+pub use build::{
+    date, date_time, date_time_with_nanos, date_time_with_seconds, in_zone, instant, instant_with_nanos, interval, interval_with, period, posix_seconds,
+    time, time_with_nanos, time_with_seconds, with_offset, year_month, Endpoint, Period,
+};
+pub use iso::{format_iso, parse_iso};
+pub use ops::{add, compare, contains, days_between, fields, overlaps, posix_seconds_between};
+pub use zones::{resolve, to_offset, to_zone, Rules};
 
 use serde::de::{self, Deserializer, MapAccess, SeqAccess, Visitor};
 use serde_json::{Map, Value};
@@ -59,23 +85,77 @@ pub struct Diagnostic {
     pub message: String,
 }
 
+/// A `utv-result/1.0` result: a status, diagnostics and candidates.
+///
+/// `unique` has exactly one candidate and `multiple` has all of them in ascending order.
+/// `none`, `invalid`, `unsupported`, `symbolic` and validation results have none.
+/// Candidates are UTV values, or plain JSON for operations that answer with a string,
+/// number or object (`compare`, `fields`, `days_between`, `contains`, `overlaps`, `format_iso`).
 #[derive(Debug, Clone, PartialEq)]
 pub struct UtvResult {
+    /// `validate` for validation, `convert` for the native adapters, otherwise the everyday
+    /// operation's contract name (`parseIso`, `add`, `resolve`, ...).
+    pub operation: String,
     pub status: Status,
     pub diagnostics: Vec<Diagnostic>,
+    pub candidates: Vec<Value>,
 }
 
 impl UtvResult {
-    fn ok() -> Self { UtvResult { status: Status::Valid, diagnostics: vec![] } }
-    fn fail(status: Status, code: &str, path: &str, message: impl Into<String>) -> Self {
-        UtvResult { status, diagnostics: vec![Diagnostic { code: code.into(), severity: Severity::Error, path: path.into(), message: message.into() }] }
+    pub(crate) fn ok() -> Self { UtvResult::new(Status::Valid, vec![]) }
+    pub(crate) fn fail(status: Status, code: &str, path: &str, message: impl Into<String>) -> Self {
+        let mut r = UtvResult::new(status, vec![]);
+        r.diagnostics.push(Diagnostic { code: code.into(), severity: Severity::Error, path: path.into(), message: message.into() });
+        r
+    }
+    /// A result with this status and these candidates (operation `validate` until set).
+    pub fn new(status: Status, candidates: Vec<Value>) -> Self {
+        UtvResult { operation: "validate".into(), status, diagnostics: vec![], candidates }
+    }
+    /// A `unique` result with one candidate.
+    pub fn unique(candidate: Value) -> Self {
+        UtvResult::new(Status::Unique, vec![candidate])
+    }
+    pub(crate) fn op(mut self, operation: &str) -> Self {
+        self.operation = operation.into();
+        self
+    }
+    /// The single candidate of a `unique` result; `None` for every other status.
+    pub fn value(&self) -> Option<&Value> {
+        match (self.status, self.candidates.as_slice()) {
+            (Status::Unique, [v]) => Some(v),
+            _ => None,
+        }
+    }
+    /// The single candidate of a `unique` result as a string (for `format_iso`, `compare`, ...).
+    pub fn as_str(&self) -> Option<&str> {
+        self.value().and_then(Value::as_str)
     }
     /// Serialize as a `utv-result/1.0` JSON object.
     pub fn to_json(&self) -> Value {
         let diags: Vec<Value> = self.diagnostics.iter().map(|d| serde_json::json!({
             "code": d.code, "severity": d.severity.as_str(), "path": d.path, "message": d.message
         })).collect();
-        serde_json::json!({ "schema": RESULT_SCHEMA, "status": self.status.as_str(), "diagnostics": diags })
+        serde_json::json!({ "schema": RESULT_SCHEMA, "operation": self.operation, "status": self.status.as_str(), "diagnostics": diags, "candidates": self.candidates })
+    }
+}
+
+impl fmt::Display for UtvResult {
+    /// The status, then the candidate(s): ISO 8601 text where `format_iso` has one, JSON otherwise,
+    /// then the first diagnostic for statuses without candidates.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.status.as_str())?;
+        let shown: Vec<String> = self.candidates.iter().map(|c| match c {
+            Value::String(s) => s.clone(),
+            Value::Object(_) => iso::format_iso(c).as_str().map(str::to_owned).unwrap_or_else(|| c.to_string()),
+            other => other.to_string(),
+        }).collect();
+        if !shown.is_empty() {
+            write!(f, " {}", shown.join(", "))?;
+        } else if let Some(d) = self.diagnostics.first() {
+            write!(f, " ({}: {})", d.code, d.message)?;
+        }
+        Ok(())
     }
 }
 
@@ -200,9 +280,8 @@ impl SchemaCx {
         if let Some(c) = s.get("const") { if c != v { errs.push((path.into(), format!("expected const {c}"))); } }
         if let Some(Value::Array(e)) = s.get("enum") { if !e.contains(v) { errs.push((path.into(), "value not in enum".into())); } }
         if let (Some(p), Some(sv)) = (s.get("pattern").and_then(Value::as_str), v.as_str()) {
-            match regex::Regex::new(p) {
-                Ok(re) if !re.is_match(sv) => errs.push((path.into(), format!("does not match pattern {p}"))),
-                _ => {}
+            if let Some(false) = pattern_matches(p, sv) {
+                errs.push((path.into(), format!("does not match pattern {p}")));
             }
         }
         if let (Some(m), Some(sv)) = (s.get("minLength").and_then(Value::as_u64), v.as_str()) {
@@ -259,12 +338,22 @@ impl SchemaCx {
     }
 }
 
+/// Schema patterns, compiled once each. `None` if the pattern doesn't compile.
+fn pattern_matches(pattern: &str, text: &str) -> Option<bool> {
+    use std::collections::HashMap;
+    use std::sync::{Mutex, OnceLock};
+    static CACHE: OnceLock<Mutex<HashMap<String, Option<regex::Regex>>>> = OnceLock::new();
+    let mut cache = CACHE.get_or_init(Default::default).lock().unwrap_or_else(|e| e.into_inner());
+    let re = cache.entry(pattern.to_owned()).or_insert_with(|| regex::Regex::new(pattern).ok());
+    re.as_ref().map(|re| re.is_match(text))
+}
+
 fn type_ok(t: &str, v: &Value) -> bool {
     match t {
         "object" => v.is_object(),
         "array" => v.is_array(),
         "string" => v.is_string(),
-        "integer" => v.is_i64() || v.is_u64() || v.as_f64().map_or(false, |f| f.fract() == 0.0),
+        "integer" => v.is_i64() || v.is_u64() || v.as_f64().is_some_and(|f| f.fract() == 0.0),
         "number" => v.is_number(),
         "boolean" => v.is_boolean(),
         "null" => v.is_null(),
@@ -292,10 +381,9 @@ pub fn validate_value(v: &Value) -> UtvResult {
     if errs.is_empty() {
         return UtvResult::ok();
     }
-    UtvResult {
-        status: Status::Invalid,
-        diagnostics: errs.into_iter().map(|(path, message)| Diagnostic { code: "structural.schema".into(), severity: Severity::Error, path, message }).collect(),
-    }
+    let mut r = UtvResult::new(Status::Invalid, vec![]);
+    r.diagnostics = errs.into_iter().map(|(path, message)| Diagnostic { code: "structural.schema".into(), severity: Severity::Error, path, message }).collect();
+    r
 }
 
 /// Parse UTV JSON text and validate it structurally.

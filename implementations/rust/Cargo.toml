@@ -1,11 +1,30 @@
 [package]
 name = "utv"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-description = "Universal Temporal Value (utv/1.0) reader: envelope and structural validation"
+description = "Universal Temporal Value (utv/1.0): validation and the everyday API (parse, format, add, compare, resolve)"
 license-file = "../../LICENSE"
+
+[features]
+# Adapters for chrono's NaiveDate, NaiveTime, NaiveDateTime, DateTime<FixedOffset> and DateTime<Utc>
+# (utv::interop::chrono). Off by default: the library's own dependencies stay serde_json, serde and regex.
+chrono = ["dep:chrono"]
 
 [dependencies]
 serde_json = { version = "1", features = ["preserve_order"] }
 serde = "1"
 regex = "1"
+chrono = { version = "0.4.38", optional = true }
+
+[dev-dependencies]
+# The "native" side of examples/everyday.rs and its test. std has no calendar types.
+chrono = "0.4.38"
+chrono-tz = "0.10"
+
+[[example]]
+name = "everyday"
+required-features = ["chrono"]
+
+[[test]]
+name = "everyday_example"
+required-features = ["chrono"]

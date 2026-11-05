@@ -5108,6 +5108,45 @@
         }
       },
       "note": "an all-zero fraction gives no nano field, matching the builder rule"
+    },
+    {
+      "id": "resolve-gap-with-offset-assertion",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 3,
+              "day": 8,
+              "hour": 2,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id",
+            "offsetAssertion": -18000
+          }
+        },
+        "demo-zones",
+        {
+          "gap": "shift-forward-by-gap",
+          "overlap": "reject"
+        }
+      ],
+      "expect": {
+        "status": "invalid"
+      },
+      "note": "the gap leaves no candidate, so the asserted offset matches nothing; the assertion is checked before the gap policy"
     }
   ]
 }
