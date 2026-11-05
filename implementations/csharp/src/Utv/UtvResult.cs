@@ -13,8 +13,9 @@ namespace Utv;
 /// A <c>utv-result/1.0</c> evaluation result (spec/RESULT-CONTRACT.md). Immutable.
 /// </summary>
 /// <remarks>
-/// This increment always reports an empty manifest, no assumptions and a <c>lossless</c> loss report,
-/// which is correct for the validation operations it implements: they depend on no external rules.
+/// <see cref="ToJson"/> always reports an empty manifest, no assumptions and a <c>lossless</c> loss report.
+/// The everyday operations are exact; the rules a <c>resolve</c> or <c>toZone</c> used are the
+/// <see cref="ZoneRules"/> the caller passed in.
 /// </remarks>
 public sealed class UtvResult
 {
@@ -71,8 +72,41 @@ public sealed class UtvResult
     /// <summary>Diagnostics, in report order.</summary>
     public IReadOnlyList<Diagnostic> Diagnostics { get; }
 
-    /// <summary>Candidate UTV envelopes (empty for validation).</summary>
+    /// <summary>
+    /// Candidates: UTV envelopes, or plain JSON (a string, number or object) for operations that answer
+    /// with one, such as <c>formatIso</c>, <c>compare</c>, <c>fields</c> or <c>daysBetween</c>.
+    /// Empty for validation and for every status other than <c>unique</c> and <c>multiple</c>.
+    /// <c>multiple</c> lists them in ascending order.
+    /// </summary>
     public IReadOnlyList<JsonElement> Candidates { get; }
+
+    /// <summary>True when the status is <see cref="UtvStatus.Unique"/>, so <see cref="Value"/> can be read.</summary>
+    public bool IsUnique => Status == UtvStatus.Unique;
+
+    /// <summary>The single candidate of a <see cref="UtvStatus.Unique"/> result.</summary>
+    /// <exception cref="InvalidOperationException">The status is not <c>unique</c>.</exception>
+    public JsonElement Value => IsUnique
+        ? Candidates[0]
+        : throw new InvalidOperationException($"`{Operation}` gave `{Status.ToWireString()}`, which has no single value; check Status first");
+
+    /// <summary>The single candidate, if the status is <see cref="UtvStatus.Unique"/>.</summary>
+    public bool TryGetValue(out JsonElement value)
+    {
+        value = IsUnique ? Candidates[0] : default;
+        return IsUnique;
+    }
+
+    /// <summary>The single candidate as a string, for example the text from <c>formatIso</c> or the answer of <c>compare</c>.</summary>
+    /// <exception cref="InvalidOperationException">The status is not <c>unique</c>, or the candidate is not a JSON string.</exception>
+    public string GetString() => Value.ValueKind == JsonValueKind.String
+        ? Value.GetString()!
+        : throw new InvalidOperationException($"the candidate of `{Operation}` is a JSON {Value.ValueKind}, not a string");
+
+    /// <summary>The single candidate as an integer, for example the answer of <c>daysBetween</c>.</summary>
+    /// <exception cref="InvalidOperationException">The status is not <c>unique</c>, or the candidate is not a JSON integer in range.</exception>
+    public long GetInt64() => Value.ValueKind == JsonValueKind.Number && Value.TryGetInt64(out long n)
+        ? n
+        : throw new InvalidOperationException($"the candidate of `{Operation}` is not a 64-bit integer");
 
     /// <summary>Serializes the result as a compact <c>utv-result/1.0</c> JSON object.</summary>
     public string ToJson()

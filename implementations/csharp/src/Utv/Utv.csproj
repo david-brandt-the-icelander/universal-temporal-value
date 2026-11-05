@@ -12,9 +12,9 @@
     <AssemblyName>Utv</AssemblyName>
 
     <PackageId>Utv</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>UTV contributors</Authors>
-    <Description>Universal Temporal Value (UTV) reader for specification version utv/1.0: strict JSON parsing, envelope and structural validation against schema/utv-1.0.schema.json, utv-result/1.0 results, and proleptic Gregorian civil date validation. Conformance profiles claimed: none yet.</Description>
+    <Description>Universal Temporal Value (UTV) library for specification version utv/1.0: strict JSON parsing, structural validation against schema/utv-1.0.schema.json, utv-result/1.0 results, proleptic Gregorian civil date validation, and the everyday API (builders, ISO 8601 / RFC 3339 / RFC 9557 parsing and formatting, calendar arithmetic, comparison, intervals, zone resolution with caller-supplied rules, and .NET interop). Conformance profiles claimed: none yet.</Description>
     <PackageTags>utv;utv/1.0;time;date;calendar;temporal;json-schema</PackageTags>
     <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
