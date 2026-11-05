@@ -1,0 +1,4875 @@
+{
+  "description": "Executable fixtures for the everyday API (docs/everyday-api.md). Every library must produce exactly these outcomes. Expected values were computed with Python's datetime and zoneinfo (IANA tzdb), independently of the UTV libraries.",
+  "rules": {
+    "demo-zones": "conformance/rules/demo-zones.json"
+  },
+  "comparison": "Results are compared as JSON values (object key order is irrelevant). `result` is the single candidate for `unique`; `results` lists all candidates in ascending order for `multiple`. Other statuses have no candidates.",
+  "fixtures": [
+    {
+      "id": "parse-date",
+      "op": "parseIso",
+      "args": [
+        "2026-11-05"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "parse-year-month",
+      "op": "parseIso",
+      "args": [
+        "2026-11"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "year-month",
+            "fields": {
+              "year": "2026",
+              "month": 11
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "parse-time",
+      "op": "parseIso",
+      "args": [
+        "09:30"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "time",
+            "fields": {
+              "hour": 9,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "parse-time-seconds-fraction",
+      "op": "parseIso",
+      "args": [
+        "09:30:15.250"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "time",
+            "fields": {
+              "hour": 9,
+              "minute": 30,
+              "second": 15,
+              "nano": 250000000
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "parse-local-datetime",
+      "op": "parseIso",
+      "args": [
+        "2026-11-05T14:30"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 14,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "parse-offset-datetime",
+      "op": "parseIso",
+      "args": [
+        "2026-11-05T14:30:00+01:00"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 14,
+              "minute": 30,
+              "second": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "fixed-offset",
+              "seconds": 3600
+            },
+            "zoneIntent": "fixed-offset"
+          }
+        }
+      }
+    },
+    {
+      "id": "parse-plus-zero-is-an-offset",
+      "op": "parseIso",
+      "args": [
+        "2026-11-05T14:30:00+00:00"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 14,
+              "minute": 30,
+              "second": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "fixed-offset",
+              "seconds": 0
+            },
+            "zoneIntent": "fixed-offset"
+          }
+        }
+      },
+      "note": "+00:00 is a real offset of zero"
+    },
+    {
+      "id": "parse-z-is-an-instant",
+      "op": "parseIso",
+      "args": [
+        "2026-11-05T13:30:00Z"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1793885400"
+          }
+        }
+      },
+      "note": "Z means UTC known, local offset unknown: an instant"
+    },
+    {
+      "id": "parse-minus-zero-is-an-instant",
+      "op": "parseIso",
+      "args": [
+        "2026-11-05T13:30:00-00:00"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1793885400"
+          }
+        }
+      }
+    },
+    {
+      "id": "parse-z-fraction",
+      "op": "parseIso",
+      "args": [
+        "1970-01-01T00:00:00.5Z"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "0",
+            "subTick": {
+              "numerator": "1",
+              "denominator": "2"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "parse-zoned",
+      "op": "parseIso",
+      "args": [
+        "2027-06-01T09:00[Europe/Paris]"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2027",
+              "month": 6,
+              "day": 1,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        }
+      }
+    },
+    {
+      "id": "parse-zoned-with-offset",
+      "op": "parseIso",
+      "args": [
+        "2027-06-01T09:00+02:00[Europe/Paris]"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2027",
+              "month": 6,
+              "day": 1,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id",
+            "offsetAssertion": 7200
+          }
+        }
+      }
+    },
+    {
+      "id": "parse-expanded-year",
+      "op": "parseIso",
+      "args": [
+        "+275760-09-13"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "275760",
+              "month": 9,
+              "day": 13
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "parse-negative-year",
+      "op": "parseIso",
+      "args": [
+        "-0500-03-01"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "-500",
+              "month": 3,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "parse-year-zero",
+      "op": "parseIso",
+      "args": [
+        "0000-01-01"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "0",
+              "month": 1,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "parse-feb-30",
+      "op": "parseIso",
+      "args": [
+        "2026-02-30"
+      ],
+      "expect": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "parse-feb-29-common-year",
+      "op": "parseIso",
+      "args": [
+        "2026-02-29"
+      ],
+      "expect": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "parse-month-13",
+      "op": "parseIso",
+      "args": [
+        "2026-13-01"
+      ],
+      "expect": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "parse-minute-60",
+      "op": "parseIso",
+      "args": [
+        "2026-11-05T14:60"
+      ],
+      "expect": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "parse-garbage",
+      "op": "parseIso",
+      "args": [
+        "next Tuesday"
+      ],
+      "expect": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "parse-lowercase-t",
+      "op": "parseIso",
+      "args": [
+        "2026-11-05t14:30"
+      ],
+      "expect": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "parse-offset-too-large",
+      "op": "parseIso",
+      "args": [
+        "2026-11-05T14:30+19:00"
+      ],
+      "expect": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "parse-leap-second",
+      "op": "parseIso",
+      "args": [
+        "2016-12-31T23:59:60Z"
+      ],
+      "expect": {
+        "status": "unsupported"
+      },
+      "note": "needs a leap-second table"
+    },
+    {
+      "id": "parse-24-00",
+      "op": "parseIso",
+      "args": [
+        "2026-11-05T24:00"
+      ],
+      "expect": {
+        "status": "unsupported"
+      },
+      "note": "needs an end-of-day policy"
+    },
+    {
+      "id": "parse-week-date",
+      "op": "parseIso",
+      "args": [
+        "2026-W45-4"
+      ],
+      "expect": {
+        "status": "unsupported"
+      }
+    },
+    {
+      "id": "parse-ordinal-date",
+      "op": "parseIso",
+      "args": [
+        "2026-309"
+      ],
+      "expect": {
+        "status": "unsupported"
+      }
+    },
+    {
+      "id": "parse-basic-format",
+      "op": "parseIso",
+      "args": [
+        "20261105"
+      ],
+      "expect": {
+        "status": "unsupported"
+      }
+    },
+    {
+      "id": "parse-critical-annotation",
+      "op": "parseIso",
+      "args": [
+        "2027-06-01T09:00[!Europe/Paris]"
+      ],
+      "expect": {
+        "status": "unsupported"
+      }
+    },
+    {
+      "id": "format-date",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "2026-11-05"
+      }
+    },
+    {
+      "id": "format-year-month",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "year-month",
+            "fields": {
+              "year": "2026",
+              "month": 11
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "2026-11"
+      }
+    },
+    {
+      "id": "format-time",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "time",
+            "fields": {
+              "hour": 9,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "09:30"
+      }
+    },
+    {
+      "id": "format-time-fraction",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "time",
+            "fields": {
+              "hour": 9,
+              "minute": 30,
+              "second": 15,
+              "nano": 250000000
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "09:30:15.25"
+      }
+    },
+    {
+      "id": "format-local-datetime",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 14,
+              "minute": 30,
+              "second": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "2026-11-05T14:30:05"
+      }
+    },
+    {
+      "id": "format-offset",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 14,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "fixed-offset",
+              "seconds": -18000
+            },
+            "zoneIntent": "fixed-offset"
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "2026-11-05T14:30-05:00"
+      }
+    },
+    {
+      "id": "format-zero-offset",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 14,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "fixed-offset",
+              "seconds": 0
+            },
+            "zoneIntent": "fixed-offset"
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "2026-11-05T14:30+00:00"
+      }
+    },
+    {
+      "id": "format-zoned",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2027",
+              "month": 6,
+              "day": 1,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "2027-06-01T09:00[Europe/Paris]"
+      }
+    },
+    {
+      "id": "format-zoned-asserted",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2027",
+              "month": 6,
+              "day": 1,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id",
+            "offsetAssertion": 7200
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "2027-06-01T09:00+02:00[Europe/Paris]"
+      }
+    },
+    {
+      "id": "format-instant",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1793885400"
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "2026-11-05T13:30:00Z"
+      }
+    },
+    {
+      "id": "format-instant-fraction",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "0",
+            "subTick": {
+              "numerator": "1",
+              "denominator": "2"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "1970-01-01T00:00:00.5Z"
+      }
+    },
+    {
+      "id": "format-instant-negative",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "-1"
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "1969-12-31T23:59:59Z"
+      }
+    },
+    {
+      "id": "format-big-year",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "275760",
+              "month": 9,
+              "day": 13
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "+275760-09-13"
+      }
+    },
+    {
+      "id": "format-negative-year",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "-500",
+              "month": 3,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "-0500-03-01"
+      }
+    },
+    {
+      "id": "format-amount-unsupported",
+      "op": "formatIso",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "months": "1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unsupported"
+      }
+    },
+    {
+      "id": "fields-today",
+      "op": "fields",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "dayOfWeek": 4,
+          "dayOfYear": 309,
+          "isoWeekYear": "2026",
+          "isoWeek": 45,
+          "daysInMonth": 30,
+          "isLeapYear": false
+        }
+      }
+    },
+    {
+      "id": "fields-iso-week-53",
+      "op": "fields",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2021",
+              "month": 1,
+              "day": 3
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "dayOfWeek": 7,
+          "dayOfYear": 3,
+          "isoWeekYear": "2020",
+          "isoWeek": 53,
+          "daysInMonth": 31,
+          "isLeapYear": false
+        }
+      },
+      "note": "belongs to ISO week 53 of 2020"
+    },
+    {
+      "id": "fields-leap-day",
+      "op": "fields",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2024",
+              "month": 2,
+              "day": 29
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "dayOfWeek": 4,
+          "dayOfYear": 60,
+          "isoWeekYear": "2024",
+          "isoWeek": 9,
+          "daysInMonth": 29,
+          "isLeapYear": true
+        }
+      }
+    },
+    {
+      "id": "fields-datetime",
+      "op": "fields",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "dayOfWeek": 4,
+          "dayOfYear": 365,
+          "isoWeekYear": "2026",
+          "isoWeek": 53,
+          "daysInMonth": 31,
+          "isLeapYear": false
+        }
+      }
+    },
+    {
+      "id": "fields-invalid-date",
+      "op": "fields",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 2,
+              "day": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "fields-year-month-unsupported",
+      "op": "fields",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "year-month",
+            "fields": {
+              "year": "2026",
+              "month": 11
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unsupported"
+      }
+    },
+    {
+      "id": "add-days",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "days": "30"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 12,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "add-negative-days",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 3,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "days": "-1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 2,
+              "day": 28
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "add-weeks",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 12,
+              "day": 28
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "weeks": "1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2027",
+              "month": 1,
+              "day": 4
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "add-month",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "months": "1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 12,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "add-month-end-reject",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 1,
+              "day": 31
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "months": "1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "none"
+      },
+      "note": "31 February does not exist; the default policy refuses to guess"
+    },
+    {
+      "id": "add-month-end-constrain",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 1,
+              "day": 31
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "months": "1"
+            }
+          }
+        },
+        {
+          "monthEnd": "constrain"
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 2,
+              "day": 28
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "add-year-from-leap-day-constrain",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2024",
+              "month": 2,
+              "day": 29
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "years": "1"
+            }
+          }
+        },
+        {
+          "monthEnd": "constrain"
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2025",
+              "month": 2,
+              "day": 28
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "add-year-from-leap-day-reject",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2024",
+              "month": 2,
+              "day": 29
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "years": "1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "none"
+      }
+    },
+    {
+      "id": "add-months-then-days",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 1,
+              "day": 31
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "months": "1",
+              "days": "1"
+            }
+          }
+        },
+        {
+          "monthEnd": "constrain"
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 3,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      },
+      "note": "months first (31 Jan → 28 Feb), then days"
+    },
+    {
+      "id": "add-year-month",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "year-month",
+            "fields": {
+              "year": "2026",
+              "month": 11
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "months": "3"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "year-month",
+            "fields": {
+              "year": "2027",
+              "month": 2
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "add-days-to-year-month",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "year-month",
+            "fields": {
+              "year": "2026",
+              "month": 11
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "days": "1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "add-hours-to-date",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "hours": "1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "add-hours-wall-clock",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 23,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "hours": "2"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 6,
+              "hour": 1,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "add-day-keeps-zone-intent",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 3,
+              "day": 28,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "days": "1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 3,
+              "day": 29,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        }
+      },
+      "note": "09:00 the next day in Paris, across the DST change; still an intention"
+    },
+    {
+      "id": "add-to-time-unsupported",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "time",
+            "fields": {
+              "hour": 23,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "hours": "2"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unsupported"
+      }
+    },
+    {
+      "id": "add-posix-seconds",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "0"
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "clock-ticks",
+            "rules": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "seconds": {
+              "numerator": "3600",
+              "denominator": "1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "3600"
+          }
+        }
+      }
+    },
+    {
+      "id": "add-posix-fraction",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "0",
+            "subTick": {
+              "numerator": "3",
+              "denominator": "4"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "clock-ticks",
+            "rules": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "seconds": {
+              "numerator": "1",
+              "denominator": "2"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1",
+            "subTick": {
+              "numerator": "1",
+              "denominator": "4"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "add-si-seconds-to-posix-unsupported",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "0"
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "elapsed",
+            "seconds": {
+              "numerator": "3600",
+              "denominator": "1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unsupported"
+      },
+      "note": "SI seconds on a POSIX coordinate need a leap-second table"
+    },
+    {
+      "id": "add-calendar-to-instant-invalid",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "0"
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "days": "1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "add-invalid-date",
+      "op": "add",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 2,
+              "day": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "calendar",
+            "components": {
+              "days": "1"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "compare-dates-before",
+      "op": "compare",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 12,
+              "day": 25
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "before"
+      }
+    },
+    {
+      "id": "compare-dates-equal",
+      "op": "compare",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "equal"
+      }
+    },
+    {
+      "id": "compare-datetimes-after",
+      "op": "compare",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 14,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "after"
+      }
+    },
+    {
+      "id": "compare-times",
+      "op": "compare",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "time",
+            "fields": {
+              "hour": 9,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "time",
+            "fields": {
+              "hour": 9,
+              "minute": 30,
+              "second": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "before"
+      }
+    },
+    {
+      "id": "compare-instants",
+      "op": "compare",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1",
+            "subTick": {
+              "numerator": "1",
+              "denominator": "1000000000"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1"
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "after"
+      }
+    },
+    {
+      "id": "compare-offsets-same-instant",
+      "op": "compare",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 14,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "fixed-offset",
+              "seconds": 3600
+            },
+            "zoneIntent": "fixed-offset"
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 8,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "fixed-offset",
+              "seconds": -18000
+            },
+            "zoneIntent": "fixed-offset"
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "equal"
+      },
+      "note": "14:30+01:00 and 08:30-05:00 are the same instant"
+    },
+    {
+      "id": "compare-zoned-unsupported",
+      "op": "compare",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        }
+      ],
+      "expect": {
+        "status": "unsupported"
+      },
+      "note": "needs zone rules: resolve first"
+    },
+    {
+      "id": "compare-date-vs-datetime-unsupported",
+      "op": "compare",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 0,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unsupported"
+      }
+    },
+    {
+      "id": "days-between",
+      "op": "daysBetween",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 12,
+              "day": 25
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": 50
+      }
+    },
+    {
+      "id": "days-between-negative",
+      "op": "daysBetween",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 12,
+              "day": 25
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": -50
+      }
+    },
+    {
+      "id": "days-between-across-leap-year",
+      "op": "daysBetween",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2024",
+              "month": 1,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2025",
+              "month": 1,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": 366
+      }
+    },
+    {
+      "id": "days-between-proleptic",
+      "op": "daysBetween",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "1",
+              "month": 1,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": 739924
+      }
+    },
+    {
+      "id": "days-between-datetime-unsupported",
+      "op": "daysBetween",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 6
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unsupported"
+      }
+    },
+    {
+      "id": "posix-seconds-between",
+      "op": "posixSecondsBetween",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "0"
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "86400"
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "clock-ticks",
+            "rules": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "seconds": {
+              "numerator": "86400",
+              "denominator": "1"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "posix-seconds-between-fraction",
+      "op": "posixSecondsBetween",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1",
+            "subTick": {
+              "numerator": "1",
+              "denominator": "2"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "0"
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "amount",
+          "value": {
+            "basis": "clock-ticks",
+            "rules": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "seconds": {
+              "numerator": "-3",
+              "denominator": "2"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "contains-inside",
+      "op": "contains",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "excluded",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 12,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 15
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "definitely"
+      }
+    },
+    {
+      "id": "contains-excluded-end",
+      "op": "contains",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "excluded",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 12,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 12,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "impossible"
+      }
+    },
+    {
+      "id": "contains-included-end",
+      "op": "contains",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 30
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "definitely"
+      }
+    },
+    {
+      "id": "contains-before-start",
+      "op": "contains",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "excluded",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 12,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 10,
+              "day": 31
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "impossible"
+      }
+    },
+    {
+      "id": "contains-unbounded",
+      "op": "contains",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "unbounded"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "3000",
+              "month": 1,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "definitely"
+      }
+    },
+    {
+      "id": "contains-unknown-end",
+      "op": "contains",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "unknown"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2027",
+              "month": 6,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "possibly"
+      },
+      "note": "the end exists but is not known"
+    },
+    {
+      "id": "contains-unknown-end-before-start",
+      "op": "contains",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "unknown"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 10,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "impossible"
+      }
+    },
+    {
+      "id": "contains-instant",
+      "op": "contains",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "physical",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "instant",
+                "value": {
+                  "system": {
+                    "system": "utv.timescale",
+                    "id": "unix-posix",
+                    "version": "1"
+                  },
+                  "ticks": "0"
+                }
+              }
+            },
+            "end": {
+              "state": "excluded",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "instant",
+                "value": {
+                  "system": {
+                    "system": "utv.timescale",
+                    "id": "unix-posix",
+                    "version": "1"
+                  },
+                  "ticks": "10"
+                }
+              }
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "9",
+            "subTick": {
+              "numerator": "999999999",
+              "denominator": "1000000000"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "definitely"
+      }
+    },
+    {
+      "id": "contains-instant-end",
+      "op": "contains",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "physical",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "instant",
+                "value": {
+                  "system": {
+                    "system": "utv.timescale",
+                    "id": "unix-posix",
+                    "version": "1"
+                  },
+                  "ticks": "0"
+                }
+              }
+            },
+            "end": {
+              "state": "excluded",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "instant",
+                "value": {
+                  "system": {
+                    "system": "utv.timescale",
+                    "id": "unix-posix",
+                    "version": "1"
+                  },
+                  "ticks": "10"
+                }
+              }
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "10"
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "impossible"
+      }
+    },
+    {
+      "id": "contains-mixed-domain-unsupported",
+      "op": "contains",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "excluded",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 12,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "0"
+          }
+        }
+      ],
+      "expect": {
+        "status": "unsupported"
+      }
+    },
+    {
+      "id": "overlaps-adjacent-half-open",
+      "op": "overlaps",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "excluded",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 12,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 12,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "excluded",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2027",
+                    "month": 1,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "impossible"
+      },
+      "note": "[Nov) and [Dec) meet but do not overlap"
+    },
+    {
+      "id": "overlaps-closed-vs-half-open",
+      "op": "overlaps",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 30
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 12,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "excluded",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2027",
+                    "month": 1,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "impossible"
+      },
+      "note": "[1 Nov, 30 Nov] and [1 Dec, …) share no day"
+    },
+    {
+      "id": "overlaps-yes",
+      "op": "overlaps",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "excluded",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 12,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 30
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "excluded",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 12,
+                    "day": 5
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "definitely"
+      }
+    },
+    {
+      "id": "overlaps-unknown-end",
+      "op": "overlaps",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 11,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "unknown"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "civil/gregory",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2026",
+                    "month": 12,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            },
+            "end": {
+              "state": "excluded",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "civil",
+                "value": {
+                  "form": "date",
+                  "fields": {
+                    "year": "2027",
+                    "month": 1,
+                    "day": 1
+                  },
+                  "calendar": {
+                    "id": "gregory",
+                    "chronology": "proleptic"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "possibly"
+      }
+    },
+    {
+      "id": "overlaps-instants-touching-closed",
+      "op": "overlaps",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "physical",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "instant",
+                "value": {
+                  "system": {
+                    "system": "utv.timescale",
+                    "id": "unix-posix",
+                    "version": "1"
+                  },
+                  "ticks": "0"
+                }
+              }
+            },
+            "end": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "instant",
+                "value": {
+                  "system": {
+                    "system": "utv.timescale",
+                    "id": "unix-posix",
+                    "version": "1"
+                  },
+                  "ticks": "10"
+                }
+              }
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "interval",
+          "value": {
+            "domain": "physical",
+            "start": {
+              "state": "included",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "instant",
+                "value": {
+                  "system": {
+                    "system": "utv.timescale",
+                    "id": "unix-posix",
+                    "version": "1"
+                  },
+                  "ticks": "10"
+                }
+              }
+            },
+            "end": {
+              "state": "excluded",
+              "point": {
+                "schema": "utv/1.0",
+                "kind": "instant",
+                "value": {
+                  "system": {
+                    "system": "utv.timescale",
+                    "id": "unix-posix",
+                    "version": "1"
+                  },
+                  "ticks": "20"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": "definitely"
+      },
+      "note": "both include instant 10"
+    },
+    {
+      "id": "resolve-unique",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 7,
+              "day": 4,
+              "hour": 12,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1783180800"
+          }
+        }
+      }
+    },
+    {
+      "id": "resolve-gap-reject",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 3,
+              "day": 8,
+              "hour": 2,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "none"
+      },
+      "note": "02:30 never happened in New York that night"
+    },
+    {
+      "id": "resolve-gap-preserve",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 3,
+              "day": 8,
+              "hour": 2,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        "demo-zones",
+        {
+          "gap": "preserve-unresolved",
+          "overlap": "reject"
+        }
+      ],
+      "expect": {
+        "status": "none"
+      }
+    },
+    {
+      "id": "resolve-gap-shift-forward",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 3,
+              "day": 8,
+              "hour": 2,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        "demo-zones",
+        {
+          "gap": "shift-forward-by-gap",
+          "overlap": "reject"
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1772955000"
+          }
+        }
+      },
+      "note": "the instant labeled 03:30 EDT"
+    },
+    {
+      "id": "resolve-overlap-reject",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 1,
+              "hour": 1,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "multiple",
+        "results": [
+          {
+            "schema": "utv/1.0",
+            "kind": "instant",
+            "value": {
+              "system": {
+                "system": "utv.timescale",
+                "id": "unix-posix",
+                "version": "1"
+              },
+              "ticks": "1793511000"
+            }
+          },
+          {
+            "schema": "utv/1.0",
+            "kind": "instant",
+            "value": {
+              "system": {
+                "system": "utv.timescale",
+                "id": "unix-posix",
+                "version": "1"
+              },
+              "ticks": "1793514600"
+            }
+          }
+        ]
+      },
+      "note": "01:30 happened twice; refusing to choose returns both"
+    },
+    {
+      "id": "resolve-overlap-earliest",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 1,
+              "hour": 1,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        "demo-zones",
+        {
+          "gap": "reject",
+          "overlap": "earliest"
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1793511000"
+          }
+        }
+      }
+    },
+    {
+      "id": "resolve-overlap-latest",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 1,
+              "hour": 1,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        "demo-zones",
+        {
+          "gap": "reject",
+          "overlap": "latest"
+        }
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1793514600"
+          }
+        }
+      }
+    },
+    {
+      "id": "resolve-uses-value-policy",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 1,
+              "hour": 1,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id",
+            "resolutionPolicy": {
+              "gap": "reject",
+              "overlap": "latest"
+            }
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1793514600"
+          }
+        }
+      }
+    },
+    {
+      "id": "resolve-with-seconds-nano",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 7,
+              "day": 4,
+              "hour": 12,
+              "minute": 0,
+              "second": 1,
+              "nano": 500000000
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1783180801",
+            "subTick": {
+              "numerator": "1",
+              "denominator": "2"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "resolve-paris-winter",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 12,
+              "day": 25,
+              "hour": 9,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1798185600"
+          }
+        }
+      }
+    },
+    {
+      "id": "resolve-reykjavik",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 14,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Atlantic/Reykjavik"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1793889000"
+          }
+        }
+      }
+    },
+    {
+      "id": "resolve-fixed-offset",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 14,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "fixed-offset",
+              "seconds": 3600
+            },
+            "zoneIntent": "fixed-offset"
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1793885400"
+          }
+        }
+      }
+    },
+    {
+      "id": "resolve-floating-symbolic",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 14,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "symbolic"
+      },
+      "note": "no zone: nothing to resolve against yet"
+    },
+    {
+      "id": "resolve-unknown-zone",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 14,
+              "minute": 30
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Asia/Tokyo"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unsupported"
+      },
+      "note": "not in the demo rules"
+    },
+    {
+      "id": "resolve-outside-window",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2030",
+              "month": 1,
+              "day": 1,
+              "hour": 12,
+              "minute": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unsupported"
+      },
+      "note": "never extrapolate rules"
+    },
+    {
+      "id": "resolve-date-form-unsupported",
+      "op": "resolve",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id"
+          }
+        },
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unsupported"
+      },
+      "note": "a whole day is not one instant"
+    },
+    {
+      "id": "to-zone-paris-summer",
+      "op": "toZone",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1811833200"
+          }
+        },
+        "Europe/Paris",
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2027",
+              "month": 6,
+              "day": 1,
+              "hour": 9,
+              "minute": 0,
+              "second": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id",
+            "offsetAssertion": 7200
+          }
+        }
+      }
+    },
+    {
+      "id": "to-zone-ny-overlap-first",
+      "op": "toZone",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1793511000"
+          }
+        },
+        "America/New_York",
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 1,
+              "hour": 1,
+              "minute": 30,
+              "second": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id",
+            "offsetAssertion": -14400
+          }
+        }
+      }
+    },
+    {
+      "id": "to-zone-ny-overlap-second",
+      "op": "toZone",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1793514600"
+          }
+        },
+        "America/New_York",
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 1,
+              "hour": 1,
+              "minute": 30,
+              "second": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "America/New_York"
+            },
+            "zoneIntent": "follow-zone-id",
+            "offsetAssertion": -18000
+          }
+        }
+      },
+      "note": "same wall time, different offset: the asserted offset tells the two apart"
+    },
+    {
+      "id": "to-zone-nano",
+      "op": "toZone",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1811833200",
+            "subTick": {
+              "numerator": "1",
+              "denominator": "200000000"
+            }
+          }
+        },
+        "Europe/Paris",
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2027",
+              "month": 6,
+              "day": 1,
+              "hour": 9,
+              "minute": 0,
+              "second": 0,
+              "nano": 5
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "iana",
+              "id": "Europe/Paris"
+            },
+            "zoneIntent": "follow-zone-id",
+            "offsetAssertion": 7200
+          }
+        }
+      }
+    },
+    {
+      "id": "to-zone-unknown",
+      "op": "toZone",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1811833200"
+          }
+        },
+        "Asia/Tokyo",
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unsupported"
+      }
+    },
+    {
+      "id": "to-zone-outside-window",
+      "op": "toZone",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "0"
+          }
+        },
+        "America/New_York",
+        "demo-zones"
+      ],
+      "expect": {
+        "status": "unsupported"
+      }
+    },
+    {
+      "id": "to-offset",
+      "op": "toOffset",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1793885400"
+          }
+        },
+        -18000
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 5,
+              "hour": 8,
+              "minute": 30,
+              "second": 0
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "fixed-offset",
+              "seconds": -18000
+            },
+            "zoneIntent": "fixed-offset"
+          }
+        }
+      }
+    },
+    {
+      "id": "to-offset-negative-instant",
+      "op": "toOffset",
+      "args": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "-1"
+          }
+        },
+        0
+      ],
+      "expect": {
+        "status": "unique",
+        "result": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "datetime",
+            "fields": {
+              "year": "1969",
+              "month": 12,
+              "day": 31,
+              "hour": 23,
+              "minute": 59,
+              "second": 59
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            },
+            "zone": {
+              "type": "fixed-offset",
+              "seconds": 0
+            },
+            "zoneIntent": "fixed-offset"
+          }
+        }
+      }
+    }
+  ]
+}

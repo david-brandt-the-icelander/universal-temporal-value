@@ -14,6 +14,8 @@ Checks performed:
   6. Every falsehood ID in spec/FALSEHOODS-MATRIX.md has a scenario, and vice versa.
   7. Every value in examples/traditional.json is accepted by the schema exactly when the
      catalog expects structural status `valid`.
+  8. Every UTV value in conformance/operations/everyday.json (arguments and expected results)
+     passes the schema, fixture ids are unique, and referenced rule bundles exist.
 
 Usage:  python3 tools/validate.py          (from the repository root)
 Requires: jsonschema >= 4.18  (pip install -r tools/requirements.txt)
@@ -167,12 +169,46 @@ def check_traditional_catalog(validator: Draft202012Validator) -> None:
     ok(f"{len(catalog['entries'])} catalog entries agree with the schema")
 
 
+def check_everyday_fixtures(validator: Draft202012Validator) -> None:
+    print("Everyday API fixtures")
+    catalog = load_json(ROOT / "conformance" / "operations" / "everyday.json")
+    for name, rel in catalog["rules"].items():
+        if not (ROOT / rel).is_file():
+            fail(f"everyday.json: rule bundle {name} -> {rel} not found")
+    seen: set[str] = set()
+    count = 0
+
+    def walk(node, where: str) -> None:
+        nonlocal count
+        if isinstance(node, dict) and str(node.get("schema", "")).startswith("utv/"):
+            count += 1
+            for err in validator.iter_errors(node):
+                fail(f"everyday.json: {where}: {err.message[:200]}")
+                break
+            return
+        if isinstance(node, dict):
+            for child in node.values():
+                walk(child, where)
+        elif isinstance(node, list):
+            for child in node:
+                walk(child, where)
+
+    for fixture in catalog["fixtures"]:
+        if fixture["id"] in seen:
+            fail(f"everyday.json: duplicate id {fixture['id']}")
+        seen.add(fixture["id"])
+        walk(fixture["args"], f"{fixture['id']} args")
+        walk(fixture["expect"], f"{fixture['id']} expect")
+    ok(f"{len(catalog['fixtures'])} fixtures, {count} UTV values pass the schema")
+
+
 def main() -> int:
     validator = check_schemas()
     check_examples(validator)
     check_spec_examples(validator)
     check_scenarios()
     check_traditional_catalog(validator)
+    check_everyday_fixtures(validator)
     print()
     if failures:
         print(f"{len(failures)} failure(s)")
