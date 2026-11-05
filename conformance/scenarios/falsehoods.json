@@ -1,0 +1,436 @@
+[
+  {
+    "id": "CAL-01",
+    "scenario": "civil local day over spring transition",
+    "designSafeguard": "Civil/amount distinctions; named day boundary; DST",
+    "specSections": "4,5",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CAL-02",
+    "scenario": "Feb 29, leap and intercalary months",
+    "designSafeguard": "Calendar registry; month-end arithmetic policy",
+    "specSections": "4,5",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CAL-03",
+    "scenario": "ISO week 2020-W53",
+    "designSafeguard": "Week system independent; fielded dates",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CAL-04",
+    "scenario": "Historic Julian/Gregorian / Hebrew date",
+    "designSafeguard": "Registered calendar, chronology and eras",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CAL-05",
+    "scenario": "Sunset-based date",
+    "designSafeguard": "Registered day boundary and location",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CAL-06",
+    "scenario": "1582 reform, partial evidence",
+    "designSafeguard": "History uncertainty, jurisdiction and source",
+    "specSections": "4,7",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CAL-07",
+    "scenario": "1 BCE vs astronomical year 0",
+    "designSafeguard": "Explicit chronology and era semantics",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CAL-08",
+    "scenario": "1347 year-only",
+    "designSafeguard": "Partial date is not midnight",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CAL-09",
+    "scenario": "Jan 31 +1 month −1 month",
+    "designSafeguard": "Operation-specific clamp/carry and ordering",
+    "specSections": "5",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CAL-10",
+    "scenario": "Pacific/Apia 2011-12-30",
+    "designSafeguard": "Local-day resolution can have zero solutions",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "ZONE-01",
+    "scenario": "+01:00 vs Europe/Paris",
+    "designSafeguard": "Distinct named and fixed offset variants",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "ZONE-02",
+    "scenario": "CST ambiguous",
+    "designSafeguard": "Abbreviation not valid zone identity",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "ZONE-03",
+    "scenario": "Lord Howe, Apia",
+    "designSafeguard": "Offset changes arbitrary seconds/days",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "ZONE-04",
+    "scenario": "midnight transition",
+    "designSafeguard": "Full tzdb transition rules",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "ZONE-05",
+    "scenario": "NY DST overlap/gap",
+    "designSafeguard": "0/1/multiple/indeterminate resolution",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "ZONE-06",
+    "scenario": "synthetic multi-overlap rules",
+    "designSafeguard": "General finite candidate set",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "ZONE-07",
+    "scenario": "future policy change",
+    "designSafeguard": "Floating rules with re-resolution",
+    "specSections": "4,10",
+    "status": "design-test-required"
+  },
+  {
+    "id": "ZONE-08",
+    "scenario": "zone boundary change",
+    "designSafeguard": "Geographical legal-time intent and mapping",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "ZONE-09",
+    "scenario": "pre-1970 local times",
+    "designSafeguard": "Uncertainty/unknown/rule source",
+    "specSections": "4,14",
+    "status": "design-test-required"
+  },
+  {
+    "id": "ZONE-10",
+    "scenario": "historic +00:09:21",
+    "designSafeguard": "Second-precision offsets and model registry",
+    "specSections": "4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "ZONE-11",
+    "scenario": "Paris July +01:00",
+    "designSafeguard": "Strict native consistency; RFC adapter difference",
+    "specSections": "2,4",
+    "status": "design-test-required"
+  },
+  {
+    "id": "ZONE-12",
+    "scenario": "travel crossing zone boundary",
+    "designSafeguard": "Trajectory or per-occurrence location",
+    "specSections": "4,10",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-01",
+    "scenario": "clock off by years",
+    "designSafeguard": "Quality/source/error bound separate",
+    "specSections": "8",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-02",
+    "scenario": "NTP backward step",
+    "designSafeguard": "Clock generation, reset, step and slew",
+    "specSections": "8",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-03",
+    "scenario": "temperature drift",
+    "designSafeguard": "Drift/calibration/holdover model",
+    "specSections": "8",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-04",
+    "scenario": "NTP without bound",
+    "designSafeguard": "Calibration evidence required",
+    "specSections": "8",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-05",
+    "scenario": "cross-host event ordering",
+    "designSafeguard": "Cross-clock correlation/uncertainty",
+    "specSections": "8",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-06",
+    "scenario": "suspend-aware vs pause-on-suspend",
+    "designSafeguard": "Clock registry: suspend/reboot/wrap",
+    "specSections": "8",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-07",
+    "scenario": "same timestamp twice",
+    "designSafeguard": "Event IDs separate, logical ordering",
+    "specSections": "8,9",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-08",
+    "scenario": "Lamport counter mismatch",
+    "designSafeguard": "Protocol-specific causal metadata",
+    "specSections": "9",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-09",
+    "scenario": "timer resolution and drift",
+    "designSafeguard": "Clock-rate/quantization/quality",
+    "specSections": "7,8",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-10",
+    "scenario": "clock-skew negative latency",
+    "designSafeguard": "Sync uncertainty and transport model",
+    "specSections": "8",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-11",
+    "scenario": "logged at vs happened at",
+    "designSafeguard": "Observation roles and assertion source",
+    "specSections": "8,11",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-12",
+    "scenario": "2016 leap second",
+    "designSafeguard": "Registered timescales/leap semantics",
+    "specSections": "3",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-13",
+    "scenario": "negative leap model, changed UTC policy",
+    "designSafeguard": "Versioned UTC/leap-rule model",
+    "specSections": "3,14",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-14",
+    "scenario": "Google vs other smear profile",
+    "designSafeguard": "Provider-specific smear model",
+    "specSections": "3,8",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-15",
+    "scenario": "23:59:60 UTC label",
+    "designSafeguard": "Non-bijective conversion result",
+    "specSections": "3",
+    "status": "design-test-required"
+  },
+  {
+    "id": "CLK-16",
+    "scenario": "POSIX leap folding",
+    "designSafeguard": "Registry epoch/leap/time uncertainty",
+    "specSections": "3",
+    "status": "design-test-required"
+  },
+  {
+    "id": "HIST-01",
+    "scenario": "clocks deliberately stopped",
+    "designSafeguard": "Legal vs observed practice separate",
+    "specSections": "4,11",
+    "status": "design-test-required"
+  },
+  {
+    "id": "HIST-02",
+    "scenario": "corrected date reported later",
+    "designSafeguard": "Bitemporal revision chain",
+    "specSections": "11",
+    "status": "design-test-required"
+  },
+  {
+    "id": "HIST-03",
+    "scenario": "tzdb historical correction",
+    "designSafeguard": "Immutable rule manifest and revisions",
+    "specSections": "4,16",
+    "status": "design-test-required"
+  },
+  {
+    "id": "HIST-04",
+    "scenario": "approximately 1347",
+    "designSafeguard": "Precision/epistemic uncertainty",
+    "specSections": "7",
+    "status": "design-test-required"
+  },
+  {
+    "id": "HIST-05",
+    "scenario": "12000 radiocarbon BP",
+    "designSafeguard": "Epoch/calibration registry",
+    "specSections": "14",
+    "status": "design-test-required"
+  },
+  {
+    "id": "REC-01",
+    "scenario": "weekly meeting across DST",
+    "designSafeguard": "Distinct elapsed vs local recurrence",
+    "specSections": "10",
+    "status": "design-test-required"
+  },
+  {
+    "id": "REC-02",
+    "scenario": "first weekday of month",
+    "designSafeguard": "Rule+intent+zone+calendar+exceptions",
+    "specSections": "10",
+    "status": "design-test-required"
+  },
+  {
+    "id": "REC-03",
+    "scenario": "RRULE local 02:30 gap",
+    "designSafeguard": "RFC5545 verified erratum and named policies",
+    "specSections": "10",
+    "status": "design-test-required"
+  },
+  {
+    "id": "REC-04",
+    "scenario": "tzdb changed scheduled instant",
+    "designSafeguard": "Stable civil occurrence identity",
+    "specSections": "10",
+    "status": "design-test-required"
+  },
+  {
+    "id": "REC-05",
+    "scenario": "market closed on local holiday",
+    "designSafeguard": "Versioned business/jurisdiction rules",
+    "specSections": "10",
+    "status": "design-test-required"
+  },
+  {
+    "id": "REC-06",
+    "scenario": "daily recurrence forever",
+    "designSafeguard": "Explicit finite budgets/continuations",
+    "specSections": "10,13",
+    "status": "design-test-required"
+  },
+  {
+    "id": "REC-07",
+    "scenario": "country abolishes DST",
+    "designSafeguard": "Re-resolution and cache invalidation",
+    "specSections": "10",
+    "status": "design-test-required"
+  },
+  {
+    "id": "UNC-01",
+    "scenario": "nine decimals ±1 s",
+    "designSafeguard": "Precision, resolution, uncertainty separate",
+    "specSections": "7",
+    "status": "design-test-required"
+  },
+  {
+    "id": "UNC-02",
+    "scenario": "asymmetric clock drift",
+    "designSafeguard": "Asymmetric, disjoint and distributions",
+    "specSections": "7",
+    "status": "design-test-required"
+  },
+  {
+    "id": "UNC-03",
+    "scenario": "two NTP-derived clocks",
+    "designSafeguard": "Correlations, joint models and explicit unknown",
+    "specSections": "7",
+    "status": "design-test-required"
+  },
+  {
+    "id": "UNC-04",
+    "scenario": "unobserved event",
+    "designSafeguard": "Unknown != probability model",
+    "specSections": "7",
+    "status": "design-test-required"
+  },
+  {
+    "id": "UNC-05",
+    "scenario": "overlapping uncertain events",
+    "designSafeguard": "Partial order and indeterminate",
+    "specSections": "6,13",
+    "status": "design-test-required"
+  },
+  {
+    "id": "UNC-06",
+    "scenario": "relativistic spacecraft",
+    "designSafeguard": "Frame and proper-time reference systems",
+    "specSections": "3,14",
+    "status": "design-test-required"
+  },
+  {
+    "id": "SEC-01",
+    "scenario": "February 30",
+    "designSafeguard": "3-stage validation; unknown not coerced",
+    "specSections": "13,15",
+    "status": "design-test-required"
+  },
+  {
+    "id": "SEC-02",
+    "scenario": "03/04/05",
+    "designSafeguard": "Explicit locale/calendar/parser policy",
+    "specSections": "12",
+    "status": "design-test-required"
+  },
+  {
+    "id": "SEC-03",
+    "scenario": "ISO string lacking uncertainty",
+    "designSafeguard": "Adapter loss reports",
+    "specSections": "2,13",
+    "status": "design-test-required"
+  },
+  {
+    "id": "SEC-04",
+    "scenario": "two events same millisecond",
+    "designSafeguard": "External IDs and event histories",
+    "specSections": "11",
+    "status": "design-test-required"
+  },
+  {
+    "id": "SEC-05",
+    "scenario": "historical tzdb unavailable",
+    "designSafeguard": "Immutable digest and dependency closure",
+    "specSections": "16",
+    "status": "design-test-required"
+  },
+  {
+    "id": "SEC-06",
+    "scenario": "unbounded recurrence explosion",
+    "designSafeguard": "resource-limit status & budgets",
+    "specSections": "15",
+    "status": "design-test-required"
+  }
+]

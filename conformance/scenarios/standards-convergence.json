@@ -1,0 +1,258 @@
+[
+  {
+    "id": "STD-001",
+    "category": "ordinal",
+    "scenario": "Two named periods overlap without numeric anchors",
+    "expectedDesignOutcome": "return possible topology relations; do not fabricate dates",
+    "sourceStandard": "ISO 19108; OWL-Time",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-002",
+    "category": "ordinal",
+    "scenario": "Cyclic strict-before graph",
+    "expectedDesignOutcome": "reject semantically inconsistent graph",
+    "sourceStandard": "OWL-Time",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-003",
+    "category": "ordinal",
+    "scenario": "Partial order with incomparable labels",
+    "expectedDesignOutcome": "return indeterminate, not arbitrary sorting",
+    "sourceStandard": "ISO 19108",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-004",
+    "category": "event",
+    "scenario": "Before each meal with missing breakfast",
+    "expectedDesignOutcome": "remain symbolic/indeterminate under open-world policy",
+    "sourceStandard": "FHIR R5 Timing",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-005",
+    "category": "event",
+    "scenario": "Three times per day without hours",
+    "expectedDesignOutcome": "retain frequency constraint; no invented 08:00 schedule",
+    "sourceStandard": "FHIR R5 Timing",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-006",
+    "category": "event",
+    "scenario": "One to three times in every 3–5 days",
+    "expectedDesignOutcome": "preserve ranges for both frequency and period",
+    "sourceStandard": "FHIR R5 Timing",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-007",
+    "category": "selection",
+    "scenario": "Third Wednesday in one given month",
+    "expectedDesignOutcome": "select one date without asserting recurrence",
+    "sourceStandard": "ISO 8601-2",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-008",
+    "category": "selection",
+    "scenario": "Select last element of infinite unordered set",
+    "expectedDesignOutcome": "resource-limit or indeterminate",
+    "sourceStandard": "ISO 8601-2",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-009",
+    "category": "selection",
+    "scenario": "Nth item in tied partial ordering",
+    "expectedDesignOutcome": "reject or use explicit tie-breaker",
+    "sourceStandard": "OWL-Time",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-010",
+    "category": "interval",
+    "scenario": "Start + P1M at Jan 31",
+    "expectedDesignOutcome": "apply explicit month-end policy",
+    "sourceStandard": "ISO 8601",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-011",
+    "category": "interval",
+    "scenario": "Duration + end using non-invertible calendar addition",
+    "expectedDesignOutcome": "return zero or multiple candidates as appropriate",
+    "sourceStandard": "ISO 8601",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-012",
+    "category": "interval",
+    "scenario": "Discrete closed date range vs half-open next date",
+    "expectedDesignOutcome": "equivalence requires domain-successor rule",
+    "sourceStandard": "OWL-Time",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-013",
+    "category": "interval",
+    "scenario": "Allen relation set with uncertain boundaries",
+    "expectedDesignOutcome": "return possible relations, not one forced relation",
+    "sourceStandard": "OWL-Time",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-014",
+    "category": "recurrence",
+    "scenario": "RFC 5545 valid nonexistent local recurrence",
+    "expectedDesignOutcome": "follow §3.3.5 per verified erratum 4271",
+    "sourceStandard": "RFC 5545",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-015",
+    "category": "recurrence",
+    "scenario": "Invalid Feb 30 recurrence",
+    "expectedDesignOutcome": "omit without counting per RFC profile",
+    "sourceStandard": "RFC 5545",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-016",
+    "category": "recurrence",
+    "scenario": "RSCALE SKIP FORWARD with leap month",
+    "expectedDesignOutcome": "perform skip at specified BYxxx stage",
+    "sourceStandard": "RFC 7529",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-017",
+    "category": "recurrence",
+    "scenario": "Cancelled and moved occurrence same recurrenceId",
+    "expectedDesignOutcome": "preserve original recurrence identity",
+    "sourceStandard": "RFC 8984",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-018",
+    "category": "recurrence",
+    "scenario": "Unknown VTIMEZONE differs from IANA release",
+    "expectedDesignOutcome": "preserve rule definition, cannot silently replace",
+    "sourceStandard": "RFC 5545",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-019",
+    "category": "series",
+    "scenario": "Two samples with same time value",
+    "expectedDesignOutcome": "preserve both unless explicit deduplication",
+    "sourceStandard": "TimeseriesML",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-020",
+    "category": "series",
+    "scenario": "Series has missing samples and reset counter",
+    "expectedDesignOutcome": "counter-reset policy required in aggregation",
+    "sourceStandard": "TimeseriesML",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-021",
+    "category": "series",
+    "scenario": "ResultTime after PhenomenonTime",
+    "expectedDesignOutcome": "preserve both independently",
+    "sourceStandard": "SensorThings",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-022",
+    "category": "series",
+    "scenario": "Hourly bins on fall DST shift",
+    "expectedDesignOutcome": "vary elapsed bin durations; explicit zone rules",
+    "sourceStandard": "TimeseriesML",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-023",
+    "category": "series",
+    "scenario": "Categorial time series with interpolation=linear",
+    "expectedDesignOutcome": "semantic invalid without numeric mapping",
+    "sourceStandard": "TimeseriesML",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-024",
+    "category": "series",
+    "scenario": "Live stream changes after a signature",
+    "expectedDesignOutcome": "cannot claim signed immutable snapshot",
+    "sourceStandard": "SensorThings",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-025",
+    "category": "uncertainty",
+    "scenario": "Correlated clock errors between sources",
+    "expectedDesignOutcome": "do not assume independence",
+    "sourceStandard": "UTV core",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-026",
+    "category": "physics",
+    "scenario": "GPS second converted to UTC without leap table",
+    "expectedDesignOutcome": "unsupported/indeterminate with missing rules",
+    "sourceStandard": "IERS",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-027",
+    "category": "business",
+    "scenario": "Holiday rules change after future schedule",
+    "expectedDesignOutcome": "re-evaluate under explicit rule-binding policy",
+    "sourceStandard": "UTV core",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-028",
+    "category": "geography",
+    "scenario": "Jurisdiction boundary changes before appointment",
+    "expectedDesignOutcome": "follow-location-law changes mapping with evidence",
+    "sourceStandard": "IANA/tz boundary",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-029",
+    "category": "lexical",
+    "scenario": "ISO choice and uncertainty notation import",
+    "expectedDesignOutcome": "keep semantics and original lexical form",
+    "sourceStandard": "ISO 8601-2:2019/Amd1:2025",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-030",
+    "category": "interop",
+    "scenario": "JSCalendar override patch moves instance",
+    "expectedDesignOutcome": "match via recurrenceId not new start",
+    "sourceStandard": "RFC 8984",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-031",
+    "category": "graph",
+    "scenario": "Temporal graph constraint unsatisfiable",
+    "expectedDesignOutcome": "proof of no solutions, distinct from unsupported",
+    "sourceStandard": "OWL-Time",
+    "status": "design-requirement-not-implemented"
+  },
+  {
+    "id": "STD-032",
+    "category": "semantic",
+    "scenario": "Passing JSON Schema with unknown ordinal registry",
+    "expectedDesignOutcome": "semantic validator returns unsupported",
+    "sourceStandard": "UTV",
+    "status": "design-requirement-not-implemented"
+  }
+]

@@ -1,0 +1,1036 @@
+{
+  "posix-instant": {
+    "schema": "utv/1.0",
+    "kind": "instant",
+    "value": {
+      "system": {
+        "system": "utv.timescale",
+        "id": "unix-posix",
+        "version": "1"
+      },
+      "ticks": "0"
+    }
+  },
+  "paris-resolved-2026": {
+    "schema": "utv/1.0",
+    "kind": "civil",
+    "value": {
+      "form": "datetime",
+      "fields": {
+        "year": "2026",
+        "month": 7,
+        "day": 15,
+        "hour": 14,
+        "minute": 30,
+        "second": 0
+      },
+      "calendar": {
+        "id": "gregory",
+        "chronology": "proleptic"
+      },
+      "zone": {
+        "type": "iana",
+        "id": "Europe/Paris"
+      },
+      "zoneIntent": "follow-zone-id",
+      "resolutionPolicy": {
+        "gap": "reject",
+        "overlap": "reject"
+      },
+      "offsetAssertion": 7200
+    }
+  },
+  "new-york-overlap": {
+    "schema": "utv/1.0",
+    "kind": "civil",
+    "value": {
+      "form": "datetime",
+      "fields": {
+        "year": "2026",
+        "month": 11,
+        "day": 1,
+        "hour": 1,
+        "minute": 30
+      },
+      "calendar": {
+        "id": "gregory",
+        "chronology": "proleptic"
+      },
+      "zone": {
+        "type": "iana",
+        "id": "America/New_York"
+      },
+      "zoneIntent": "follow-zone-id",
+      "resolutionPolicy": {
+        "gap": "reject",
+        "overlap": "all"
+      }
+    }
+  },
+  "new-york-gap-intention": {
+    "schema": "utv/1.0",
+    "kind": "civil",
+    "value": {
+      "form": "datetime",
+      "fields": {
+        "year": "2026",
+        "month": 3,
+        "day": 8,
+        "hour": 2,
+        "minute": 30
+      },
+      "calendar": {
+        "id": "gregory",
+        "chronology": "proleptic"
+      },
+      "zone": {
+        "type": "iana",
+        "id": "America/New_York"
+      },
+      "zoneIntent": "follow-zone-id",
+      "resolutionPolicy": {
+        "gap": "preserve-unresolved",
+        "overlap": "all"
+      }
+    }
+  },
+  "partial-year": {
+    "schema": "utv/1.0",
+    "kind": "civil",
+    "value": {
+      "form": "year",
+      "fields": {
+        "year": "1347"
+      },
+      "calendar": {
+        "id": "gregory",
+        "chronology": "proleptic"
+      },
+      "quality": {
+        "precision": "year"
+      }
+    }
+  },
+  "calendar-month": {
+    "schema": "utv/1.0",
+    "kind": "amount",
+    "value": {
+      "basis": "calendar",
+      "components": {
+        "months": "1"
+      }
+    }
+  },
+  "exact-si-day": {
+    "schema": "utv/1.0",
+    "kind": "amount",
+    "value": {
+      "basis": "elapsed",
+      "seconds": {
+        "numerator": "86400",
+        "denominator": "1"
+      }
+    }
+  },
+  "civil-date-range": {
+    "schema": "utv/1.0",
+    "kind": "interval",
+    "value": {
+      "domain": "civil/gregory",
+      "start": {
+        "state": "included",
+        "point": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      },
+      "end": {
+        "state": "excluded",
+        "point": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 12,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    }
+  },
+  "unknown-start": {
+    "schema": "utv/1.0",
+    "kind": "interval",
+    "value": {
+      "domain": "physical",
+      "start": {
+        "state": "unknown"
+      },
+      "end": {
+        "state": "excluded",
+        "point": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "12345"
+          }
+        }
+      }
+    }
+  },
+  "uncertain-bounded": {
+    "schema": "utv/1.0",
+    "kind": "uncertain",
+    "value": {
+      "target": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "year",
+          "fields": {
+            "year": "1347"
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "model": "bounds",
+      "parameters": {
+        "earliest": {
+          "year": "1340"
+        },
+        "latest": {
+          "year": "1355"
+        },
+        "interpretation": "possible range, not 95% confidence"
+      }
+    }
+  },
+  "correlated-uncertainty": {
+    "schema": "utv/1.0",
+    "kind": "observation",
+    "value": {
+      "role": "received-at",
+      "reading": {
+        "schema": "utv/1.0",
+        "kind": "instant",
+        "value": {
+          "system": {
+            "system": "utv.timescale",
+            "id": "unix-posix",
+            "version": "1"
+          },
+          "ticks": "100"
+        }
+      },
+      "source": "gateway-7",
+      "quality": {
+        "precision": "nanosecond",
+        "resolution": "microsecond",
+        "correlationGroup": "clock-sync-domain-1",
+        "uncertainty": {
+          "kind": "bounded",
+          "lowerNanoseconds": "-5000000",
+          "upperNanoseconds": "5000000",
+          "basis": "calibration"
+        }
+      }
+    }
+  },
+  "monotonic-clock": {
+    "schema": "utv/1.0",
+    "kind": "clock",
+    "value": {
+      "clockRef": {
+        "system": "utv.clock",
+        "id": "machine-7/monotonic",
+        "version": "boot-3"
+      },
+      "generation": "boot-3",
+      "ticks": "123456789",
+      "tickUnit": {
+        "numerator": "1",
+        "denominator": "1000000000"
+      }
+    }
+  },
+  "lamport-clock": {
+    "schema": "utv/1.0",
+    "kind": "logical-clock",
+    "value": {
+      "algorithm": {
+        "system": "utv.logical",
+        "id": "lamport",
+        "version": "1"
+      },
+      "actorNamespace": "cluster-a",
+      "generation": "deployment-23",
+      "state": {
+        "actor": "node-7",
+        "counter": "9001"
+      }
+    }
+  },
+  "weekly-meeting": {
+    "schema": "utv/1.0",
+    "kind": "recurrence",
+    "value": {
+      "intent": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "datetime",
+          "fields": {
+            "year": "2026",
+            "month": 11,
+            "day": 3,
+            "hour": 9,
+            "minute": 0
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          },
+          "zone": {
+            "type": "iana",
+            "id": "Europe/Paris"
+          },
+          "zoneIntent": "follow-zone-id"
+        }
+      },
+      "algorithm": {
+        "system": "rfc",
+        "id": "5545",
+        "version": "1"
+      },
+      "rule": "FREQ=WEEKLY;BYDAY=TU",
+      "resolutionPolicy": {
+        "profile": "rfc5545-with-verified-errata"
+      }
+    }
+  },
+  "future-location-law": {
+    "schema": "utv/1.0",
+    "kind": "location-intent",
+    "value": {
+      "authority": "law",
+      "place": {
+        "type": "coordinates",
+        "latitude": 64.1466,
+        "longitude": -21.9426,
+        "datum": "WGS84"
+      },
+      "mapping": {
+        "system": "utv.geozone",
+        "id": "legal-zone-boundaries",
+        "version": "2026a"
+      },
+      "time": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "datetime",
+          "fields": {
+            "year": "2035",
+            "month": 6,
+            "day": 1,
+            "hour": 9
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          },
+          "zoneIntent": "follow-location-law"
+        }
+      }
+    }
+  },
+  "event-assertion": {
+    "schema": "utv/1.0",
+    "kind": "assertion",
+    "value": {
+      "assertionId": "a1",
+      "subjectId": "event:55",
+      "claimedTime": {
+        "schema": "utv/1.0",
+        "kind": "instant",
+        "value": {
+          "system": {
+            "system": "utv.timescale",
+            "id": "unix-posix",
+            "version": "1"
+          },
+          "ticks": "500"
+        }
+      },
+      "source": "sensor-4",
+      "recordedAt": {
+        "schema": "utv/1.0",
+        "kind": "instant",
+        "value": {
+          "system": {
+            "system": "utv.timescale",
+            "id": "unix-posix",
+            "version": "1"
+          },
+          "ticks": "510"
+        }
+      }
+    }
+  },
+  "correction-history": {
+    "schema": "utv/1.0",
+    "kind": "event-history",
+    "value": {
+      "subjectId": "event:55",
+      "revisions": [
+        {
+          "schema": "utv/1.0",
+          "kind": "assertion",
+          "value": {
+            "assertionId": "a1",
+            "subjectId": "event:55",
+            "claimedTime": {
+              "schema": "utv/1.0",
+              "kind": "instant",
+              "value": {
+                "system": {
+                  "system": "utv.timescale",
+                  "id": "unix-posix",
+                  "version": "1"
+                },
+                "ticks": "500"
+              }
+            },
+            "source": "sensor-4",
+            "recordedAt": {
+              "schema": "utv/1.0",
+              "kind": "instant",
+              "value": {
+                "system": {
+                  "system": "utv.timescale",
+                  "id": "unix-posix",
+                  "version": "1"
+                },
+                "ticks": "510"
+              }
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "assertion",
+          "value": {
+            "assertionId": "a2",
+            "subjectId": "event:55",
+            "claimedTime": {
+              "schema": "utv/1.0",
+              "kind": "instant",
+              "value": {
+                "system": {
+                  "system": "utv.timescale",
+                  "id": "unix-posix",
+                  "version": "1"
+                },
+                "ticks": "499"
+              }
+            },
+            "source": "calibration-correction",
+            "recordedAt": {
+              "schema": "utv/1.0",
+              "kind": "instant",
+              "value": {
+                "system": {
+                  "system": "utv.timescale",
+                  "id": "unix-posix",
+                  "version": "1"
+                },
+                "ticks": "900"
+              }
+            }
+          },
+          "provenance": {
+            "supersedes": "a1"
+          }
+        }
+      ]
+    }
+  },
+  "geological-reference": {
+    "schema": "utv/1.0",
+    "kind": "temporal-reference",
+    "value": {
+      "reference": {
+        "system": "utv.reference",
+        "id": "calibrated-years-before-1950",
+        "version": "1"
+      },
+      "coordinate": {
+        "numerator": "12000",
+        "denominator": "1"
+      },
+      "frame": {
+        "note": "illustrative; interpretation depends on registry/calibration"
+      }
+    }
+  },
+  "alternative-candidates": {
+    "schema": "utv/1.0",
+    "kind": "set",
+    "value": {
+      "operation": "alternatives",
+      "members": [
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1"
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.timescale",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "2"
+          }
+        }
+      ]
+    }
+  },
+  "next-business-day": {
+    "schema": "utv/1.0",
+    "kind": "relative",
+    "value": {
+      "language": {
+        "system": "utv.expression",
+        "id": "business-relatives",
+        "version": "1"
+      },
+      "expression": "next-business-day",
+      "anchor": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "2026",
+            "month": 11,
+            "day": 4
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "context": {
+        "businessRule": {
+          "system": "utv.business",
+          "id": "fictional-example",
+          "version": "1"
+        }
+      }
+    }
+  },
+  "interval-relation": {
+    "schema": "utv/1.0",
+    "kind": "relation",
+    "value": {
+      "relation": [
+        "before",
+        "meets"
+      ],
+      "left": {
+        "schema": "utv/1.0",
+        "kind": "interval",
+        "value": {
+          "domain": "physical",
+          "start": {
+            "state": "included",
+            "point": {
+              "schema": "utv/1.0",
+              "kind": "instant",
+              "value": {
+                "system": {
+                  "system": "utv.timescale",
+                  "id": "unix-posix",
+                  "version": "1"
+                },
+                "ticks": "1"
+              }
+            }
+          },
+          "end": {
+            "state": "excluded",
+            "point": {
+              "schema": "utv/1.0",
+              "kind": "instant",
+              "value": {
+                "system": {
+                  "system": "utv.timescale",
+                  "id": "unix-posix",
+                  "version": "1"
+                },
+                "ticks": "2"
+              }
+            }
+          }
+        }
+      },
+      "right": {
+        "schema": "utv/1.0",
+        "kind": "interval",
+        "value": {
+          "domain": "physical",
+          "start": {
+            "state": "included",
+            "point": {
+              "schema": "utv/1.0",
+              "kind": "instant",
+              "value": {
+                "system": {
+                  "system": "utv.timescale",
+                  "id": "unix-posix",
+                  "version": "1"
+                },
+                "ticks": "2"
+              }
+            }
+          },
+          "end": {
+            "state": "excluded",
+            "point": {
+              "schema": "utv/1.0",
+              "kind": "instant",
+              "value": {
+                "system": {
+                  "system": "utv.timescale",
+                  "id": "unix-posix",
+                  "version": "1"
+                },
+                "ticks": "3"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "ordinal-named-dynasty": {
+    "schema": "utv/1.0",
+    "kind": "ordinal-position",
+    "value": {
+      "system": {
+        "system": "utv.example.registry",
+        "id": "historical-phases",
+        "version": "1"
+      },
+      "label": "third-dynasty"
+    }
+  },
+  "event-relative-breakfast": {
+    "schema": "utv/1.0",
+    "kind": "event-relative",
+    "value": {
+      "anchor": {
+        "class": "daily-breakfast",
+        "scope": {
+          "subject": "person-1"
+        }
+      },
+      "matching": "each",
+      "relation": "before",
+      "offset": {
+        "schema": "utv/1.0",
+        "kind": "amount",
+        "value": {
+          "basis": "elapsed",
+          "seconds": {
+            "numerator": "1800",
+            "denominator": "1"
+          }
+        }
+      }
+    }
+  },
+  "nth-wednesday-selection": {
+    "schema": "utv/1.0",
+    "kind": "selection",
+    "value": {
+      "source": {
+        "schema": "utv/1.0",
+        "kind": "interval",
+        "value": {
+          "domain": "civil",
+          "start": {
+            "state": "included",
+            "point": {
+              "schema": "utv/1.0",
+              "kind": "civil",
+              "value": {
+                "form": "date",
+                "fields": {
+                  "year": "2026",
+                  "month": 11,
+                  "day": 1
+                },
+                "calendar": {
+                  "id": "gregory",
+                  "chronology": "proleptic"
+                }
+              }
+            }
+          },
+          "end": {
+            "state": "excluded",
+            "point": {
+              "schema": "utv/1.0",
+              "kind": "civil",
+              "value": {
+                "form": "date",
+                "fields": {
+                  "year": "2026",
+                  "month": 12,
+                  "day": 1
+                },
+                "calendar": {
+                  "id": "gregory",
+                  "chronology": "proleptic"
+                }
+              }
+            }
+          }
+        }
+      },
+      "predicate": {
+        "expression": {
+          "operator": "weekday",
+          "day": "WE"
+        }
+      },
+      "orderBy": {
+        "basis": "calendar-order",
+        "direction": "ascending"
+      },
+      "take": "nth",
+      "index": 3,
+      "indexBase": 1
+    }
+  },
+  "duration-constructed-interval": {
+    "schema": "utv/1.0",
+    "kind": "interval",
+    "value": {
+      "domain": "physical",
+      "construction": "start-amount",
+      "start": {
+        "state": "included",
+        "point": {
+          "schema": "utv/1.0",
+          "kind": "instant",
+          "value": {
+            "system": {
+              "system": "utv.example.registry",
+              "id": "unix-posix",
+              "version": "1"
+            },
+            "ticks": "1793795400"
+          }
+        }
+      },
+      "amount": {
+        "schema": "utv/1.0",
+        "kind": "amount",
+        "value": {
+          "basis": "elapsed",
+          "seconds": {
+            "numerator": "7200",
+            "denominator": "1"
+          }
+        }
+      },
+      "arithmeticPolicy": {
+        "basis": "elapsed"
+      }
+    }
+  },
+  "temporal-graph-relative-eras": {
+    "schema": "utv/1.0",
+    "kind": "temporal-graph",
+    "value": {
+      "nodes": [
+        {
+          "id": "dynasty-1",
+          "subject": "historic:dynasty1"
+        },
+        {
+          "id": "dynasty-2",
+          "subject": "historic:dynasty2"
+        }
+      ],
+      "edges": [
+        {
+          "left": "dynasty-1",
+          "right": "dynasty-2",
+          "relations": [
+            "before",
+            "meets"
+          ]
+        }
+      ],
+      "domain": "ordinal"
+    }
+  },
+  "time-series-point-samples": {
+    "schema": "utv/1.0",
+    "kind": "series",
+    "value": {
+      "id": "temp-sensor-1",
+      "subject": "sensor-1",
+      "temporalAxis": "observation",
+      "samples": [
+        {
+          "schema": "utv/1.0",
+          "kind": "sample",
+          "value": {
+            "subject": "sensor-1",
+            "phenomenonTime": {
+              "schema": "utv/1.0",
+              "kind": "instant",
+              "value": {
+                "system": {
+                  "system": "utv.example.registry",
+                  "id": "unix-posix",
+                  "version": "1"
+                },
+                "ticks": "1793795400"
+              }
+            },
+            "payload": {
+              "value": "19.2",
+              "unit": "Cel"
+            },
+            "kindOfSupport": "point"
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "sample",
+          "value": {
+            "subject": "sensor-1",
+            "phenomenonTime": {
+              "schema": "utv/1.0",
+              "kind": "instant",
+              "value": {
+                "system": {
+                  "system": "utv.example.registry",
+                  "id": "unix-posix",
+                  "version": "1"
+                },
+                "ticks": "1793795460"
+              }
+            },
+            "payload": {
+              "value": "19.3",
+              "unit": "Cel"
+            },
+            "kindOfSupport": "point"
+          }
+        }
+      ],
+      "interpolation": {
+        "method": "none"
+      },
+      "ordering": {
+        "by": "phenomenonTime",
+        "strict": false
+      }
+    }
+  },
+  "series-with-immutable-chunk": {
+    "schema": "utv/1.0",
+    "kind": "series",
+    "value": {
+      "id": "station-1",
+      "temporalAxis": "result",
+      "subject": "sensor-1",
+      "chunks": [
+        {
+          "uri": "https://example.org/chunk-1.json",
+          "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "count": "25000",
+          "schemaRef": "https://example.org/sample-schema"
+        }
+      ],
+      "ordering": {
+        "by": "resultTime",
+        "strict": false
+      },
+      "samplingModel": {
+        "kind": "irregular"
+      }
+    }
+  },
+  "event-recurrence-constraint": {
+    "schema": "utv/1.0",
+    "kind": "pattern",
+    "value": {
+      "frequency": {
+        "minimum": "3",
+        "maximum": "5"
+      },
+      "per": {
+        "schema": "utv/1.0",
+        "kind": "amount",
+        "value": {
+          "basis": "calendar",
+          "components": {
+            "days": "1"
+          }
+        }
+      },
+      "constraints": [
+        {
+          "type": "spread-throughout-period"
+        }
+      ]
+    }
+  },
+  "ordered-temporal-sequence": {
+    "schema": "utv/1.0",
+    "kind": "sequence",
+    "value": {
+      "members": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        },
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 11,
+              "day": 2
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ],
+      "ordering": {
+        "source": "explicit-index"
+      },
+      "cardinality": {
+        "type": "finite",
+        "count": "3"
+      },
+      "duplicatePolicy": "preserve",
+      "domain": "civil"
+    }
+  },
+  "result-time-differs-from-phenomenon-time": {
+    "schema": "utv/1.0",
+    "kind": "sample",
+    "value": {
+      "subject": "sensor-2",
+      "phenomenonTime": {
+        "schema": "utv/1.0",
+        "kind": "instant",
+        "value": {
+          "system": {
+            "system": "utv.example.registry",
+            "id": "unix-posix",
+            "version": "1"
+          },
+          "ticks": "1793795400"
+        }
+      },
+      "resultTime": {
+        "schema": "utv/1.0",
+        "kind": "instant",
+        "value": {
+          "system": {
+            "system": "utv.example.registry",
+            "id": "unix-posix",
+            "version": "1"
+          },
+          "ticks": "1793795500"
+        }
+      },
+      "payload": {
+        "value": 12,
+        "unit": "m"
+      },
+      "kindOfSupport": "window"
+    }
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "unknown-kind": {
+    "schema": "utv/1.0",
+    "kind": "not-a-time",
+    "value": {}
+  },
+  "ordinal-missing-system": {
+    "schema": "utv/1.0",
+    "kind": "ordinal-position",
+    "value": {
+      "label": "dynasty"
+    }
+  },
+  "selection-missing-predicate": {
+    "schema": "utv/1.0",
+    "kind": "selection",
+    "value": {
+      "source": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "2026",
+            "month": 11,
+            "day": 4
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "take": "first"
+    }
+  },
+  "event-relative-missing-anchor": {
+    "schema": "utv/1.0",
+    "kind": "event-relative",
+    "value": {
+      "matching": "each",
+      "relation": "after"
+    }
+  },
+  "series-with-invalid-sample": {
+    "schema": "utv/1.0",
+    "kind": "series",
+    "value": {
+      "id": "t",
+      "temporalAxis": "result",
+      "samples": [
+        {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 1,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "interval-start-amount-without-amount": {
+    "schema": "utv/1.0",
+    "kind": "interval",
+    "value": {
+      "domain": "physical",
+      "construction": "start-amount",
+      "start": {
+        "state": "included",
+        "point": {
+          "schema": "utv/1.0",
+          "kind": "civil",
+          "value": {
+            "form": "date",
+            "fields": {
+              "year": "2026",
+              "month": 1,
+              "day": 1
+            },
+            "calendar": {
+              "id": "gregory",
+              "chronology": "proleptic"
+            }
+          }
+        }
+      }
+    }
+  },
+  "unknown-core-property": {
+    "schema": "utv/1.0",
+    "kind": "ordinal-position",
+    "value": {
+      "system": {
+        "system": "utv.example.registry",
+        "id": "era",
+        "version": "1"
+      },
+      "label": "x",
+      "unrecognized": "y"
+    }
+  },
+  "unreleased-draft-schema-identifier": {
+    "schema": "utv/4",
+    "kind": "instant",
+    "value": {
+      "system": {
+        "system": "utv.timescale",
+        "id": "unix-posix",
+        "version": "1"
+      },
+      "ticks": "0"
+    }
+  }
+}
