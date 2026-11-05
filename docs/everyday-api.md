@@ -4,7 +4,7 @@ This is the first set of *operations* every UTV library implements, beyond valid
 
 It is a subset of [`docs/operations.md`](operations.md). Where the specification is silent, this document is the contract. Every library must produce exactly the outcomes in [`conformance/operations/everyday.json`](../conformance/operations/everyday.json). That file is the arbiter: if this prose and the fixtures disagree, raise it rather than picking one.
 
-Values are UTV JSON values, held in each language's ordinary JSON type, exactly as in 0.1. Typed records come later (milestone M2).
+Values are UTV JSON values, held in each language's ordinary JSON type, exactly as in 0.1. This is the **JSON layer**: from 0.3 on, the typed layer in [`library-api.md`](library-api.md) sits on top of it. The JSON layer also has `parseText` / `formatText` for the [text form](text-form.md). Diagnostic codes are shared by every library and listed in [`library-api.md` §5](library-api.md#5-diagnostic-codes); the fixtures check them through `expect.diagnostics`.
 
 ## Results
 

@@ -16,6 +16,7 @@ Checks performed:
      catalog expects structural status `valid`.
   8. Every UTV value in conformance/operations/everyday.json (arguments and expected results)
      passes the schema, fixture ids are unique, and referenced rule bundles exist.
+  9. Every UTV value in conformance/operations/text-form.json passes the schema and ids are unique.
 
 Usage:  python3 tools/validate.py          (from the repository root)
 Requires: jsonschema >= 4.18  (pip install -r tools/requirements.txt)
@@ -202,6 +203,22 @@ def check_everyday_fixtures(validator: Draft202012Validator) -> None:
     ok(f"{len(catalog['fixtures'])} fixtures, {count} UTV values pass the schema")
 
 
+def check_text_form_fixtures(validator: Draft202012Validator) -> None:
+    print("Text-form fixtures")
+    catalog = load_json(ROOT / "conformance" / "operations" / "text-form.json")
+    seen: set[str] = set()
+    for fixture in catalog["fixtures"]:
+        if fixture["id"] in seen:
+            fail(f"text-form.json: duplicate id {fixture['id']}")
+        seen.add(fixture["id"])
+        values = [fixture.get("value"), fixture.get("expect", {}).get("value")]
+        for value in (v for v in values if v is not None):
+            for err in validator.iter_errors(value):
+                fail(f"text-form.json: {fixture['id']}: {err.message[:200]}")
+                break
+    ok(f"{len(catalog['fixtures'])} text-form fixtures pass the schema")
+
+
 def main() -> int:
     validator = check_schemas()
     check_examples(validator)
@@ -209,6 +226,7 @@ def main() -> int:
     check_scenarios()
     check_traditional_catalog(validator)
     check_everyday_fixtures(validator)
+    check_text_form_fixtures(validator)
     print()
     if failures:
         print(f"{len(failures)} failure(s)")
