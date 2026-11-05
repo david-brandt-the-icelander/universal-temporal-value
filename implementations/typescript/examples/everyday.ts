@@ -1,237 +1,332 @@
-// Everyday date and time tasks, side by side: what you write today with JavaScript's `Date` and
-// `Intl.DateTimeFormat`, and the same task with UTV.
-// Run with `npm run everyday` from implementations/typescript/.
+// Everyday date and time tasks, done twice: with JavaScript's Date and Intl, then with UTV.
+// Run it with `npm run everyday` from implementations/typescript/. Its output is everyday.expected.txt.
 //
-// `Temporal` (Temporal.PlainDate, Temporal.ZonedDateTime, …) would fix most of the native quirks shown
-// here, but it is not available by default in Node 22, so "native" below means `Date` + `Intl`.
-// Native lines print whatever this host gives (its clock, its ICU time zone data); only the UTV lines
-// are checked, because they are deterministic.
-import { readFileSync } from "node:fs";
-import { pathToFileURL } from "node:url";
+// Each print line shows its output as a trailing comment. Rows ending in ‡ depend on this host
+// (its clock, time zone or tz database), so the snapshot test skips them. Temporal would fix many
+// of the Date quirks below, but Node 22 doesn't ship it.
 import {
-  add, candidate, compare, contains, date, dateTime, daysBetween, fields, formatIso, fromDate, fromEpochMilliseconds,
-  fromPlainDate, inZone, instant, interval, loadRules, overlaps, parseIso, period, posixSeconds, posixSecondsBetween,
-  resolve, time, toDate, toZone, type Json, type UtvResult,
+  CivilDate, CivilDateTime, CivilTime, FixedOffsetDateTime, Instant, Interval, Bound, PosixSeconds, ElapsedSeconds,
+  TemporalContext, ZoneRules, MonthEnd, Gap, Overlap, Weekday, assertNever, type Outcome,
 } from "../src/index.js";
 
-// Compiled to dist/examples/; the repository root is four levels up.
-export const RULES_URL = new URL("../../../../conformance/rules/demo-zones.json", import.meta.url);
-const DAY_MS = 86_400_000;
-const NY = "America/New_York", PARIS = "Europe/Paris";
+// The zone rules are an explicit input, loaded once. UTV never reads the host's tz database.
+const ctx = TemporalContext.with(ZoneRules.load("../../conformance/rules/demo-zones.json"));
+const NY = "America/New_York";
 
-// --- printing helpers --------------------------------------------------------------------------------
+console.log("Everyday date and time tasks: Date and Intl, then UTV");
 
-type Log = (line?: string) => void;
+console.log("\n1. Now");
 
-/** One line for a UTV result: the status, plus the value as ISO text where it has one. */
-export function describe(r: UtvResult): string {
-  const show = (c: Json | undefined): string => {
-    if (typeof c !== "object" || c === null || Array.isArray(c)) return String(c);
-    const text = formatIso(c);
-    if (text.status === "unique") return String(text.candidates[0]);
-    const v = c["value"] as { [k: string]: Json };
-    if (c["kind"] === "amount" && v["basis"] === "clock-ticks") {
-      const s = v["seconds"] as { numerator: string; denominator: string };
-      return `${s.numerator}${s.denominator === "1" ? "" : `/${s.denominator}`} POSIX seconds`;
-    }
-    return JSON.stringify(c);
-  };
-  if (r.status === "unique") return `unique ${show(r.candidates[0])}`;
-  if (r.status === "multiple") return `multiple [${r.candidates.map(show).join(", ")}]`;
-  const code = r.diagnostics[0]?.code;
-  return code === undefined ? r.status : `${r.status} (${code})`;
+// BEGIN now
+console.log("   Now");
+// The program reads the clock. UTV never does: the reading is passed in.
+const reading = Date.now();
+row("Date", new Date(reading).toISOString(), "this host's clock ‡"); // 2026-11-05T13:30:00.123Z
+row("UTV", Instant.fromUnixMilliseconds(reading), "the same reading ‡"); // 2026-11-05T13:30:00.123Z
+// END now
+
+console.log("\n2. A date");
+
+// BEGIN a-date
+console.log("   5 November 2026");
+// Months count from 0, and the result is midnight in the host's zone, as an instant.
+const jsNov5 = new Date(2026, 10, 5);
+row("Date", jsNov5.toISOString(), "local midnight, in UTC ‡"); // 2026-11-05T00:00:00.000Z
+row("Date", new Date("2026-11-05").toISOString(), "date-only text is UTC"); // 2026-11-05T00:00:00.000Z
+
+const nov5 = CivilDate.of(2026, 11, 5);
+row("UTV", nov5, "a date, not an instant"); // 2026-11-05
+// END a-date
+
+// BEGIN weekday-week
+console.log("   Day of week and ISO week");
+row("Date", jsNov5.getDay(), "Sunday is 0; no ISO week"); // 4
+
+const weekday = Weekday[nov5.dayOfWeek];
+row("UTV", `${weekday}, ISO week ${nov5.isoWeek}`, `day ${nov5.dayOfYear}`); // Thursday, ISO week 45  day 309
+// END weekday-week
+
+console.log("\n3. Invalid dates");
+
+// BEGIN feb-30
+console.log("   30 February 2026");
+row("Date", new Date(2026, 1, 30).toDateString(), "rolled over silently"); // Mon Mar 02 2026
+row("Date", new Date("2026-02-30").toISOString(), "parsed, rolled over"); // 2026-03-02T00:00:00.000Z
+
+try {
+  CivilDate.of(2026, 2, 30);
+} catch (e) {
+  row("UTV", String(e)); // RangeError: 2026-02 has no day 30 (day-out-of-range)
+}
+row("UTV", CivilDate.parse("2026-02-30"), "parsing returns an Outcome"); // invalid (day-out-of-range)
+// END feb-30
+
+console.log("\n4. Adding");
+
+// BEGIN add-days
+console.log("   5 Nov + 30 days");
+const jsLater = new Date(2026, 10, 5);
+jsLater.setDate(jsLater.getDate() + 30);
+row("Date", jsLater.toDateString()); // Sat Dec 05 2026
+
+row("UTV", nov5.addDays(30), "can't fail: a plain CivilDate"); // 2026-12-05
+// END add-days
+
+// BEGIN month-end
+console.log("   31 Jan 2026 + 1 month");
+const jsJan31 = new Date(2026, 0, 31);
+jsJan31.setMonth(jsJan31.getMonth() + 1);
+row("Date", jsJan31.toDateString(), "rolled over silently"); // Tue Mar 03 2026
+
+const jan31 = CivilDate.of(2026, 1, 31);
+const nextMonth: Outcome<CivilDate> = jan31.addMonths(1);
+switch (nextMonth.status) {
+  case "unique":
+    row("UTV", nextMonth.value);
+    break;
+  case "none": { // ← this one runs
+    const [why] = nextMonth.diagnostics;
+    row("UTV", "no such date", `${why?.message} (${why?.code})`); // 2026-02 has no day 31 (month-end)
+    break;
+  }
+  case "multiple":
+  case "unsupported":
+  case "invalid":
+    row("UTV", nextMonth);
+    break;
+  default:
+    assertNever(nextMonth);
+}
+row("UTV", jan31.addMonths(1, MonthEnd.Constrain), "MonthEnd.Constrain clamps"); // 2026-02-28
+// END month-end
+
+console.log("\n5. Days between");
+
+// BEGIN days-between
+console.log("   5 Nov → 25 Dec");
+const jsDec25 = new Date(2026, 11, 25);
+const msPerDay = 24 * 60 * 60 * 1000;
+row("Date", (jsDec25.getTime() - jsNov5.getTime()) / msPerDay, "milliseconds ÷ msPerDay"); // 50
+
+const dec25 = CivilDate.of(2026, 12, 25);
+row("UTV", nov5.daysUntil(dec25), "whole days"); // 50
+// END days-between
+
+// BEGIN compare-dates
+console.log("   Which comes first");
+row("Date", jsNov5 < jsDec25, "< compares time values"); // true
+row("Date", jsNov5 === new Date(2026, 10, 5), "=== compares objects"); // false
+
+row("UTV", nov5.isBefore(dec25), "isBefore"); // true
+row("UTV", nov5.equals(CivilDate.of(2026, 11, 5)), "equals compares values"); // true
+row("UTV", nov5.compare(dec25), "compare gives -1, 0 or 1"); // -1
+// END compare-dates
+
+console.log("\n6. Times and date-times");
+
+// BEGIN time-of-day
+console.log("   09:30");
+// Date has no time of day, so pick a date. The time is read in the host's zone.
+const jsNineThirty = new Date(1970, 0, 1, 9, 30);
+row("Date", jsNineThirty.toISOString(), "a made-up date, in UTC ‡"); // 1970-01-01T09:30:00.000Z
+
+row("UTV", CivilTime.of(9, 30), "a time of day"); // 09:30
+row("UTV", CivilTime.of(9, 30, 0), "seconds you give are kept"); // 09:30:00
+// END time-of-day
+
+// BEGIN datetime-plus-hours
+console.log("   23:30 + 2 hours");
+const jsLate = new Date(2026, 10, 5, 23, 30);
+jsLate.setHours(jsLate.getHours() + 2);
+row("Date", jsLate.toLocaleString("en-GB"), "in the host's zone"); // 06/11/2026, 01:30:00
+
+row("UTV", CivilDateTime.of(2026, 11, 5, 23, 30).addHours(2), "no zone, no DST"); // 2026-11-06T01:30
+// END datetime-plus-hours
+
+console.log("\n7. Parsing with offsets");
+
+// BEGIN parse-offsets
+console.log("   Z vs +00:00");
+const jsZ = new Date("2026-11-05T14:30:00Z");
+const jsZero = new Date("2026-11-05T14:30:00+00:00");
+row("Date", jsZero.toISOString(), "the +00:00 is gone"); // 2026-11-05T14:30:00.000Z
+row("Date", jsZ.getTime() === jsZero.getTime(), "the same Date"); // true
+
+const z = Instant.parse("2026-11-05T14:30:00Z").single();
+const zero = FixedOffsetDateTime.parse("2026-11-05T14:30:00+00:00").single();
+row("UTV", z, "an Instant: offset unknown"); // 2026-11-05T14:30:00Z
+row("UTV", zero, "a wall clock at +00:00"); // 2026-11-05T14:30:00+00:00
+row("UTV", zero.toInstant().equals(z), "same moment, different facts"); // true
+row("UTV", Instant.parse("2026-11-05T14:30:00+00:00"), "+00:00 is not Z"); // invalid (kind-mismatch)
+// END parse-offsets
+
+console.log("\n8. Time zones");
+
+// BEGIN meeting-in-paris
+console.log("   09:00 in Paris, seen from New York");
+// zonedToDate is what people write by hand (at the end of this file). It asks the host's tz database.
+const jsMeeting = zonedToDate(2027, 6, 1, 9, 0, "Europe/Paris");
+row("Intl", jsMeeting.toLocaleString("en-GB", { timeZone: NY }), "in New York ‡"); // 01/06/2027, 03:00:00
+
+const meeting = CivilDateTime.of(2027, 6, 1, 9, 0).inZone("Europe/Paris");
+// single() gives the one answer, or throws an OutcomeError. It never picks silently.
+const meetingAt = meeting.resolve(ctx).single();
+row("UTV", meeting); // 2027-06-01T09:00[Europe/Paris]
+row("UTV", meetingAt); // 2027-06-01T07:00:00Z
+row("UTV", meetingAt.inZone(NY, ctx).single()); // 2027-06-01T03:00:00-04:00[America/New_York]
+// END meeting-in-paris
+
+console.log("\n9. DST gap");
+
+// BEGIN dst-gap
+console.log("   02:30 on 8 March 2026 in New York");
+const jsGap = zonedToDate(2026, 3, 8, 2, 30, NY);
+row("Intl", jsGap.toLocaleString("en-GB", { timeZone: NY }), "no error ‡"); // 08/03/2026, 01:30:00
+
+const gapTime = CivilDateTime.of(2026, 3, 8, 2, 30).inZone(NY);
+const gapAt: Outcome<Instant> = gapTime.resolve(ctx);
+switch (gapAt.status) {
+  case "unique":
+    row("UTV", gapAt.value);
+    break;
+  case "multiple":
+    for (const t of gapAt.values) row("UTV", t);
+    break;
+  case "none": { // ← this one runs: clocks jump from 02:00 to 03:00
+    const [why] = gapAt.diagnostics;
+    row("UTV", "no such time", `${why?.message} (${why?.code})`); // America/New_York skips this wall time (gap)
+    break;
+  }
+  case "unsupported":
+  case "invalid":
+    row("UTV", gapAt);
+    break;
+  default:
+    assertNever(gapAt);
+}
+const shifted = gapTime.resolve(ctx, { gap: Gap.ShiftForward }).single();
+row("UTV", shifted.inZone(NY, ctx).single(), "Gap.ShiftForward"); // 2026-03-08T03:30:00-04:00[America/New_York]
+// END dst-gap
+
+console.log("\n10. DST overlap");
+
+// BEGIN dst-overlap
+console.log("   01:30 on 1 November 2026 in New York");
+const jsTwice = zonedToDate(2026, 11, 1, 1, 30, NY);
+const jsTwiceInNY = jsTwice.toLocaleString("en-GB", { timeZone: NY, timeZoneName: "short" });
+row("Intl", jsTwiceInNY, "one of two, silently ‡"); // 01/11/2026, 1:30:00 GMT-4
+
+const twice = CivilDateTime.of(2026, 11, 1, 1, 30).inZone(NY);
+const twiceAt: Outcome<Instant> = twice.resolve(ctx);
+switch (twiceAt.status) {
+  case "unique":
+    row("UTV", twiceAt.value);
+    break;
+  case "multiple": // ← this one runs: 01:30 EDT, then 01:30 EST
+    for (const t of twiceAt.values) row("UTV", t.inZone(NY, ctx).single(), twiceAt.diagnostics[0]?.code);
+    // 2026-11-01T01:30:00-04:00[America/New_York] ambiguous
+    // 2026-11-01T01:30:00-05:00[America/New_York] ambiguous
+    break;
+  case "none":
+  case "unsupported":
+  case "invalid":
+    row("UTV", twiceAt);
+    break;
+  default:
+    assertNever(twiceAt);
+}
+const earliest = twice.resolve(ctx, { overlap: Overlap.Earliest }).single();
+row("UTV", earliest, "Overlap.Earliest"); // 2026-11-01T05:30:00Z
+// END dst-overlap
+
+console.log("\n11. Timestamps");
+
+// BEGIN timestamps
+console.log("   Exact fractions and differences");
+row("Date", new Date(1793885400.123456 * 1000).toISOString(), "milliseconds only"); // 2026-11-05T13:30:00.123Z
+row("JS", 1793885400.3 - 1793885400.1, "float seconds"); // 0.20000004768371582
+
+const t1 = Instant.fromUnixSeconds(1793885400, 100_000_000);
+const t2 = Instant.fromUnixSeconds(1793885400, 300_000_000);
+row("UTV", Instant.fromUnixSeconds(1793885400, 123_456_000), "microseconds kept"); // 2026-11-05T13:30:00.123456Z
+row("UTV", t1.until(t2), "exact"); // 0.2 s (POSIX)
+// END timestamps
+
+console.log("\n12. Durations vs periods");
+
+// BEGIN day-vs-24h
+console.log("   One day vs 86,400 seconds across DST");
+const jsNoon = zonedToDate(2026, 3, 7, 12, 0, NY);
+const jsNextNoon = new Date(jsNoon.getTime() + 86_400_000);
+row("Intl", jsNextNoon.toLocaleString("en-GB", { timeZone: NY }), "+ 86,400,000 ms ‡"); // 08/03/2026, 13:00:00
+
+const noon = CivilDateTime.of(2026, 3, 7, 12, 0).inZone(NY);
+const noonAt = noon.resolve(ctx).single();
+const dayLater = noonAt.add(PosixSeconds.of(86_400));
+row("UTV", noon.addDays(1), "+ 1 day"); // 2026-03-08T12:00[America/New_York]
+row("UTV", dayLater.inZone(NY, ctx).single(), "+ 86,400 s"); // 2026-03-08T13:00:00-04:00[America/New_York]
+row("UTV", noonAt.add(ElapsedSeconds.of(86_400)), "SI seconds"); // unsupported (needs-leap-seconds)
+// END day-vs-24h
+
+console.log("\n13. Ranges");
+
+// BEGIN ranges
+console.log("   November, open-ended and unknown ends");
+const jsNov15 = new Date(2026, 10, 15);
+row("Date", jsNov15 >= new Date(2026, 10, 1) && jsNov15 < new Date(2026, 11, 1), "by hand"); // true
+
+const nov1 = CivilDate.of(2026, 11, 1);
+const november = Interval.halfOpen(nov1, CivilDate.of(2026, 12, 1));
+row("UTV", november); // [2026-11-01, 2026-12-01)
+row("UTV", november.contains(CivilDate.of(2026, 11, 15)), "15 November"); // definitely
+row("UTV", november.contains(CivilDate.of(2026, 12, 1)), "1 December"); // impossible
+
+const fromNov = Interval.of(Bound.included(nov1), Bound.unbounded);
+row("UTV", fromNov, "no end"); // [2026-11-01, ..)
+row("UTV", fromNov.contains(CivilDate.of(3000, 1, 1)), "3000-01-01"); // definitely
+
+const endUnknown = Interval.of(Bound.included(nov1), Bound.unknown);
+row("UTV", endUnknown, "an end nobody knows yet"); // [2026-11-01, ?)
+row("UTV", endUnknown.contains(CivilDate.of(2027, 6, 1)), "2027-06-01"); // possibly
+// END ranges
+
+console.log("\n14. Round trip");
+
+// BEGIN round-trip
+console.log("   Native → UTV → native");
+const original = new Date(Date.UTC(2026, 10, 5, 13, 30, 0, 250));
+const asInstant = Instant.fromDate(original);
+const back = asInstant.toDate().single();
+row("Date", original.toISOString()); // 2026-11-05T13:30:00.250Z
+row("UTV", asInstant, "Instant.fromDate"); // 2026-11-05T13:30:00.25Z
+row("Date", back.toISOString(), `same time value: ${back.getTime() === original.getTime()}`); // … true
+
+const precise = Instant.fromUnixNanoseconds(1_793_885_400_123_456_789n);
+const lossy: Outcome<Date> = precise.toDate();
+const [loss] = lossy.diagnostics;
+row("UTV", precise); // 2026-11-05T13:30:00.123456789Z
+row("Date", lossy.single().toISOString(), `${loss?.severity}: ${loss?.code}`); // …123Z  warning: precision-loss
+// END round-trip
+
+// ---------------------------------------------------------------------------------------------------
+// Printing: one aligned row per result. Rows whose note ends in ‡ depend on this host.
+
+function row(who: string, value: unknown, note = ""): void {
+  console.log(`     ${who.padEnd(5)} ${String(value).padEnd(32)} ${note}`.trimEnd());
 }
 
-// --- native helpers: what people hand-write for time zones with Date + Intl ---------------------------
+// ---------------------------------------------------------------------------------------------------
+// What people write by hand: a Date can't be built "at 09:00 in Paris", so guess the instant, ask Intl
+// (the host's tz database) for the zone's offset there, and correct once.
 
-function zoneAvailable(zone: string): boolean {
-  try { new Intl.DateTimeFormat("en-US", { timeZone: zone }); return true; } catch { return false; }
-}
-
-/** The zone's UTC offset at an instant, in ms, from the host's ICU time zone data. */
-function offsetMs(zone: string, ms: number): number {
-  const name = new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "longOffset" })
-    .formatToParts(ms).find((p) => p.type === "timeZoneName")?.value ?? "GMT";
-  const m = /GMT([+-])(\d{2}):(\d{2})/.exec(name);
-  return m ? (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3])) * 60_000 : 0;
-}
-
-/** The usual hand-rolled "wall time in a zone → Date": guess, look up the offset, correct once. */
-function zonedToDate(y: number, mo: number, d: number, h: number, mi: number, zone: string): Date {
-  const guess = Date.UTC(y, mo - 1, d, h, mi);
+function zonedToDate(y: number, month: number, d: number, h: number, min: number, zone: string): Date {
+  const guess = Date.UTC(y, month - 1, d, h, min);
   return new Date(guess - offsetMs(zone, guess - offsetMs(zone, guess)));
 }
 
-/** A Date's wall clock in a zone, as `YYYY-MM-DDThh:mm:ss±hh:mm`, via Intl. */
-function wallClock(d: Date, zone: string): string {
-  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
-    timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit",
-    hourCycle: "h23", timeZoneName: "longOffset",
-  }).formatToParts(d).map((p) => [p.type, p.value]));
-  const off = String(parts["timeZoneName"]).replace("GMT", "") || "+00:00";
-  return `${parts["year"]}-${parts["month"]}-${parts["day"]}T${parts["hour"]}:${parts["minute"]}:${parts["second"]}${off}`;
+function offsetMs(zone: string, at: number): number {
+  const name = new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "longOffset" })
+    .formatToParts(at).find((p) => p.type === "timeZoneName")?.value ?? "GMT";
+  const m = /GMT([+-])(\d{2}):(\d{2})/.exec(name);
+  return m === null ? 0 : (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3])) * 60_000;
 }
-
-const ymd = (d: Date) => (Number.isNaN(d.getTime()) ? "Invalid Date" : d.toISOString().slice(0, 10));
-
-// --- the tour ----------------------------------------------------------------------------------------
-
-/** Prints every section and returns the UTV lines that did not give the expected outcome. */
-export function runEveryday(log: Log = console.log): string[] {
-  const mismatches: string[] = [];
-  const rules = loadRules(readFileSync(RULES_URL, "utf8")); // the demo rules, loaded explicitly
-
-  const section = (title: string) => log(`\n== ${title} ==`);
-  /** A native line. Never throws: a host without a time zone gets a note instead. */
-  const nat = (label: string, f: () => unknown, zone?: string) => {
-    if (zone !== undefined && !zoneAvailable(zone)) { log(`  Native  ${label}: (time zone ${zone} is not available on this host; skipped)`); return undefined; }
-    try { const v = f(); log(`  Native  ${label}: ${String(v)}`); return v; } catch (e) { log(`  Native  ${label}: threw ${String(e)}`); return undefined; }
-  };
-  /** A UTV line, checked against the expected outcome. */
-  const utv = (label: string, r: UtvResult, expected: string | RegExp) => {
-    const got = describe(r);
-    log(`  UTV     ${label}: ${got}`);
-    if (typeof expected === "string" ? got !== expected : !expected.test(got)) mismatches.push(`${label}: expected ${String(expected)}, got ${got}`);
-    return candidate(r)!;
-  };
-  const note = (text: string) => log(`  Note:   ${text}`);
-
-  section("1. Now");
-  nat("new Date().toISOString()", () => new Date().toISOString());
-  // UTV never reads the clock. The example reads it, then converts that reading explicitly.
-  const reading = Date.now();
-  utv("fromEpochMilliseconds(Date.now())", fromEpochMilliseconds(reading), /^unique \d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z$/);
-  note("both depend on this host's clock; with UTV the clock reading is a visible input, so the code below it is reproducible.");
-
-  section("2. A date");
-  const nov5 = new Date(Date.UTC(2026, 10, 5)); // month 10 is November: Date months are 0-based
-  nat("new Date(Date.UTC(2026, 10, 5)).toISOString()", () => nov5.toISOString());
-  nat('toLocaleDateString("en-GB", { timeZone: "UTC", dateStyle: "full" })', () => nov5.toLocaleDateString("en-GB", { timeZone: "UTC", dateStyle: "full" }));
-  nat('new Date("2026-11-05").toISOString()', () => new Date("2026-11-05").toISOString());
-  nat("getUTCDay()  (Sunday = 0)", () => nov5.getUTCDay());
-  note('a Date is an instant, not a date. Date-only text parses as UTC midnight, but "2026-11-05T00:00" parses in the host zone. There is no ISO-week API.');
-  const day = date(2026, 11, 5);
-  utv("formatIso(date(2026, 11, 5))", formatIso(day), "unique 2026-11-05");
-  utv('parseIso("2026-11-05")', parseIso("2026-11-05"), "unique 2026-11-05");
-  utv("fields(day)", fields(day), 'unique {"dayOfWeek":4,"dayOfYear":309,"isoWeekYear":"2026","isoWeek":45,"daysInMonth":30,"isLeapYear":false}');
-
-  section("3. Invalid dates");
-  // new Date(y, m, d) builds local midnight in the host zone; read it back with the local getters.
-  nat("new Date(2026, 1, 30)  (host-local fields)", () => { const d = new Date(2026, 1, 30); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; });
-  nat("new Date(Date.UTC(2026, 1, 30))", () => ymd(new Date(Date.UTC(2026, 1, 30))));
-  const parsed = nat('new Date("2026-02-30")', () => ymd(new Date("2026-02-30")));
-  note(`the constructors roll 30 February over to 2 March without an error; parsing "2026-02-30" gave ${String(parsed)} on this engine.`);
-  utv('parseIso("2026-02-30")', parseIso("2026-02-30"), "invalid (field-out-of-range)");
-  utv("fields(date(2026, 2, 30))", fields(date(2026, 2, 30)), "invalid (field-out-of-range)");
-
-  section("4. Adding");
-  nat("new Date(nov5.getTime() + 30 * DAY_MS)", () => ymd(new Date(nov5.getTime() + 30 * DAY_MS)));
-  nat("d.setUTCMonth(d.getUTCMonth() + 1)", () => { const d = new Date(nov5); d.setUTCMonth(d.getUTCMonth() + 1); return ymd(d); });
-  const jan31 = nat("31 Jan 2026, setUTCMonth(+1)", () => { const d = new Date(Date.UTC(2026, 0, 31)); d.setUTCMonth(d.getUTCMonth() + 1); return ymd(d); });
-  note(`Date rolled "31 February" over to ${String(jan31)} without saying so.`);
-  utv("add(day, period({ days: 30 }))", add(day, period({ days: 30 })), "unique 2026-12-05");
-  utv("add(day, period({ months: 1 }))", add(day, period({ months: 1 })), "unique 2026-12-05");
-  utv("add(date(2026, 1, 31), period({ months: 1 }))", add(date(2026, 1, 31), period({ months: 1 })), "none (month-end)");
-  utv('  same, { monthEnd: "constrain" }', add(date(2026, 1, 31), period({ months: 1 }), { monthEnd: "constrain" }), "unique 2026-02-28");
-  note("UTV's default says the day does not exist (none); clamping is a policy you ask for.");
-
-  section("5. Days between");
-  nat("(Date.UTC(2026, 11, 25) - Date.UTC(2026, 10, 5)) / DAY_MS", () => (Date.UTC(2026, 11, 25) - Date.UTC(2026, 10, 5)) / DAY_MS);
-  nat("nov5 < dec25", () => nov5 < new Date(Date.UTC(2026, 11, 25)));
-  nat("nov5 === new Date(Date.UTC(2026, 10, 5))", () => nov5 === new Date(Date.UTC(2026, 10, 5)));
-  note("=== compares object identity, so two equal Dates are not ===; compare getTime() instead.");
-  const dec25 = date(2026, 12, 25);
-  utv("daysBetween(day, dec25)", daysBetween(day, dec25), "unique 50");
-  utv("compare(day, dec25)", compare(day, dec25), "unique before");
-  utv("compare(day, date(2026, 11, 5))", compare(day, date(2026, 11, 5)), "unique equal");
-
-  section("6. Times and date-times");
-  nat("new Date(Date.UTC(1970, 0, 1, 9, 30)).toISOString().slice(11, 16)", () => new Date(Date.UTC(1970, 0, 1, 9, 30)).toISOString().slice(11, 16));
-  nat("new Date(Date.UTC(2026, 10, 5, 23, 30) + 2 * 3_600_000)", () => new Date(Date.UTC(2026, 10, 5, 23, 30) + 2 * 3_600_000).toISOString());
-  note("Date has no time-of-day or local date-time type: UTC stands in here, and the local constructor would follow the host's DST.");
-  utv("formatIso(time(9, 30))", formatIso(time(9, 30)), "unique 09:30");
-  utv("add(dateTime(2026, 11, 5, 23, 30), period({ hours: 2 }))", add(dateTime(2026, 11, 5, 23, 30), period({ hours: 2 })), "unique 2026-11-06T01:30");
-
-  section("7. Parsing with offsets");
-  for (const s of ["2026-11-05T14:30:00+01:00", "2026-11-05T14:30:00Z", "2026-11-05T14:30:00+00:00"]) nat(`new Date("${s}").toISOString()`, () => new Date(s).toISOString());
-  note('Date keeps only the instant: "Z" and "+00:00" give identical Dates, and the +01:00 is gone.');
-  utv('parseIso("…+01:00")', parseIso("2026-11-05T14:30:00+01:00"), "unique 2026-11-05T14:30:00+01:00");
-  const z = utv('parseIso("…Z")', parseIso("2026-11-05T14:30:00Z"), "unique 2026-11-05T14:30:00Z");
-  const zero = utv('parseIso("…+00:00")', parseIso("2026-11-05T14:30:00+00:00"), "unique 2026-11-05T14:30:00+00:00");
-  utv("compare(z, zero)", compare(z, zero), "unsupported (incomparable)");
-  utv("compare(z, resolve(zero, rules))", compare(z, candidate(resolve(zero, rules))!), "unique equal");
-  note('"Z" is an instant (UTC known, local offset unknown); "+00:00" is a civil time at offset 0. Same moment, different facts.');
-
-  section("8. Time zones");
-  const meetingDate = nat("zonedToDate(2027, 6, 1, 9, 0, PARIS).toISOString()", () => zonedToDate(2027, 6, 1, 9, 0, PARIS).toISOString(), PARIS);
-  if (meetingDate !== undefined) nat("wallClock(meeting, NY)", () => wallClock(new Date(String(meetingDate)), NY), NY);
-  note("Date cannot be built in a zone: zonedToDate is hand-written offset lookup on Intl, using this host's tz database.");
-  const meeting = inZone(dateTime(2027, 6, 1, 9, 0), PARIS);
-  utv("formatIso(meeting)", formatIso(meeting), "unique 2027-06-01T09:00[Europe/Paris]");
-  const at = utv("resolve(meeting, rules)", resolve(meeting, rules), "unique 2027-06-01T07:00:00Z");
-  utv("toZone(at, NY, rules)", toZone(at, NY, rules), "unique 2027-06-01T03:00:00-04:00[America/New_York]");
-
-  section("9. DST gap");
-  const gapNative = nat("wallClock(zonedToDate(2026, 3, 8, 2, 30, NY), NY)", () => wallClock(zonedToDate(2026, 3, 8, 2, 30, NY), NY), NY);
-  if (gapNative !== undefined) note(`02:30 does not exist in New York that day; with this host's tz data the native code returned ${String(gapNative)}, without an error.`);
-  const gap = inZone(dateTime(2026, 3, 8, 2, 30), NY);
-  utv("resolve(gap, rules)", resolve(gap, rules), "none (gap)");
-  const shifted = utv('  same, { gap: "shift-forward-by-gap" }', resolve(gap, rules, { gap: "shift-forward-by-gap" }), "unique 2026-03-08T07:30:00Z");
-  utv("toZone(shifted, NY, rules)", toZone(shifted, NY, rules), "unique 2026-03-08T03:30:00-04:00[America/New_York]");
-
-  section("10. DST overlap");
-  const overlapNative = nat("wallClock(zonedToDate(2026, 11, 1, 1, 30, NY), NY)", () => wallClock(zonedToDate(2026, 11, 1, 1, 30, NY), NY), NY);
-  if (overlapNative !== undefined) note(`01:30 happens twice in New York that day; with this host's tz data the native code picked ${String(overlapNative)} and never mentioned the other.`);
-  const twice = inZone(dateTime(2026, 11, 1, 1, 30), NY);
-  utv("resolve(twice, rules)", resolve(twice, rules), "multiple [2026-11-01T05:30:00Z, 2026-11-01T06:30:00Z]");
-  utv('  same, { overlap: "earliest" }', resolve(twice, rules, { overlap: "earliest" }), "unique 2026-11-01T05:30:00Z");
-
-  section("11. Timestamps");
-  nat("new Date(1793885400.123456 * 1000).toISOString()", () => new Date(1793885400.123456 * 1000).toISOString());
-  nat("1793885400.3 - 1793885400.1", () => 1793885400.3 - 1793885400.1);
-  note("epoch seconds as a float: Date keeps milliseconds only, and float subtraction is inexact.");
-  utv("formatIso(instant(1793885400, 123_456_000))", formatIso(instant(1793885400, 123_456_000)), "unique 2026-11-05T13:30:00.123456Z");
-  utv("posixSecondsBetween(instant(…, 100_000_000), instant(…, 300_000_000))", posixSecondsBetween(instant(1793885400, 100_000_000), instant(1793885400, 300_000_000)), "unique 1/5 POSIX seconds");
-
-  section("12. Durations vs periods");
-  const nextNoon = nat("noon NY 7 Mar + DAY_MS", () => wallClock(new Date(zonedToDate(2026, 3, 7, 12, 0, NY).getTime() + DAY_MS), NY), NY);
-  if (nextNoon !== undefined) note(`a native "day" is 86,400,000 ms; across the DST change it landed on ${String(nextNoon).slice(11, 16)} with this host's tz data.`);
-  const noon = inZone(dateTime(2026, 3, 7, 12, 0), NY);
-  utv("add(noon, period({ days: 1 }))", add(noon, period({ days: 1 })), "unique 2026-03-08T12:00[America/New_York]");
-  const noonAt = candidate(resolve(noon, rules))!;
-  utv("toZone(add(noonAt, posixSeconds(86400)))", toZone(candidate(add(noonAt, posixSeconds(86400)))!, NY, rules), "unique 2026-03-08T13:00:00-04:00[America/New_York]");
-  const si = { schema: "utv/1.0", kind: "amount", value: { basis: "elapsed", seconds: { numerator: "86400", denominator: "1" } } };
-  utv("add(noonAt, 86400 SI seconds)", add(noonAt, si), "unsupported (needs-leap-seconds)");
-  note("a period is a calendar intention; posixSeconds is exact clock time; SI seconds need a leap-second table.");
-
-  section("13. Ranges");
-  const novStart = Date.UTC(2026, 10, 1), decStart = Date.UTC(2026, 11, 1);
-  nat("t >= novStart && t < decStart  (15 Nov)", () => { const t = Date.UTC(2026, 10, 15); return t >= novStart && t < decStart; });
-  note("no range type: half-open checks are written by hand, and an unknown end has no representation.");
-  const november = interval(date(2026, 11, 1), date(2026, 12, 1));
-  const december = interval(date(2026, 12, 1), date(2027, 1, 1));
-  utv("contains(november, date(2026, 11, 15))", contains(november, date(2026, 11, 15)), "unique definitely");
-  utv("contains(november, date(2026, 12, 1))", contains(november, date(2026, 12, 1)), "unique impossible");
-  utv("overlaps(november, december)", overlaps(november, december), "unique impossible");
-  utv('contains(interval(nov1, "unbounded"), date(3000, 1, 1))', contains(interval(date(2026, 11, 1), "unbounded"), date(3000, 1, 1)), "unique definitely");
-  utv('contains(interval(nov1, "unknown"), date(2027, 6, 1))', contains(interval(date(2026, 11, 1), "unknown"), date(2027, 6, 1)), "unique possibly");
-
-  section("14. Round trip");
-  const original = new Date(Date.UTC(2026, 10, 5, 13, 30, 0, 250));
-  nat("original.toISOString()", () => original.toISOString());
-  const asUtv = utv('fromDate(original, "instant")', fromDate(original, "instant"), "unique 2026-11-05T13:30:00.25Z");
-  const back = toDate(asUtv);
-  nat("toDate(asUtv).value.getTime() === original.getTime()", () => back.value?.getTime() === original.getTime());
-  utv('fromDate(original, "local")', fromDate(original, "local"), "unsupported (host-zone-refused)");
-  const fine = toDate(instant(1793885400, 123_456_789));
-  log(`  UTV     toDate(instant with nanoseconds): ${fine.status}, ${fine.value?.toISOString()}, loss ${fine.loss.classification} [${fine.loss.fields.join(", ")}]`);
-  if (fine.loss.classification !== "information-losing") mismatches.push("toDate did not report sub-millisecond loss");
-  utv("fromPlainDate({ year: 2026, month: 2, day: 30 })", fromPlainDate({ year: 2026, month: 2, day: 30 }), "invalid (field-out-of-range)");
-  note("each conversion names its intent; a host-local reading is refused and lost precision is reported.");
-
-  log(mismatches.length === 0 ? "\nEvery UTV outcome as expected." : `\n${mismatches.length} UTV mismatches:\n  ${mismatches.join("\n  ")}`);
-  return mismatches;
-}
-
-const isMain = process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
-if (isMain && runEveryday().length > 0) process.exitCode = 1;

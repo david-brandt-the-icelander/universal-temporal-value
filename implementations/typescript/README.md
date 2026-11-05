@@ -1,88 +1,159 @@
 # @utv/core (TypeScript)
 
-- **Library version:** 0.2.0
-- **Specification versions read:** `utv/1.0` (result contract `utv-result/1.0`). Any other well-formed `utv/M.N` (newer minor or other major, e.g. `utv/1.1`, `utv/2.0`) is reported as `unsupported`; a missing, non-string or malformed identifier (e.g. `utv/4`, `utv/1`) is `invalid`.
-- **Conformance profiles claimed:** none yet (short of `core-civil`). The everyday API passes every fixture in
-  [`conformance/operations/everyday.json`](../../conformance/operations/everyday.json).
-- **Registries shipped:** none (no tzdb, leap-second table or non-Gregorian calendars). `loadRules` parses rule bundles in
-  the format of [`conformance/rules/demo-zones.json`](../../conformance/rules/demo-zones.json); the caller reads the file.
-- **Runtime dependencies:** none. Library code never reads the system clock, host time zone, locale or network.
+```ts
+import { CivilDate, MonthEnd } from "@utv/core";
 
-## Implemented
+const d = new Date(2026, 0, 31);
+d.setMonth(d.getMonth() + 1);                   // Date: Tue Mar 03 2026, rolled over silently
 
-- `parseStrict(text)`: a hand-written JSON parser that rejects duplicate object keys (at any depth).
-- `validateStructural(text)` → `UtvResult` (`utv-result/1.0`, operation `validate`):
-  - envelope: only `schema`, `kind`, `value`, `provenance`, `extensions`; `schema`, `kind`, `value` required;
-  - `schema` must be exactly `utv/1.0` (other well-formed `utv/M.N` → `unsupported`, malformed → `invalid`);
-  - `kind` must be one of the 26 core kinds;
-  - per-kind required and allowed `value` members, transcribed from `schema/utv-1.0.schema.json`;
-  - `instant` ticks-xor-coordinate, `interval` construction-specific members, `series.samples` must be `sample` envelopes;
-  - nested UTV envelopes are validated recursively.
-  Deeper schema constraints (enums, nested field shapes, integer-string patterns, …) are not checked yet.
-- `validateSemantic(text)`: structural check first, then proleptic Gregorian `civil` date validation
-  (month 1–12, day within month, leap years via arbitrary-precision `bigint` years, e.g. Feb 30 is invalid,
-  Feb 29 only in leap years).
-- Types: `Status` (invalid, unsupported, indeterminate, none, unique, multiple, range, symbolic,
-  resource-limit, error, valid), `Diagnostic` (`{code, severity, path, message, evidenceRefs?}`), `UtvResult`
-  (now with `operation`, `candidates` and `manifest.dependencies`; `candidate(result)` returns the single
-  candidate of a `unique` result).
+const jan31 = CivilDate.of(2026, 1, 31);
+String(jan31.addMonths(1));                     // UTV: "none (month-end)": 2026-02 has no day 31
+String(jan31.addMonths(1, MonthEnd.Constrain)); // "2026-02-28", because you asked
+```
 
-### Everyday API (0.2)
+```sh
+npm test           # build, then every test: fixtures, typed layer, example snapshot
+npm run everyday   # the side-by-side example: Date and Intl, then UTV
+```
 
-The contract is [`docs/everyday-api.md`](../../docs/everyday-api.md). Values are plain JSON (`Json`), as in 0.1.
-Every operation returns a `UtvResult` and never throws for a semantic outcome.
+- **Library version:** 0.3.0
+- **Specification versions read:** `utv/1.0` (result contract `utv-result/1.0`, text form `utv-text/1`). Any other
+  well-formed `utv/M.N` is `unsupported`; a missing, non-string or malformed identifier is `invalid`.
+- **Contracts:** [`docs/library-api.md`](../../docs/library-api.md) (typed layer, 0.3),
+  [`docs/everyday-api.md`](../../docs/everyday-api.md) (JSON layer, 0.2), [`docs/text-form.md`](../../docs/text-form.md).
+- **Runtime dependencies:** none. Library code never reads the clock, the host's time zone, its tz database or its locale.
+
+## Typed API (0.3)
+
+One immutable class per everyday value. Each is exactly one UTV value: `toString()` is the
+[text form](../../docs/text-form.md), `toJSON()` the UTV JSON (so `JSON.stringify(value)` just works), and
+`equals()` compares by value. Node's `console.log` shows `CivilDate(2026-11-05)`.
+
+| Type | Build it with | Text |
+|---|---|---|
+| `CivilDate` | `CivilDate.of(2026, 11, 5)` | `2026-11-05` |
+| `CivilYearMonth` | `CivilYearMonth.of(2026, 11)` | `2026-11` |
+| `CivilTime` | `CivilTime.of(9, 30)`, `CivilTime.of(9, 30, 15, 250_000_000)` | `09:30`, `09:30:15.25` |
+| `CivilDateTime` | `CivilDateTime.of(2026, 11, 5, 14, 30)`, `date.at(time)` | `2026-11-05T14:30` |
+| `FixedOffsetDateTime` | `dateTime.atOffset(3600)` | `2026-11-05T14:30+01:00` |
+| `ZonedIntent` | `dateTime.inZone("Europe/Paris")` | `2027-06-01T09:00[Europe/Paris]` |
+| `Instant` | `Instant.fromUnixSeconds(s, ns)`, `fromUnixNanoseconds(n)`, `fromUnixMilliseconds(Date.now())`, `fromDate(d)` | `2026-11-05T13:30:00Z` |
+| `Period` | `Period.days(30)`, `Period.months(1)`, `Period.of({ years, months, weeks, days, hours, minutes, seconds })` | `P30D`, `P1M`, `-P1DT2H` |
+| `PosixSeconds`, `ElapsedSeconds` | `PosixSeconds.of(86_400)`, `PosixSeconds.of(1, 3)`, `ElapsedSeconds.of(86_400)` | display only: `3600.75 s (POSIX)`, `1/3 s (POSIX)`, `86400 s (SI)` |
+| `Interval<CivilDate \| Instant>` | `Interval.halfOpen(a, b)`, `Interval.closed(a, b)`, `Interval.of(Bound.included(a), Bound.unknown)` | `[2026-11-01, 2026-12-01)`, `[2026-11-01, ?)` |
+
+- **Valid by construction.** `of` throws a `RangeError` for a value that can't exist (30 February, hour 25, an
+  offset beyond ±18:00, a reversed interval). `tryOf` returns an `Outcome` instead. Years are `bigint`.
+- **Input never throws.** `T.parse(text)`, `T.fromJson(json)`, and the untyped `parse(text)` / `fromJson(json)`
+  return an `Outcome`. The wrong kind gives `invalid` (`kind-mismatch`).
+- **Comparison** is `compare(other): -1 | 0 | 1`, `isBefore`, `isAfter`, only where the order is defined:
+  civil dates, year-months, times and date-times, fixed-offset date-times (by instant) and instants.
+  `ZonedIntent` has none; `ctx.compare(a, b)` resolves both first and answers with an `Outcome<Ordering>`.
+
+### Total operations return values; partial ones return `Outcome`
+
+`date.addDays(30)` can't fail, so it returns a `CivilDate`. `date.addMonths(1)` can (31 January), so it returns an
+`Outcome<CivilDate>`; `date.addMonths(1, MonthEnd.Constrain)` can't, so it returns a `CivilDate` again. Every
+`Outcome` in your code marks a question time can refuse to answer.
+
+| Type | Total | Partial (`Outcome`) |
+|---|---|---|
+| `CivilDate` | `addDays`, `addWeeks`, `addMonths(n, MonthEnd.Constrain)`, `addYears(n, MonthEnd.Constrain)`, `year`, `month`, `day`, `dayOfWeek` (`Weekday`, Monday = 1), `dayOfYear`, `isoWeek`, `isoWeekYear`, `daysInMonth`, `isLeapYear`, `daysUntil`, `at(time)` | `addMonths(n)`, `addYears(n)`, `add(period)` |
+| `CivilYearMonth` | `addMonths`, `addYears` | |
+| `CivilDateTime` | `addDays`/`Weeks`/`Hours`/`Minutes`/`Seconds` (wall clock), `addMonths(n, MonthEnd.Constrain)`, `date`, `time`, `inZone(id)`, `atOffset(s)` | `addMonths(n)`, `add(period)` |
+| `FixedOffsetDateTime` | `toInstant()`, `dateTime`, `offsetSeconds` | |
+| `ZonedIntent` | `addDays`/`Weeks`/`Hours`/`Minutes`/`Seconds` (wall clock; drops an asserted offset), `dateTime`, `zoneId`, `assertedOffsetSeconds` | `resolve(ctx, policy?)`, `addMonths(n)` |
+| `Instant` | `add(PosixSeconds)`, `until(other)`, `atOffset(s)`, `unixSeconds`, `nanoseconds` | `inZone(id, ctx)`, `add(ElapsedSeconds)`, `toDate()` |
+| `Period`, `PosixSeconds`, `ElapsedSeconds` | components, `negate()` | |
+| `Interval` | `contains(point)`, `overlaps(other)` (both a `Truth`: `definitely`, `possibly`, `impossible`), `start`, `end` | |
+
+### `Outcome<T>`
+
+A discriminated union on `status`: `Unique` (`value`), `Multiple` (`values`, ascending), `None`, `Unsupported` and
+`Invalid`. Every case carries `diagnostics` (`{ code, severity, path, message }`, with the shared codes of
+library-api §5). Handle it with a `switch`; `assertNever` makes a missing case a type error:
+
+```ts
+const at: Outcome<Instant> = CivilDateTime.of(2026, 3, 8, 2, 30).inZone("America/New_York").resolve(ctx);
+switch (at.status) {
+  case "unique": use(at.value); break;
+  case "multiple": chooseFrom(at.values); break;
+  case "none": console.log(at.diagnostics[0]?.code); break; // "gap": clocks jump from 02:00 to 03:00
+  case "unsupported": case "invalid": throw new Error(String(at));
+  default: assertNever(at);
+}
+```
+
+The helpers never pick an answer silently: `uniqueOr(fallback)`, `single()` (throws an `OutcomeError` carrying the
+status and diagnostics unless the outcome is unique), `toString()` (`2026-02-28` or `none (month-end)`) and
+`toResult()` (the `utv-result/1.0` envelope of the JSON layer).
+
+### Policies and the context
+
+Policies are typed constants, and their string literals type-check too: `MonthEnd.Reject | Constrain`,
+`Gap.Reject | PreserveUnresolved | ShiftForward`, `Overlap.Reject | All | Earliest | Latest`, and
+`ResolutionPolicy.Strict` (the default), `ResolutionPolicy.AllCandidates`, `ResolutionPolicy.of(gap, overlap)` or
+`{ gap: Gap.ShiftForward }`.
+
+Zone rules are an explicit input, held once by a `TemporalContext`. There is no default context.
+
+```ts
+const ctx = TemporalContext.with(ZoneRules.load("../../conformance/rules/demo-zones.json"));
+meeting.resolve(ctx);                    // or ctx.resolve(meeting)
+instant.inZone("America/New_York", ctx); // or ctx.inZone(instant, "America/New_York")
+ctx.compare(zonedA, zonedB);             // Outcome<Ordering>: multiple if an overlap decides the order
+```
+
+`ZoneRules.load(path)` reads a rule bundle in the format of
+[`conformance/rules/demo-zones.json`](../../conformance/rules/demo-zones.json); `ZoneRules.parse(text)` parses one.
+The demo bundle covers three zones for 2026–2027 only; outside it, answers are `unsupported`, never extrapolated.
+
+## JSON layer (0.2)
+
+The typed layer is built on the JSON-level everyday API, which stays as it was. Values are plain UTV JSON, and every
+operation returns a `utv-result/1.0` `UtvResult`, never throwing for a semantic outcome.
 
 | Module | Exports |
 |---|---|
-| `src/builders.ts` | `date`, `yearMonth`, `time`, `dateTime`, `inZone`, `withOffset`, `instant`, `period` (positional or `period({ months: 1 })`), `posixSeconds`, `interval` (ends may be `"unbounded"` or `"unknown"`) |
-| `src/iso.ts` | `parseIso`, `formatIso` |
-| `src/ops.ts` | `fields`, `add` (`{ monthEnd: "reject" \| "constrain" }`), `compare`, `daysBetween`, `posixSecondsBetween`, `contains`, `overlaps` |
-| `src/zones.ts` | `loadRules` → `ZoneRules`, `resolve` (`{ gap, overlap }` policy), `toZone`, `toOffset` |
-| `src/native.ts` | native interop, below |
+| `src/builders.ts` | `date`, `yearMonth`, `time`, `dateTime`, `inZone`, `withOffset`, `instant`, `period`, `posixSeconds`, `interval` |
+| `src/iso.ts`, `src/text.ts` | `parseIso`, `formatIso`; `parseText`, `formatText` (the text form, adding periods and intervals) |
+| `src/ops.ts` | `fields`, `add`, `compare`, `daysBetween`, `posixSecondsBetween`, `contains`, `overlaps` |
+| `src/zones.ts` | `loadRules` / `ZoneRules`, `resolve`, `toZone`, `toOffset` |
+| `src/native.ts` | `fromDate` (the caller names the intent; `"local"` is refused with `local-zone`), `toDate`, `fromEpochMilliseconds`, `toEpochMilliseconds`, `fromPlainDate`, `toPlainDate`; loss is reported with `precision-loss` and `zone-dropped` warnings |
+| `src/structural.ts`, `src/civil.ts` | `validateStructural`, `validateSemantic` (0.1) |
 
-All arithmetic is exact (`bigint` years and days, rational seconds). Where the contract is silent this library:
+All arithmetic is exact: `bigint` years and days, rational seconds.
 
-- drops an `offsetAssertion` when `add` changes the wall time (diagnostic `offset-assertion-dropped`), since the old offset may no longer hold;
-- in `resolve`, keeps only the candidate whose offset matches an `offsetAssertion`, and gives `invalid` (`offset-mismatch`) when none does;
-- treats RFC 9557 annotations other than one `[Area/Location]` (e.g. `[u-ca=…]`, `[+01:00]`) as `unsupported`.
-
-### Native interop
-
-`Date` is an instant read in the host zone; this library never reads that zone. The caller names the intent:
-
-| Function | Does |
-|---|---|
-| `fromDate(d, "instant")` | the instant a `Date` holds |
-| `fromDate(d, { offsetSeconds })`, `fromDate(d, { zone, rules })` | the civil date-time at a fixed offset, or in a named zone with explicit rules |
-| `fromDate(d, "local")` | refused: `unsupported` (`host-zone-refused`) |
-| `toDate(v)` | instant or fixed-offset date-time → `Date`; sub-millisecond precision and a dropped offset are reported in `loss`; zoned or floating values are `unsupported` |
-| `fromEpochMilliseconds(ms)`, `toEpochMilliseconds(v)` | epoch milliseconds ↔ instant (loss reported) |
-| `fromPlainDate({ year, month, day })`, `toPlainDate(v)` | a plain object (1-based months) ↔ date; 30 February is `invalid` |
-
-Conversions to native types return a `NativeResult<T>`: `{ status, value?, loss, diagnostics }`.
-
-## Build and test
+## Tests
 
 ```sh
 npm test   # tsc -p . && node --test "dist/test/**/*.test.js"
 ```
 
-`typescript` is the only devDependency (a globally installed `tsc` also works). Tests read the shared
-fixtures `conformance/examples/valid.json`, `conformance/examples/invalid-structural.json`,
-`conformance/operations/everyday.json` (every fixture, `test/everyday.test.ts`) and
-`conformance/rules/demo-zones.json` from the repository root, resolved relative to this package directory.
+`typescript` is the only devDependency. The tests read the shared files from the repository root:
+
+| Test | Checks |
+|---|---|
+| `test/everyday.test.ts` | every fixture in `conformance/operations/everyday.json`: status, results and `expect.diagnostics` codes |
+| `test/text-form.test.ts` | every fixture in `conformance/operations/text-form.json`, through `parseText` / `formatText` |
+| `test/typed.test.ts` | the typed layer: each row of library-api §2, `parse(String(v))` and `fromJson(v.toJSON())` round trips, constructors, an exhaustiveness check that must fail to compile |
+| `test/everyday-example.test.ts` | runs the example and compares its output with `examples/everyday.expected.txt` |
+| `test/traditional.test.ts` | every outcome of the shared catalog `examples/traditional.json` |
+| `test/native.test.ts` | native interop, and that library sources never read the clock, host zone or locale |
+| `test/conformance.test.ts`, `test/envelope.test.ts`, `test/civil.test.ts`, `test/api.test.ts` | validation and the 0.2 API |
 
 ## Everyday example
 
 ```sh
-npm run everyday   # tsc -p . && node dist/examples/everyday.js
+npm run everyday            # tsc -p . && node dist/examples/everyday.js
+npm run everyday:snapshot   # record examples/everyday.expected.txt again, then review the diff
 ```
 
-[`examples/everyday.ts`](examples/everyday.ts) is the main example: fourteen everyday tasks (now, a date, invalid
-dates, adding, days between, times, offsets, time zones, DST gap and overlap, timestamps, durations vs periods,
-ranges, round trip), each done first with `Date` and `Intl.DateTimeFormat`, then with UTV. Native lines print what
-this host gives (its clock and tz data); the UTV lines are deterministic and checked, so the run exits with code 1 on
-any mismatch. `npm test` runs it too (`test/everyday-example.test.ts`).
+[`examples/everyday.ts`](examples/everyday.ts) runs fourteen everyday tasks top to bottom: first with `Date` and
+`Intl`, then with UTV, printing one aligned row per result with the output as a trailing comment in the source.
+Month ends, DST gaps and DST overlaps are handled with a real `switch` on the `Outcome`. Rows ending in `‡` depend on
+the host (its clock, time zone or tz database); the snapshot test skips them. Each task sits between
+`// BEGIN <task-id>` and `// END <task-id>` markers for the cross-language page.
 
 ## Traditional catalog tour
 
@@ -90,10 +161,7 @@ any mismatch. `npm test` runs it too (`test/everyday-example.test.ts`).
 npm run example   # tsc -p . && node dist/examples/traditional.js
 ```
 
-[`examples/traditional.ts`](examples/traditional.ts) builds two Gregorian dates from TypeScript values (5 November 2026
-and 30 February 2026), validates them and switches on the result status. It then walks the shared catalog
-[`examples/traditional.json`](../../examples/traditional.json) (37 everyday date and time tasks; see
-[`examples/README.md`](../../examples/README.md)), printing each task's usual library call, this library's
-structural and Gregorian statuses, and why the UTV form differs. Any outcome that differs from the catalog is
-printed as `MISMATCH` and the process exits with code 1. `npm test` runs the same catalog check
-(`test/traditional.test.ts`).
+[`examples/traditional.ts`](examples/traditional.ts) validates two hand-built dates, then walks the shared catalog
+[`examples/traditional.json`](../../examples/traditional.json) (see [`examples/README.md`](../../examples/README.md)),
+printing each task's usual library call and this library's structural and Gregorian statuses. Any outcome that
+differs from the catalog is printed as `MISMATCH` and the process exits with code 1.

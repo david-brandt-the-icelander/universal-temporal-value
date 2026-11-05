@@ -27,17 +27,18 @@ export function validateSemantic(text: string): UtvResult {
   if (structural.status !== "valid") return structural;
   const env = doc as Obj;
   const value = env["value"] as Obj;
-  const unsupported = (path: string, message: string) =>
-    makeResult("unsupported", [{ code: "unsupported-feature", severity: "error", path, message }]);
-  if (env["kind"] !== "civil") return unsupported("/kind", `semantic validation of kind "${String(env["kind"])}" is not implemented`);
+  const unsupported = (code: string, path: string, message: string) =>
+    makeResult("unsupported", [{ code, severity: "error", path, message }]);
+  if (env["kind"] !== "civil") return unsupported("unsupported-operand", "/kind", `semantic validation of kind "${String(env["kind"])}" is not implemented`);
   const cal = value["calendar"];
   if (!isObj(cal) || cal["id"] !== "gregory" || cal["chronology"] !== "proleptic") {
-    return unsupported("/value/calendar", "only the proleptic Gregorian calendar is implemented");
+    return unsupported("unsupported-calendar", "/value/calendar", "only the proleptic Gregorian calendar is implemented");
   }
   const fields = value["fields"];
   if (!isObj(fields)) return makeResult("invalid", [{ code: "type", severity: "error", path: "/value/fields", message: "fields must be an object" }]);
   const diags: Diagnostic[] = [];
-  const bad = (f: string, message: string) => diags.push({ code: "field-out-of-range", severity: "error", path: `/value/fields/${f}`, message });
+  const bad = (f: string, message: string) =>
+    diags.push({ code: f === "month" ? "month-out-of-range" : f === "day" ? "day-out-of-range" : "type", severity: "error", path: `/value/fields/${f}`, message });
   const y = fields["year"], m = fields["month"], d = fields["day"];
   let year: bigint | undefined;
   if (y !== undefined) {

@@ -22,9 +22,9 @@ function isoWeeksInYear(year: bigint): number {
 export function fields(value: Json): UtvResult {
   return run("fields", () => {
     const { kind } = envelope(value, "");
-    if (kind !== "civil") fail("unsupported", "unsupported-kind", "/kind", "fields applies to civil date and datetime values");
+    if (kind !== "civil") fail("unsupported", "unsupported-operand", "/kind", "fields applies to civil date and datetime values");
     const c = readCivil(value, "");
-    if (c.form !== "date" && c.form !== "datetime") fail("unsupported", "unsupported-form", "/value/form", `fields applies to date and datetime, not ${c.form}`);
+    if (c.form !== "date" && c.form !== "datetime") fail("unsupported", "unsupported-operand", "/value/form", `fields applies to date and datetime, not ${c.form}`);
     const ed = daysFromCivil(c.year, c.month, c.day);
     const dow = dayOfWeek(ed);
     const doy = Number(ed - daysFromCivil(c.year, 1, 1)) + 1;
@@ -63,18 +63,18 @@ export function add(value: Json, amount: Json, policy?: AddPolicy): UtvResult {
       const t = readInstant(value, "/0");
       const a = readAmount(amount, "/1");
       if (a.basis === "elapsed") fail("unsupported", "needs-leap-seconds", "/1/value/basis", "adding SI (elapsed) seconds to a POSIX instant needs a leap-second table");
-      if (a.basis === "calendar") fail("invalid", "calendar-amount-on-instant", "/1/value/basis", "an instant has no calendar; add a calendar period to a civil value, or use posixSeconds");
+      if (a.basis === "calendar") fail("invalid", "kind-mismatch", "/1/value/basis", "an instant has no calendar; add a calendar period to a civil value, or use posixSeconds");
       return unique(writeInstant(addR(t, a.seconds)));
     }
-    if (kind !== "civil") fail("unsupported", "unsupported-kind", "/0/kind", `add does not handle kind "${kind}"`);
+    if (kind !== "civil") fail("unsupported", "unsupported-operand", "/0/kind", `add does not handle kind "${kind}"`);
     const c = readCivil(value, "/0");
     const a = readAmount(amount, "/1");
-    if (a.basis !== "calendar") fail("unsupported", "not-a-calendar-amount", "/1/value/basis", "a civil value takes a calendar period; resolve it to an instant to add exact seconds");
-    if (c.form === "time") fail("unsupported", "time-wraps", "/0/value/form", "adding to a time of day can wrap past midnight and lose the day");
+    if (a.basis !== "calendar") fail("unsupported", "unsupported-operand", "/1/value/basis", "a civil value takes a calendar period; resolve it to an instant to add exact seconds");
+    if (c.form === "time") fail("unsupported", "unsupported-operand", "/0/value/form", "adding to a time of day can wrap past midnight and lose the day");
     const p = a.c;
     const notAllowed = c.form === "year-month" ? ["weeks", "days", "hours", "minutes", "seconds"] as const
       : c.form === "date" ? ["hours", "minutes", "seconds"] as const : [] as const;
-    for (const k of notAllowed) if (p[k] !== 0n) fail("invalid", "component-not-allowed", `/1/value/components/${k}`, `a ${c.form} cannot take ${k}`);
+    for (const k of notAllowed) if (p[k] !== 0n) fail("invalid", "kind-mismatch", `/1/value/components/${k}`, `a ${c.form} cannot take ${k}`);
 
     const diagnostics: Diagnostic[] = [];
     // 1. years and months together
@@ -85,7 +85,7 @@ export function add(value: Json, amount: Json, policy?: AddPolicy): UtvResult {
     // 2. month end
     if (c.form !== "year-month" && day > daysInMonth(year, month)) {
       if (monthEnd === "reject") {
-        return { status: "none", diagnostics: [{ code: "month-end", severity: "info", path: "/1", message: `day ${day} does not exist in ${year}-${String(month).padStart(2, "0")}; pass {monthEnd: "constrain"} to clamp` }] };
+        return { status: "none", diagnostics: [{ code: "month-end", severity: "info", path: "/1", message: `${year}-${String(month).padStart(2, "0")} has no day ${day}` }] };
       }
       day = daysInMonth(year, month);
     }
@@ -119,12 +119,12 @@ export function compare(a: Json, b: Json): UtvResult {
   return run("compare", () => {
     const ka = envelope(a, "/0").kind, kb = envelope(b, "/1").kind;
     if (ka === "instant" && kb === "instant") return unique(order(cmp(readInstant(a, "/0"), readInstant(b, "/1"))));
-    if (ka !== "civil" || kb !== "civil") fail("unsupported", "incomparable", "", `cannot compare kind "${ka}" with kind "${kb}"`);
+    if (ka !== "civil" || kb !== "civil") fail("unsupported", "unsupported-operand", "", `cannot compare kind "${ka}" with kind "${kb}"`);
     const x = readCivil(a, "/0"), y = readCivil(b, "/1");
     if (x.zone.type === "iana" || y.zone.type === "iana") {
-      fail("unsupported", "resolve-first", "", "ordering values in a named zone depends on the zone's rules; resolve them to instants first");
+      fail("unsupported", "needs-zone-rules", "", "ordering values in a named zone depends on the zone's rules; resolve them to instants first");
     }
-    if (x.form !== y.form) fail("unsupported", "incomparable", "", `cannot compare a ${x.form} with a ${y.form}`);
+    if (x.form !== y.form) fail("unsupported", "unsupported-operand", "", `cannot compare a ${x.form} with a ${y.form}`);
     if (x.zone.type === "floating" && y.zone.type === "floating") {
       const key = (c: Civil) => [c.year, BigInt(c.month), BigInt(c.day), BigInt(c.hour), BigInt(c.minute), BigInt(c.second), BigInt(c.nano)];
       const kx = key(x), ky = key(y);
@@ -134,7 +134,7 @@ export function compare(a: Json, b: Json): UtvResult {
     if (x.zone.type === "fixed-offset" && y.zone.type === "fixed-offset" && x.form === "datetime") {
       return unique(order(cmp(sub(wallSeconds(x), rat(BigInt(x.zone.seconds))), sub(wallSeconds(y), rat(BigInt(y.zone.seconds))))));
     }
-    return fail("unsupported", "incomparable", "", "cannot compare an unzoned value with a fixed-offset one");
+    return fail("unsupported", "unsupported-operand", "", "cannot compare an unzoned value with a fixed-offset one");
   });
 }
 
@@ -144,11 +144,11 @@ export function compare(a: Json, b: Json): UtvResult {
 /** Reads a Gregorian `date` as an epoch day, checking that every date in one operation has the same zone. */
 function dateDay(v: Json, path: string, zones: Set<string>): bigint {
   const { kind } = envelope(v, path);
-  if (kind !== "civil") fail("unsupported", "unsupported-kind", `${path}/kind`, `expected a civil date, got kind "${kind}"`);
+  if (kind !== "civil") fail("unsupported", "unsupported-operand", `${path}/kind`, `expected a civil date, got kind "${kind}"`);
   const c = readCivil(v, path);
-  if (c.form !== "date") fail("unsupported", "unsupported-form", `${path}/value/form`, `expected a date, got a ${c.form}`);
+  if (c.form !== "date") fail("unsupported", "unsupported-operand", `${path}/value/form`, `expected a date, got a ${c.form}`);
   zones.add(canonical(c.zone as unknown as Json));
-  if (zones.size > 1) fail("unsupported", "mixed-zones", `${path}/value/zone`, "dates in different zones cannot be counted against each other");
+  if (zones.size > 1) fail("unsupported", "different-zones", `${path}/value/zone`, "dates in different zones cannot be counted against each other");
   return daysFromCivil(c.year, c.month, c.day);
 }
 
@@ -157,7 +157,7 @@ export function daysBetween(a: Json, b: Json): UtvResult {
   return run("daysBetween", () => {
     const zones = new Set<string>();
     const n = dateDay(b, "/1", zones) - dateDay(a, "/0", zones);
-    if (n > BigInt(Number.MAX_SAFE_INTEGER) || n < -BigInt(Number.MAX_SAFE_INTEGER)) fail("unsupported", "too-large", "", "the day count does not fit a JSON-safe integer");
+    if (n > BigInt(Number.MAX_SAFE_INTEGER) || n < -BigInt(Number.MAX_SAFE_INTEGER)) fail("unsupported", "implementation-limit", "", "the day count does not fit a JSON-safe integer");
     return unique(Number(n));
   });
 }
@@ -178,21 +178,21 @@ type Truth = boolean | undefined;
 function readPoint(v: Json | undefined, domain: Domain, path: string, zones: Set<string>): Rational {
   const { kind } = envelope(v, path);
   if (domain === "instant") {
-    if (kind !== "instant") fail("unsupported", "mixed-domains", path, `an instant interval cannot hold kind "${kind}"`);
+    if (kind !== "instant") fail("unsupported", "unsupported-operand", path, `an instant interval cannot hold kind "${kind}"`);
     return readInstant(v, path);
   }
-  if (kind !== "civil") fail("unsupported", "mixed-domains", path, `a civil date interval cannot hold kind "${kind}"`);
+  if (kind !== "civil") fail("unsupported", "unsupported-operand", path, `a civil date interval cannot hold kind "${kind}"`);
   return rat(dateDay(v as Json, path, zones));
 }
 
 function readInterval(v: Json, path: string, zones: Set<string>): Interval {
   const { kind, value } = envelope(v, path);
   const vp = `${path}/value`;
-  if (kind !== "interval") fail("invalid", "wrong-kind", `${path}/kind`, `expected an interval, got kind "${kind}"`);
+  if (kind !== "interval") fail("invalid", "kind-mismatch", `${path}/kind`, `expected an interval, got kind "${kind}"`);
   const c = value["construction"];
-  if ((c !== undefined && c !== "start-end") || "amount" in value || "arithmeticPolicy" in value) fail("unsupported", "unsupported-construction", vp, "only start-end intervals are implemented");
+  if ((c !== undefined && c !== "start-end") || "amount" in value || "arithmeticPolicy" in value) fail("unsupported", "unsupported-operand", vp, "only start-end intervals are implemented");
   const d = value["domain"];
-  const domain: Domain = d === "civil/gregory" ? "date" : d === "physical" ? "instant" : fail("unsupported", "unsupported-domain", `${vp}/domain`, `interval domain ${JSON.stringify(d)} is not implemented`);
+  const domain: Domain = d === "civil/gregory" ? "date" : d === "physical" ? "instant" : fail("unsupported", "unsupported-operand", `${vp}/domain`, `interval domain ${JSON.stringify(d)} is not implemented`);
   const end = (e: Json | undefined, ep: string): End => {
     if (!isObj(e)) fail("invalid", "type", ep, "an endpoint must be an object");
     const state = e["state"];
@@ -244,7 +244,7 @@ export function overlaps(a: Json, b: Json): UtvResult {
   return run("overlaps", () => {
     const zones = new Set<string>();
     const x = halfOpen(readInterval(a, "/0", zones)), y = halfOpen(readInterval(b, "/1", zones));
-    if (x.domain !== y.domain) fail("unsupported", "mixed-domains", "", "cannot overlap a civil date interval with an instant interval");
+    if (x.domain !== y.domain) fail("unsupported", "unsupported-operand", "", "cannot overlap a civil date interval with an instant interval");
     const provablyEmpty = (iv: Interval) => iv.empty || startBeforeEnd(iv.start, iv.end) === false;
     if (provablyEmpty(x) || provablyEmpty(y)) return unique("impossible");
     return unique(verdict(and(startBeforeEnd(x.start, y.end), startBeforeEnd(y.start, x.end))));

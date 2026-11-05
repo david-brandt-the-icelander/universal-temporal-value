@@ -9,7 +9,7 @@ import {
 // Runs every fixture in the shared conformance/operations/everyday.json, read from the repository
 // (compiled to dist/test/, so the repository root is four levels up).
 const repo = new URL("../../../../", import.meta.url);
-interface Fixture { id: string; op: string; args: Json[]; expect: { status: string; result?: Json; results?: Json[] } }
+interface Fixture { id: string; op: string; args: Json[]; expect: { status: string; result?: Json; results?: Json[]; diagnostics?: string[] } }
 const file = JSON.parse(readFileSync(new URL("conformance/operations/everyday.json", repo), "utf8")) as {
   rules: Record<string, string>; fixtures: Fixture[];
 };
@@ -60,6 +60,8 @@ for (const fx of file.fixtures) {
     const expected: Json[] = fx.expect.results ?? (fx.expect.result !== undefined ? [fx.expect.result] : []);
     assert.equal(canon(r.candidates), canon(expected), `${fx.id}: candidates differ`);
     if (r.status === "unique") assert.equal(r.candidates.length, 1, `${fx.id}: unique needs one candidate`);
+    const codes = r.diagnostics.map((d) => d.code);
+    for (const code of fx.expect.diagnostics ?? []) assert.ok(codes.includes(code), `${fx.id}: expected diagnostic ${code}, got [${codes.join(", ")}]`);
     passed++;
   });
 }

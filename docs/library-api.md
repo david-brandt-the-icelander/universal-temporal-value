@@ -39,7 +39,7 @@ These rules apply to every type:
 - **JSON at the edges.** `ToJson()` gives the UTV JSON. `T.FromJson(json)` returns `Outcome<T>`.
   - Wrong kinds or forms give `invalid` (`kind-mismatch`).
   - A valid UTV value that no typed type can hold gives `unsupported` (`unsupported-operand`). Examples are a zoned `date`, or a floating date-time carrying a `resolutionPolicy`. The JSON layer still handles such values.
-- **Intervals are valid by construction too.** A reversed interval (end before start) is a constructor error with `reversed-interval`. So is an interval with no point at all, such as `Interval.Of(Bound.Unbounded, Bound.Unknown)`: there's nothing to fix its domain.
+- **Intervals are valid by construction too.** A reversed interval (end before start) is a constructor error with `reversed-interval`. So is an interval with no point at all, such as `Interval.Of(Bound.Unbounded, Bound.Unknown)`: there's nothing to fix its domain. Its code is `unsupported-form`, the same as when parsing `(.., ..)`.
 - **`Instant.Nanoseconds`** is the floor of the sub-second part in nanoseconds. The exact rational stays in the JSON, and `Instant.SubSecond` returns it exactly as a rational.
 - **Hashing.** Where a language has no hash protocol (JavaScript), value semantics means `equals()` plus immutability.
 - **Text input.** `T.Parse(text)` returns `Outcome<T>`.

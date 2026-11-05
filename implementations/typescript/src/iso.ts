@@ -14,7 +14,7 @@ const RE_YEAR_MONTH = new RegExp(`^${Y}-(\\d{2})$`);
 const RE_DATE = new RegExp(`^${Y}-(\\d{2})-(\\d{2})$`);
 const RE_TIME = new RegExp(`^${T}$`);
 const RE_DATETIME = new RegExp(`^${Y}-(\\d{2})-(\\d{2})T${T}(Z|[+-]\\d{2}:\\d{2})?((?:\\[[^\\[\\]]*\\])*)$`);
-const ZONE_NAME = /^[A-Za-z._][A-Za-z0-9._+-]*(\/[A-Za-z._][A-Za-z0-9._+-]*)*$/;
+export const ZONE_NAME = /^[A-Za-z._][A-Za-z0-9._+-]*(\/[A-Za-z._][A-Za-z0-9._+-]*)*$/;
 
 /** Valid ISO 8601 / RFC forms that this profile recognises but does not handle. */
 const UNSUPPORTED_FORMS: [RegExp, string][] = [
@@ -25,7 +25,7 @@ const UNSUPPORTED_FORMS: [RegExp, string][] = [
 ];
 
 const yearOf = (s: string, path: string): bigint => {
-  if (/^-0+$/.test(s)) fail("invalid", "invalid-year", path, "year -0000 is not allowed");
+  if (/^-0+$/.test(s)) fail("invalid", "syntax", path, "year -0000 is not allowed");
   return BigInt(s);
 };
 
@@ -33,7 +33,7 @@ const yearOf = (s: string, path: string): bigint => {
 export function parseIso(text: string): UtvResult {
   return run("parseIso", () => {
     if (typeof text !== "string") fail("invalid", "type", "", "parseIso takes a string");
-    const bad = (message: string) => fail("invalid", "invalid-syntax", "", message);
+    const bad = (message: string) => fail("invalid", "syntax", "", message);
     let m: RegExpExecArray | null;
     if ((m = RE_YEAR_MONTH.exec(text))) {
       const c = civil("year-month", yearOf(m[1]!, ""), +m[2]!, 1);
@@ -53,10 +53,10 @@ export function parseIso(text: string): UtvResult {
       if (off !== undefined && off !== "Z") {
         const [hh, mm] = [+off.slice(1, 3), +off.slice(4, 6)];
         offset = (off[0] === "-" ? -1 : 1) * (hh * 3600 + mm * 60);
-        if (mm > 59 || Math.abs(offset) > MAX_OFFSET) bad(`offset ${off} is beyond ±18:00`);
+        if (mm > 59 || Math.abs(offset) > MAX_OFFSET) fail("invalid", "offset-out-of-range", "", `offset ${off} is beyond ±18:00`);
       }
       const annotations = ann === "" ? [] : ann.slice(1, -1).split("][");
-      if (annotations.some((a) => a.startsWith("!"))) fail("unsupported", "critical-annotation", "", "critical annotations [!…] are not supported");
+      if (annotations.some((a) => a.startsWith("!"))) fail("unsupported", "unsupported-annotation", "", "critical annotations [!…] are not supported");
       if (annotations.length > 1 || annotations.some((a) => !ZONE_NAME.test(a))) {
         if (annotations.some((a) => a === "" || /[^A-Za-z0-9._+\-/=:]/.test(a))) bad("malformed annotation");
         fail("unsupported", "unsupported-annotation", "", "only a single [Area/Location] time zone annotation is supported");
@@ -64,7 +64,7 @@ export function parseIso(text: string): UtvResult {
       checkTime(c);
       const zone = annotations[0];
       const utc = off === "Z" || off === "-00:00";
-      if (utc && zone !== undefined) fail("unsupported", "utc-with-zone", "", "Z or -00:00 followed by a [zone] is not supported");
+      if (utc && zone !== undefined) fail("unsupported", "unsupported-annotation", "", "Z or -00:00 followed by a [zone] is not supported");
       if (utc) return unique(writeInstant(wallSeconds(c)));
       if (zone !== undefined) {
         c.zone = { type: "iana", id: zone };
@@ -80,8 +80,8 @@ export function parseIso(text: string): UtvResult {
 }
 
 function civil(form: Civil["form"], year: bigint, month: number, day: number): Civil {
-  if (month < 1 || month > 12) fail("invalid", "field-out-of-range", "", `month ${month} is out of range`);
-  if (day < 1 || day > daysInMonth(year, month)) fail("invalid", "field-out-of-range", "", `day ${day} does not exist in ${year}-${String(month).padStart(2, "0")}`);
+  if (month < 1 || month > 12) fail("invalid", "month-out-of-range", "", `month ${month} is out of range`);
+  if (day < 1 || day > daysInMonth(year, month)) fail("invalid", "day-out-of-range", "", `${year}-${String(month).padStart(2, "0")} has no day ${day}`);
   return { form, year, month, day, hour: 0, minute: 0, second: 0, nano: 0, hasSecond: false, zone: { type: "floating" } };
 }
 
@@ -119,18 +119,18 @@ function formatTime(c: Civil, forceSeconds = false): string {
 }
 
 function formatOffset(seconds: number, path: string): string {
-  if (seconds % 60 !== 0) fail("unsupported", "sub-minute-offset", path, "offsets with seconds have no ISO 8601 extended form here");
+  if (seconds % 60 !== 0) fail("unsupported", "no-text-form", path, "offsets with seconds have no ISO 8601 extended form here");
   const a = Math.abs(seconds);
   return `${seconds < 0 ? "-" : "+"}${pad(Math.floor(a / 3600))}:${pad((a % 3600) / 60)}`;
 }
 
 function formatZone(zone: Zone, offsetAssertion: number | undefined): string {
   if (zone.type === "fixed-offset") {
-    if (offsetAssertion !== undefined) fail("unsupported", "unsupported-feature", "/value/offsetAssertion", "offsetAssertion on a fixed-offset value has no ISO form");
+    if (offsetAssertion !== undefined) fail("unsupported", "no-text-form", "/value/offsetAssertion", "offsetAssertion on a fixed-offset value has no ISO form");
     return formatOffset(zone.seconds, "/value/zone/seconds");
   }
   if (zone.type === "iana") return (offsetAssertion === undefined ? "" : formatOffset(offsetAssertion, "/value/offsetAssertion")) + `[${zone.id}]`;
-  if (offsetAssertion !== undefined) fail("unsupported", "unsupported-feature", "/value/offsetAssertion", "offsetAssertion without a zone has no ISO form");
+  if (offsetAssertion !== undefined) fail("unsupported", "no-text-form", "/value/offsetAssertion", "offsetAssertion without a zone has no ISO form");
   return "";
 }
 
@@ -141,17 +141,17 @@ export function formatIso(value: Json): UtvResult {
     if (kind === "instant") {
       const { whole, frac } = split(readInstant(value, ""));
       const nano = toNano(frac);
-      if (nano === undefined) fail("unsupported", "sub-nanosecond", "/value/subTick", "fractions finer than a nanosecond have no ISO form here");
+      if (nano === undefined) fail("unsupported", "no-text-form", "/value/subTick", "fractions finer than a nanosecond have no ISO form here");
       const days = whole >= 0n ? whole / 86400n : -((-whole + 86399n) / 86400n);
       const sod = Number(whole - days * 86400n);
       const d = civilFromDays(days);
       const c: Civil = { form: "datetime", ...d, hour: Math.floor(sod / 3600), minute: Math.floor(sod / 60) % 60, second: sod % 60, nano, hasSecond: true, zone: { type: "floating" } };
       return unique(`${formatYear(c.year)}-${pad(c.month)}-${pad(c.day)}T${formatTime(c, true)}Z`);
     }
-    if (kind !== "civil") fail("unsupported", "unsupported-kind", "/kind", `formatIso does not handle kind "${kind}"`);
+    if (kind !== "civil") fail("unsupported", "unsupported-operand", "/kind", `formatIso does not handle kind "${kind}"`);
     const c = readCivil(value, "");
     if (c.form !== "datetime" && (c.zone.type !== "floating" || c.offsetAssertion !== undefined)) {
-      fail("unsupported", "unsupported-feature", "/value/zone", `a zoned ${c.form} has no ISO 8601 form`);
+      fail("unsupported", "no-text-form", "/value/zone", `a zoned ${c.form} has no ISO 8601 form`);
     }
     const ymd = `${formatYear(c.year)}-${pad(c.month)}`;
     switch (c.form) {

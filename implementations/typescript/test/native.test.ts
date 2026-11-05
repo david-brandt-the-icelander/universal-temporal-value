@@ -32,7 +32,7 @@ test("Date in a named zone uses explicit rules", () => {
 test("Date as local civil time is refused (host zone)", () => {
   const r = fromDate(d, "local");
   assert.equal(r.status, "unsupported");
-  assert.equal(r.diagnostics[0]?.code, "host-zone-refused");
+  assert.equal(r.diagnostics[0]?.code, "local-zone");
   assert.equal(r.candidates.length, 0);
 });
 test("Invalid Date is invalid", () => assert.equal(fromDate(new Date(Number.NaN), "instant").status, "invalid"));

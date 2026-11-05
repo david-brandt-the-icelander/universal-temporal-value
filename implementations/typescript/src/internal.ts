@@ -88,11 +88,11 @@ const isInt = (x: Json | undefined): x is number => typeof x === "number" && Num
 export function readCivil(v: Json | undefined, path: string): Civil {
   const { kind, value } = envelope(v, path);
   const vp = `${path}/value`;
-  if (kind !== "civil") fail("unsupported", "wrong-kind", `${path}/kind`, `expected a civil value, got kind "${kind}"`);
+  if (kind !== "civil") fail("unsupported", "unsupported-operand", `${path}/kind`, `expected a civil value, got kind "${kind}"`);
   if (!jsonEqual(value["calendar"], GREGORY)) fail("unsupported", "unsupported-calendar", `${vp}/calendar`, "only the proleptic Gregorian calendar is implemented");
   const form = value["form"];
-  if (typeof form !== "string" || !Object.hasOwn(FORM_FIELDS, form)) fail("unsupported", "unsupported-form", `${vp}/form`, `civil form ${JSON.stringify(form)} is not implemented`);
-  for (const p of ["location", "quality"]) if (p in value) fail("unsupported", "unsupported-feature", `${vp}/${p}`, `civil "${p}" is not implemented`);
+  if (typeof form !== "string" || !Object.hasOwn(FORM_FIELDS, form)) fail("unsupported", "unsupported-operand", `${vp}/form`, `civil form ${JSON.stringify(form)} is not implemented`);
+  for (const p of ["location", "quality"]) if (p in value) fail("unsupported", "unsupported-operand", `${vp}/${p}`, `civil "${p}" is not implemented`);
   const fields = value["fields"];
   const fp = `${vp}/fields`;
   if (!isObj(fields)) fail("invalid", "type", fp, "fields must be an object");
@@ -102,18 +102,19 @@ export function readCivil(v: Json | undefined, path: string): Civil {
   const range = (k: string, lo: number, hi: number, dflt: number): number => {
     const x = fields[k];
     if (x === undefined) return dflt;
-    if (!isInt(x) || x < lo || x > hi) fail("invalid", "field-out-of-range", `${fp}/${k}`, `${k} must be an integer ${lo}..${hi}`);
+    const code = k === "month" ? "month-out-of-range" : k === "day" ? "day-out-of-range" : "field-out-of-range";
+    if (!isInt(x) || x < lo || x > hi) fail("invalid", code, `${fp}/${k}`, `${k} must be an integer ${lo}..${hi}`);
     return x;
   };
   let year = 0n;
   if ("year" in fields) {
     const y = fields["year"];
-    if (typeof y !== "string" || !INT.test(y)) fail("invalid", "field-out-of-range", `${fp}/year`, "year must be a decimal integer string");
+    if (typeof y !== "string" || !INT.test(y)) fail("invalid", "type", `${fp}/year`, "year must be a decimal integer string");
     year = BigInt(y);
   }
   const month = range("month", 1, 12, 1);
   const day = range("day", 1, 31, 1);
-  if ("day" in fields && day > daysInMonth(year, month)) fail("invalid", "field-out-of-range", `${fp}/day`, `day ${day} does not exist in ${year}-${String(month).padStart(2, "0")}`);
+  if ("day" in fields && day > daysInMonth(year, month)) fail("invalid", "day-out-of-range", `${fp}/day`, `${year}-${String(month).padStart(2, "0")} has no day ${day}`);
   const hour = range("hour", 0, 23, 0);
   const minute = range("minute", 0, 59, 0);
   const second = range("second", 0, 60, 0);
@@ -123,7 +124,7 @@ export function readCivil(v: Json | undefined, path: string): Civil {
   const civil: Civil = { form: form as Form, year, month, day, hour, minute, second, nano, hasSecond: "second" in fields, zone: readZone(value, vp) };
   const oa = value["offsetAssertion"];
   if (oa !== undefined) {
-    if (!isInt(oa) || Math.abs(oa) > MAX_OFFSET) fail("invalid", "field-out-of-range", `${vp}/offsetAssertion`, "offsetAssertion must be whole seconds within ±18:00");
+    if (!isInt(oa) || Math.abs(oa) > MAX_OFFSET) fail("invalid", "offset-out-of-range", `${vp}/offsetAssertion`, "offsetAssertion must be whole seconds within ±18:00");
     civil.offsetAssertion = oa;
   }
   const rp = value["resolutionPolicy"];
@@ -137,28 +138,28 @@ export function readCivil(v: Json | undefined, path: string): Civil {
 function readZone(value: Obj, vp: string): Zone {
   const z = value["zone"], intent = value["zoneIntent"];
   const intentIs = (...ok: string[]) => {
-    if (intent !== undefined && !ok.includes(intent as string)) fail("unsupported", "unsupported-zone-intent", `${vp}/zoneIntent`, `zoneIntent ${JSON.stringify(intent)} is not implemented for this zone`);
+    if (intent !== undefined && !ok.includes(intent as string)) fail("unsupported", "unsupported-operand", `${vp}/zoneIntent`, `zoneIntent ${JSON.stringify(intent)} is not implemented for this zone`);
   };
   if (z === undefined || (isObj(z) && z["type"] === "floating")) { intentIs("floating-wall"); return { type: "floating" }; }
   if (!isObj(z)) fail("invalid", "type", `${vp}/zone`, "zone must be an object");
-  if ("rules" in z) fail("unsupported", "unsupported-feature", `${vp}/zone/rules`, "zone-bound rules are not implemented; pass rules to the operation");
+  if ("rules" in z) fail("unsupported", "unsupported-operand", `${vp}/zone/rules`, "zone-bound rules are not implemented; pass rules to the operation");
   if (z["type"] === "iana" && typeof z["id"] === "string" && !("seconds" in z)) { intentIs("follow-zone-id"); return { type: "iana", id: z["id"] }; }
   if (z["type"] === "fixed-offset" && !("id" in z)) {
     const s = z["seconds"];
-    if (!isInt(s) || Math.abs(s) > MAX_OFFSET) fail("invalid", "field-out-of-range", `${vp}/zone/seconds`, "offset must be whole seconds within ±18:00");
+    if (!isInt(s) || Math.abs(s) > MAX_OFFSET) fail("invalid", "offset-out-of-range", `${vp}/zone/seconds`, "offset must be whole seconds within ±18:00");
     intentIs("fixed-offset");
     return { type: "fixed-offset", seconds: s };
   }
-  return fail("unsupported", "unsupported-zone", `${vp}/zone`, `zone ${canonical(z)} is not implemented`);
+  return fail("unsupported", "unsupported-operand", `${vp}/zone`, `zone ${canonical(z)} is not implemented`);
 }
 
 /** Reads a POSIX instant as exact seconds since the epoch. */
 export function readInstant(v: Json | undefined, path: string): Rational {
   const { kind, value } = envelope(v, path);
   const vp = `${path}/value`;
-  if (kind !== "instant") fail("unsupported", "wrong-kind", `${path}/kind`, `expected an instant, got kind "${kind}"`);
-  if (!jsonEqual(value["system"], POSIX)) fail("unsupported", "unsupported-timescale", `${vp}/system`, "only the unix-posix timescale is implemented");
-  for (const p of ["coordinate", "quality"]) if (p in value) fail("unsupported", "unsupported-feature", `${vp}/${p}`, `instant "${p}" is not implemented`);
+  if (kind !== "instant") fail("unsupported", "unsupported-operand", `${path}/kind`, `expected an instant, got kind "${kind}"`);
+  if (!jsonEqual(value["system"], POSIX)) fail("unsupported", "unsupported-operand", `${vp}/system`, "only the unix-posix timescale is implemented");
+  for (const p of ["coordinate", "quality"]) if (p in value) fail("unsupported", "unsupported-operand", `${vp}/${p}`, `instant "${p}" is not implemented`);
   const t = value["ticks"];
   if (typeof t !== "string" || !INT.test(t)) fail("invalid", "type", `${vp}/ticks`, "ticks must be a decimal integer string");
   if (value["subTick"] === undefined) return rat(BigInt(t));
@@ -183,8 +184,8 @@ export type Amount =
 export function readAmount(v: Json | undefined, path: string): Amount {
   const { kind, value } = envelope(v, path);
   const vp = `${path}/value`;
-  if (kind !== "amount") fail("invalid", "wrong-kind", `${path}/kind`, `expected an amount, got kind "${kind}"`);
-  if ("sequence" in value) fail("unsupported", "unsupported-feature", `${vp}/sequence`, "amount sequences are not implemented");
+  if (kind !== "amount") fail("invalid", "kind-mismatch", `${path}/kind`, `expected an amount, got kind "${kind}"`);
+  if ("sequence" in value) fail("unsupported", "unsupported-operand", `${vp}/sequence`, "amount sequences are not implemented");
   const basis = value["basis"];
   if (basis === "calendar") {
     const comps = value["components"];
@@ -193,18 +194,18 @@ export function readAmount(v: Json | undefined, path: string): Amount {
     for (const [k, x] of Object.entries(comps)) {
       const cp = `${vp}/components/${k}`;
       if (!(COMPONENTS as readonly string[]).includes(k)) fail("invalid", "unknown-component", cp, `unknown calendar component "${k}"`);
-      if (typeof x === "string" && /^-?[0-9]+\.[0-9]+$/.test(x)) fail("unsupported", "fractional-component", cp, "fractional components are not implemented");
+      if (typeof x === "string" && /^-?[0-9]+\.[0-9]+$/.test(x)) fail("unsupported", "unsupported-operand", cp, "fractional components are not implemented");
       if (typeof x !== "string" || !INT.test(x)) fail("invalid", "type", cp, "components are decimal integer strings");
       c[k as Component] = BigInt(x);
     }
     return { basis, c };
   }
   if (basis === "clock-ticks") {
-    if (!jsonEqual(value["rules"], POSIX)) fail("unsupported", "unsupported-timescale", `${vp}/rules`, "only unix-posix clock ticks are implemented");
+    if (!jsonEqual(value["rules"], POSIX)) fail("unsupported", "unsupported-operand", `${vp}/rules`, "only unix-posix clock ticks are implemented");
     return { basis, seconds: readRational(value["seconds"], `${vp}/seconds`) };
   }
   if (basis === "elapsed") return { basis };
-  return fail("unsupported", "unsupported-basis", `${vp}/basis`, `amount basis ${JSON.stringify(basis)} is not implemented`);
+  return fail("unsupported", "unsupported-operand", `${vp}/basis`, `amount basis ${JSON.stringify(basis)} is not implemented`);
 }
 
 // ---------------------------------------------------------------------------------------------

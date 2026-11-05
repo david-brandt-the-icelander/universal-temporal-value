@@ -29,6 +29,11 @@ export interface NativeResult<T> {
 function native<T>(body: () => { value: T; lossFields?: string[]; diagnostics?: Diagnostic[] }): NativeResult<T> {
   try {
     const { value, lossFields = [], diagnostics = [] } = body();
+    for (const f of lossFields) {
+      diagnostics.push(f === "zone"
+        ? { code: "zone-dropped", severity: "warning", path: "/value/zone", message: "the native value keeps only the instant; the offset was dropped" }
+        : { code: "precision-loss", severity: "warning", path: "/value/subTick", message: "the native value is coarser; the fraction was floored" });
+    }
     return { status: "unique", value, loss: { classification: lossFields.length ? "information-losing" : "lossless", fields: lossFields }, diagnostics };
   } catch (e) {
     if (e instanceof Fail) return { status: e.status, loss: { classification: "lossless", fields: [] }, diagnostics: [e.diagnostic] };
@@ -61,7 +66,7 @@ export function fromDate(d: Date, intent: DateIntent): UtvResult {
   if (typeof intent === "object" && intent !== null && "offsetSeconds" in intent) return { ...toOffset(inst, intent.offsetSeconds), operation: op };
   if (typeof intent === "object" && intent !== null && "zone" in intent) return { ...toZone(inst, intent.zone, intent.rules), operation: op };
   return makeResult("unsupported", [{
-    code: "host-zone-refused", severity: "error", path: "/1",
+    code: "local-zone", severity: "error", path: "/1",
     message: "a local civil reading of a Date depends on the host's time zone; name a zone ({zone, rules}) or an offset ({offsetSeconds}) instead",
   }], { operation: op });
 }
@@ -80,17 +85,17 @@ export function toDate(value: Json): NativeResult<Date> {
     else if (kind === "civil") {
       const c = readCivil(value, "");
       if (c.form !== "datetime" || c.zone.type !== "fixed-offset") {
-        fail("unsupported", "resolve-first", "/value/zone", c.zone.type === "iana"
+        fail("unsupported", c.zone.type === "iana" ? "needs-zone-rules" : "local-zone", "/value/zone", c.zone.type === "iana"
           ? "a Date keeps no zone, so this zoned intention would be lost; resolve it with explicit rules first"
           : "only an instant or a fixed-offset date-time names one moment; a floating value would need the host zone");
       }
       t = sub(wallSeconds(c), rat(BigInt(c.zone.seconds)));
       lossFields.push("zone");
-    } else return fail("unsupported", "unsupported-kind", "/kind", `a Date cannot hold kind "${kind}"`);
+    } else return fail("unsupported", "unsupported-operand", "/kind", `a Date cannot hold kind "${kind}"`);
     const scaled = rat(t.n * 1000n, t.d);
     const ms = floorDiv(scaled.n, scaled.d);
     if (ms * scaled.d !== scaled.n) lossFields.push("subTick");
-    if (ms > DATE_LIMIT_MS || ms < -DATE_LIMIT_MS) fail("unsupported", "out-of-range", "", "outside the range a Date can hold (±8.64e15 ms)");
+    if (ms > DATE_LIMIT_MS || ms < -DATE_LIMIT_MS) fail("unsupported", "out-of-native-range", "", "outside the range a Date can hold (±8.64e15 ms)");
     return { value: new Date(Number(ms)), lossFields };
   });
 }
@@ -111,7 +116,7 @@ export function toEpochMilliseconds(value: Json): NativeResult<number> {
   return native(() => {
     const t = readInstant(value, "");
     const { whole, frac } = split(rat(t.n * 1000n, t.d));
-    if (whole > BigInt(Number.MAX_SAFE_INTEGER) || whole < -BigInt(Number.MAX_SAFE_INTEGER)) fail("unsupported", "out-of-range", "", "does not fit a safe integer number of milliseconds");
+    if (whole > BigInt(Number.MAX_SAFE_INTEGER) || whole < -BigInt(Number.MAX_SAFE_INTEGER)) fail("unsupported", "out-of-native-range", "", "does not fit a safe integer number of milliseconds");
     return { value: Number(whole), lossFields: frac.n === 0n ? [] : ["subTick"] };
   });
 }
@@ -136,11 +141,11 @@ export function fromPlainDate(p: PlainDate): UtvResult {
 export function toPlainDate(value: Json): NativeResult<PlainDate> {
   return native(() => {
     const { kind } = envelope(value, "");
-    if (kind !== "civil") fail("unsupported", "unsupported-kind", "/kind", "expected a civil date");
+    if (kind !== "civil") fail("unsupported", "unsupported-operand", "/kind", "expected a civil date");
     const c = readCivil(value, "");
-    if (c.form !== "date") fail("unsupported", "unsupported-form", "/value/form", `expected a date, got a ${c.form}`);
-    if (c.zone.type !== "floating") fail("unsupported", "zone-would-be-lost", "/value/zone", "a plain date object has no zone");
-    if (c.year > BigInt(Number.MAX_SAFE_INTEGER) || c.year < -BigInt(Number.MAX_SAFE_INTEGER)) fail("unsupported", "out-of-range", "/value/fields/year", "year does not fit a safe integer");
+    if (c.form !== "date") fail("unsupported", "unsupported-operand", "/value/form", `expected a date, got a ${c.form}`);
+    if (c.zone.type !== "floating") fail("unsupported", "unsupported-operand", "/value/zone", "a plain date object has no zone");
+    if (c.year > BigInt(Number.MAX_SAFE_INTEGER) || c.year < -BigInt(Number.MAX_SAFE_INTEGER)) fail("unsupported", "out-of-native-range", "/value/fields/year", "year does not fit a safe integer");
     return { value: { year: Number(c.year), month: c.month, day: c.day } };
   });
 }

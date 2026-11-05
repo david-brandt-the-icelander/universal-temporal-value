@@ -1,4 +1,5 @@
 /** Zone rules and the conversions between local date-times and instants: resolve, toZone, toOffset. */
+import { readFileSync } from "node:fs";
 import { parseStrict, type Json } from "./json.js";
 import type { Diagnostic, UtvResult } from "./result.js";
 import { civilFromDays } from "./civil.js";
@@ -25,6 +26,11 @@ export class ZoneRules {
     readonly validUntil: bigint,
     private readonly zones: ReadonlyMap<string, ZoneData>,
   ) {}
+
+  /** Reads and parses a rule bundle file. The caller names the file: nothing is looked up on the host. */
+  static load(path: string | URL): ZoneRules { return loadRules(readFileSync(path, "utf8")); }
+  /** Parses rule bundle text (same as {@link loadRules}). Throws {@link RulesError} if it is malformed. */
+  static parse(text: string): ZoneRules { return loadRules(text); }
 
   has(zoneId: string): boolean { return this.zones.has(zoneId); }
   get zoneIds(): string[] { return [...this.zones.keys()]; }
@@ -97,7 +103,7 @@ const DAY = rat(86400n);
 export function resolve(value: Json, rules: ZoneRules | string | Json, policy?: ResolutionPolicy): UtvResult {
   return run("resolve", () => {
     const { kind, value: v } = envelope(value, "/0");
-    if (kind !== "civil" || v["form"] !== "datetime") fail("unsupported", "unsupported-form", "/0/value/form", "resolve takes a civil datetime");
+    if (kind !== "civil" || v["form"] !== "datetime") fail("unsupported", "unsupported-operand", "/0/value/form", "resolve takes a civil datetime");
     const c = readCivil(value, "/0"); // second 60 is `unsupported` here
     const L = wallSeconds(c);
     if (c.zone.type === "floating") return { status: "symbolic", diagnostics: [{ code: "no-zone", severity: "info", path: "/0/value/zone", message: "no zone is bound, so there is nothing to resolve yet; bind one with inZone or withOffset" }] };
@@ -109,7 +115,7 @@ export function resolve(value: Json, rules: ZoneRules | string | Json, policy?: 
     const r = rulesArg(rules, "/1");
     const dependencies = [r.ruleSet];
     if (!r.has(zoneId)) fail("unsupported", "unknown-zone", "/0/value/zone/id", `zone ${zoneId} is not in rule set ${canonical(r.ruleSet)}`);
-    if (!r.covers(sub(L, DAY)) || !r.covers(addR(L, DAY))) fail("unsupported", "outside-rules-window", "/0/value/fields", "the wall time is outside the rule bundle's validity window; never extrapolated");
+    if (!r.covers(sub(L, DAY)) || !r.covers(addR(L, DAY))) fail("unsupported", "outside-rule-window", "/0/value/fields", "the wall time is outside the rule bundle's validity window; never extrapolated");
 
     if (policy !== undefined && !isObj(policy as Json)) fail("invalid", "type", "/2", "policy must be an object");
     const vp = c.resolutionPolicy ?? {};
@@ -131,13 +137,13 @@ export function resolve(value: Json, rules: ZoneRules | string | Json, policy?: 
         const tr = r.transitions(zoneId).find((x) => cmp(rat(x.at + BigInt(x.before)), L) <= 0 && cmp(L, rat(x.at + BigInt(x.after))) < 0)!;
         return out(unique(writeInstant(sub(L, rat(BigInt(tr.before))))));
       }
-      return out({ status: "none", diagnostics: [{ code: "gap", severity: "info", path: "/0", message: `the wall time is skipped in ${zoneId} (a DST gap); pass {gap: "shift-forward-by-gap"} to move it forward` }] });
+      return out({ status: "none", diagnostics: [{ code: "gap", severity: "info", path: "/0", message: `${zoneId} skips this wall time` }] });
     }
     const instants = candidates.map((x) => writeInstant(x.t));
     if (overlap === "earliest") return out(unique(instants[0]!));
     if (overlap === "latest") return out(unique(instants[instants.length - 1]!));
     const diagnostics: Diagnostic[] = overlap === "reject"
-      ? [{ code: "ambiguous", severity: "info", path: "/0", message: `the wall time occurs ${instants.length} times in ${zoneId} (a DST overlap); pass {overlap: "earliest"} or "latest" to pick one` }]
+      ? [{ code: "ambiguous", severity: "info", path: "/0", message: `${zoneId} has this wall time ${instants.length === 2 ? "twice" : `${instants.length} times`}` }]
       : [];
     return out({ status: "multiple", candidates: instants, diagnostics });
   });
@@ -162,7 +168,7 @@ function candidatesFor(r: ZoneRules, zoneId: string, L: Rational): { t: Rational
 function civilAt(t: Rational, offset: number, zone: Zone): Civil {
   const { whole, frac } = split(t);
   const nano = toNano(frac);
-  if (nano === undefined) fail("unsupported", "sub-nanosecond", "/0/value/subTick", "a civil date-time holds whole nanoseconds; this instant is finer");
+  if (nano === undefined) fail("unsupported", "implementation-limit", "/0/value/subTick", "a civil date-time holds whole nanoseconds; this instant is finer");
   const local = whole + BigInt(offset);
   const sod = Number(mod(local, 86400n));
   return {
@@ -177,7 +183,7 @@ export function toZone(value: Json, zoneId: string, rules: ZoneRules | string | 
     const t = readInstant(value, "/0");
     const r = rulesArg(rules, "/2");
     if (typeof zoneId !== "string" || !r.has(zoneId)) fail("unsupported", "unknown-zone", "/1", `zone ${String(zoneId)} is not in rule set ${canonical(r.ruleSet)}`);
-    if (!r.covers(t)) fail("unsupported", "outside-rules-window", "/0", "the instant is outside the rule bundle's validity window; never extrapolated");
+    if (!r.covers(t)) fail("unsupported", "outside-rule-window", "/0", "the instant is outside the rule bundle's validity window; never extrapolated");
     const offset = r.offsetAt(zoneId, t);
     const c = civilAt(t, offset, { type: "iana", id: zoneId });
     c.offsetAssertion = offset;
@@ -189,7 +195,7 @@ export function toZone(value: Json, zoneId: string, rules: ZoneRules | string | 
 export function toOffset(value: Json, seconds: number): UtvResult {
   return run("toOffset", () => {
     const t = readInstant(value, "/0");
-    if (typeof seconds !== "number" || !Number.isInteger(seconds) || Math.abs(seconds) > MAX_OFFSET) fail("invalid", "field-out-of-range", "/1", "offset must be whole seconds within ±18:00");
+    if (typeof seconds !== "number" || !Number.isInteger(seconds) || Math.abs(seconds) > MAX_OFFSET) fail("invalid", "offset-out-of-range", "/1", "offset must be whole seconds within ±18:00");
     return unique(writeCivil(civilAt(t, seconds, { type: "fixed-offset", seconds })));
   });
 }
