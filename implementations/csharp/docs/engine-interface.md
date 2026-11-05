@@ -66,7 +66,7 @@ if (over.TryGetUnique(out var truth) && truth == Truth.Definitely) Archive(meeti
 
 | 0.1.0 (now) | Planned |
 |---|---|
-| `UtvResult` (non-generic) | Base class of `UtvResult<T>`; existing members keep their meaning |
+| `sealed class UtvResult` with a constructor and `IReadOnlyList<JsonElement> Candidates` | Unsealed and made the abstract base of `UtvResult<T>`, with typed candidates on the generic class. This breaks the 0.x API, which is acceptable before 1.0.0 and must be recorded in the library's CHANGELOG |
 | `UtvValidator.ValidateStructural(string)` | Becomes `IValidation.Parse`, returning a typed `UtvValue`. The static method stays as a thin wrapper |
 | `GregorianCivil.Validate(string)` | Becomes the Gregorian `ICalendarSystem` behind `IValidation.Validate` |
 | JSON-level values | Typed `sealed record` per kind, with canonical-form equality |

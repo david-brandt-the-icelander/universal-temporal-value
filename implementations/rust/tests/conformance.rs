@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use utv::{validate_structural, Status};
+use utv::{validate_gregorian_civil, validate_structural, Status};
 
 fn load(name: &str) -> serde_json::Map<String, serde_json::Value> {
     let p = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../conformance/examples").join(name);
@@ -45,9 +45,16 @@ fn envelope_rules() {
 #[test]
 fn gregorian_dates() {
     let d = |y: &str, m: u32, day: u32| format!(r#"{{"schema":"utv/1.0","kind":"civil","value":{{"form":"date","fields":{{"year":"{y}","month":{m},"day":{day}}},"calendar":{{"id":"gregory","chronology":"proleptic"}}}}}}"#);
-    assert_eq!(validate_structural(&d("2026", 2, 30)).status, Status::Invalid);
-    assert_eq!(validate_structural(&d("2024", 2, 29)).status, Status::Valid);
-    assert_eq!(validate_structural(&d("2026", 2, 29)).status, Status::Invalid);
-    assert_eq!(validate_structural(&d("1900", 2, 29)).status, Status::Invalid);
-    assert_eq!(validate_structural(&d("2000", 2, 29)).status, Status::Valid);
+    // Structural validation does not judge calendar semantics.
+    assert_eq!(validate_structural(&d("2026", 2, 30)).status, Status::Valid);
+    assert_eq!(validate_gregorian_civil(&d("2026", 2, 30)).status, Status::Invalid);
+    assert_eq!(validate_gregorian_civil(&d("2024", 2, 29)).status, Status::Valid);
+    assert_eq!(validate_gregorian_civil(&d("2026", 2, 29)).status, Status::Invalid);
+    assert_eq!(validate_gregorian_civil(&d("1900", 2, 29)).status, Status::Invalid);
+    assert_eq!(validate_gregorian_civil(&d("2000", 2, 29)).status, Status::Valid);
+    // Other calendars and kinds are unsupported, not guessed.
+    let hebrew = d("5787", 2, 30).replace("\"gregory\"", "\"hebrew\"");
+    assert_eq!(validate_gregorian_civil(&hebrew).status, Status::Unsupported);
+    let instant = r#"{"schema":"utv/1.0","kind":"instant","value":{"system":{"system":"utv.timescale","id":"unix-posix","version":"1"},"ticks":"0"}}"#;
+    assert_eq!(validate_gregorian_civil(instant).status, Status::Unsupported);
 }

@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>Utv</RootNamespace>
+    <AssemblyName>Utv</AssemblyName>
+
+    <PackageId>Utv</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>UTV contributors</Authors>
+    <Description>Universal Temporal Value (UTV) reader for specification version utv/1.0: strict JSON parsing, envelope and structural validation against schema/utv-1.0.schema.json, utv-result/1.0 results, and proleptic Gregorian civil date validation. Conformance profiles claimed: none yet.</Description>
+    <PackageTags>utv;utv/1.0;time;date;calendar;temporal;json-schema</PackageTags>
+    <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The structural schema is linked from the repository root, never copied. -->
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../../../schema/utv-1.0.schema.json"
+                      Link="schema/utv-1.0.schema.json"
+                      LogicalName="Utv.utv-1.0.schema.json" />
+    <None Include="$(MSBuildThisFileDirectory)../../README.md" Pack="true" PackagePath="/" Link="README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Utv.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -290,9 +290,7 @@ pub fn validate_value(v: &Value) -> UtvResult {
     let mut errs = Vec::new();
     cx.validate(def, v, "", &mut errs);
     if errs.is_empty() {
-        let mut r = UtvResult::ok();
-        if kind == "civil" { r = check_civil(v); }
-        return r;
+        return UtvResult::ok();
     }
     UtvResult {
         status: Status::Invalid,
@@ -322,11 +320,36 @@ pub fn days_in_month(year: i128, month: u32) -> Option<u32> {
     })
 }
 
+/// Semantic check of a proleptic Gregorian `civil` value. Runs structural validation first and
+/// returns its result unless it is `valid`. Kept separate from `validate_structural` because
+/// structural validity and semantic validity are different questions (implementations/README.md).
+/// Other kinds, calendars and chronologies return `unsupported`.
+pub fn validate_gregorian_civil(text: &str) -> UtvResult {
+    let v = match parse_strict(text) {
+        Ok(v) => v,
+        Err(e) => return UtvResult::fail(Status::Invalid, "json.parse", "", e),
+    };
+    let structural = validate_value(&v);
+    if structural.status != Status::Valid { return structural; }
+    check_civil(&v)
+}
+
 fn check_civil(v: &Value) -> UtvResult {
+    if v["kind"].as_str() != Some("civil") {
+        return UtvResult::fail(Status::Unsupported, "semantic.kind", "/kind", "only `civil` values are checked semantically");
+    }
     let val = &v["value"];
-    if val.pointer("/calendar/id").and_then(Value::as_str) != Some("gregory") { return UtvResult::ok(); }
+    if val.pointer("/calendar/id").and_then(Value::as_str) != Some("gregory")
+        || val.pointer("/calendar/chronology").and_then(Value::as_str) != Some("proleptic")
+    {
+        return UtvResult::fail(Status::Unsupported, "semantic.calendar", "/value/calendar", "only the proleptic Gregorian calendar is implemented");
+    }
     let f = &val["fields"];
-    let (Some(y), Some(m)) = (f["year"].as_str().and_then(|s| s.parse::<i128>().ok()), f["month"].as_i64()) else { return UtvResult::ok(); };
+    let Some(m) = f["month"].as_i64() else { return UtvResult::ok(); };
+    let Some(y) = f["year"].as_str().and_then(|s| s.parse::<i128>().ok()) else {
+        if f["year"].is_null() { return UtvResult::ok(); }
+        return UtvResult::fail(Status::Unsupported, "semantic.year-range", "/value/fields/year", "year outside the supported i128 range");
+    };
     if !(1..=12).contains(&m) {
         return UtvResult::fail(Status::Invalid, "civil.month", "/value/fields/month", "month out of range 1..12");
     }

@@ -16,8 +16,9 @@ Results use `utv-result/1.0`.
 - Result type: `Status` (invalid, unsupported, indeterminate, none, unique, multiple,
   range, symbolic, resource-limit, error, valid) and `Diagnostic {code, severity, path, message}`;
   `UtvResult::to_json()` emits a `utv-result/1.0` object.
-- Proleptic Gregorian `civil` date check (`calendar.id = "gregory"`): month range,
-  day-of-month, leap years (Feb 29 only in leap years).
+- `validate_gregorian_civil(&str)`: semantic check of proleptic Gregorian `civil`
+  values (month range, day-of-month, Feb 29 only in leap years), run after and
+  separately from structural validation. Other kinds and calendars return `unsupported`.
 
 The library never reads the system clock, time zone or locale.
 
