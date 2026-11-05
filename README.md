@@ -7,7 +7,8 @@
 | Specification | **1.0** ([`spec/SPECIFICATION.md`](spec/SPECIFICATION.md)) |
 | Wire identifier | `utv/1.0` |
 | Structural schema | [`schema/utv-1.0.schema.json`](schema/utv-1.0.schema.json) (JSON Schema 2020-12) |
-| Implementations | None yet. Language libraries will live under [`implementations/`](implementations/) |
+| Implementations | C#, Java, Python, Rust and TypeScript libraries (0.3) under [`implementations/`](implementations/) |
+| Side by side | [`docs/side-by-side.md`](docs/side-by-side.md): everyday tasks with each language's own date/time API next to UTV |
 | License | [MPL-2.0](LICENSE) |
 
 ---
@@ -43,6 +44,24 @@ UTV doesn't claim to know everything about time. It claims to **never invent kno
 - **Rules are explicit data.** Time-zone databases, leap-second tables, calendars and holiday rules are versioned, content-addressed dependencies. Nothing comes from the host's clock, time zone, locale or network.
 - **Precision is not accuracy.** Measurement quality, uncertainty and correlated clock errors are first-class.
 - **Every conversion reports what it lost.**
+
+### What it looks like in code
+
+```csharp
+using DateOutcome = Utv.Outcome<Utv.CivilDate>;
+
+var jan31 = new DateOnly(2026, 1, 31);
+jan31.AddMonths(1);                                  // 2026-02-28, clamped without a word
+
+switch (CivilDate.Of(2026, 1, 31).AddMonths(1))      // an Outcome: the answer may not exist
+{
+    case DateOutcome.Unique(var d): Use(d); break;
+    case DateOutcome.None(var why): Ask(why); break; // ← runs: 2026-02 has no day 31 (month-end)
+}
+CivilDate.Of(2026, 1, 31).AddMonths(1, MonthEnd.Constrain);   // 2026-02-28, because you asked
+```
+
+The same in Java, Python, Rust and TypeScript, task by task, is in [`docs/side-by-side.md`](docs/side-by-side.md).
 
 ### A small example
 
@@ -116,7 +135,7 @@ Start with `spec/SPECIFICATION.md`, then `spec/DECISIONS.md` and `spec/RESULT-CO
 
 ## Status
 
-UTV 1.0 is a **complete design specification**. No implementation exists yet:
+UTV 1.0 is a **complete design specification**. Libraries in five languages (0.3) implement an everyday subset; see [`implementations/`](implementations/) and [`docs/library-api.md`](docs/library-api.md). Beyond that subset:
 
 - The structural schema and examples are validated. Run `python3 tools/validate.py`; CI runs it on every push.
 - The 94 semantic scenarios in `conformance/scenarios/` are **requirements**, not executable tests yet.

@@ -1,5 +1,13 @@
 # Aesthetics review: the UTV libraries and their examples
 
+> **Status: implemented in libraries 0.3** (all five languages).
+> - **R1–R4, R6–R9:** see [`library-api.md`](library-api.md) and [`side-by-side.md`](side-by-side.md).
+> - **R5, text form:** see [`text-form.md`](text-form.md). The canonical interval notation uses brackets instead of EDTF's slash, because EDTF's `a/b` can't say whether an end is excluded; EDTF slash forms are accepted as input.
+> - **Deferred:** the shorter JSON *authoring* form, also proposed under R5, needs spec 1.1 (OI-18).
+> - **Deferred:** EDTF qualifiers (`1347~`) need a mapping to the `uncertain` kind.
+>
+> The findings below describe the 0.2 libraries.
+
 **Scope:** the five 0.2.0 libraries (`implementations/*`), their side-by-side `everyday` examples, the traditional catalog tour, and the UTV JSON format as programmers meet it.
 
 **Question:** what would make UTV pleasant to read and write, and the examples persuasive, without giving up anything the specification guarantees?

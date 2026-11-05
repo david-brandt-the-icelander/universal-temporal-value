@@ -6,6 +6,14 @@ Two kinds of examples, both runnable in every language library.
 
 Each library has an **everyday** example with 14 short sections. In each section, the language's own date/time types do an ordinary task (`DateTime`/`DateOnly` in C#, `java.time`, Python `datetime`, JavaScript `Date`, Rust `chrono`), and UTV does the same task right next to it. Both are run for real, and the output says what the native API actually did when the two differ.
 
+The examples are plain code you can copy:
+- **Typed values.** They use typed UTV values (`CivilDate.Of(2026, 1, 31).AddMonths(1)`).
+- **Outcomes.** Where time can refuse to answer, they handle the `Outcome` with a real `switch`/`match`.
+- **Expected output.** Each output line appears as a comment next to the code that prints it.
+- **Snapshot test.** Each library's snapshot test runs the example and compares it with a committed `everyday.expected.txt`. It skips rows marked ‡, which depend on the host's clock, tz database or runtime version.
+
+**[`docs/side-by-side.md`](../docs/side-by-side.md)** puts all five languages next to each other, task by task. `tools/side_by_side.py` generates it from the marked code in the examples, and CI checks that it's up to date.
+
 1. Now
 2. A date
 3. Invalid dates
@@ -37,7 +45,7 @@ Some things the examples show, as observed on the build machine:
 | 02:30 on 8 March 2026 in New York (doesn't exist) | Java moves it to 03:30, Python accepts it, .NET throws on conversion, chrono returns `None` | `none`, or 03:30 EDT if you ask for `shift-forward-by-gap` |
 | 01:30 on 1 November 2026 in New York (happens twice) | Most pick one offset without saying so; chrono reports both | `multiple`, with both instants, until you pick a policy |
 
-UTV operations use the small pinned rule bundle in [`conformance/rules/demo-zones.json`](../conformance/rules/demo-zones.json) (New York, Paris, Reykjavik; 2026–2027 only), never the machine's time zone database. Native output can vary by host; UTV output doesn't. The operations are specified in [`docs/everyday-api.md`](../docs/everyday-api.md), and all five libraries pass the same 130 fixtures in [`conformance/operations/everyday.json`](../conformance/operations/everyday.json).
+UTV operations use the small pinned rule bundle in [`conformance/rules/demo-zones.json`](../conformance/rules/demo-zones.json) (New York, Paris, Reykjavik; 2026–2027 only), never the machine's time zone database. Native output can vary by host; UTV output doesn't. The typed API is specified in [`docs/library-api.md`](../docs/library-api.md), over the JSON-level operations in [`docs/everyday-api.md`](../docs/everyday-api.md). All five libraries pass the same 131 fixtures in [`conformance/operations/everyday.json`](../conformance/operations/everyday.json) and 46 in [`text-form.json`](../conformance/operations/text-form.json).
 
 ## 2. A tour of 37 traditional tasks as UTV values
 

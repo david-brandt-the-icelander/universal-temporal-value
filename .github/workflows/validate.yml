@@ -17,3 +17,4 @@ jobs:
           python-version: "3.12"
       - run: pip install -r tools/requirements.txt
       - run: python3 tools/validate.py
+      - run: python3 tools/side_by_side.py --check
