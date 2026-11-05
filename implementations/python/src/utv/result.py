@@ -34,16 +34,30 @@ class Diagnostic:
 
 @dataclass
 class Result:
+    """A ``utv-result/1.0`` result.
+
+    ``candidates`` holds the answers: exactly one for ``unique``, all of them in
+    ascending order for ``multiple``, none otherwise. Candidates are UTV values
+    (plain dicts) or plain JSON; the native-interop adapters in :mod:`utv.native`
+    put native Python objects there instead.
+    """
+
     operation: str
     status: Status
     diagnostics: list[Diagnostic] = field(default_factory=list)
+    candidates: list[Any] = field(default_factory=list)
     manifest: dict[str, Any] = field(default_factory=lambda: {"dependencies": []})
     assumptions: list[Any] = field(default_factory=list)
     loss: dict[str, Any] = field(default_factory=lambda: {"classification": "lossless", "fields": []})
     schema: str = "utv-result/1.0"
 
+    @property
+    def value(self) -> Any:
+        """The single candidate of a ``unique`` result, otherwise ``None``."""
+        return self.candidates[0] if self.status is Status.UNIQUE and len(self.candidates) == 1 else None
+
     def to_dict(self) -> dict[str, Any]:
-        return {
+        out = {
             "schema": self.schema,
             "operation": self.operation,
             "status": self.status.value,
@@ -52,3 +66,6 @@ class Result:
             "loss": self.loss,
             "diagnostics": [d.to_dict() for d in self.diagnostics],
         }
+        if self.candidates:
+            out["candidates"] = list(self.candidates)
+        return out
