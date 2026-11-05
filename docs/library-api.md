@@ -184,6 +184,10 @@ Diagnostics are `{code, severity, path, message}`. The **codes** below are share
 
 Names never stutter: `Parse`/`Format`, not `ParseIso`/`FormatIso`. The 0.2 names stay available in the JSON layer.
 
+Where a name collides with the language itself, each library records the deviation in its README:
+- **Python:** `Period.of_days` / `of_months` / … because a `days` classmethod would clash with the `days` component; `TemporalContext(rules)` / `TemporalContext.with_rules(rules)` because `with` is a keyword.
+- **Java:** `TemporalValue.parse(text)` because `Utv.parse(String)` is the 0.2 JSON parser.
+
 ## 7. Examples (all five languages)
 
 Each library's `everyday` example is rewritten as **plain, copyable code**:
@@ -202,7 +206,7 @@ Each library's `everyday` example is rewritten as **plain, copyable code**:
 - **Snapshot test.**
   - **Recording.** Commit the full output of one run as `examples/everyday.expected.txt` (C#: `examples/Everyday/everyday.expected.txt`).
   - **What the test compares.** A test runs the example and compares every line with the snapshot, except rows marked *host-dependent*.
-  - **Host-dependent rows.** These depend on the clock or the host's tz database. The row helper prints them with a trailing ` ‡`, and the test skips any line ending in ` ‡`.
+  - **Host-dependent rows.** These depend on the clock, the host's tz database, or the language or runtime version (for example, Python 3.10's `fromisoformat` rejects `Z`). The row helper prints them with a trailing ` ‡`, and the test skips any line ending in ` ‡`.
   - **Effect.** The snapshot replaces the old in-example assertions, so the output comments can't drift unnoticed.
 - **Task markers.** These feed the generated cross-language page `docs/side-by-side.md`. Wrap each task's code in comment markers: `// BEGIN <task-id>` … `// END <task-id>`, or `#` in Python. Use these ids and titles in every language:
 

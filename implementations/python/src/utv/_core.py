@@ -11,7 +11,7 @@ import math
 import re
 from dataclasses import dataclass
 from fractions import Fraction
-from typing import Any, Callable
+from typing import Any, Callable, Sequence
 
 from .gregorian import days_in_month
 from .result import Diagnostic, Result, Status
@@ -31,10 +31,12 @@ _INTEGER = re.compile(r"(0|-?[1-9][0-9]*)")
 class Outcome(Exception):
     """Raised inside an operation to stop with a non-``unique`` status."""
 
-    def __init__(self, status: Status, code: str, path: str, message: str, severity: str = "error") -> None:
+    def __init__(self, status: Status, code: str, path: str, message: str, severity: str = "error",
+                 also: Sequence[Diagnostic] = ()) -> None:
         super().__init__(message)
         self.status = status
         self.diagnostic = Diagnostic(code=code, severity=severity, path=path, message=message)
+        self.diagnostics = [self.diagnostic, *also]
 
 
 def invalid(code: str, path: str, message: str) -> Outcome:
@@ -54,7 +56,7 @@ def operation(name: str) -> Callable[[Callable[..., Result]], Callable[..., Resu
             try:
                 res = fn(*args, **kwargs)
             except Outcome as out:
-                return Result(operation=name, status=out.status, diagnostics=[out.diagnostic])
+                return Result(operation=name, status=out.status, diagnostics=list(out.diagnostics))
             res.operation = name
             return res
 
@@ -107,16 +109,16 @@ def parse_rational(r: dict[str, Any], path: str) -> Fraction:
     try:
         return Fraction(int(r["numerator"]), int(r["denominator"]))
     except (KeyError, TypeError, ValueError, ZeroDivisionError):
-        raise invalid("malformed-rational", path, "expected {numerator, denominator} decimal strings") from None
+        raise invalid("malformed-value", path, "expected {numerator, denominator} decimal strings") from None
 
 
 def integer_string(text: Any, path: str) -> int:
     if not isinstance(text, str) or not _INTEGER.fullmatch(text):
-        raise invalid("malformed-integer", path, f"{text!r} is not a decimal integer string")
+        raise invalid("malformed-value", path, f"{text!r} is not a decimal integer string")
     try:
         return int(text)
     except ValueError:  # beyond Python's int/str conversion limit
-        raise Outcome(Status.RESOURCE_LIMIT, "integer-too-long", path, "integer string too long to convert") from None
+        raise Outcome(Status.RESOURCE_LIMIT, "implementation-limit", path, "integer string too long to convert") from None
 
 
 def instant_value(t: Fraction) -> dict[str, Any]:
@@ -141,9 +143,14 @@ def structural(value: Any, path: str) -> dict[str, Any]:
     """Structurally validate a UTV value; stop with its status if it fails."""
     res = validate_value(value)
     if res.status is not Status.VALID:
-        d = res.diagnostics[0] if res.diagnostics else Diagnostic("invalid", "error", "", "not a UTV value")
-        raise Outcome(res.status, d.code, path + d.path, d.message)
-    return value
+        found = [Diagnostic(d.code, d.severity, path + d.path, d.message) for d in res.diagnostics]
+        if res.status is Status.INVALID:  # the shared code, with the 0.1 structural codes alongside
+            d = found[0] if found else Diagnostic("malformed-value", "error", path, "not a UTV value")
+            raise Outcome(Status.INVALID, "malformed-value", d.path, d.message, also=found)
+        d = found[0] if found else Diagnostic("unsupported-operand", "error", path, "not a supported UTV value")
+        raise Outcome(res.status, d.code, d.path, d.message, also=found[1:])
+    checked: dict[str, Any] = value
+    return checked
 
 
 def is_posix(system: Any) -> bool:
@@ -159,12 +166,12 @@ def instant_seconds(value: Any, path: str = "") -> Fraction:
     """Exact POSIX seconds of an instant value."""
     structural(value, path)
     if value["kind"] != "instant":
-        raise unsupported("not-an-instant", path + "/kind", f"expected an instant, got {value['kind']!r}")
+        raise unsupported("unsupported-operand", path + "/kind", f"expected an instant, got {value['kind']!r}")
     v = value["value"]
     if not is_posix(v["system"]):
-        raise unsupported("unsupported-timescale", path + "/value/system", "only the unix-posix timescale is implemented")
+        raise unsupported("unsupported-operand", path + "/value/system", "only the unix-posix timescale is implemented")
     if "ticks" not in v:
-        raise unsupported("unsupported-coordinate", path + "/value", "only tick-based instants are implemented")
+        raise unsupported("unsupported-operand", path + "/value", "only tick-based instants are implemented")
     t = Fraction(integer_string(v["ticks"], path + "/value/ticks"))
     if "subTick" in v:
         t += parse_rational(v["subTick"], path + "/value/subTick")
@@ -229,7 +236,7 @@ def civil(value: Any, path: str = "", forms: tuple[str, ...] | None = None) -> C
     """
     structural(value, path)
     if value["kind"] != "civil":
-        raise unsupported("not-civil", path + "/kind", f"expected a civil value, got {value['kind']!r}")
+        raise unsupported("unsupported-operand", path + "/kind", f"expected a civil value, got {value['kind']!r}")
     v = value["value"]
     form = v["form"]
     cal = v["calendar"]
@@ -237,16 +244,16 @@ def civil(value: Any, path: str = "", forms: tuple[str, ...] | None = None) -> C
         raise unsupported("unsupported-calendar", path + "/value/calendar", "only the proleptic Gregorian calendar is implemented")
     if form not in _FORM_FIELDS or (forms is not None and form not in forms):
         allowed = forms if forms is not None else tuple(_FORM_FIELDS)
-        raise unsupported("unsupported-form", path + "/value/form", f"form {form!r} is not handled here (expected {', '.join(allowed)})")
+        raise unsupported("unsupported-operand", path + "/value/form", f"form {form!r} is not handled here (expected {', '.join(allowed)})")
     required, optional = _FORM_FIELDS[form]
     f = v["fields"]
     fp = path + "/value/fields"
     for name in required:
         if name not in f:
-            raise invalid("missing-field", f"{fp}/{name}", f"a {form} needs {name!r}")
+            raise invalid("malformed-value", f"{fp}/{name}", f"a {form} needs {name!r}")
     for name in f:
         if name not in required and name not in optional:
-            raise invalid("unexpected-field", f"{fp}/{name}", f"a {form} has no {name!r} field")
+            raise invalid("malformed-value", f"{fp}/{name}", f"a {form} has no {name!r} field")
     ints = {k: int(f[k]) for k in f if k != "year"}
     year = integer_string(f["year"], fp + "/year") if "year" in f else None
     month, day = ints.get("month"), ints.get("day")
@@ -256,16 +263,16 @@ def civil(value: Any, path: str = "", forms: tuple[str, ...] | None = None) -> C
     if day is not None and not 1 <= day <= days_in_month(year, month):  # type: ignore[arg-type]
         raise invalid("day-out-of-range", fp + "/day", f"day {day} is not in 1..{days_in_month(year, month)}")  # type: ignore[arg-type]
     if hour is not None and not 0 <= hour <= 24:
-        raise invalid("hour-out-of-range", fp + "/hour", f"hour {hour} is not in 0..23")
+        raise invalid("field-out-of-range", fp + "/hour", f"hour {hour} is not in 0..23")
     if minute is not None and not 0 <= minute <= 59:
-        raise invalid("minute-out-of-range", fp + "/minute", f"minute {minute} is not in 0..59")
+        raise invalid("field-out-of-range", fp + "/minute", f"minute {minute} is not in 0..59")
     if second is not None and not 0 <= second <= 60:
-        raise invalid("second-out-of-range", fp + "/second", f"second {second} is not in 0..59")
+        raise invalid("field-out-of-range", fp + "/second", f"second {second} is not in 0..59")
     if nano is not None and not 0 <= nano < NANOS:
-        raise invalid("nano-out-of-range", fp + "/nano", f"nano {nano} is not in 0..999999999")
+        raise invalid("field-out-of-range", fp + "/nano", f"nano {nano} is not in 0..999999999")
     if hour == 24:
         if minute or second or nano:
-            raise invalid("hour-out-of-range", fp + "/hour", "hour 24 is only meaningful as 24:00")
+            raise invalid("field-out-of-range", fp + "/hour", "hour 24 is only meaningful as 24:00")
         raise unsupported("end-of-day", fp + "/hour", "24:00 needs an end-of-day policy")
     if second == 60:
         raise unsupported("leap-second", fp + "/second", "second 60 needs a leap-second table")
@@ -273,13 +280,13 @@ def civil(value: Any, path: str = "", forms: tuple[str, ...] | None = None) -> C
     z = v.get("zone")
     if z is not None and z["type"] != "floating":
         if form != "datetime" and form != "date":
-            raise unsupported("unsupported-zone", path + "/value/zone", f"a zone on a {form} is not handled")
+            raise unsupported("unsupported-operand", path + "/value/zone", f"a zone on a {form} is not handled")
         if z["type"] == "fixed-offset":
             zone, offset = "fixed-offset", int(z["seconds"])
         elif z["type"] == "iana":
             zone, zone_id = "iana", z["id"]
         else:
-            raise unsupported("unsupported-zone", path + "/value/zone", f"zone type {z['type']!r} is not implemented")
+            raise unsupported("unsupported-operand", path + "/value/zone", f"zone type {z['type']!r} is not implemented")
     return Civil(form, year, month, day, hour, minute, second, nano, zone, offset, zone_id, value)
 
 
@@ -299,6 +306,6 @@ def datetime_fields(t: Fraction) -> dict[str, Any]:
     fields: dict[str, Any] = {"year": str(y), "month": m, "day": d, "hour": sod // 3600, "minute": sod // 60 % 60, "second": sod % 60}
     if nano:
         if nano.denominator != 1:
-            raise unsupported("sub-nanosecond", "/value/subTick", "civil values hold at most nanosecond precision")
+            raise unsupported("implementation-limit", "/value/subTick", "civil values hold at most nanosecond precision")
         fields["nano"] = int(nano)
     return fields

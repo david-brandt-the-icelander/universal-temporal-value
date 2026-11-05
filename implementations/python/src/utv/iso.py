@@ -41,10 +41,10 @@ _RE_ANNOTATION = re.compile(r"\[([^\[\]]*)\]")
 # Valid ISO 8601 / RFC 9557 forms this profile recognises but doesn't handle.
 _TIME_TAIL = r"(?:T[0-9:.]+(?:Z|[+-][0-9:]+)?)?"
 _UNSUPPORTED_FORMS = [
-    (re.compile(_YEAR + r"-W[0-9]{2}(?:-[1-7])?" + _TIME_TAIL), "week-date", "week dates are not handled by this profile"),
-    (re.compile(_YEAR + r"-[0-9]{3}" + _TIME_TAIL), "ordinal-date", "ordinal dates are not handled by this profile"),
-    (re.compile(r"[+-]?[0-9]{4,}W[0-9]{2,3}"), "basic-format", "basic-format week dates are not handled by this profile"),
-    (re.compile(r"[+-]?[0-9]{7,8}(?:T[0-9]{2,6}(?:[.,][0-9]+)?(?:Z|[+-][0-9]{2}(?:[0-9]{2})?)?)?"), "basic-format",
+    (re.compile(_YEAR + r"-W[0-9]{2}(?:-[1-7])?" + _TIME_TAIL), "unsupported-form", "week dates are not handled by this profile"),
+    (re.compile(_YEAR + r"-[0-9]{3}" + _TIME_TAIL), "unsupported-form", "ordinal dates are not handled by this profile"),
+    (re.compile(r"[+-]?[0-9]{4,}W[0-9]{2,3}"), "unsupported-form", "basic-format week dates are not handled by this profile"),
+    (re.compile(r"[+-]?[0-9]{7,8}(?:T[0-9]{2,6}(?:[.,][0-9]+)?(?:Z|[+-][0-9]{2}(?:[0-9]{2})?)?)?"), "unsupported-form",
      "basic format (no separators) is not handled by this profile"),
 ]
 
@@ -52,7 +52,7 @@ _UNSUPPORTED_FORMS = [
 def _year(text: str) -> int:
     year = int(text)
     if text.startswith("-") and year == 0:
-        raise invalid("negative-zero-year", "", "-0000 is not a valid year")
+        raise invalid("syntax", "", "-0000 is not a valid year")
     return year
 
 
@@ -89,18 +89,18 @@ def _zone_annotation(annotations: str) -> str | None:
     if not found:
         return None
     if any(content.startswith("!") for content in found):
-        raise unsupported("critical-annotation", "", "critical annotations ([!…]) are not handled by this profile")
+        raise unsupported("unsupported-annotation", "", "critical annotations ([!…]) are not handled by this profile")
     if len(found) > 1 or not ZONE_ID.fullmatch(found[0]):
         shown = "".join(f"[{c}]" for c in found)
-        raise unsupported("annotation", "", f"only a single [Area/Location] annotation is handled, not {shown}")
-    return found[0]
+        raise unsupported("unsupported-annotation", "", f"only a single [Area/Location] annotation is handled, not {shown}")
+    return str(found[0])
 
 
 @operation("parseIso")
 def parse_iso(text: str) -> Result:
     """Parse ISO 8601 extended / RFC 3339 / RFC 9557 text into a UTV value."""
     if not isinstance(text, str):
-        raise invalid("not-a-string", "", "parse_iso takes a str")
+        raise invalid("malformed-value", "", "parse_iso takes a str")
     if m := _RE_DATE.fullmatch(text):
         value = civil_value("date", _date_fields(m))
     elif m := _RE_YEAR_MONTH.fullmatch(text):
@@ -113,7 +113,7 @@ def parse_iso(text: str) -> Result:
         for pattern, code, message in _UNSUPPORTED_FORMS:
             if pattern.fullmatch(text):
                 raise unsupported(code, "", message)
-        raise invalid("not-iso-8601", "", f"{text!r} is not in the supported ISO 8601 / RFC 3339 / RFC 9557 grammar")
+        raise invalid("syntax", "", f"{text!r} is not in the supported ISO 8601 / RFC 3339 / RFC 9557 grammar")
     civil(value)  # field ranges: invalid / unsupported
     return unique(value)
 
@@ -128,7 +128,7 @@ def _parse_datetime(m: re.Match[str]) -> Result:
     checked = civil(local)
     if offset in ("Z", "-00:00"):
         if zone is not None:
-            raise unsupported("utc-with-zone", "", "Z or -00:00 followed by a [zone] is not handled by this profile")
+            raise unsupported("unsupported-annotation", "", "a [zone] after Z or -00:00 is not handled by this profile")
         return unique(instant_value(checked.wall_seconds()))
     if zone is not None:
         extra: dict[str, Any] = {"zone": {"type": "iana", "id": zone}, "zoneIntent": "follow-zone-id"}
@@ -154,7 +154,7 @@ def _fmt_fraction(nano: int) -> str:
 
 def _fmt_offset(seconds: int) -> str:
     if seconds % 60 or abs(seconds) > 99 * 3600:
-        raise unsupported("unprintable-offset", "/value/zone/seconds", "the offset can't be printed as ±hh:mm")
+        raise unsupported("no-text-form", "/value/zone/seconds", "the offset can't be printed as ±hh:mm")
     sign = "-" if seconds < 0 else "+"
     hh, mm = divmod(abs(seconds) // 60, 60)
     return f"{sign}{hh:02d}:{mm:02d}"
@@ -176,12 +176,12 @@ def format_iso(value: Any) -> Result:
         whole = math.floor(t)
         frac = (t - whole) * NANOS
         if frac.denominator != 1:
-            raise unsupported("unprintable-fraction", "/value/subTick", "the fraction needs more than 9 decimal digits")
+            raise unsupported("no-text-form", "/value/subTick", "the fraction needs more than 9 decimal digits")
         f = datetime_fields(Fraction(whole))
         text = f"{_fmt_year(int(f['year']))}-{f['month']:02d}-{f['day']:02d}T{f['hour']:02d}:{f['minute']:02d}:{f['second']:02d}"
         return unique(text + _fmt_fraction(int(frac)) + "Z")
     if value["kind"] != "civil":
-        raise unsupported("unsupported-kind", "/kind", f"{value['kind']!r} values have no ISO 8601 form in this profile")
+        raise unsupported("unsupported-operand", "/kind", f"{value['kind']!r} values have no ISO 8601 form in this profile")
     c = civil(value)
     if c.form == "time":
         return unique(_fmt_time(c))
@@ -191,7 +191,7 @@ def format_iso(value: Any) -> Result:
     text += f"-{c.day:02d}"
     if c.form == "date":
         if c.zone != "floating":
-            raise unsupported("unprintable-zone", "/value/zone", "a zoned date has no ISO 8601 form")
+            raise unsupported("no-text-form", "/value/zone", "a zoned date has no ISO 8601 form")
         return unique(text)
     text += "T" + _fmt_time(c)
     if c.zone == "fixed-offset":

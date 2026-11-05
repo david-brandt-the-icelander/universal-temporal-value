@@ -1,4 +1,5 @@
-"""Every fixture in the shared conformance/operations/everyday.json (read from the repository, not copied)."""
+"""Every fixture in the shared conformance/operations/everyday.json (read from the repository, not copied):
+status, candidates and the diagnostic codes listed in ``expect.diagnostics``."""
 
 import json
 import unittest
@@ -65,6 +66,9 @@ class EverydayFixtures(unittest.TestCase):
                 else:
                     want = []
                 self.assertEqual(canonical(res.candidates), canonical(want), f["id"])
+                codes = {d.code for d in res.diagnostics}
+                for code in expect.get("diagnostics", []):
+                    self.assertIn(code, codes, why)
 
     def test_candidates_are_valid_utv(self):
         """Every UTV value an operation returns passes structural validation."""

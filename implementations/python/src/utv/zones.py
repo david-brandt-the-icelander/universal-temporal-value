@@ -68,6 +68,16 @@ class ZoneRules:
     def manifest(self) -> dict[str, Any]:
         return {"dependencies": [dict(self.rule_set)]}
 
+    @classmethod
+    def load(cls, path: Union[str, "os.PathLike[str]"]) -> ZoneRules:
+        """Read a rule bundle from a file the caller names (same as :func:`load_rules`)."""
+        return load_rules(path)
+
+    @classmethod
+    def parse(cls, source: Union[str, bytes, Mapping[str, Any]]) -> ZoneRules:
+        """Parse a rule bundle from JSON text (same as :func:`parse_rules`)."""
+        return parse_rules(source)
+
 
 def parse_rules(source: Union[str, bytes, Mapping[str, Any]]) -> ZoneRules:
     """Parse a rule bundle from JSON text or an already-parsed dict.
@@ -99,7 +109,7 @@ def _rules(rules: Any) -> ZoneRules:
     try:
         return parse_rules(rules)
     except (ValueError, TypeError):
-        raise invalid("malformed-rules", "/1", "the rules argument is not a valid rule bundle") from None
+        raise invalid("malformed-value", "/1", "the rules argument is not a valid rule bundle") from None
 
 
 _GAP = ("reject", "preserve-unresolved", "shift-forward-by-gap")
@@ -127,7 +137,7 @@ def resolve(value: Any, rules: Any, policy: Optional[Mapping[str, Any]] = None) 
     """
     c = civil(value, "/0")
     if c.form != "datetime":
-        raise unsupported("not-a-datetime", "/0/value/form", f"a {c.form} is not one instant")
+        raise unsupported("unsupported-operand", "/0/value/form", f"a {c.form} is not one instant")
     if c.zone == "floating":
         return Result(operation="resolve", status=Status.SYMBOLIC, diagnostics=[
             Diagnostic("no-zone", "info", "/0/value/zone", "no zone is bound, so there is nothing to resolve against yet")])
@@ -140,7 +150,7 @@ def resolve(value: Any, rules: Any, policy: Optional[Mapping[str, Any]] = None) 
     if zone is None:
         raise unsupported("unknown-zone", "/0/value/zone/id", f"{c.zone_id} is not in rule set {bundle.rule_set.get('id')}")
     if local - 86400 < bundle.valid_from or local + 86400 >= bundle.valid_until:
-        raise unsupported("outside-rules", "/0/value/fields", "the rules don't cover this date; never extrapolated")
+        raise unsupported("outside-rule-window", "/0/value/fields", "the rules don't cover this date; never extrapolated")
     gap, overlap = _policy(policy, value)
     found = sorted(local - o for o in zone.offsets_near(local - 86400, local + 86400) if zone.offset_at(local - o) == o)
     manifest = bundle.manifest()
@@ -164,12 +174,12 @@ def resolve(value: Any, rules: Any, policy: Optional[Mapping[str, Any]] = None) 
             if before is not None:
                 return answer(Status.UNIQUE, [local - before])
         return Result(operation="resolve", status=Status.NONE, manifest=manifest, diagnostics=[
-            Diagnostic("gap", "info", "/0/value/fields", f"this wall time doesn't exist in {c.zone_id} (a DST gap)")])
+            Diagnostic("gap", "info", "/0/value/fields", f"wall time skipped in {c.zone_id}")])
     if overlap == "earliest":
         return answer(Status.UNIQUE, found[:1])
     if overlap == "latest":
         return answer(Status.UNIQUE, found[-1:])
-    diags = [Diagnostic("ambiguous", "info", "/0/value/fields", f"this wall time happens {len(found)} times in {c.zone_id}")]
+    diags = [Diagnostic("ambiguous", "info", "/0/value/fields", f"wall time happens {len(found)} times in {c.zone_id}")]
     return answer(Status.MULTIPLE, found, diags if overlap == "reject" else [])
 
 
@@ -182,7 +192,7 @@ def to_zone(instant: Any, zone_id: str, rules: Any) -> Result:
     if zone is None:
         raise unsupported("unknown-zone", "/1", f"{zone_id} is not in rule set {bundle.rule_set.get('id')}")
     if not bundle.valid_from <= t < bundle.valid_until:
-        raise unsupported("outside-rules", "/0", "the rules don't cover this instant; never extrapolated")
+        raise unsupported("outside-rule-window", "/0", "the rules don't cover this instant; never extrapolated")
     offset = zone.offset_at(t)
     extra = {"zone": {"type": "iana", "id": zone_id}, "zoneIntent": "follow-zone-id", "offsetAssertion": offset}
     return unique(civil_value("datetime", datetime_fields(t + offset), extra), manifest=bundle.manifest())
@@ -193,7 +203,7 @@ def to_offset(instant: Any, seconds: int) -> Result:
     """The wall time at a fixed UTC offset (seconds east of UTC) at ``instant``."""
     t = instant_seconds(instant, "/0")
     if isinstance(seconds, bool) or not isinstance(seconds, int):
-        raise invalid("not-an-offset", "/1", "the offset must be an integer number of seconds")
+        raise invalid("malformed-value", "/1", "the offset must be an integer number of seconds")
     if abs(seconds) > MAX_OFFSET:
         raise invalid("offset-out-of-range", "/1", "offsets are limited to ±18:00")
     extra = {"zone": {"type": "fixed-offset", "seconds": seconds}, "zoneIntent": "fixed-offset"}

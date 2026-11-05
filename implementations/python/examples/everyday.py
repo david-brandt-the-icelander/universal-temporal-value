@@ -1,345 +1,320 @@
-"""Everyday date/time tasks: Python's datetime, side by side with UTV.
+"""Everyday date/time tasks: Python's datetime next to UTV.
 
-Run from ``implementations/python``::
+Run from implementations/python:
 
     PYTHONPATH=src python3 examples/everyday.py
 
-Each section does an ordinary thing first with the standard library
-(``datetime``, ``zoneinfo``), then with UTV. Native output can vary by host
-(clock, tz database); UTV output can't, except the clock reading in section 1.
-The script checks its own UTV outcomes and exits with status 1 if any differ.
+Each task does the ordinary thing with datetime and zoneinfo, then with UTV.
+The comments show what each row prints. Rows marked ‡ depend on this machine
+(the clock, its tz database or the Python version); tests/test_examples.py
+checks every other line against examples/everyday.expected.txt.
 """
 
-from __future__ import annotations
-
 import calendar
-import json
-import time as clock
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
-from typing import Any, Optional
+from time import time_ns
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-import utv
-from utv import UNBOUNDED, UNKNOWN, Intent, Result, Status
+from utv import (
+    Bound, CivilDate, CivilDateTime, CivilTime, ElapsedSeconds, Gap, Instant, Intent, Interval, Invalid,
+    MonthEnd, Multiple, NoneOf, Overlap, PosixSeconds, ResolutionPolicy, TemporalContext, Unique, ZoneRules,
+    from_native, parse, to_native,
+)
 
-RULES_PATH = Path(__file__).resolve().parents[3] / "conformance" / "rules" / "demo-zones.json"
-mismatches: list[str] = []
+# UTV's zone rules: a small pinned file (New York, Paris, Reykjavik; 2026-2027), named once.
+ctx = TemporalContext(ZoneRules.load(Path(__file__).parents[3] / "conformance/rules/demo-zones.json"))
 
-
-# --- printing helpers ---------------------------------------------------------
-
-def native(label: str, value: Any) -> None:
-    print(f"  native  {label:<40} {value}")
-
-
-def iso(value: Any) -> str:
-    """format_iso for UTV values, plain text for strings, JSON for other answers."""
-    if isinstance(value, str):
-        return value
-    if isinstance(value, dict) and "schema" in value:
-        r = utv.format_iso(value)
-        if r.status is Status.UNIQUE:
-            return r.value
-        if value.get("kind") == "amount":
-            s = value["value"].get("seconds")
-            if s:
-                return f"{s['numerator']} s" if s["denominator"] == "1" else f"{s['numerator']}/{s['denominator']} s"
-            return json.dumps(value["value"]["components"])
-        return json.dumps(value)
-    return json.dumps(value)
+# Python's zone rules: the host's tz database. Without one, the Python rows that need it are skipped.
+try:
+    PARIS: ZoneInfo | None = ZoneInfo("Europe/Paris")
+    NEW_YORK: ZoneInfo | None = ZoneInfo("America/New_York")
+except ZoneInfoNotFoundError:
+    PARIS = NEW_YORK = None
 
 
-def show(label: str, r: Any, expect: Optional[str] = None, *, values: Optional[list[str]] = None) -> Result:
-    """Print a UTV outcome, and record a mismatch if it isn't what this example expects.
-
-    A built value (not a result) is shown through format_iso.
-    """
-    if not isinstance(r, Result):
-        r = utv.format_iso(r)
-    shown = ", ".join(iso(c) for c in r.candidates)
-    why = "; ".join(f"{d.code}: {d.message}" for d in r.diagnostics if r.status is not Status.UNIQUE)
-    print(f"  UTV     {label:<40} {r.status.value:<11} {shown}{'  (' + why + ')' if why else ''}")
-    if expect is not None and r.status.value != expect:
-        mismatches.append(f"{label}: expected {expect}, got {r.status.value}")
-    if values is not None and [iso(c) for c in r.candidates] != values:
-        mismatches.append(f"{label}: expected {values}, got {[iso(c) for c in r.candidates]}")
-    return r
+def row(who: str, value: object, note: str = "", host: bool = False) -> None:
+    """Print one aligned output row; a long value puts its note on the next line.
+    host=True marks a row that depends on this machine."""
+    text, mark = str(value), " ‡" if host else ""
+    if len(text) > 33 and note:
+        print(f"     {who:<7}{text}{mark}")
+        who, text = "", ""
+    print(f"     {who:<7}{text:<33} {note}".rstrip() + mark)
 
 
-def note(text: str) -> None:
-    print(f"  note    {text}")
+print("Everyday date/time tasks: Python's datetime and UTV   (‡ depends on this machine)")
 
+print("\n1. Now")
+print("   Now")
+# BEGIN now
+now = datetime.now(timezone.utc)
+row("Python", now.isoformat(timespec="seconds"), "datetime.now(timezone.utc)", host=True)
+# 2026-11-05T13:30:00+00:00   datetime.now(timezone.utc) ‡
+stamp = Instant.from_unix_nanoseconds(time_ns())  # UTV never reads the clock: you pass the reading in
+row("UTV", stamp, "from time_ns()", host=True)  # 2026-11-05T13:30:00.123456789Z   from time_ns() ‡
+# END now
 
-def zone(key: str) -> Optional[ZoneInfo]:
-    """A ZoneInfo from the host's tz database, or None (printed) if it isn't installed."""
-    try:
-        return ZoneInfo(key)
-    except (ZoneInfoNotFoundError, ValueError, OSError):
-        native(f"ZoneInfo({key!r})", "not available on this host; native side skipped")
-        return None
+print("\n2. A date")
+print("   5 November 2026")
+# BEGIN a-date
+d = date(2026, 11, 5)
+row("Python", d)  # 2026-11-05
+row("Python", repr(d))  # datetime.date(2026, 11, 5)
+day = CivilDate.of(2026, 11, 5)
+row("UTV", day)  # 2026-11-05
+row("UTV", repr(day))  # CivilDate(2026-11-05)
+# END a-date
+print("   Day of week and ISO week")
+# BEGIN weekday-week
+d = date(2026, 11, 5)
+row("Python", f"{d:%A}, ISO week {d.isocalendar().week}", "%A follows the locale")
+# Thursday, ISO week 45   %A follows the locale
+day = CivilDate.of(2026, 11, 5)
+row("UTV", f"{day.day_of_week}, ISO week {day.iso_week}", f"day {day.day_of_year} of the year")
+# Thursday, ISO week 45   day 309 of the year
+# END weekday-week
 
+print("\n3. Invalid dates")
+print("   30 February 2026")
+# BEGIN feb-30
+try:
+    date(2026, 2, 30)
+except ValueError:
+    row("Python", "ValueError", "raised by date()")  # ValueError   raised by date()
+try:
+    CivilDate.of(2026, 2, 30)
+except ValueError as error:
+    row("UTV", "ValueError", str(error))  # ValueError   invalid (day-out-of-range): day 30 is not in 1..28
+match CivilDate.parse("2026-02-30"):  # text from outside: an Outcome, never an exception
+    case Unique(value=parsed):
+        row("UTV", parsed)
+    case Invalid(diagnostics=why):
+        row("UTV", "invalid", f"{why[0].message} ({why[0].code})")
+        # invalid   day 30 is not in 1..28 (day-out-of-range)
+    case other:
+        row("UTV", other)
+# END feb-30
 
-def section(title: str) -> None:
-    print(f"\n== {title} ==")
+print("\n4. Adding")
+print("   5 Nov + 30 days")
+# BEGIN add-days
+row("Python", date(2026, 11, 5) + timedelta(days=30))  # 2026-12-05
+row("UTV", CivilDate.of(2026, 11, 5).add_days(30))  # 2026-12-05
+# END add-days
+print("   31 Jan 2026 + 1 month")
+# BEGIN month-end
+jan31 = date(2026, 1, 31)
+try:
+    jan31.replace(month=2)
+except ValueError:
+    row("Python", "ValueError", "date.replace(month=2); there is no add-months")
+    # ValueError   date.replace(month=2); there is no add-months
+last_day = calendar.monthrange(2026, 2)[1]  # what people write by hand: clamp to the month end
+row("Python", jan31.replace(month=2, day=min(jan31.day, last_day)), "clamped by hand")
+# 2026-02-28   clamped by hand
 
+utv_jan31 = CivilDate.of(2026, 1, 31)
+match utv_jan31.add_months(1):  # Outcome[CivilDate]
+    case Unique(value=feb):
+        row("UTV", feb)
+    case NoneOf(diagnostics=why):  # this runs
+        row("UTV", "no such date", f"{why[0].message} ({why[0].code})")
+        # no such date   2026-02 has no day 31 (month-end)
+    case other:
+        row("UTV", other)
+row("UTV", utv_jan31.add_months(1, MonthEnd.CONSTRAIN), "with MonthEnd.CONSTRAIN")
+# 2026-02-28   with MonthEnd.CONSTRAIN
+# END month-end
 
-# --- the sections ---------------------------------------------------------------
+print("\n5. Days between")
+print("   5 Nov → 25 Dec")
+# BEGIN days-between
+row("Python", (date(2026, 12, 25) - date(2026, 11, 5)).days)  # 50
+row("UTV", CivilDate.of(2026, 11, 5).days_until(CivilDate.of(2026, 12, 25)))  # 50
+# END days-between
+print("   Which comes first")
+# BEGIN compare-dates
+row("Python", date(2026, 11, 5) < date(2026, 12, 25))  # True
+row("UTV", CivilDate.of(2026, 11, 5) < CivilDate.of(2026, 12, 25))  # True
+if PARIS and NEW_YORK:
+    paris_9am, new_york_9am = datetime(2026, 11, 5, 9, tzinfo=PARIS), datetime(2026, 11, 5, 9, tzinfo=NEW_YORK)
+    row("Python", paris_9am < new_york_9am, "09:00 Paris < 09:00 New York", host=True)
+    # True   09:00 Paris < 09:00 New York ‡
+utv_paris = CivilDateTime.of(2026, 11, 5, 9, 0).in_zone("Europe/Paris")
+utv_new_york = CivilDateTime.of(2026, 11, 5, 9, 0).in_zone("America/New_York")
+row("UTV", ctx.compare(utv_paris, utv_new_york), "zoned values have no <; the order needs rules")
+# before   zoned values have no <; the order needs rules
+# END compare-dates
 
-def now() -> None:
-    section("1. Now")
-    reading = datetime.now(timezone.utc)  # the example reads the clock, not the library
-    native("datetime.now(timezone.utc)", reading.isoformat())
-    show("from_datetime(reading, INSTANT)", utv.from_datetime(reading, Intent.INSTANT), "unique")
-    show("instant(*divmod(time_ns(), 10**9))", utv.instant(*divmod(clock.time_ns(), 10**9)), "unique")
-    note("utv has no now(): the clock reading is an explicit input, so the dependency is visible (value varies per run)")
+print("\n6. Times and date-times")
+print("   09:30")
+# BEGIN time-of-day
+row("Python", time(9, 30))  # 09:30:00
+row("UTV", CivilTime.of(9, 30), "as written; 09:30:00 is a different value")
+# 09:30   as written; 09:30:00 is a different value
+# END time-of-day
+print("   23:30 + 2 hours")
+# BEGIN datetime-plus-hours
+row("Python", datetime(2026, 11, 5, 23, 30) + timedelta(hours=2))  # 2026-11-06 01:30:00
+row("UTV", CivilDateTime.of(2026, 11, 5, 23, 30).add_hours(2))  # 2026-11-06T01:30
+# END datetime-plus-hours
 
+print("\n7. Parsing with offsets")
+print("   Z vs +00:00")
+# BEGIN parse-offsets
+zero = datetime.fromisoformat("2026-11-05T14:30:00+00:00")
+row("Python", repr(zero.tzinfo), "from +00:00")  # datetime.timezone.utc   from +00:00
+try:
+    z = datetime.fromisoformat("2026-11-05T14:30:00Z")
+    row("Python", repr(z.tzinfo), "from Z: the same object", host=True)
+    # datetime.timezone.utc   from Z: the same object ‡
+except ValueError:
+    row("Python", "ValueError", "from Z (Python 3.10)", host=True)
+utc = parse("2026-11-05T14:30:00Z").single()  # UTC is known, the local offset isn't
+offset_zero = parse("2026-11-05T14:30:00+00:00").single()  # the local offset is 0
+row("UTV", utc, type(utc).__name__)  # 2026-11-05T14:30:00Z   Instant
+row("UTV", offset_zero, type(offset_zero).__name__)  # 2026-11-05T14:30:00+00:00   FixedOffsetDateTime
+# END parse-offsets
 
-def a_date() -> None:
-    section("2. A date")
-    d = date(2026, 11, 5)
-    native("date(2026, 11, 5).isoformat()", d.isoformat())
-    native("date.fromisoformat('2026-11-05')", repr(date.fromisoformat("2026-11-05")))
-    native("isoweekday(), isocalendar()", f"{d.isoweekday()}, {tuple(d.isocalendar())}")
-    show("format_iso(date(2026, 11, 5))", utv.format_iso(utv.date(2026, 11, 5)), "unique")
-    parsed = show("parse_iso('2026-11-05')", utv.parse_iso("2026-11-05"), "unique", values=["2026-11-05"])
-    show("fields(...)", utv.fields(parsed.value), "unique",
-         values=['{"dayOfWeek": 4, "dayOfYear": 309, "isoWeekYear": "2026", "isoWeek": 45, "daysInMonth": 30, "isLeapYear": false}'])
+print("\n8. Time zones")
+print("   09:00 in Paris, seen from New York")
+# BEGIN meeting-in-paris
+if PARIS and NEW_YORK:
+    meeting = datetime(2027, 6, 1, 9, 0, tzinfo=PARIS)
+    row("Python", meeting.astimezone(NEW_YORK), "host tz database", host=True)
+    # 2027-06-01 03:00:00-04:00   host tz database ‡
+utv_meeting = CivilDateTime.of(2027, 6, 1, 9, 0).in_zone("Europe/Paris")
+starts = utv_meeting.resolve(ctx).single()  # 09:00 happens exactly once that day in Paris
+row("UTV", starts.in_zone("America/New_York", ctx).single(), "demo-zones rules")
+# 2027-06-01T03:00:00-04:00[America/New_York]
+#                                   demo-zones rules
+# END meeting-in-paris
 
+print("\n9. DST gap")
+print("   02:30 on 8 March 2026 in New York")
+# BEGIN dst-gap
+if NEW_YORK:
+    wall = datetime(2026, 3, 8, 2, 30, tzinfo=NEW_YORK)
+    row("Python", wall, "accepted without a word", host=True)
+    # 2026-03-08 02:30:00-05:00   accepted without a word ‡
+    row("Python", wall.astimezone(timezone.utc).astimezone(NEW_YORK), "after a trip through UTC", host=True)
+    # 2026-03-08 03:30:00-04:00   after a trip through UTC ‡
+gap = CivilDateTime.of(2026, 3, 8, 2, 30).in_zone("America/New_York")
+resolved = gap.resolve(ctx)  # Outcome[Instant]
+match resolved:
+    case Unique(value=instant):
+        row("UTV", instant)
+    case NoneOf(diagnostics=why):  # this runs: clocks jump from 02:00 to 03:00
+        row("UTV", "no such time", f"{why[0].message} ({why[0].code})")
+        # no such time   wall time skipped in America/New_York (gap)
+    case _:
+        row("UTV", resolved)
+shifted = gap.resolve(ctx, ResolutionPolicy(gap=Gap.SHIFT_FORWARD)).single()
+row("UTV", shifted.in_zone("America/New_York", ctx).single(), "with Gap.SHIFT_FORWARD")
+# 2026-03-08T03:30:00-04:00[America/New_York]
+#                                   with Gap.SHIFT_FORWARD
+# END dst-gap
 
-def invalid_dates() -> None:
-    section("3. Invalid dates")
-    try:
-        native("date(2026, 2, 30)", date(2026, 2, 30))
-    except ValueError as exc:
-        native("date(2026, 2, 30)", f"raises ValueError: {exc}")
-    feb30 = utv.date(2026, 2, 30)  # builders don't judge; operations do
-    show("fields(date(2026, 2, 30))", utv.fields(feb30), "invalid")
-    show("parse_iso('2026-02-30')", utv.parse_iso("2026-02-30"), "invalid")
-    note("native refuses at construction with an exception; UTV builds the value and every operation answers 'invalid'")
+print("\n10. DST overlap")
+print("   01:30 on 1 November 2026 in New York")
+# BEGIN dst-overlap
+if NEW_YORK:
+    wall = datetime(2026, 11, 1, 1, 30, tzinfo=NEW_YORK)
+    row("Python", wall, "fold=0 (the default): EDT, no warning", host=True)
+    # 2026-11-01 01:30:00-04:00   fold=0 (the default): EDT, no warning ‡
+    row("Python", wall.replace(fold=1), "fold=1: EST", host=True)  # 2026-11-01 01:30:00-05:00   fold=1: EST ‡
+overlap = CivilDateTime.of(2026, 11, 1, 1, 30).in_zone("America/New_York")
+resolved = overlap.resolve(ctx)  # Outcome[Instant]
+match resolved:
+    case Unique(value=instant):
+        row("UTV", instant)
+    case Multiple(values=instants):  # this runs: clocks go back from 02:00 to 01:00
+        for n, instant in enumerate(instants, 1):
+            row("UTV", instant.in_zone("America/New_York", ctx).single(), f"{n} of {len(instants)}")
+        # 2026-11-01T01:30:00-04:00[America/New_York]
+        #                                   1 of 2
+        # 2026-11-01T01:30:00-05:00[America/New_York]
+        #                                   2 of 2
+    case _:
+        row("UTV", resolved)
+earliest = overlap.resolve(ctx, ResolutionPolicy(overlap=Overlap.EARLIEST)).single()
+row("UTV", earliest, "with Overlap.EARLIEST")  # 2026-11-01T05:30:00Z   with Overlap.EARLIEST
+# END dst-overlap
 
+print("\n11. Timestamps")
+print("   Exact fractions and differences")
+# BEGIN timestamps
+stamp_float = datetime.fromtimestamp(1793885400.123456789, tz=timezone.utc)
+row("Python", stamp_float.isoformat(), "a float timestamp")  # 2026-11-05T13:30:00.123457+00:00   a float ...
+row("Python", timedelta(seconds=1) / 3)  # 0:00:00.333333
+precise = Instant.from_unix_seconds(1793885400, 123_456_789)
+row("UTV", precise)  # 2026-11-05T13:30:00.123456789Z
+row("UTV", Instant.from_unix_seconds(1793885400).until(precise))  # 0.123456789 s (POSIX)
+row("UTV", PosixSeconds.of(1, 3), "exact; it has no decimal form")  # 1/3 s (POSIX)   exact; it has no ...
+# END timestamps
 
-def add_months(d: date, n: int) -> date:
-    """The usual stdlib workaround for 'add n months' (dateutil isn't stdlib): clamp to month end."""
-    y, m = divmod(d.month - 1 + n, 12)
-    year, month = d.year + y, m + 1
-    return d.replace(year=year, month=month, day=min(d.day, calendar.monthrange(year, month)[1]))
+print("\n12. Durations vs periods")
+print("   One day vs 86,400 seconds across DST")
+# BEGIN day-vs-24h
+if NEW_YORK:
+    noon = datetime(2026, 10, 31, 12, 0, tzinfo=NEW_YORK)
+    next_noon = noon + timedelta(days=1)
+    row("Python", next_noon, "noon + timedelta(days=1)", host=True)
+    # 2026-11-01 12:00:00-05:00   noon + timedelta(days=1) ‡
+    row("Python", next_noon - noon, "subtracted as wall times", host=True)
+    # 1 day, 0:00:00   subtracted as wall times ‡
+    elapsed = next_noon.astimezone(timezone.utc) - noon.astimezone(timezone.utc)
+    row("Python", elapsed, "subtracted in UTC", host=True)  # 1 day, 1:00:00   subtracted in UTC ‡
+utv_noon = CivilDateTime.of(2026, 10, 31, 12, 0).in_zone("America/New_York")
+utv_next_noon = utv_noon.add_days(1)  # a calendar day: 12:00 again
+row("UTV", utv_next_noon, "add_days(1)")
+# 2026-11-01T12:00[America/New_York]
+#                                   add_days(1)
+start, end = utv_noon.resolve(ctx).single(), utv_next_noon.resolve(ctx).single()
+row("UTV", start.until(end), "elapsed: 25 hours")  # 90000 s (POSIX)   elapsed: 25 hours
+later = start.add(PosixSeconds.of(86400))
+row("UTV", later.in_zone("America/New_York", ctx).single(), "+ 86,400 POSIX seconds")
+# 2026-11-01T11:00:00-05:00[America/New_York]
+#                                   + 86,400 POSIX seconds
+row("UTV", start.add(ElapsedSeconds.of(86400)), "+ 86,400 SI seconds")
+# unsupported (needs-leap-seconds)   + 86,400 SI seconds
+# END day-vs-24h
 
+print("\n13. Ranges")
+print("   November, open-ended and unknown ends")
+# BEGIN ranges
+first, last = date(2026, 11, 1), date(2026, 12, 1)
+row("Python", first <= date(2026, 11, 15) < last, "no range type: compare by hand")
+# True   no range type: compare by hand
+lease_end = None
+row("Python", lease_end is None or date(2027, 6, 1) < lease_end, "end=None: no end, or not known yet?")
+# True   end=None: no end, or not known yet?
+november = Interval.half_open(CivilDate.of(2026, 11, 1), CivilDate.of(2026, 12, 1))
+row("UTV", november, f"15 Nov: {november.contains(CivilDate.of(2026, 11, 15))}")
+# [2026-11-01, 2026-12-01)   15 Nov: definitely
+row("UTV", november, f"1 Dec: {november.contains(CivilDate.of(2026, 12, 1))}")
+# [2026-11-01, 2026-12-01)   1 Dec: impossible
+open_ended = Interval.of(Bound.included(CivilDate.of(2026, 11, 1)), Bound.UNBOUNDED)
+row("UTV", open_ended, f"1 Jan 3000: {open_ended.contains(CivilDate.of(3000, 1, 1))}")
+# [2026-11-01, ..)   1 Jan 3000: definitely
+unknown_end = Interval.of(Bound.included(CivilDate.of(2026, 11, 1)), Bound.UNKNOWN)
+row("UTV", unknown_end, f"1 Jun 2027: {unknown_end.contains(CivilDate.of(2027, 6, 1))}")
+# [2026-11-01, ?)   1 Jun 2027: possibly
+# END ranges
 
-def adding() -> None:
-    section("4. Adding")
-    d = date(2026, 11, 5)
-    native("d + timedelta(days=30)", d + timedelta(days=30))
-    native("add_months(d, 1)  # workaround", add_months(d, 1))
-    try:
-        native("date(2026, 1, 31).replace(month=2)", date(2026, 1, 31).replace(month=2))
-    except ValueError as exc:
-        native("date(2026, 1, 31).replace(month=2)", f"raises ValueError: {exc}")
-    native("add_months(date(2026, 1, 31), 1)", add_months(date(2026, 1, 31), 1))
-    show("add(d, period(days=30))", utv.add(utv.date(2026, 11, 5), utv.period(days=30)), "unique", values=["2026-12-05"])
-    show("add(d, period(months=1))", utv.add(utv.date(2026, 11, 5), utv.period(months=1)), "unique", values=["2026-12-05"])
-    jan31 = utv.date(2026, 1, 31)
-    show("add(31 Jan, period(months=1))", utv.add(jan31, utv.period(months=1)), "none")
-    show("... {'monthEnd': 'constrain'}", utv.add(jan31, utv.period(months=1), {"monthEnd": "constrain"}),
-         "unique", values=["2026-02-28"])
-    note("stdlib has no month arithmetic: replace() raises, the usual workaround clamps silently; "
-         "UTV answers 'none' until you choose 'constrain'")
-
-
-def days_between() -> None:
-    section("5. Days between")
-    a, b = date(2026, 11, 5), date(2026, 12, 25)
-    native("(b - a).days", (b - a).days)
-    native("a < b", a < b)
-    show("days_between(a, b)", utv.days_between(utv.date(2026, 11, 5), utv.date(2026, 12, 25)), "unique", values=["50"])
-    show("compare(a, b)", utv.compare(utv.date(2026, 11, 5), utv.date(2026, 12, 25)), "unique", values=["before"])
-    note("compare() returns before/equal/after, or 'unsupported' when the order depends on rules (e.g. two zones)")
-
-
-def times() -> None:
-    section("6. Times and date-times")
-    native("time(9, 30).isoformat()", time(9, 30).isoformat())
-    native("datetime(2026,11,5,23,30) + 2h", (datetime(2026, 11, 5, 23, 30) + timedelta(hours=2)).isoformat())
-    show("time(9, 30)", utv.time(9, 30), "unique", values=["09:30"])
-    show("add(date_time(...23:30), period(hours=2))",
-         utv.add(utv.date_time(2026, 11, 5, 23, 30), utv.period(hours=2)), "unique", values=["2026-11-06T01:30"])
-    note("native time() always has seconds (09:30:00); UTV keeps 09:30 as written")
-
-
-def parsing_offsets() -> None:
-    section("7. Parsing with offsets")
-    parsed: dict[str, Any] = {}
-    for text in ("2026-11-05T14:30:00+01:00", "2026-11-05T14:30:00Z", "2026-11-05T14:30:00+00:00"):
-        label = f"fromisoformat('...{text[19:]}')"
-        try:
-            parsed[text[19:]] = datetime.fromisoformat(text)
-            native(label, f"{parsed[text[19:]].isoformat()}  tzinfo={parsed[text[19:]].tzinfo!r}")
-        except ValueError as exc:  # Python 3.10 doesn't accept "Z"
-            native(label, f"raises ValueError: {exc}")
-    show("parse_iso('...+01:00')", utv.parse_iso("2026-11-05T14:30:00+01:00"), "unique", values=["2026-11-05T14:30:00+01:00"])
-    z = show("parse_iso('...Z')", utv.parse_iso("2026-11-05T14:30:00Z"), "unique", values=["2026-11-05T14:30:00Z"])
-    zero = show("parse_iso('...+00:00')", utv.parse_iso("2026-11-05T14:30:00+00:00"), "unique",
-                values=["2026-11-05T14:30:00+00:00"])
-    print(f"  UTV     {'kinds':<40} Z -> {z.value['kind']}, +00:00 -> {zero.value['kind']} at offset "
-          f"{zero.value['value']['zone']['seconds']}")
-    if "Z" in parsed and parsed["Z"].tzinfo == parsed["+00:00"].tzinfo:
-        note("native gave Z and +00:00 the same tzinfo, so they can't be told apart afterwards")
-    note("UTV keeps 'UTC, local offset unknown' (Z: an instant) apart from 'local offset is 0' (+00:00: an offset date-time)")
-
-
-def time_zones(rules: utv.ZoneRules) -> None:
-    section("8. Time zones")
-    paris, new_york = zone("Europe/Paris"), zone("America/New_York")
-    if paris and new_york:
-        meeting = datetime(2027, 6, 1, 9, 0, tzinfo=paris)
-        native("datetime(2027,6,1,9,0,tzinfo=Paris)", meeting.isoformat())
-        native(".astimezone(New_York)", meeting.astimezone(new_york).isoformat())
-    meeting_utv = utv.in_zone(utv.date_time(2027, 6, 1, 9, 0), "Europe/Paris")
-    show("in_zone(date_time(...), 'Europe/Paris')", meeting_utv, "unique",
-         values=["2027-06-01T09:00[Europe/Paris]"])
-    at = show("resolve(meeting, rules)", utv.resolve(meeting_utv, rules), "unique", values=["2027-06-01T07:00:00Z"])
-    show("to_zone(instant, 'America/New_York')", utv.to_zone(at.value, "America/New_York", rules), "unique",
-         values=["2027-06-01T03:00:00-04:00[America/New_York]"])
-    note(f"native uses the host's tz database; UTV uses only the rules passed in ({rules.rule_set['id']} "
-         f"{rules.rule_set['version']}), recorded in the result manifest")
-
-
-def dst_gap(rules: utv.ZoneRules) -> None:
-    section("9. DST gap")
-    new_york = zone("America/New_York")
-    if new_york:
-        wall = datetime(2026, 3, 8, 2, 30, tzinfo=new_york)
-        back = wall.astimezone(timezone.utc).astimezone(new_york)
-        native("datetime(2026,3,8,2,30,tzinfo=NY)", wall.isoformat())
-        native(".astimezone(utc).astimezone(NY)", back.isoformat())
-        if back.replace(tzinfo=None) != wall.replace(tzinfo=None):
-            note("native accepted a wall time that this host's tzdb says never happened, with no error")
-    gap = utv.in_zone(utv.date_time(2026, 3, 8, 2, 30), "America/New_York")
-    show("resolve(02:30 New York)", utv.resolve(gap, rules), "none")
-    shifted = show("... {'gap': 'shift-forward-by-gap'}",
-                   utv.resolve(gap, rules, {"gap": "shift-forward-by-gap", "overlap": "reject"}),
-                   "unique", values=["2026-03-08T07:30:00Z"])
-    show("to_zone(that, 'America/New_York')", utv.to_zone(shifted.value, "America/New_York", rules), "unique",
-         values=["2026-03-08T03:30:00-04:00[America/New_York]"])
-
-
-def dst_overlap(rules: utv.ZoneRules) -> None:
-    section("10. DST overlap")
-    new_york = zone("America/New_York")
-    if new_york:
-        wall = datetime(2026, 11, 1, 1, 30, tzinfo=new_york)
-        native("datetime(2026,11,1,1,30,tzinfo=NY)", f"{wall.isoformat()}  (fold={wall.fold})")
-        native("same with fold=1", wall.replace(fold=1).isoformat())
-        if wall.utcoffset() != wall.replace(fold=1).utcoffset():
-            note(f"01:30 is ambiguous here; fold defaults to 0, which gave {wall.isoformat()[-6:]} with no warning")
-    overlap = utv.in_zone(utv.date_time(2026, 11, 1, 1, 30), "America/New_York")
-    show("resolve(01:30 New York)", utv.resolve(overlap, rules), "multiple",
-         values=["2026-11-01T05:30:00Z", "2026-11-01T06:30:00Z"])
-    show("... {'overlap': 'earliest'}", utv.resolve(overlap, rules, {"gap": "reject", "overlap": "earliest"}),
-         "unique", values=["2026-11-01T05:30:00Z"])
-
-
-def timestamps() -> None:
-    section("11. Timestamps")
-    stamp = datetime.fromtimestamp(1793885400.123456789, tz=timezone.utc)
-    native("fromtimestamp(1793885400.123456789)", stamp.isoformat())
-    a = datetime.fromtimestamp(1793885400, tz=timezone.utc)
-    native("(stamp - a).total_seconds()", (stamp - a).total_seconds())
-    precise = utv.instant(1793885400, 123_456_789)
-    show("instant(1793885400, 123_456_789)", precise, "unique",
-         values=["2026-11-05T13:30:00.123456789Z"])
-    show("posix_seconds_between(a, precise)", utv.posix_seconds_between(utv.instant(1793885400), precise), "unique",
-         values=["123456789/1000000000 s"])
-    note("a float timestamp keeps microseconds at best; UTV ticks are integers and fractions are exact rationals")
-
-
-def durations(rules: utv.ZoneRules) -> None:
-    section("12. Durations vs periods")
-    native("timedelta(days=1) == timedelta(hours=24)", timedelta(days=1) == timedelta(hours=24))
-    new_york = zone("America/New_York")
-    if new_york:
-        start = datetime(2026, 10, 31, 12, 0, tzinfo=new_york)
-        end = start + timedelta(days=1)
-        native("NY 10-31 12:00 + timedelta(days=1)", end.isoformat())
-        elapsed = end.astimezone(timezone.utc) - start.astimezone(timezone.utc)
-        native("elapsed (via UTC)", elapsed)
-        note(f"same-tzinfo datetime + timedelta is wall-clock arithmetic: 'one day' was {elapsed / timedelta(hours=1):g} hours here")
-    noon = utv.in_zone(utv.date_time(2026, 10, 31, 12, 0), "America/New_York")
-    next_day = show("add(noon NY, period(days=1))", utv.add(noon, utv.period(days=1)), "unique",
-                    values=["2026-11-01T12:00[America/New_York]"])
-    a, b = utv.resolve(noon, rules).value, utv.resolve(next_day.value, rules).value
-    show("posix_seconds_between(resolved)", utv.posix_seconds_between(a, b), "unique", values=["90000 s"])
-    show("add(instant, posix_seconds(86400))", utv.add(a, utv.posix_seconds(86400)), "unique",
-         values=["2026-11-01T16:00:00Z"])
-    si_day = {"schema": "utv/1.0", "kind": "amount",
-              "value": {"basis": "elapsed", "seconds": {"numerator": "86400", "denominator": "1"}}}
-    show("add(instant, 86400 SI seconds)", utv.add(a, si_day), "unsupported")
-    note("period(days=1) is a calendar step, posix_seconds(86400) an exact count; SI seconds need a leap-second table")
-
-
-def ranges() -> None:
-    section("13. Ranges")
-    start, end = date(2026, 11, 1), date(2026, 12, 1)
-    native("start <= date(2026,11,15) < end", start <= date(2026, 11, 15) < end)
-    native("start <= date(2026,12,1) < end", start <= date(2026, 12, 1) < end)
-    note("the stdlib has no date-range type; you write the comparisons yourself")
-    november = utv.interval(utv.date(2026, 11, 1), utv.date(2026, 12, 1))
-    december = utv.interval(utv.date(2026, 12, 1), utv.date(2027, 1, 1))
-    show("contains(november, 15 Nov)", utv.contains(november, utv.date(2026, 11, 15)), "unique", values=["definitely"])
-    show("contains(november, 1 Dec)", utv.contains(november, utv.date(2026, 12, 1)), "unique", values=["impossible"])
-    show("overlaps(november, december)", utv.overlaps(november, december), "unique", values=["impossible"])
-    open_ended = utv.interval(utv.date(2026, 11, 1), UNBOUNDED)
-    show("contains([1 Nov, ...), 1 Jan 3000)", utv.contains(open_ended, utv.date(3000, 1, 1)), "unique",
-         values=["definitely"])
-    unknown_end = utv.interval(utv.date(2026, 11, 1), UNKNOWN)
-    show("contains([1 Nov, ?), 1 Jun 2027)", utv.contains(unknown_end, utv.date(2027, 6, 1)), "unique",
-         values=["possibly"])
-
-
-def round_trip() -> None:
-    section("14. Round trip")
-    original = datetime(2026, 11, 5, 14, 30, tzinfo=timezone(timedelta(hours=1)))
-    as_utv = show("from_datetime(+01:00, OFFSET)", utv.from_datetime(original, Intent.OFFSET), "unique",
-                  values=["2026-11-05T14:30:00+01:00"])
-    back = utv.to_datetime(as_utv.value).value
-    native("to_datetime(...)", f"{back.isoformat()}  equal to original: {back == original}")
-    paris = zone("Europe/Paris")
-    if paris:
-        zoned = show("from_datetime(Paris ZoneInfo)", utv.from_datetime(datetime(2027, 6, 1, 9, 0, tzinfo=paris)), "unique")
-        native("to_datetime(zoned, tz=Paris)", utv.to_datetime(zoned.value, tz=paris).value.isoformat())
-    show("to_datetime(zoned) without tz", utv.to_datetime(utv.parse_iso("2027-06-01T09:00+02:00[Europe/Paris]").value),
-         "unsupported")
-    naive = datetime(2026, 11, 5, 14, 30)  # what datetime.now() returns: host-local wall time, no zone
-    show("from_datetime(naive, INSTANT)", utv.from_datetime(naive, Intent.INSTANT), "unsupported")
-    show("from_datetime(naive)", utv.from_datetime(naive), "unique", values=["2026-11-05T14:30:00"])
-    note("a naive datetime is only ever a floating wall time; UTV never reads it 'as local'")
-
-
-def main() -> int:
-    mismatches.clear()
-    rules = utv.load_rules(RULES_PATH)
-    now()
-    a_date()
-    invalid_dates()
-    adding()
-    days_between()
-    times()
-    parsing_offsets()
-    time_zones(rules)
-    dst_gap(rules)
-    dst_overlap(rules)
-    timestamps()
-    durations(rules)
-    ranges()
-    round_trip()
-    print()
-    if mismatches:
-        for m in mismatches:
-            print(f"MISMATCH: {m}")
-        return 1
-    print("Every UTV outcome as expected.")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+print("\n14. Round trip")
+print("   Native → UTV → native")
+# BEGIN round-trip
+original = datetime(2026, 11, 5, 14, 30, tzinfo=timezone(timedelta(hours=1)))
+fixed = from_native(original, Intent.OFFSET).single()  # you name the intent: an offset date-time
+row("UTV", fixed, type(fixed).__name__)  # 2026-11-05T14:30:00+01:00   FixedOffsetDateTime
+back = to_native(fixed).single()
+row("Python", back, f"equal to the original: {back == original}")
+# 2026-11-05 14:30:00+01:00   equal to the original: True
+naive = datetime(2026, 11, 5, 14, 30)  # no zone, like datetime.now()
+row("UTV", from_native(naive, Intent.INSTANT), "never read as local time")
+# unsupported (local-zone)   never read as local time
+row("UTV", to_native(CivilDate.of(10000, 1, 1)), "datetime.date stops at 9999")
+# unsupported (out-of-native-range)   datetime.date stops at 9999
+# END round-trip

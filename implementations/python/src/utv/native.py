@@ -52,7 +52,7 @@ def _intent(intent: Any) -> Optional[Intent]:
     try:
         return Intent(intent)
     except ValueError:
-        raise invalid("unknown-intent", "/intent", f"unknown intent {intent!r}") from None
+        raise invalid("intent-required", "/intent", f"unknown intent {intent!r}") from None
 
 
 def _lossy(fields: list[str]) -> dict[str, Any]:
@@ -75,7 +75,7 @@ def from_time(t: _dt.time) -> Result:
     if not isinstance(t, _dt.time):
         raise TypeError("from_time takes a datetime.time")
     if t.tzinfo is not None:
-        raise unsupported("aware-time", "/tzinfo", "a time of day with a tzinfo has no UTV form; zones need a date")
+        raise unsupported("unsupported-operand", "/tzinfo", "a time of day with a tzinfo has no UTV form; zones need a date")
     return unique(build.time(t.hour, t.minute, t.second, t.microsecond * 1000))
 
 
@@ -88,7 +88,7 @@ def _zone_key(tz: ZoneInfo) -> str:
 
 def _whole_seconds(delta: _dt.timedelta, path: str) -> int:
     if delta.microseconds:
-        raise unsupported("sub-second-offset", path, "UTC offsets with a fraction of a second are not handled")
+        raise unsupported("unsupported-operand", path, "UTC offsets with a fraction of a second are not handled")
     return delta.days * 86400 + delta.seconds
 
 
@@ -126,16 +126,16 @@ def from_datetime(dt: _dt.datetime, intent: Union[Intent, str, None] = None) -> 
             raise invalid("intent-required", "/intent", "a datetime with a fixed timezone can be an INSTANT or an OFFSET "
                                                         "date-time; pass intent=")
         if want is Intent.ZONED:
-            raise unsupported("no-zone-id", "/tzinfo", "a fixed timezone has no IANA zone id")
+            raise unsupported("unsupported-operand", "/tzinfo", "a fixed timezone has no IANA zone id")
         key = None
     elif isinstance(tz, ZoneInfo):
         key = _zone_key(tz)
         want = want or Intent.ZONED
     else:
-        raise unsupported("unknown-tzinfo", "/tzinfo",
+        raise unsupported("local-zone", "/tzinfo",
                           f"{type(tz).__name__} is not timezone or ZoneInfo; it may depend on the host's local zone")
     if want not in (Intent.INSTANT, Intent.OFFSET, Intent.ZONED):
-        raise invalid("wrong-intent", "/intent", f"{want.value!r} is not an intent for a datetime")
+        raise invalid("intent-required", "/intent", f"{want.value!r} is not an intent for a datetime")
     offset = _whole_seconds(dt.utcoffset(), "/tzinfo")  # type: ignore[arg-type]
     diagnostics: list[Diagnostic] = []
     if key is not None:
@@ -149,7 +149,7 @@ def from_datetime(dt: _dt.datetime, intent: Union[Intent, str, None] = None) -> 
                                           f"{naive.isoformat()} doesn't exist in {key}; no offset asserted"))
             return Result(operation="convert", status=Status.UNIQUE, candidates=[build.in_zone(wall, key)], diagnostics=diagnostics)
         if dt.replace(fold=1 - dt.fold).utcoffset() != dt.utcoffset():
-            diagnostics.append(Diagnostic("ambiguous-local-time", "info", "/fold",
+            diagnostics.append(Diagnostic("ambiguous", "info", "/fold",
                                           f"{naive.isoformat()} happens twice in {key}; fold={dt.fold} chose offset {offset}s"))
     if want is Intent.INSTANT:
         delta = dt - _EPOCH
@@ -173,7 +173,7 @@ def from_timedelta(td: _dt.timedelta, intent: Union[Intent, str, None] = None) -
         return unique(build.posix_seconds(Fraction(td.days * 86400 + td.seconds) + Fraction(td.microseconds, 1_000_000)))
     if want is Intent.PERIOD:
         if td.microseconds:
-            raise unsupported("fractional-component", "/microseconds", "calendar periods hold whole seconds")
+            raise unsupported("unsupported-operand", "/microseconds", "calendar periods hold whole seconds")
         return unique(build.period(days=td.days, seconds=td.seconds))
     raise invalid("intent-required", "/intent", "a timedelta can be POSIX_SECONDS or a PERIOD; pass intent=")
 
@@ -183,7 +183,7 @@ def from_timedelta(td: _dt.timedelta, intent: Union[Intent, str, None] = None) -
 def _microseconds(nano: int, allow_loss: bool, loss: list[str]) -> int:
     if nano % 1000:
         if not allow_loss:
-            raise unsupported("sub-microsecond", "/value/fields/nano",
+            raise unsupported("out-of-native-range", "/value/fields/nano",
                               "datetime holds microseconds; pass allow_loss=True to truncate")
         loss.append("nano")
     return nano // 1000
@@ -197,7 +197,17 @@ def _native(fn: Any, *args: Any, **kwargs: Any) -> Any:
 
 
 def _done(candidates: list[Any], loss: list[str], status: Status = Status.UNIQUE) -> Result:
-    return Result(operation="convert", status=status, candidates=candidates, loss=_lossy(loss) if loss else dict(_LOSSLESS))
+    """A conversion result; in lossy mode, a warning per kind of loss (``precision-loss``, ``zone-dropped``)."""
+    diagnostics = []
+    dropped = [f for f in loss if f != "zone"]
+    if dropped:
+        diagnostics.append(Diagnostic("precision-loss", "warning", "/value",
+                                      f"truncated to microseconds; dropped {', '.join(dropped)}"))
+    if "zone" in loss:
+        diagnostics.append(Diagnostic("zone-dropped", "warning", "/value/zone",
+                                      "kept the asserted offset and dropped the zone"))
+    return Result(operation="convert", status=status, candidates=candidates, diagnostics=diagnostics,
+                  loss=_lossy(loss) if loss else dict(_LOSSLESS))
 
 
 @operation("convert")
@@ -233,33 +243,33 @@ def to_datetime(value: Any, tz: Optional[_dt.tzinfo] = None, allow_loss: bool = 
     structural(value, "")
     if value["kind"] == "instant":
         t = instant_seconds(value)
-        us = t * 1_000_000
-        if us.denominator != 1:
+        micros = t * 1_000_000
+        if micros.denominator != 1:
             if not allow_loss:
-                raise unsupported("sub-microsecond", "/value/subTick", "datetime holds microseconds; pass allow_loss=True to truncate")
+                raise unsupported("out-of-native-range", "/value/subTick", "datetime holds microseconds; pass allow_loss=True to truncate")
             loss.append("subTick")
-        out = _native(lambda: _EPOCH + _dt.timedelta(microseconds=us.numerator // us.denominator))
+        out = _native(lambda: _EPOCH + _dt.timedelta(microseconds=micros.numerator // micros.denominator))
         return _done([out if tz is None else _native(out.astimezone, tz)], loss)
     c = civil(value, forms=("datetime",))
     us = _microseconds(c.nano or 0, allow_loss, loss)
     naive = _native(_dt.datetime, c.year, c.month, c.day, c.hour, c.minute, c.second or 0, us)
     if c.zone == "floating":
         if tz is not None:
-            raise unsupported("floating-with-tz", "/tz", "a floating date-time has no zone; use in_zone() first")
+            raise unsupported("unsupported-operand", "/tz", "a floating date-time has no zone; use in_zone() first")
         return _done([naive], loss)
     if c.zone == "fixed-offset":
         if tz is not None:
-            raise unsupported("offset-with-tz", "/tz", "an offset date-time already has its offset; don't pass tz")
+            raise unsupported("unsupported-operand", "/tz", "an offset date-time already has its offset; don't pass tz")
         return _done([naive.replace(tzinfo=_native(_dt.timezone, _dt.timedelta(seconds=c.offset)))], loss)  # type: ignore[arg-type]
     asserted = value["value"].get("offsetAssertion")
     if tz is None:
         if allow_loss and asserted is not None:
             fixed = _native(_dt.timezone, _dt.timedelta(seconds=asserted))
             return _done([naive.replace(tzinfo=fixed)], loss + ["zone"])
-        raise unsupported("needs-zone-data", "/tz",
+        raise unsupported("needs-zone-rules", "/tz",
                           f"pass tz=ZoneInfo({c.zone_id!r}); or allow_loss=True to keep only the asserted offset")
     if not isinstance(tz, ZoneInfo) or tz.key != c.zone_id:
-        raise unsupported("zone-mismatch", "/tz", f"tz must be a ZoneInfo for {c.zone_id}")
+        raise unsupported("unsupported-operand", "/tz", f"tz must be a ZoneInfo for {c.zone_id}")
     folds = [naive.replace(tzinfo=tz, fold=f) for f in (0, 1)]
     if _native(folds[0].astimezone, _dt.timezone.utc).astimezone(tz).replace(tzinfo=None) != naive:
         return Result(operation="convert", status=Status.NONE, diagnostics=[
@@ -281,13 +291,13 @@ def to_timedelta(amount: Any, allow_loss: bool = False) -> Result:
     structural(amount, "")
     v = amount["value"]
     if amount["kind"] != "amount" or v["basis"] != "clock-ticks" or "seconds" not in v:
-        raise unsupported("not-posix-seconds", "/value/basis", "only POSIX-seconds amounts have a timedelta form")
+        raise unsupported("unsupported-operand", "/value/basis", "only POSIX-seconds amounts have a timedelta form")
     seconds = Fraction(int(v["seconds"]["numerator"]), int(v["seconds"]["denominator"]))
     us = seconds * 1_000_000
     loss: list[str] = []
     if us.denominator != 1:
         if not allow_loss:
-            raise unsupported("sub-microsecond", "/value/seconds", "timedelta holds microseconds; pass allow_loss=True")
+            raise unsupported("out-of-native-range", "/value/seconds", "timedelta holds microseconds; pass allow_loss=True")
         loss.append("seconds")
     return _done([_native(_dt.timedelta, microseconds=us.numerator // us.denominator)], loss)
 

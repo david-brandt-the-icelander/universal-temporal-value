@@ -78,9 +78,9 @@ def _components(amount: dict[str, Any]) -> dict[str, int]:
     for name, text in comps.items():
         path = f"/1/value/components/{name}"
         if name not in _COMPONENTS:
-            raise unsupported("unsupported-component", path, f"component {name!r} is not handled by add")
+            raise unsupported("unsupported-operand", path, f"component {name!r} is not handled by add")
         if isinstance(text, str) and "." in text:
-            raise unsupported("fractional-component", path, "fractional components are not handled by add")
+            raise unsupported("unsupported-operand", path, "fractional components are not handled by add")
         out[name] = integer_string(text, path)
     return out
 
@@ -91,7 +91,7 @@ def _month_end(policy: Optional[dict[str, Any]]) -> str:
     choice = policy.get("monthEnd", "reject") if isinstance(policy, dict) else None
     if choice not in ("reject", "constrain"):
         raise unsupported("unsupported-policy", "/2/monthEnd", f"monthEnd policy {choice!r} is not implemented")
-    return choice
+    return str(choice)
 
 
 @operation("add")
@@ -104,7 +104,7 @@ def add(value: Any, amount: Any, policy: Optional[dict[str, Any]] = None) -> Res
     structural(value, "/0")
     structural(amount, "/1")
     if amount["kind"] != "amount":
-        raise invalid("not-an-amount", "/1/kind", "the second argument must be an amount")
+        raise invalid("kind-mismatch", "/1/kind", "the second argument must be an amount")
     basis = amount["value"]["basis"]
     if value["kind"] == "instant":
         t = instant_seconds(value, "/0")
@@ -112,24 +112,24 @@ def add(value: Any, amount: Any, policy: Optional[dict[str, Any]] = None) -> Res
             raise unsupported("needs-leap-seconds", "/1/value/basis",
                               "SI seconds on a POSIX instant need a leap-second table")
         if basis == "calendar":
-            raise invalid("calendar-on-instant", "/1/value/basis",
+            raise invalid("kind-mismatch", "/1/value/basis",
                           "an instant has no calendar; convert it to a civil value first")
         if basis != "clock-ticks" or not is_posix(amount["value"].get("rules")) or "seconds" not in amount["value"]:
-            raise unsupported("unsupported-amount", "/1/value", "an instant accepts only a POSIX-seconds amount")
+            raise unsupported("unsupported-operand", "/1/value", "an instant accepts only a POSIX-seconds amount")
         return unique(instant_value(t + parse_rational(amount["value"]["seconds"], "/1/value/seconds")))
     if value["kind"] != "civil":
-        raise unsupported("unsupported-kind", "/0/kind", f"add is not implemented for {value['kind']!r}")
+        raise unsupported("unsupported-operand", "/0/kind", f"add is not implemented for {value['kind']!r}")
     c = civil(value, "/0")
     if c.form == "time":
-        raise unsupported("time-wraps", "/0/value/form", "adding to a time of day wraps past midnight and loses information")
+        raise unsupported("unsupported-operand", "/0/value/form", "adding to a time of day wraps past midnight and loses information")
     if c.form not in _ALLOWED:
-        raise unsupported("unsupported-form", "/0/value/form", f"add is not implemented for form {c.form!r}")
+        raise unsupported("unsupported-operand", "/0/value/form", f"add is not implemented for form {c.form!r}")
     if basis != "calendar":
-        raise invalid("wrong-amount-basis", "/1/value/basis", "a civil value takes a calendar amount")
+        raise invalid("kind-mismatch", "/1/value/basis", "a civil value takes a calendar amount")
     comps = _components(amount)
     for name in comps:
         if name not in _ALLOWED[c.form]:
-            raise invalid("component-not-allowed", f"/1/value/components/{name}", f"a {c.form} has no {name}")
+            raise invalid("kind-mismatch", f"/1/value/components/{name}", f"a {c.form} has no {name}")
     rule = _month_end(policy)
 
     # 1-2: years and months, then the month-end rule.
@@ -144,7 +144,7 @@ def add(value: Any, amount: Any, policy: Optional[dict[str, Any]] = None) -> Res
     if day > limit:  # type: ignore[operator]
         if rule == "reject":
             raise Outcome(Status.NONE, "month-end", "/0/value/fields/day",
-                          f"{year}-{month:02d} has no day {day}; pass {{'monthEnd': 'constrain'}} to clamp", "info")
+                          f"{year}-{month:02d} has no day {day}", "info")
         day = limit
     # 3-4: weeks and days, then wall-clock hours/minutes/seconds carrying into days.
     days = days_from_civil(year, month, day) + 7 * comps.get("weeks", 0) + comps.get("days", 0)  # type: ignore[arg-type]
@@ -180,17 +180,17 @@ def compare(a: Any, b: Any) -> Result:
     if a["kind"] == "instant" and b["kind"] == "instant":
         return unique(_relation(instant_seconds(a, "/0"), instant_seconds(b, "/1")))
     if a["kind"] != "civil" or b["kind"] != "civil":
-        raise unsupported("incomparable", "", f"can't compare {a['kind']!r} with {b['kind']!r}")
+        raise unsupported("unsupported-operand", "", f"can't compare {a['kind']!r} with {b['kind']!r}")
     ca, cb = civil(a, "/0"), civil(b, "/1")
     if "iana" in (ca.zone, cb.zone):
-        raise unsupported("resolve-first", "", "ordering depends on zone rules: resolve both values to instants first")
+        raise unsupported("needs-zone-rules", "", "ordering depends on zone rules: resolve both values to instants first")
     if ca.form != cb.form:
-        raise unsupported("different-forms", "", f"can't compare a {ca.form} with a {cb.form}")
+        raise unsupported("unsupported-operand", "", f"can't compare a {ca.form} with a {cb.form}")
     if ca.zone == cb.zone == "floating":
         return unique(_relation(ca.order_key(), cb.order_key()))
     if ca.zone == cb.zone == "fixed-offset" and ca.form == "datetime":
         return unique(_relation(ca.wall_seconds() - ca.offset, cb.wall_seconds() - cb.offset))  # type: ignore[operator]
-    raise unsupported("mixed-zones", "", "can't order a floating value against one with an offset")
+    raise unsupported("unsupported-operand", "", "can't order a floating value against one with an offset")
 
 
 # --- differences -----------------------------------------------------------
@@ -242,26 +242,26 @@ def _point(value: Any, domain: str, path: str) -> _Bound:
     structural(value, path)
     if domain == "physical":
         if value["kind"] != "instant":
-            raise unsupported("mixed-domains", path, "an instant interval takes instant points")
+            raise unsupported("unsupported-operand", path, "an instant interval takes instant points")
         return _Bound("included", instant_seconds(value, path))
     if value["kind"] != "civil":
-        raise unsupported("mixed-domains", path, "a civil-date interval takes date points")
+        raise unsupported("unsupported-operand", path, "a civil-date interval takes date points")
     c: Civil = civil(value, path)
     if c.form != "date":
-        raise unsupported("unsupported-form", path + "/value/form", "only civil-date intervals are implemented")
+        raise unsupported("unsupported-operand", path + "/value/form", "only civil-date intervals are implemented")
     return _Bound("included", c.day_number, c)
 
 
 def _interval(value: Any, path: str) -> tuple[str, _Bound, _Bound]:
     structural(value, path)
     if value["kind"] != "interval":
-        raise invalid("not-an-interval", path + "/kind", "expected an interval")
+        raise invalid("kind-mismatch", path + "/kind", "expected an interval")
     v = value["value"]
     domain = v["domain"]
     if domain not in ("physical", "civil/gregory"):
-        raise unsupported("unsupported-domain", path + "/value/domain", f"interval domain {domain!r} is not implemented")
+        raise unsupported("unsupported-operand", path + "/value/domain", f"interval domain {domain!r} is not implemented")
     if "start" not in v or "end" not in v:
-        raise unsupported("unsupported-construction", path + "/value", "only start/end intervals are implemented")
+        raise unsupported("unsupported-operand", path + "/value", "only start/end intervals are implemented")
     bounds = []
     for side in ("start", "end"):
         e = v[side]
@@ -279,7 +279,7 @@ def _before(lo: _Bound, hi: _Bound, strict: bool) -> Optional[bool]:
         return True
     if lo.state == "unknown" or hi.state == "unknown":
         return None
-    return lo.point < hi.point if strict else lo.point <= hi.point
+    return bool(lo.point < hi.point if strict else lo.point <= hi.point)
 
 
 @operation("contains")
@@ -306,7 +306,7 @@ def overlaps(a: Any, b: Any) -> Result:
     da, sa, ea = _interval(a, "/0")
     db, sb, eb = _interval(b, "/1")
     if da != db:
-        raise unsupported("mixed-domains", "", "can't relate a civil-date interval to an instant interval")
+        raise unsupported("unsupported-operand", "", "can't relate a civil-date interval to an instant interval")
     _dates(sa, ea, sb, eb)
     if da == "civil/gregory":
         (sa, ea), (sb, eb) = _half_open(sa, ea), _half_open(sb, eb)

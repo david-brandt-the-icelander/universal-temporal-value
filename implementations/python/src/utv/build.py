@@ -99,6 +99,15 @@ def posix_seconds(n: int | Fraction) -> dict[str, Any]:
     return posix_amount(Fraction(n))
 
 
+def elapsed_seconds(n: int | Fraction) -> dict[str, Any]:
+    """An exact amount of SI seconds (``elapsed``). Adding it to a POSIX instant needs a leap-second table."""
+    if isinstance(n, bool) or not isinstance(n, (int, Fraction)):
+        raise TypeError("n must be an int or a fractions.Fraction")
+    seconds = Fraction(n)
+    return {"schema": SCHEMA, "kind": "amount",
+            "value": {"basis": "elapsed", "seconds": {"numerator": str(seconds.numerator), "denominator": str(seconds.denominator)}}}
+
+
 def _endpoint(point: Any, included: bool) -> dict[str, Any]:
     if isinstance(point, dict) and "state" in point and "kind" not in point:
         return dict(point)

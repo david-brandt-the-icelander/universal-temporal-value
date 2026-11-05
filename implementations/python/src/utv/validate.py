@@ -49,7 +49,8 @@ def _reject_constant(name: str) -> Any:
 @lru_cache(maxsize=1)
 def _schema() -> dict[str, Any]:
     text = resources.files("utv").joinpath("data/utv-1.0.schema.json").read_text(encoding="utf-8")
-    return json.loads(text)
+    schema: dict[str, Any] = json.loads(text)
+    return schema
 
 
 def _result(status: Status, diags: list[Diagnostic] | None = None) -> Result:
@@ -110,13 +111,14 @@ _TYPES = {
 def _resolve(ref: str) -> dict[str, Any]:
     if not ref.startswith("#/$defs/"):
         raise ValueError(f"unsupported $ref {ref}")
-    return _schema()["$defs"][ref[len("#/$defs/"):]]
+    found: dict[str, Any] = _schema()["$defs"][ref[len("#/$defs/"):]]
+    return found
 
 
 def _json_equal(a: Any, b: Any) -> bool:
     if isinstance(a, bool) or isinstance(b, bool):
-        return type(a) is type(b) and a == b
-    return a == b
+        return type(a) is type(b) and bool(a == b)
+    return bool(a == b)
 
 
 def _valid(inst: Any, sch: Any) -> bool:

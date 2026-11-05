@@ -96,7 +96,7 @@ class FromZoneInfo(unittest.TestCase):
         self.assertEqual(first.value["value"]["offsetAssertion"], -14400)
         self.assertEqual(second.value["value"]["offsetAssertion"], -18000)
         self.assertEqual(first.value["value"]["zone"], {"type": "iana", "id": "America/New_York"})
-        self.assertEqual(first.diagnostics[0].code, "ambiguous-local-time")
+        self.assertEqual(first.diagnostics[0].code, "ambiguous")
 
     def test_gap_is_not_silently_shifted(self):
         gap = dt.datetime(2026, 3, 8, 2, 30, tzinfo=NY)
@@ -138,6 +138,7 @@ class ToNative(unittest.TestCase):
         lossy = utv.to_datetime(value, allow_loss=True)
         self.assertEqual(lossy.value, dt.datetime(2026, 11, 5, 14, 30))
         self.assertEqual(lossy.loss, {"classification": "information-losing", "fields": ["nano"]})
+        self.assertEqual([d.code for d in lossy.diagnostics], ["precision-loss"])
         self.assertEqual(utv.to_datetime(utv.instant(0, 1)).status, Status.UNSUPPORTED)
         self.assertEqual(utv.to_timedelta(utv.posix_seconds(Fraction(1, 3))).status, Status.UNSUPPORTED)
 
@@ -145,10 +146,11 @@ class ToNative(unittest.TestCase):
         zoned = utv.parse_iso("2026-11-01T01:30-05:00[America/New_York]").value
         r = utv.to_datetime(zoned)
         self.assertEqual(r.status, Status.UNSUPPORTED)
-        self.assertEqual(r.diagnostics[0].code, "needs-zone-data")
+        self.assertEqual(r.diagnostics[0].code, "needs-zone-rules")
         lossy = utv.to_datetime(zoned, allow_loss=True)
         self.assertEqual(lossy.value.utcoffset(), dt.timedelta(hours=-5))
         self.assertEqual(lossy.loss["fields"], ["zone"])
+        self.assertEqual([d.code for d in lossy.diagnostics], ["zone-dropped"])
 
     def test_calendar_period_has_no_timedelta(self):
         self.assertEqual(utv.to_timedelta(utv.period(months=1)).status, Status.UNSUPPORTED)
