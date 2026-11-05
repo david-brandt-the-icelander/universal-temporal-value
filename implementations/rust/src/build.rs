@@ -13,7 +13,7 @@
 //! # let _ = meeting;
 //! ```
 
-use serde_json::{json, Map, Value};
+use serde_json::{json, Value};
 
 use crate::model::{instant_json, posix_seconds_json, Civil, Form};
 use crate::num::Q;
@@ -96,65 +96,30 @@ pub fn instant_with_nanos(epoch_seconds: i64, nano: u32) -> Value {
     instant_json(Q::from_secs_nanos(epoch_seconds as i128, nano).expect("i64 seconds and u32 nanos fit in i128"))
 }
 
-/// The components of a calendar amount. Each may be negative; zero components are omitted
-/// from the value.
+pub use crate::typed::amount::Period;
+
+/// A calendar amount (`{"basis":"calendar","components":{…}}`): only non-zero components,
+/// as decimal strings. Each component may be negative.
 ///
 /// ```
 /// use utv::build::{period, Period};
 /// let p = period(Period { months: 1, days: 1, ..Period::default() });
 /// assert_eq!(p["value"]["components"], serde_json::json!({"months": "1", "days": "1"}));
 /// ```
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct Period {
-    pub years: i64,
-    pub months: i64,
-    pub weeks: i64,
-    pub days: i64,
-    pub hours: i64,
-    pub minutes: i64,
-    pub seconds: i64,
-}
-
-impl Period {
-    pub fn years(n: i64) -> Period {
-        Period { years: n, ..Period::default() }
-    }
-    pub fn months(n: i64) -> Period {
-        Period { months: n, ..Period::default() }
-    }
-    pub fn weeks(n: i64) -> Period {
-        Period { weeks: n, ..Period::default() }
-    }
-    pub fn days(n: i64) -> Period {
-        Period { days: n, ..Period::default() }
-    }
-    pub fn hours(n: i64) -> Period {
-        Period { hours: n, ..Period::default() }
-    }
-    pub fn minutes(n: i64) -> Period {
-        Period { minutes: n, ..Period::default() }
-    }
-    pub fn seconds(n: i64) -> Period {
-        Period { seconds: n, ..Period::default() }
-    }
-}
-
-/// A calendar amount (`{"basis":"calendar","components":{…}}`): only non-zero components,
-/// as decimal strings.
 pub fn period(p: Period) -> Value {
-    let mut c = Map::new();
-    for (name, n) in [("years", p.years), ("months", p.months), ("weeks", p.weeks), ("days", p.days), ("hours", p.hours), ("minutes", p.minutes), ("seconds", p.seconds)] {
-        if n != 0 {
-            c.insert(name.into(), Value::String(n.to_string()));
-        }
-    }
-    json!({"schema": crate::SPEC_VERSION, "kind": "amount", "value": {"basis": "calendar", "components": c}})
+    p.to_json()
 }
 
 /// An amount of POSIX seconds (`basis: clock-ticks`). POSIX seconds are not SI seconds across a
 /// leap second.
 pub fn posix_seconds(n: i64) -> Value {
     posix_seconds_json(Q::int(n as i128))
+}
+
+/// An amount of SI seconds (`basis: elapsed`). Adding it to a POSIX instant needs a
+/// leap-second table, so `add` answers `unsupported` (`needs-leap-seconds`).
+pub fn elapsed_seconds(n: i64) -> Value {
+    crate::typed::amount::ElapsedSeconds::of(n).to_json()
 }
 
 /// One end of an interval.

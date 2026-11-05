@@ -1,7 +1,8 @@
 //! Runs every fixture of the shared `conformance/operations/everyday.json` (the arbiter of
 //! `docs/everyday-api.md`), read from the repository, not a copy. Fails with the id of every
-//! fixture whose status or candidates differ. Results are compared as JSON values; object key
-//! order is irrelevant (`serde_json::Map` equality ignores it).
+//! fixture whose status, candidates, operation name or expected diagnostic codes
+//! (`expect.diagnostics`, which must all be present) differ. Results are compared as JSON
+//! values; object key order is irrelevant (`serde_json::Map` equality ignores it).
 
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -58,6 +59,7 @@ fn every_everyday_fixture_passes() {
     assert!(!fixtures.is_empty(), "no fixtures");
 
     let mut failures = vec![];
+    let mut checked_codes = 0;
     for f in fixtures {
         let id = f["id"].as_str().expect("fixture id");
         let args = f["args"].as_array().map(Vec::as_slice).unwrap_or_default();
@@ -80,6 +82,13 @@ fn every_everyday_fixture_passes() {
             (None, Some(Value::Array(many))) => many.clone(),
             _ => vec![],
         };
+        let codes: Vec<&str> = r.diagnostics.iter().map(|d| d.code.as_str()).collect();
+        let want_codes: Vec<&str> = expect["diagnostics"].as_array().map(Vec::as_slice).unwrap_or_default().iter().filter_map(Value::as_str).collect();
+        if let Some(missing) = want_codes.iter().find(|c| !codes.contains(c)) {
+            failures.push(format!("{id}: expected diagnostic `{missing}`, got {codes:?}"));
+            continue;
+        }
+        checked_codes += want_codes.len();
         if r.status.as_str() != want_status || r.candidates != want_candidates {
             failures.push(format!(
                 "{id}: expected {want_status} {}, got {} {} {:?}",
@@ -90,6 +99,6 @@ fn every_everyday_fixture_passes() {
             ));
         }
     }
-    println!("everyday fixtures: {}/{} passed", fixtures.len() - failures.len(), fixtures.len());
+    println!("everyday fixtures: {}/{} passed ({checked_codes} diagnostic codes checked)", fixtures.len() - failures.len(), fixtures.len());
     assert!(failures.is_empty(), "{} of {} fixtures failed:\n{}", failures.len(), fixtures.len(), failures.join("\n"));
 }

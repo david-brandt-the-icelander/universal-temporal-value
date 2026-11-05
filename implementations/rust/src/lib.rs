@@ -1,35 +1,66 @@
-//! Universal Temporal Value (`utv/1.0`): validation and the everyday API.
+//! Universal Temporal Value (`utv/1.0`): dates, times, instants and periods whose operations
+//! say when time has no answer, or more than one.
 //!
-//! - Validation (0.1): [`validate_structural`] and [`validate_gregorian_civil`].
-//! - Everyday API (0.2, `docs/everyday-api.md`): builders in [`build`], ISO 8601 text in
-//!   [`iso`], calendar and instant arithmetic in [`ops`], zone rules and resolution in
-//!   [`zones`], and explicit adapters to Rust types in [`interop`].
+//! ```
+//! use utv::{CivilDate, Outcome};
+//! let jan31 = CivilDate::of(2026, 1, 31)?;
+//! match jan31.add_months(1) {
+//!     Outcome::Unique(date, _) => println!("{date}"),
+//!     Outcome::None(why) => println!("no such date: {why}"), // 2026-02 has no day 31 (month-end)
+//!     other => println!("{other}"),
+//! }
+//! assert_eq!(jan31.add_months_constrained(1).to_string(), "2026-02-28"); // because you asked
+//! # Ok::<(), utv::Diagnostics>(())
+//! ```
 //!
-//! Values are UTV JSON values held as [`serde_json::Value`]. Every operation returns a
-//! [`UtvResult`]: a status, diagnostics and candidates. Semantic outcomes (`none`,
-//! `multiple`, `unsupported`, `invalid`, ...) are results, never panics or `Err`s.
+//! Two layers, the same answers:
 //!
-//! This library never reads the system clock, time zone or locale.
+//! - **Typed values (0.3, `docs/library-api.md`).** [`CivilDate`], [`CivilYearMonth`],
+//!   [`CivilTime`], [`CivilDateTime`], [`FixedOffsetDateTime`], [`ZonedIntent`], [`Instant`],
+//!   [`Period`], [`PosixSeconds`], [`ElapsedSeconds`] and [`Interval`]. Constructors validate
+//!   (`CivilDate::of(2026, 2, 30)` is an `Err`); operations that can't fail return plain
+//!   values; the ones that can return an [`Outcome`] to `match`. Zone rules live in a
+//!   [`TemporalContext`]. `Display` is the text form (`docs/text-form.md`), [`parse`] reads it.
+//! - **The JSON layer (0.1, 0.2).** UTV JSON values as [`serde_json::Value`], with every
+//!   operation returning a [`UtvResult`]: validation ([`validate_structural`],
+//!   [`validate_gregorian_civil`]), builders in [`build`], ISO 8601 in [`iso`], the text form in
+//!   [`text`], arithmetic in [`ops`], zone rules in [`zones`], native adapters in [`interop`].
+//!   The typed layer calls it underneath, and the shared fixtures test it.
+//!
+//! Diagnostic codes are the shared ones of `docs/library-api.md` §5. This library never reads the
+//! system clock, time zone or locale.
 
 pub mod build;
 pub mod interop;
 pub mod iso;
 pub mod ops;
+pub mod text;
 pub mod zones;
 
 mod model;
 mod num;
+mod typed;
 
 pub use build::{
-    date, date_time, date_time_with_nanos, date_time_with_seconds, in_zone, instant, instant_with_nanos, interval, interval_with, period, posix_seconds,
-    time, time_with_nanos, time_with_seconds, with_offset, year_month, Endpoint, Period,
+    date, date_time, date_time_with_nanos, date_time_with_seconds, elapsed_seconds, in_zone, instant, instant_with_nanos, interval, interval_with, period,
+    posix_seconds, time, time_with_nanos, time_with_seconds, with_offset, year_month, Endpoint,
 };
 pub use iso::{format_iso, parse_iso};
+pub use text::{format_text, parse_text};
 pub use ops::{add, compare, contains, days_between, fields, overlaps, posix_seconds_between};
 pub use zones::{resolve, to_offset, to_zone, Rules};
 
+// The typed layer (0.3).
+pub use typed::amount::{ElapsedSeconds, Period, PosixSeconds};
+pub use typed::civil::{CivilDate, CivilDateTime, CivilTime, CivilYearMonth, FixedOffsetDateTime, Weekday, ZonedIntent};
+pub use typed::context::{Gap, MonthEnd, Overlap, ResolutionPolicy, TemporalContext, ZoneRules};
+pub use typed::instant::Instant;
+pub use typed::interval::{Bound, Interval, IntervalPoint};
+pub use typed::value::{parse, Value};
+pub use typed::{Diagnostics, Outcome, OutcomeError, ToJson, Truth};
+
 use serde::de::{self, Deserializer, MapAccess, SeqAccess, Visitor};
-use serde_json::{Map, Value};
+use serde_json::{Map, Value as Json};
 use std::fmt;
 
 pub const SPEC_VERSION: &str = "utv/1.0";
@@ -44,7 +75,7 @@ pub const CORE_KINDS: [&str; 26] = [
     "event-relative", "selection", "sample", "series", "temporal-graph", "sequence", "pattern",
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Status {
     Invalid, Unsupported, Indeterminate, None, Unique, Multiple, Range, Symbolic,
     ResourceLimit, Error, Valid,
@@ -68,7 +99,13 @@ impl Status {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.pad(self.as_str())
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Severity { Error, Warning, Info }
 
 impl Severity {
@@ -77,7 +114,7 @@ impl Severity {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Diagnostic {
     pub code: String,
     pub severity: Severity,
@@ -98,7 +135,7 @@ pub struct UtvResult {
     pub operation: String,
     pub status: Status,
     pub diagnostics: Vec<Diagnostic>,
-    pub candidates: Vec<Value>,
+    pub candidates: Vec<Json>,
 }
 
 impl UtvResult {
@@ -109,11 +146,11 @@ impl UtvResult {
         r
     }
     /// A result with this status and these candidates (operation `validate` until set).
-    pub fn new(status: Status, candidates: Vec<Value>) -> Self {
+    pub fn new(status: Status, candidates: Vec<Json>) -> Self {
         UtvResult { operation: "validate".into(), status, diagnostics: vec![], candidates }
     }
     /// A `unique` result with one candidate.
-    pub fn unique(candidate: Value) -> Self {
+    pub fn unique(candidate: Json) -> Self {
         UtvResult::new(Status::Unique, vec![candidate])
     }
     pub(crate) fn op(mut self, operation: &str) -> Self {
@@ -121,7 +158,7 @@ impl UtvResult {
         self
     }
     /// The single candidate of a `unique` result; `None` for every other status.
-    pub fn value(&self) -> Option<&Value> {
+    pub fn value(&self) -> Option<&Json> {
         match (self.status, self.candidates.as_slice()) {
             (Status::Unique, [v]) => Some(v),
             _ => None,
@@ -129,11 +166,11 @@ impl UtvResult {
     }
     /// The single candidate of a `unique` result as a string (for `format_iso`, `compare`, ...).
     pub fn as_str(&self) -> Option<&str> {
-        self.value().and_then(Value::as_str)
+        self.value().and_then(Json::as_str)
     }
     /// Serialize as a `utv-result/1.0` JSON object.
-    pub fn to_json(&self) -> Value {
-        let diags: Vec<Value> = self.diagnostics.iter().map(|d| serde_json::json!({
+    pub fn to_json(&self) -> Json {
+        let diags: Vec<Json> = self.diagnostics.iter().map(|d| serde_json::json!({
             "code": d.code, "severity": d.severity.as_str(), "path": d.path, "message": d.message
         })).collect();
         serde_json::json!({ "schema": RESULT_SCHEMA, "operation": self.operation, "status": self.status.as_str(), "diagnostics": diags, "candidates": self.candidates })
@@ -146,8 +183,8 @@ impl fmt::Display for UtvResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.status.as_str())?;
         let shown: Vec<String> = self.candidates.iter().map(|c| match c {
-            Value::String(s) => s.clone(),
-            Value::Object(_) => iso::format_iso(c).as_str().map(str::to_owned).unwrap_or_else(|| c.to_string()),
+            Json::String(s) => s.clone(),
+            Json::Object(_) => iso::format_iso(c).as_str().map(str::to_owned).unwrap_or_else(|| c.to_string()),
             other => other.to_string(),
         }).collect();
         if !shown.is_empty() {
@@ -161,7 +198,7 @@ impl fmt::Display for UtvResult {
 
 // ---------- strict JSON parsing (rejects duplicate keys) ----------
 
-struct Strict(Value);
+struct Strict(Json);
 
 impl<'de> serde::Deserialize<'de> for Strict {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
@@ -172,21 +209,21 @@ impl<'de> serde::Deserialize<'de> for Strict {
 struct StrictVisitor;
 
 impl<'de> Visitor<'de> for StrictVisitor {
-    type Value = Value;
+    type Value = Json;
     fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("JSON value") }
-    fn visit_bool<E>(self, v: bool) -> Result<Value, E> { Ok(Value::Bool(v)) }
-    fn visit_i64<E>(self, v: i64) -> Result<Value, E> { Ok(Value::from(v)) }
-    fn visit_u64<E>(self, v: u64) -> Result<Value, E> { Ok(Value::from(v)) }
-    fn visit_f64<E>(self, v: f64) -> Result<Value, E> { Ok(Value::from(v)) }
-    fn visit_str<E>(self, v: &str) -> Result<Value, E> { Ok(Value::String(v.to_owned())) }
-    fn visit_string<E>(self, v: String) -> Result<Value, E> { Ok(Value::String(v)) }
-    fn visit_unit<E>(self) -> Result<Value, E> { Ok(Value::Null) }
-    fn visit_seq<A: SeqAccess<'de>>(self, mut a: A) -> Result<Value, A::Error> {
+    fn visit_bool<E>(self, v: bool) -> Result<Json, E> { Ok(Json::Bool(v)) }
+    fn visit_i64<E>(self, v: i64) -> Result<Json, E> { Ok(Json::from(v)) }
+    fn visit_u64<E>(self, v: u64) -> Result<Json, E> { Ok(Json::from(v)) }
+    fn visit_f64<E>(self, v: f64) -> Result<Json, E> { Ok(Json::from(v)) }
+    fn visit_str<E>(self, v: &str) -> Result<Json, E> { Ok(Json::String(v.to_owned())) }
+    fn visit_string<E>(self, v: String) -> Result<Json, E> { Ok(Json::String(v)) }
+    fn visit_unit<E>(self) -> Result<Json, E> { Ok(Json::Null) }
+    fn visit_seq<A: SeqAccess<'de>>(self, mut a: A) -> Result<Json, A::Error> {
         let mut v = Vec::new();
         while let Some(Strict(x)) = a.next_element()? { v.push(x); }
-        Ok(Value::Array(v))
+        Ok(Json::Array(v))
     }
-    fn visit_map<A: MapAccess<'de>>(self, mut a: A) -> Result<Value, A::Error> {
+    fn visit_map<A: MapAccess<'de>>(self, mut a: A) -> Result<Json, A::Error> {
         let mut m = Map::new();
         while let Some(k) = a.next_key::<String>()? {
             if m.contains_key(&k) {
@@ -195,12 +232,12 @@ impl<'de> Visitor<'de> for StrictVisitor {
             let Strict(v) = a.next_value()?;
             m.insert(k, v);
         }
-        Ok(Value::Object(m))
+        Ok(Json::Object(m))
     }
 }
 
 /// Parse JSON text, rejecting duplicate object keys.
-pub fn parse_strict(text: &str) -> Result<Value, String> {
+pub fn parse_strict(text: &str) -> Result<Json, String> {
     let mut de = serde_json::Deserializer::from_str(text);
     let Strict(v) = serde::Deserialize::deserialize(&mut de).map_err(|e| e.to_string())?;
     de.end().map_err(|e| e.to_string())?;
@@ -222,11 +259,11 @@ fn other_wellformed_version(schema: &str) -> bool {
 }
 
 /// Check the `{schema, kind, value}` envelope of an already parsed value.
-pub fn check_envelope(v: &Value, path: &str) -> UtvResult {
+pub fn check_envelope(v: &Json, path: &str) -> UtvResult {
     let Some(obj) = v.as_object() else {
         return UtvResult::fail(Status::Invalid, "envelope.not-object", path, "UTV value must be a JSON object");
     };
-    match obj.get("schema").and_then(Value::as_str) {
+    match obj.get("schema").and_then(Json::as_str) {
         Some(SPEC_VERSION) => {}
         Some(s) if other_wellformed_version(s) => {
             return UtvResult::fail(Status::Unsupported, "envelope.unsupported-version", &format!("{path}/schema"), format!("specification version `{s}` is not implemented"));
@@ -238,7 +275,7 @@ pub fn check_envelope(v: &Value, path: &str) -> UtvResult {
             return UtvResult::fail(Status::Invalid, "envelope.unknown-property", &format!("{path}/{k}"), format!("unknown top-level property `{k}`"));
         }
     }
-    match obj.get("kind").and_then(Value::as_str) {
+    match obj.get("kind").and_then(Json::as_str) {
         Some(k) if CORE_KINDS.contains(&k) => {}
         _ => return UtvResult::fail(Status::Invalid, "envelope.kind", &format!("{path}/kind"), "kind must be one of the 26 core kinds"),
     }
@@ -250,20 +287,20 @@ pub fn check_envelope(v: &Value, path: &str) -> UtvResult {
 
 // ---------- structural schema check ----------
 
-struct SchemaCx { root: Value }
+struct SchemaCx { root: Json }
 
 impl SchemaCx {
-    fn resolve<'a>(&'a self, r: &str) -> Option<&'a Value> {
+    fn resolve<'a>(&'a self, r: &str) -> Option<&'a Json> {
         let p = r.strip_prefix('#')?;
         self.root.pointer(p)
     }
 
-    fn validate(&self, s: &Value, v: &Value, path: &str, errs: &mut Vec<(String, String)>) {
+    fn validate(&self, s: &Json, v: &Json, path: &str, errs: &mut Vec<(String, String)>) {
         let Some(s) = s.as_object() else {
-            if s == &Value::Bool(false) { errs.push((path.into(), "value not allowed".into())); }
+            if s == &Json::Bool(false) { errs.push((path.into(), "value not allowed".into())); }
             return;
         };
-        if let Some(r) = s.get("$ref").and_then(Value::as_str) {
+        if let Some(r) = s.get("$ref").and_then(Json::as_str) {
             match self.resolve(r) {
                 Some(t) => self.validate(t, v, path, errs),
                 None => errs.push((path.into(), format!("unresolvable $ref {r}"))),
@@ -271,58 +308,58 @@ impl SchemaCx {
         }
         if let Some(t) = s.get("type") {
             let ok = match t {
-                Value::String(t) => type_ok(t, v),
-                Value::Array(ts) => ts.iter().filter_map(Value::as_str).any(|t| type_ok(t, v)),
+                Json::String(t) => type_ok(t, v),
+                Json::Array(ts) => ts.iter().filter_map(Json::as_str).any(|t| type_ok(t, v)),
                 _ => true,
             };
             if !ok { errs.push((path.into(), format!("expected type {t}"))); return; }
         }
         if let Some(c) = s.get("const") { if c != v { errs.push((path.into(), format!("expected const {c}"))); } }
-        if let Some(Value::Array(e)) = s.get("enum") { if !e.contains(v) { errs.push((path.into(), "value not in enum".into())); } }
-        if let (Some(p), Some(sv)) = (s.get("pattern").and_then(Value::as_str), v.as_str()) {
+        if let Some(Json::Array(e)) = s.get("enum") { if !e.contains(v) { errs.push((path.into(), "value not in enum".into())); } }
+        if let (Some(p), Some(sv)) = (s.get("pattern").and_then(Json::as_str), v.as_str()) {
             if let Some(false) = pattern_matches(p, sv) {
                 errs.push((path.into(), format!("does not match pattern {p}")));
             }
         }
-        if let (Some(m), Some(sv)) = (s.get("minLength").and_then(Value::as_u64), v.as_str()) {
+        if let (Some(m), Some(sv)) = (s.get("minLength").and_then(Json::as_u64), v.as_str()) {
             if (sv.chars().count() as u64) < m { errs.push((path.into(), "string too short".into())); }
         }
         if let Some(n) = v.as_f64() {
-            if let Some(m) = s.get("minimum").and_then(Value::as_f64) { if n < m { errs.push((path.into(), "below minimum".into())); } }
-            if let Some(m) = s.get("maximum").and_then(Value::as_f64) { if n > m { errs.push((path.into(), "above maximum".into())); } }
+            if let Some(m) = s.get("minimum").and_then(Json::as_f64) { if n < m { errs.push((path.into(), "below minimum".into())); } }
+            if let Some(m) = s.get("maximum").and_then(Json::as_f64) { if n > m { errs.push((path.into(), "above maximum".into())); } }
         }
         if let Some(a) = v.as_array() {
-            if let Some(m) = s.get("minItems").and_then(Value::as_u64) { if (a.len() as u64) < m { errs.push((path.into(), "too few items".into())); } }
+            if let Some(m) = s.get("minItems").and_then(Json::as_u64) { if (a.len() as u64) < m { errs.push((path.into(), "too few items".into())); } }
             if let Some(it) = s.get("items") {
                 for (i, x) in a.iter().enumerate() { self.validate(it, x, &format!("{path}/{i}"), errs); }
             }
         }
         if let Some(o) = v.as_object() {
-            if let Some(Value::Array(req)) = s.get("required") {
-                for r in req.iter().filter_map(Value::as_str) {
+            if let Some(Json::Array(req)) = s.get("required") {
+                for r in req.iter().filter_map(Json::as_str) {
                     if !o.contains_key(r) { errs.push((path.into(), format!("missing required property `{r}`"))); }
                 }
             }
-            let props = s.get("properties").and_then(Value::as_object);
+            let props = s.get("properties").and_then(Json::as_object);
             for (k, x) in o {
                 let p = format!("{path}/{k}");
                 match props.and_then(|pr| pr.get(k)) {
                     Some(ps) => self.validate(ps, x, &p, errs),
                     None => match s.get("additionalProperties") {
-                        Some(Value::Bool(false)) => errs.push((p, format!("unknown property `{k}`"))),
-                        Some(ap @ Value::Object(_)) => self.validate(ap, x, &p, errs),
+                        Some(Json::Bool(false)) => errs.push((p, format!("unknown property `{k}`"))),
+                        Some(ap @ Json::Object(_)) => self.validate(ap, x, &p, errs),
                         _ => {}
                     },
                 }
             }
         }
-        if let Some(Value::Array(all)) = s.get("allOf") {
+        if let Some(Json::Array(all)) = s.get("allOf") {
             for sub in all { self.validate(sub, v, path, errs); }
         }
-        if let Some(Value::Array(any)) = s.get("anyOf") {
+        if let Some(Json::Array(any)) = s.get("anyOf") {
             if !any.iter().any(|sub| self.ok(sub, v, path)) { errs.push((path.into(), "matches none of anyOf".into())); }
         }
-        if let Some(Value::Array(one)) = s.get("oneOf") {
+        if let Some(Json::Array(one)) = s.get("oneOf") {
             let n = one.iter().filter(|sub| self.ok(sub, v, path)).count();
             if n != 1 { errs.push((path.into(), format!("matches {n} oneOf branches, expected 1"))); }
         }
@@ -331,7 +368,7 @@ impl SchemaCx {
         }
     }
 
-    fn ok(&self, s: &Value, v: &Value, path: &str) -> bool {
+    fn ok(&self, s: &Json, v: &Json, path: &str) -> bool {
         let mut e = Vec::new();
         self.validate(s, v, path, &mut e);
         e.is_empty()
@@ -348,7 +385,7 @@ fn pattern_matches(pattern: &str, text: &str) -> Option<bool> {
     re.as_ref().map(|re| re.is_match(text))
 }
 
-fn type_ok(t: &str, v: &Value) -> bool {
+fn type_ok(t: &str, v: &Json) -> bool {
     match t {
         "object" => v.is_object(),
         "array" => v.is_array(),
@@ -368,7 +405,18 @@ fn schema_cx() -> &'static SchemaCx {
 }
 
 /// Validate an already parsed value: envelope, then the structural schema for its kind.
-pub fn validate_value(v: &Value) -> UtvResult {
+/// A value of the wrong shape is `invalid` with the shared code `malformed-value`, followed by
+/// the specific `envelope.*` or `structural.schema` diagnostics.
+pub fn validate_value(v: &Json) -> UtvResult {
+    let mut r = validate_shape(v);
+    if r.status == Status::Invalid {
+        let first = Diagnostic { code: "malformed-value".into(), severity: Severity::Error, path: String::new(), message: "not a well-formed UTV value".into() };
+        r.diagnostics.insert(0, first);
+    }
+    r
+}
+
+fn validate_shape(v: &Json) -> UtvResult {
     let env = check_envelope(v, "");
     if env.status != Status::Valid { return env; }
     let kind = v["kind"].as_str().unwrap_or_default();
@@ -390,7 +438,7 @@ pub fn validate_value(v: &Value) -> UtvResult {
 pub fn validate_structural(text: &str) -> UtvResult {
     match parse_strict(text) {
         Ok(v) => validate_value(&v),
-        Err(e) => UtvResult::fail(Status::Invalid, "json.parse", "", e),
+        Err(e) => UtvResult::fail(Status::Invalid, "syntax", "", e),
     }
 }
 
@@ -415,36 +463,36 @@ pub fn days_in_month(year: i128, month: u32) -> Option<u32> {
 pub fn validate_gregorian_civil(text: &str) -> UtvResult {
     let v = match parse_strict(text) {
         Ok(v) => v,
-        Err(e) => return UtvResult::fail(Status::Invalid, "json.parse", "", e),
+        Err(e) => return UtvResult::fail(Status::Invalid, "syntax", "", e),
     };
     let structural = validate_value(&v);
     if structural.status != Status::Valid { return structural; }
     check_civil(&v)
 }
 
-fn check_civil(v: &Value) -> UtvResult {
+fn check_civil(v: &Json) -> UtvResult {
     if v["kind"].as_str() != Some("civil") {
-        return UtvResult::fail(Status::Unsupported, "semantic.kind", "/kind", "only `civil` values are checked semantically");
+        return UtvResult::fail(Status::Unsupported, "unsupported-operand", "/kind", "only `civil` values are checked semantically");
     }
     let val = &v["value"];
-    if val.pointer("/calendar/id").and_then(Value::as_str) != Some("gregory")
-        || val.pointer("/calendar/chronology").and_then(Value::as_str) != Some("proleptic")
+    if val.pointer("/calendar/id").and_then(Json::as_str) != Some("gregory")
+        || val.pointer("/calendar/chronology").and_then(Json::as_str) != Some("proleptic")
     {
-        return UtvResult::fail(Status::Unsupported, "semantic.calendar", "/value/calendar", "only the proleptic Gregorian calendar is implemented");
+        return UtvResult::fail(Status::Unsupported, "unsupported-calendar", "/value/calendar", "only the proleptic Gregorian calendar is implemented");
     }
     let f = &val["fields"];
     let Some(m) = f["month"].as_i64() else { return UtvResult::ok(); };
     let Some(y) = f["year"].as_str().and_then(|s| s.parse::<i128>().ok()) else {
         if f["year"].is_null() { return UtvResult::ok(); }
-        return UtvResult::fail(Status::Unsupported, "semantic.year-range", "/value/fields/year", "year outside the supported i128 range");
+        return UtvResult::fail(Status::Unsupported, "implementation-limit", "/value/fields/year", "year outside the supported i128 range");
     };
     if !(1..=12).contains(&m) {
-        return UtvResult::fail(Status::Invalid, "civil.month", "/value/fields/month", "month out of range 1..12");
+        return UtvResult::fail(Status::Invalid, "month-out-of-range", "/value/fields/month", format!("there is no month {m}"));
     }
     if let Some(d) = f["day"].as_i64() {
         let max = days_in_month(y, m as u32).unwrap_or(31) as i64;
         if d < 1 || d > max {
-            return UtvResult::fail(Status::Invalid, "civil.day", "/value/fields/day", format!("day {d} does not exist in {y}-{m:02}"));
+            return UtvResult::fail(Status::Invalid, "day-out-of-range", "/value/fields/day", format!("{} has no day {d}", model::year_month_text(y, m as u32)));
         }
     }
     UtvResult::ok()

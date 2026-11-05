@@ -74,13 +74,28 @@ impl Rules {
         Ok(Rules { rule_set: v["ruleSet"].clone(), valid_from: int(&v["validFrom"], "validFrom")?, valid_until: int(&v["validUntil"], "validUntil")?, zones })
     }
 
+    /// Read a rule bundle from a file. The library reads only the file you name; it never
+    /// looks at the host's tz database.
+    /// A file that can't be read or isn't a rule bundle is `Err` with code `malformed-value`.
+    pub fn load(path: impl AsRef<std::path::Path>) -> Result<Rules, crate::Diagnostics> {
+        let path = path.as_ref();
+        let malformed = |e: String| crate::typed::rejected(UtvResult::fail(Status::Invalid, "malformed-value", "", format!("{}: {e}", path.display())).op("convert"));
+        let text = std::fs::read_to_string(path).map_err(|e| malformed(e.to_string()))?;
+        Rules::parse(&text).map_err(malformed)
+    }
+
+    /// A bundle without zones, for fixed-offset conversions, which need no rules.
+    pub(crate) fn empty() -> Rules {
+        Rules { rule_set: Value::Null, valid_from: 0, valid_until: 0, zones: BTreeMap::new() }
+    }
+
     /// The zone ids this bundle has rules for.
     pub fn zone_ids(&self) -> impl Iterator<Item = &str> {
         self.zones.keys().map(String::as_str)
     }
 
     fn zone(&self, id: &str) -> R<&ZoneRules> {
-        self.zones.get(id).map_or_else(|| fail(Status::Unsupported, "zone.unknown", "/value/zone/id", format!("the rules have no zone `{id}`")), Ok)
+        self.zones.get(id).map_or_else(|| fail(Status::Unsupported, "unknown-zone", "/value/zone/id", format!("the rules have no zone `{id}`")), Ok)
     }
 
     fn within(&self, t: Q) -> bool {
@@ -89,7 +104,7 @@ impl Rules {
 }
 
 fn window_err<T>() -> R<T> {
-    fail(Status::Unsupported, "rules.window", "", "outside the rules' validity window; zone rules are never extrapolated")
+    fail(Status::Unsupported, "outside-rule-window", "", "outside the rules' validity window; zone rules are never extrapolated")
 }
 
 /// Turn a civil date-time into instant(s).
@@ -113,16 +128,16 @@ pub fn resolve(value: &Value, rules: &Rules, policy: Option<&Value>) -> UtvResul
     done("resolve", (|| {
         if kind(value) == "civil" && value["value"]["form"] != "datetime" {
             crate::model::structural(value)?;
-            return fail(Status::Unsupported, "form", "/value/form", "only `datetime` values resolve to instants");
+            return fail(Status::Unsupported, "unsupported-operand", "/value/form", "only `datetime` values resolve to instants");
         }
         let c = read_civil(value)?;
         if c.form != Form::DateTime {
-            return fail(Status::Unsupported, "form", "/value/form", "only `datetime` values resolve to instants");
+            return fail(Status::Unsupported, "unsupported-operand", "/value/form", "only `datetime` values resolve to instants");
         }
         let l = c.local_seconds()?;
         let id = match &c.zone {
             Zone::Floating => {
-                let mut r = UtvResult::fail(Status::Symbolic, "floating", "/value/zone", "no zone is bound, so there is nothing to resolve yet");
+                let mut r = UtvResult::fail(Status::Symbolic, "no-zone", "/value/zone", "no zone is bound, so there is nothing to resolve yet");
                 r.diagnostics[0].severity = crate::Severity::Info;
                 return Ok(r);
             }
@@ -132,7 +147,7 @@ pub fn resolve(value: &Value, rules: &Rules, policy: Option<&Value>) -> UtvResul
                 }
                 return Ok(UtvResult::unique(instant_json(sub(l, *o)?)));
             }
-            Zone::Other(t) => return fail(Status::Unsupported, "zone.type", "/value/zone/type", format!("zone type `{t}` is not implemented")),
+            Zone::Other(t) => return fail(Status::Unsupported, "unsupported-operand", "/value/zone/type", format!("zone type `{t}` is not implemented")),
             Zone::Iana(id) => id,
         };
         let zone = rules.zone(id)?;
@@ -146,10 +161,10 @@ pub fn resolve(value: &Value, rules: &Rules, policy: Option<&Value>) -> UtvResul
         let pick = |key: &str| policy.and_then(|p| p.get(key)).and_then(Value::as_str).unwrap_or("reject").to_owned();
         let (gap, overlap) = (pick("gap"), pick("overlap"));
         if !matches!(gap.as_str(), "reject" | "preserve-unresolved" | "shift-forward-by-gap") {
-            return fail(Status::Unsupported, "policy", "/policy/gap", format!("gap policy `{gap}` is not implemented"));
+            return fail(Status::Unsupported, "unsupported-policy", "/policy/gap", format!("gap policy `{gap}` is not implemented"));
         }
         if !matches!(overlap.as_str(), "reject" | "all" | "earliest" | "latest") {
-            return fail(Status::Unsupported, "policy", "/policy/overlap", format!("overlap policy `{overlap}` is not implemented"));
+            return fail(Status::Unsupported, "unsupported-policy", "/policy/overlap", format!("overlap policy `{overlap}` is not implemented"));
         }
 
         // Offsets in force within a day of L; t = L − o is a candidate when the offset at t is o.
@@ -186,7 +201,7 @@ pub fn resolve(value: &Value, rules: &Rules, policy: Option<&Value>) -> UtvResul
                     r.diagnostics.push(note("gap", "the wall time falls in a gap; shifted forward by the gap's length"));
                     return Ok(r);
                 }
-                fail(Status::None, "gap", "/value/fields", format!("{} doesn't exist in {id}: it falls in a gap of the zone rules", wall(&c)))
+                fail(Status::None, "gap", "/value/fields", format!("{} is skipped in {id}", wall(&c)))
             }
             many => {
                 let instants: Vec<Value> = many.iter().map(|t| instant_json(*t)).collect();
@@ -196,7 +211,7 @@ pub fn resolve(value: &Value, rules: &Rules, policy: Option<&Value>) -> UtvResul
                     _ => {
                         let mut r = UtvResult::new(Status::Multiple, instants);
                         if overlap == "reject" {
-                            let mut d = UtvResult::fail(Status::Multiple, "ambiguous", "/value/fields", format!("{} happens {} times in {id}: the zone's clocks went back", wall(&c), many.len())).diagnostics;
+                            let mut d = UtvResult::fail(Status::Multiple, "ambiguous", "/value/fields", format!("{} occurs {} in {id}", wall(&c), if many.len() == 2 { "twice".to_owned() } else { format!("{} times", many.len()) })).diagnostics;
                             d[0].severity = crate::Severity::Warning;
                             r.diagnostics = d;
                         }
@@ -261,7 +276,7 @@ pub fn to_offset(instant: &Value, offset_seconds: i64) -> UtvResult {
     done("toOffset", (|| {
         let t = read_instant(instant)?;
         if offset_seconds.abs() > MAX_OFFSET {
-            return fail(Status::Invalid, "zone.offset", "/offset", "offset beyond ±18:00");
+            return fail(Status::Invalid, "offset-out-of-range", "/offset", "offset beyond ±18:00");
         }
         let mut c = civil_at(t, offset_seconds)?;
         c.zone = Zone::Fixed(offset_seconds);

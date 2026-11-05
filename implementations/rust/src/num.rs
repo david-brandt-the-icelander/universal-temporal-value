@@ -6,7 +6,7 @@
 use std::cmp::Ordering;
 
 /// A reduced rational number with a positive denominator.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) struct Q {
     pub n: i128,
     pub d: i128,
@@ -61,6 +61,15 @@ impl Q {
         Some(self.n.checked_mul(o.d)?.cmp(&o.n.checked_mul(self.d)?))
     }
 
+    /// Exact order, without overflow: whole parts first, then the fractions compared through a
+    /// 256-bit cross product.
+    pub fn cmp_exact(self, o: Q) -> Ordering {
+        self.floor().cmp(&o.floor()).then_with(|| {
+            let (a, b) = (self.frac(), o.frac());
+            mul_wide(a.n as u128, b.d as u128).cmp(&mul_wide(b.n as u128, a.d as u128))
+        })
+    }
+
     pub fn floor(self) -> i128 {
         self.n.div_euclid(self.d)
     }
@@ -83,6 +92,17 @@ impl Q {
     pub fn from_secs_nanos(secs: i128, nano: u32) -> Option<Q> {
         Q::int(secs).add(Q::new(nano as i128, 1_000_000_000)?)
     }
+}
+
+/// The full 256-bit product of two `u128`s, as `(high, low)`.
+fn mul_wide(a: u128, b: u128) -> (u128, u128) {
+    const M: u128 = u64::MAX as u128;
+    let (a1, a0, b1, b0) = (a >> 64, a & M, b >> 64, b & M);
+    let (p00, p01, p10, p11) = (a0 * b0, a0 * b1, a1 * b0, a1 * b1);
+    let mid = (p00 >> 64) + (p01 & M) + (p10 & M);
+    let low = (p00 & M) | (mid << 64);
+    let high = p11 + (p01 >> 64) + (p10 >> 64) + (mid >> 64);
+    (high, low)
 }
 
 /// Proleptic Gregorian leap year.
@@ -156,5 +176,10 @@ mod tests {
         assert_eq!(Q::new(-3, 2).unwrap().frac(), Q::new(1, 2).unwrap());
         assert_eq!(Q::new(1, 200_000_000).unwrap().frac_nanos(), Some(5));
         assert_eq!(Q::new(1, 3).unwrap().frac_nanos(), None);
+        let big = Q::new(1, i128::MAX).unwrap();
+        let bigger = Q::new(2, i128::MAX - 1).unwrap();
+        assert_eq!(big.cmp_exact(bigger), Ordering::Less);
+        assert_eq!(Q::new(-1, 2).unwrap().cmp_exact(Q::int(0)), Ordering::Less);
+        assert_eq!(mul_wide(u128::MAX, u128::MAX), (u128::MAX - 1, 1));
     }
 }

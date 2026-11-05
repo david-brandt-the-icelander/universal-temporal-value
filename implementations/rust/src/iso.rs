@@ -61,11 +61,11 @@ fn re_annotation() -> &'static Regex {
 }
 
 fn invalid<T>(msg: impl Into<String>) -> R<T> {
-    fail(Status::Invalid, "iso.syntax", "", msg)
+    fail(Status::Invalid, "syntax", "", msg)
 }
 
-fn bad_field<T>(msg: impl Into<String>) -> R<T> {
-    fail(Status::Invalid, "iso.field", "", msg)
+fn bad_field<T>(code: &str, msg: impl Into<String>) -> R<T> {
+    fail(Status::Invalid, code, "", msg)
 }
 
 fn unsupported<T>(code: &str, msg: impl Into<String>) -> R<T> {
@@ -80,7 +80,7 @@ fn year(s: &str) -> R<i128> {
     if s.starts_with('-') && s[1..].bytes().all(|b| b == b'0') {
         return invalid("year -0 is not allowed");
     }
-    s.parse::<i128>().or_else(|_| unsupported("range", "year outside the i128 range"))
+    s.parse::<i128>().or_else(|_| unsupported("implementation-limit", "year outside the i128 range"))
 }
 
 fn nano(frac: Option<&str>) -> R<Option<u32>> {
@@ -101,24 +101,24 @@ fn check_time(c: &Civil, had_fraction: bool) -> R<()> {
         return unsupported("end-of-day", "24:00 needs an end-of-day policy");
     }
     if c.hour > 23 {
-        return bad_field(format!("hour {} is out of range", c.hour));
+        return bad_field("field-out-of-range", format!("hour {} is out of range 0..=23", c.hour));
     }
     if c.minute > 59 {
-        return bad_field(format!("minute {} is out of range", c.minute));
+        return bad_field("field-out-of-range", format!("minute {} is out of range 0..=59", c.minute));
     }
     match c.second {
         Some(60) => unsupported("leap-second", "second 60 needs a leap-second table"),
-        Some(s) if s > 60 => bad_field(format!("second {s} is out of range")),
+        Some(s) if s > 60 => bad_field("field-out-of-range", format!("second {s} is out of range 0..=59")),
         _ => Ok(()),
     }
 }
 
 fn check_date(c: &Civil) -> R<()> {
     if !(1..=12).contains(&c.month) {
-        return bad_field(format!("month {} is out of range", c.month));
+        return bad_field("month-out-of-range", format!("there is no month {}", c.month));
     }
     if c.form.has_date() && (c.day < 1 || c.day > crate::num::days_in_month(c.year, c.month)) {
-        return bad_field(format!("day {} doesn't exist in {}-{:02}", c.day, c.year, c.month));
+        return bad_field("day-out-of-range", format!("{} has no day {}", crate::model::year_month_text(c.year, c.month), c.day));
     }
     Ok(())
 }
@@ -170,7 +170,7 @@ fn parse(text: &str) -> R<Value> {
         let offset = m.get(8).map(|o| o.as_str());
         let zone = annotation(m.get(9).map_or("", |a| a.as_str()))?;
         return match (offset, zone) {
-            (Some("Z" | "-00:00"), Some(_)) => unsupported("iso.utc-with-zone", "`Z` or `-00:00` followed by a [zone] is not handled by this profile"),
+            (Some("Z" | "-00:00"), Some(_)) => unsupported("unsupported-annotation", "`Z` or `-00:00` followed by a [zone] is not handled by this profile"),
             (Some("Z" | "-00:00"), None) => {
                 let l = c.local_seconds()?;
                 Ok(instant_json(l))
@@ -194,7 +194,7 @@ fn parse(text: &str) -> R<Value> {
         };
     }
     if re_other_iso().is_match(text) {
-        return unsupported("iso.form", format!("`{text}` is a valid ISO 8601 form this profile doesn't handle (week, ordinal, year-only or basic format)"));
+        return unsupported("unsupported-form", format!("`{text}` is a valid ISO 8601 form this profile doesn't handle (week, ordinal, year-only or basic format)"));
     }
     invalid(format!("`{text}` is not ISO 8601 extended / RFC 3339 / RFC 9557 text"))
 }
@@ -203,7 +203,7 @@ fn offset_seconds(o: &str) -> R<i64> {
     let sign = if o.starts_with('-') { -1 } else { 1 };
     let (h, m) = (num(&o[1..3]) as i64, num(&o[4..6]) as i64);
     if m > 59 || h * 3600 + m * 60 > MAX_OFFSET {
-        return bad_field(format!("offset {o} is beyond ±18:00"));
+        return bad_field("offset-out-of-range", format!("offset {o} is beyond ±18:00"));
     }
     Ok(sign * (h * 3600 + m * 60))
 }
@@ -218,17 +218,17 @@ fn annotation(suffix: &str) -> R<Option<String>> {
         return invalid(format!("`[{bad}]` is not an RFC 9557 annotation"));
     }
     if parts.iter().any(|p| p.starts_with('!')) {
-        return unsupported("iso.critical-annotation", "critical annotations ([!…]) are not handled by this profile");
+        return unsupported("unsupported-annotation", "critical annotations ([!…]) are not handled by this profile");
     }
     match parts.as_slice() {
         [zone] if re_zone_id().is_match(zone) => Ok(Some((*zone).to_owned())),
-        _ => unsupported("iso.annotation", "only a single [Area/Location] annotation is handled by this profile"),
+        _ => unsupported("unsupported-annotation", "only a single [Area/Location] annotation is handled by this profile"),
     }
 }
 
 // ---------- formatting ----------
 
-fn fmt_year(y: i128) -> String {
+pub(crate) fn fmt_year(y: i128) -> String {
     if (0..=9999).contains(&y) {
         format!("{y:04}")
     } else {
@@ -245,7 +245,7 @@ fn fmt_fraction(nano: u32) -> String {
 
 fn fmt_offset(s: i64) -> R<String> {
     if s % 60 != 0 {
-        return unsupported("iso.offset-seconds", "offsets with seconds can't be written as ±hh:mm");
+        return unsupported("no-text-form", "offsets with seconds can't be written as ±hh:mm");
     }
     let a = s.abs();
     Ok(format!("{}{:02}:{:02}", if s < 0 { '-' } else { '+' }, a / 3600, a / 60 % 60))
@@ -274,7 +274,7 @@ fn format(value: &Value) -> R<String> {
         "instant" => {
             let q = read_instant(value)?;
             if !terminates(q.frac().d) {
-                return unsupported("iso.fraction", "the fraction of a second has no finite decimal form");
+                return unsupported("no-text-form", "the fraction of a second has no finite decimal form");
             }
             let mut c = Civil::new(Form::DateTime);
             c.set_from_seconds(Q::int(q.floor()))?;
@@ -299,7 +299,7 @@ fn format(value: &Value) -> R<String> {
                             }
                             s += &format!("[{id}]");
                         }
-                        Zone::Other(t) => return unsupported("iso.zone", format!("zone type `{t}` has no ISO 8601 form")),
+                        Zone::Other(t) => return unsupported("unsupported-operand", format!("zone type `{t}` has no ISO 8601 form")),
                     }
                     s
                 }
@@ -307,7 +307,7 @@ fn format(value: &Value) -> R<String> {
         }
         k => {
             crate::model::structural(value)?;
-            unsupported("iso.kind", format!("kind `{k}` has no ISO 8601 form in this profile"))
+            unsupported("unsupported-operand", format!("kind `{k}` has no ISO 8601 form in this profile"))
         }
     }
 }

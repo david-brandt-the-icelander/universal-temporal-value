@@ -1,450 +1,358 @@
-//! Everyday date/time tasks, side by side: what you write today in Rust, and the same with UTV.
+//! Everyday date and time tasks in Rust: chrono first, then the same task with UTV.
 //!
-//! Run with `cargo run --example everyday --features chrono`.
+//! Run it with `cargo run --example everyday --features chrono`.
 //!
-//! Rust's standard library has no calendar types: `std::time` only has `SystemTime` (a clock
-//! reading) and `Duration`. So the native side uses the de-facto standard crate `chrono`, plus
-//! `chrono-tz` for named zones. Native outputs are printed and never checked: they depend on the
-//! host clock and zone, and on the copy of tzdb compiled into chrono-tz. UTV outputs are
-//! deterministic, so this example checks each one and exits non-zero if any differs.
+//! Rust's standard library has no calendar types, so the native side uses chrono, plus
+//! chrono-tz for named zones. Each output line is shown as a trailing comment. The snapshot
+//! test (`tests/everyday_example.rs`) checks the output against `examples/everyday.expected.txt`.
+//! Lines that end in ‡ depend on the host's clock or zone, and the test skips them.
 
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::error::Error;
+use std::fmt::Display;
+use std::time::SystemTime;
 
 use chrono::{DateTime, Datelike, Days, Local, Months, NaiveDate, NaiveTime, TimeDelta, TimeZone, Utc};
-use chrono_tz::Tz;
-use serde_json::{json, Value};
-use utv::build::{date, date_time, in_zone, instant_with_nanos, interval, interval_with, period, posix_seconds, time, Endpoint, Period};
-use utv::interop::chrono::{from_fixed_offset, from_local, from_naive_date, to_fixed_offset, to_naive_date, OffsetIntent};
-use utv::{add, compare, contains, days_between, fields, format_iso, interop, overlaps, parse_iso, posix_seconds_between, resolve, to_zone, Rules, UtvResult};
+use chrono_tz::America::New_York;
+use chrono_tz::Europe::Paris;
+use utv::{
+    Bound, CivilDate, CivilDateTime, CivilTime, ElapsedSeconds, FixedOffsetDateTime, Gap, Instant, Interval, Outcome, Overlap, PosixSeconds,
+    ResolutionPolicy, TemporalContext, Value, ZoneRules,
+};
 
-fn main() {
-    let mismatches = run();
-    println!();
-    if mismatches == 0 {
-        println!("Every UTV outcome as expected.");
-    } else {
-        println!("{mismatches} UTV outcomes differ from what this example expects.");
-        std::process::exit(1);
-    }
+pub fn main() -> Result<(), Box<dyn Error>> {
+    // UTV never reads the host's tz database: you load the rules and pass them in once.
+    let rules = ZoneRules::load(concat!(env!("CARGO_MANIFEST_DIR"), "/../../conformance/rules/demo-zones.json"))?;
+    let ctx = TemporalContext::with(rules);
+
+    now();
+    a_date()?;
+    invalid_dates();
+    adding()?;
+    days_between(&ctx)?;
+    times()?;
+    offsets()?;
+    time_zones(&ctx)?;
+    dst_gap(&ctx)?;
+    dst_overlap(&ctx)?;
+    timestamps()?;
+    day_vs_24_hours(&ctx)?;
+    ranges()?;
+    round_trip()?;
+    Ok(())
 }
 
-/// Runs every section and returns the number of UTV outcomes that differ from the expected ones.
-pub fn run() -> usize {
-    // The library never reads files or the host tzdb: the example loads the rules and passes them in.
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../conformance/rules/demo-zones.json");
-    let text = std::fs::read_to_string(path).unwrap_or_else(|e| panic!("{path}: {e}"));
-    let rules = Rules::parse(&text).unwrap_or_else(|e| panic!("{path}: {e}"));
+fn now() {
+    println!("1. Now");
+    println!("   Now");
+    // BEGIN now
+    row("chrono", Utc::now(), "chrono reads the clock ‡"); // 2026-11-05 13:30:00.123456789 UTC ‡
+    row("chrono", Local::now(), "and the host's zone ‡"); // 2026-11-05 14:30:00.123456789 +01:00 ‡
 
-    let mut t = Tour::default();
-    now(&mut t);
-    a_date(&mut t);
-    invalid_dates(&mut t);
-    adding(&mut t);
-    days_between_dates(&mut t);
-    times(&mut t);
-    offsets(&mut t);
-    time_zones(&mut t, &rules);
-    dst_gap(&mut t, &rules);
-    dst_overlap(&mut t, &rules);
-    timestamps(&mut t);
-    durations_vs_periods(&mut t, &rules);
-    ranges(&mut t);
-    round_trip(&mut t);
-    t.mismatches
-}
-
-// ---------- 1 ----------
-
-fn now(t: &mut Tour) {
-    t.section("1. Now");
+    // UTV never reads the clock. You read it and pass the reading in.
     let reading = SystemTime::now();
-    let since_epoch = reading.duration_since(UNIX_EPOCH).map_or_else(|e| format!("-{:?}", e.duration()), |d| format!("{d:?}"));
-    t.native("SystemTime::now().duration_since(UNIX_EPOCH)", since_epoch);
-    t.native("Utc::now()", Utc::now());
-    t.native("Local::now()", Local::now());
-    t.note("Local::now() used this host's zone (TZ or /etc/localtime); every reading depends on the host clock.");
-
-    // The library never reads the clock. The example reads it and converts the reading explicitly.
-    let r = interop::from_system_time(reading);
-    t.utv_status("interop::from_system_time(reading)", &r, "unique");
-    t.note("Deliberate: utv has no now(). You pass the reading in, so the clock dependency is visible and testable.");
+    row("UTV", Instant::from_system_time(reading), "the reading you passed in ‡"); // 2026-11-05T13:30:00.123456789Z ‡
+    // END now
 }
 
-// ---------- 2 ----------
+fn a_date() -> Result<(), Box<dyn Error>> {
+    println!("\n2. A date");
+    println!("   5 November 2026");
+    // BEGIN a-date
+    let date = NaiveDate::from_ymd_opt(2026, 11, 5).unwrap();
+    row("chrono", date, ""); // 2026-11-05
+    row("chrono", date.format("%-d %B %Y"), ""); // 5 November 2026
 
-fn a_date(t: &mut Tour) {
-    t.section("2. A date");
-    let d = NaiveDate::from_ymd_opt(2026, 11, 5).expect("exists");
-    t.native("NaiveDate::from_ymd_opt(2026, 11, 5)", d);
-    t.native("d.format(\"%d %B %Y\")", d.format("%d %B %Y"));
-    let p: NaiveDate = "2026-11-05".parse().expect("parses");
-    t.native("p.weekday(), p.iso_week()", format!("{}, {:?}", p.weekday(), p.iso_week()));
+    let date = CivilDate::of(2026, 11, 5)?;
+    let parsed: CivilDate = "2026-11-05".parse()?;
+    row("UTV", date, ""); // 2026-11-05
+    row("UTV", parsed == date, "parsed from \"2026-11-05\""); // true
+    // END a-date
 
-    let d = date(2026, 11, 5);
-    t.utv("format_iso(&date(2026, 11, 5))", &format_iso(&d), "unique 2026-11-05");
-    let p = parse_iso("2026-11-05");
-    t.utv("parse_iso(\"2026-11-05\")", &p, "unique 2026-11-05");
-    t.utv(
-        "fields(&p)",
-        &fields(p.value().expect("unique")),
-        r#"unique {"dayOfWeek":4,"dayOfYear":309,"isoWeekYear":"2026","isoWeek":45,"daysInMonth":30,"isLeapYear":false}"#,
-    );
+    println!("   Day of week and ISO week");
+    // BEGIN weekday-week
+    let date = NaiveDate::from_ymd_opt(2026, 11, 5).unwrap();
+    row("chrono", format!("{}, ISO week {}", date.weekday(), date.iso_week().week()), ""); // Thu, ISO week 45
+
+    let date = CivilDate::of(2026, 11, 5)?;
+    row("UTV", format!("{}, ISO week {}", date.day_of_week(), date.iso_week()), ""); // Thursday, ISO week 45
+    // END weekday-week
+    Ok(())
 }
 
-// ---------- 3 ----------
+fn invalid_dates() {
+    println!("\n3. Invalid dates");
+    println!("   30 February 2026");
+    // BEGIN feb-30
+    row("chrono", format!("{:?}", NaiveDate::from_ymd_opt(2026, 2, 30)), ""); // None
+    row("chrono", format!("{:?}", "2026-02-30".parse::<NaiveDate>()), ""); // Err(ParseError(OutOfRange))
 
-fn invalid_dates(t: &mut Tour) {
-    t.section("3. Invalid dates");
-    t.native("NaiveDate::from_ymd_opt(2026, 2, 30)", format!("{:?}", NaiveDate::from_ymd_opt(2026, 2, 30)));
-    t.native("\"2026-02-30\".parse::<NaiveDate>()", format!("{:?}", "2026-02-30".parse::<NaiveDate>()));
-    t.note("chrono neither panics nor rolls over: the constructor gives None and parse gives Err(OutOfRange).");
-
-    let feb30 = date(2026, 2, 30); // a well-formed value of a date that doesn't exist
-    t.utv("fields(&date(2026, 2, 30))", &fields(&feb30), "invalid");
-    t.utv("parse_iso(\"2026-02-30\")", &parse_iso("2026-02-30"), "invalid");
-    t.note("Same refusal, but as a result with a diagnostic saying which field is wrong.");
-}
-
-// ---------- 4 ----------
-
-fn adding(t: &mut Tour) {
-    t.section("4. Adding");
-    let d = NaiveDate::from_ymd_opt(2026, 11, 5).expect("exists");
-    let jan31 = NaiveDate::from_ymd_opt(2026, 1, 31).expect("exists");
-    t.native("d + Days::new(30)", d + Days::new(30));
-    t.native("d + Months::new(1)", d + Months::new(1));
-    t.native("jan31 + Months::new(1)", jan31 + Months::new(1));
-    t.note("chrono clamped 31 January + 1 month to 28 February without saying so.");
-
-    let d = date(2026, 11, 5);
-    let jan31 = date(2026, 1, 31);
-    let month = period(Period::months(1));
-    t.utv("add(&d, &period(Period::days(30)), None)", &add(&d, &period(Period::days(30)), None), "unique 2026-12-05");
-    t.utv("add(&d, &month, None)", &add(&d, &month, None), "unique 2026-12-05");
-    t.utv("add(&jan31, &month, None)", &add(&jan31, &month, None), "none");
-    let constrain = json!({"monthEnd": "constrain"});
-    t.utv("add(&jan31, &month, Some(&constrain))", &add(&jan31, &month, Some(&constrain)), "unique 2026-02-28");
-    t.note("UTV's default is `none` (there is no 31 February); clamping is an explicit policy.");
-}
-
-// ---------- 5 ----------
-
-fn days_between_dates(t: &mut Tour) {
-    t.section("5. Days between");
-    let (a, b) = (NaiveDate::from_ymd_opt(2026, 11, 5).expect("exists"), NaiveDate::from_ymd_opt(2026, 12, 25).expect("exists"));
-    t.native("(b - a).num_days()", (b - a).num_days());
-    t.native("a < b", a < b);
-
-    let (a, b) = (date(2026, 11, 5), date(2026, 12, 25));
-    t.utv("days_between(&a, &b)", &days_between(&a, &b), "unique 50");
-    t.utv("compare(&a, &b)", &compare(&a, &b), "unique before");
-    t.note("Same answers. UTV's compare refuses values whose order depends on zone rules instead of guessing.");
-}
-
-// ---------- 6 ----------
-
-fn times(t: &mut Tour) {
-    t.section("6. Times and date-times");
-    t.native("NaiveTime::from_hms_opt(9, 30, 0)", NaiveTime::from_hms_opt(9, 30, 0).expect("exists"));
-    let dt = NaiveDate::from_ymd_opt(2026, 11, 5).and_then(|d| d.and_hms_opt(23, 30, 0)).expect("exists");
-    t.native("dt + TimeDelta::hours(2)", dt + TimeDelta::hours(2));
-
-    t.utv("format_iso(&time(9, 30))", &format_iso(&time(9, 30)), "unique 09:30");
-    let dt = date_time(2026, 11, 5, 23, 30);
-    t.utv("add(&dt, &period(Period::hours(2)), None)", &add(&dt, &period(Period::hours(2)), None), "unique 2026-11-06T01:30");
-    t.note("UTV keeps \"no seconds given\" (09:30, not 09:30:00); both carry into the next day.");
-}
-
-// ---------- 7 ----------
-
-fn offsets(t: &mut Tour) {
-    t.section("7. Parsing with offsets");
-    for s in ["2026-11-05T14:30:00+01:00", "2026-11-05T14:30:00Z", "2026-11-05T14:30:00+00:00"] {
-        t.native(&format!("DateTime::parse_from_rfc3339({s:?})"), DateTime::parse_from_rfc3339(s).map_or_else(|e| e.to_string(), |d| d.to_string()));
+    match CivilDate::of(2026, 2, 30) {
+        Ok(date) => row("UTV", date, ""),
+        Err(why) => row("UTV", "no such date", why), // 2026-02 has no day 30 (day-out-of-range)
     }
-    t.note("chrono gives the same DateTime<FixedOffset> (+00:00) for `Z` and `+00:00`: the difference is gone.");
+    row("UTV", CivilDate::parse("2026-02-30"), ""); // invalid (day-out-of-range)
+    // END feb-30
+}
 
-    for (s, want, kind) in [
-        ("2026-11-05T14:30:00+01:00", "unique 2026-11-05T14:30:00+01:00", "civil"),
-        ("2026-11-05T14:30:00Z", "unique 2026-11-05T14:30:00Z", "instant"),
-        ("2026-11-05T14:30:00+00:00", "unique 2026-11-05T14:30:00+00:00", "civil"),
-    ] {
-        let r = parse_iso(s);
-        t.utv(&format!("parse_iso({s:?})"), &r, want);
-        t.expect_eq("  kind", r.value().map_or("", |v| v["kind"].as_str().unwrap_or("")), kind);
+fn adding() -> Result<(), Box<dyn Error>> {
+    println!("\n4. Adding");
+    println!("   5 Nov + 30 days");
+    // BEGIN add-days
+    let nov5 = NaiveDate::from_ymd_opt(2026, 11, 5).unwrap();
+    row("chrono", nov5 + Days::new(30), ""); // 2026-12-05
+
+    let nov5 = CivilDate::of(2026, 11, 5)?;
+    row("UTV", nov5.add_days(30), ""); // 2026-12-05
+    // END add-days
+
+    println!("   31 Jan 2026 + 1 month");
+    // BEGIN month-end
+    let jan31 = NaiveDate::from_ymd_opt(2026, 1, 31).unwrap();
+    row("chrono", jan31 + Months::new(1), "clamped silently"); // 2026-02-28
+
+    let jan31 = CivilDate::of(2026, 1, 31)?;
+    match jan31.add_months(1) {
+        Outcome::Unique(date, _) => row("UTV", date, ""),
+        Outcome::None(why) => row("UTV", "no such date", why), // 2026-02 has no day 31 (month-end)
+        other => row("UTV", other, ""),
     }
-    t.note("`Z` is an instant (UTC known, local offset unknown); `+00:00` is a wall time at offset 0.");
+    row("UTV", jan31.add_months_constrained(1), "clamped, because you asked"); // 2026-02-28
+    // END month-end
+    Ok(())
 }
 
-// ---------- 8 ----------
+fn days_between(ctx: &TemporalContext) -> Result<(), Box<dyn Error>> {
+    println!("\n5. Days between");
+    println!("   5 Nov → 25 Dec");
+    // BEGIN days-between
+    let nov5 = NaiveDate::from_ymd_opt(2026, 11, 5).unwrap();
+    let dec25 = NaiveDate::from_ymd_opt(2026, 12, 25).unwrap();
+    row("chrono", (dec25 - nov5).num_days(), ""); // 50
 
-fn zone(name: &str) -> Option<Tz> {
-    name.parse::<Tz>().ok()
+    let nov5 = CivilDate::of(2026, 11, 5)?;
+    let dec25 = CivilDate::of(2026, 12, 25)?;
+    row("UTV", nov5.days_until(dec25), ""); // 50
+    // END days-between
+
+    println!("   Which comes first");
+    // BEGIN compare-dates
+    let nov5 = NaiveDate::from_ymd_opt(2026, 11, 5).unwrap();
+    let dec25 = NaiveDate::from_ymd_opt(2026, 12, 25).unwrap();
+    row("chrono", format!("{:?}", nov5.cmp(&dec25)), ""); // Less
+    let paris = Paris.with_ymd_and_hms(2027, 6, 1, 9, 0, 0).unwrap();
+    let new_york = New_York.with_ymd_and_hms(2027, 6, 1, 3, 0, 0).unwrap();
+    row("chrono", format!("{:?}", paris.cmp(&new_york)), "09:00 in Paris vs 03:00 in New York"); // Equal
+
+    let nov5 = CivilDate::of(2026, 11, 5)?;
+    let dec25 = CivilDate::of(2026, 12, 25)?;
+    row("UTV", format!("{:?}", nov5.cmp(&dec25)), ""); // Less
+    // Zoned values have no `<`: their order depends on zone rules, so the context answers.
+    let paris = CivilDateTime::of(2027, 6, 1, 9, 0)?.in_zone("Europe/Paris");
+    let new_york = CivilDateTime::of(2027, 6, 1, 3, 0)?.in_zone("America/New_York");
+    match ctx.compare(&paris, &new_york) {
+        Outcome::Unique(order, _) => row("UTV", format!("{order:?}"), "by the rules you loaded"), // Equal
+        other => row("UTV", other.status(), other.diagnostics()),
+    }
+    // END compare-dates
+    Ok(())
 }
 
-fn time_zones(t: &mut Tour, rules: &Rules) {
-    t.section("8. Time zones");
-    match (zone("Europe/Paris"), zone("America/New_York")) {
-        (Some(paris), Some(new_york)) => {
-            let m = paris.with_ymd_and_hms(2027, 6, 1, 9, 0, 0);
-            t.native("Paris.with_ymd_and_hms(2027, 6, 1, 9, 0, 0)", format!("{m:?}"));
-            if let Some(m) = m.single() {
-                t.native("m.with_timezone(&New_York)", m.with_timezone(&new_york));
+fn times() -> Result<(), Box<dyn Error>> {
+    println!("\n6. Times and date-times");
+    println!("   09:30");
+    // BEGIN time-of-day
+    row("chrono", NaiveTime::from_hms_opt(9, 30, 0).unwrap(), "always has seconds"); // 09:30:00
+
+    row("UTV", CivilTime::of(9, 30)?, "no seconds given, none shown"); // 09:30
+    row("UTV", CivilTime::of_hms(9, 30, 0)?, ""); // 09:30:00
+    // END time-of-day
+
+    println!("   23:30 + 2 hours");
+    // BEGIN datetime-plus-hours
+    let late = NaiveDate::from_ymd_opt(2026, 11, 5).unwrap().and_hms_opt(23, 30, 0).unwrap();
+    row("chrono", late + TimeDelta::hours(2), ""); // 2026-11-06 01:30:00
+
+    let late = CivilDateTime::of(2026, 11, 5, 23, 30)?;
+    row("UTV", late.add_hours(2), "wall-clock hours, into the next day"); // 2026-11-06T01:30
+    // END datetime-plus-hours
+    Ok(())
+}
+
+fn offsets() -> Result<(), Box<dyn Error>> {
+    println!("\n7. Parsing with offsets");
+    println!("   Z vs +00:00");
+    // BEGIN parse-offsets
+    let utc = DateTime::parse_from_rfc3339("2026-11-05T14:30:00Z")?;
+    let zero = DateTime::parse_from_rfc3339("2026-11-05T14:30:00+00:00")?;
+    row("chrono", utc, "from ...Z"); // 2026-11-05 14:30:00 +00:00
+    row("chrono", zero, "from ...+00:00: the same value"); // 2026-11-05 14:30:00 +00:00
+
+    for text in ["2026-11-05T14:30:00Z", "2026-11-05T14:30:00+00:00"] {
+        match utv::parse(text).single()? {
+            Value::Instant(at) => row("UTV", at, "an instant: UTC known, local offset not"), // 2026-11-05T14:30:00Z
+            Value::FixedOffset(wall) => row("UTV", wall, "a wall time at offset 0"), // 2026-11-05T14:30:00+00:00
+            other => row("UTV", other, ""),
+        }
+    }
+    // END parse-offsets
+    Ok(())
+}
+
+fn time_zones(ctx: &TemporalContext) -> Result<(), Box<dyn Error>> {
+    println!("\n8. Time zones");
+    println!("   09:00 in Paris, seen from New York");
+    // BEGIN meeting-in-paris
+    let meeting = Paris.with_ymd_and_hms(2027, 6, 1, 9, 0, 0).unwrap();
+    row("chrono", meeting.with_timezone(&New_York), "tzdb compiled into chrono-tz"); // 2027-06-01 03:00:00 EDT
+
+    let meeting = CivilDateTime::of(2027, 6, 1, 9, 0)?.in_zone("Europe/Paris");
+    let starts = meeting.resolve(ctx).single()?;
+    row("UTV", &meeting, ""); // 2027-06-01T09:00[Europe/Paris]
+    row("UTV", starts, ""); // 2027-06-01T07:00:00Z
+    row("UTV", starts.in_zone("America/New_York", ctx).single()?, ""); // 2027-06-01T03:00:00-04:00[America/New_York]
+    // END meeting-in-paris
+    Ok(())
+}
+
+fn dst_gap(ctx: &TemporalContext) -> Result<(), Box<dyn Error>> {
+    println!("\n9. DST gap");
+    println!("   02:30 on 8 March 2026 in New York");
+    // BEGIN dst-gap
+    let local = New_York.with_ymd_and_hms(2026, 3, 8, 2, 30, 0);
+    row("chrono", format!("{local:?}"), "you choose what to do"); // None
+
+    let local = CivilDateTime::of(2026, 3, 8, 2, 30)?.in_zone("America/New_York");
+    match local.resolve(ctx) {
+        Outcome::Unique(at, _) => row("UTV", at, ""),
+        Outcome::None(why) => row("UTV", "no such time", why), // 2026-03-08T02:30 is skipped in America/New_York (gap)
+        other => row("UTV", other, ""),
+    }
+    let shift = ResolutionPolicy::new(Gap::ShiftForward, Overlap::Reject);
+    let at = local.resolve_with(ctx, shift).single()?;
+    row("UTV", at.in_zone("America/New_York", ctx).single()?, "Gap::ShiftForward"); // 2026-03-08T03:30:00-04:00[America/New_York]
+    // END dst-gap
+    Ok(())
+}
+
+fn dst_overlap(ctx: &TemporalContext) -> Result<(), Box<dyn Error>> {
+    println!("\n10. DST overlap");
+    println!("   01:30 on 1 November 2026 in New York");
+    // BEGIN dst-overlap
+    let local = New_York.with_ymd_and_hms(2026, 11, 1, 1, 30, 0);
+    row("chrono", format!("{local:?}"), ""); // Ambiguous(2026-11-01T01:30:00EDT, 2026-11-01T01:30:00EST)
+    row("chrono", local.earliest().unwrap(), ".earliest()"); // 2026-11-01 01:30:00 EDT
+
+    let local = CivilDateTime::of(2026, 11, 1, 1, 30)?.in_zone("America/New_York");
+    match local.resolve(ctx) {
+        Outcome::Unique(at, _) => row("UTV", at, ""),
+        Outcome::Multiple(instants, why) => {
+            row("UTV", format!("{} instants", instants.len()), why); // 2 instants  2026-11-01T01:30 occurs twice in America/New_York (ambiguous)
+            for at in instants {
+                row("UTV", at, ""); // 2026-11-01T05:30:00Z, then 2026-11-01T06:30:00Z
             }
         }
-        _ => t.native("Europe/Paris, America/New_York", "zone not available in this chrono-tz build"),
+        other => row("UTV", other, ""),
     }
-    t.note("chrono-tz uses the tzdb release compiled into the crate, not the host's zone files.");
-
-    let meeting = in_zone(date_time(2027, 6, 1, 9, 0), "Europe/Paris");
-    t.utv("in_zone(date_time(2027, 6, 1, 9, 0), \"Europe/Paris\")", &format_iso(&meeting), "unique 2027-06-01T09:00[Europe/Paris]");
-    let at = resolve(&meeting, rules, None);
-    t.utv("resolve(&meeting, &rules, None)", &at, "unique 2027-06-01T07:00:00Z");
-    if let Some(at) = at.value() {
-        t.utv("to_zone(&at, \"America/New_York\", &rules)", &to_zone(at, "America/New_York", rules), "unique 2027-06-01T03:00:00-04:00[America/New_York]");
-    }
-    t.note("UTV only uses the rules passed in (demo-zones: three zones, 2026-2027); anything else is `unsupported`.");
+    let earliest = ResolutionPolicy::new(Gap::Reject, Overlap::Earliest);
+    row("UTV", local.resolve_with(ctx, earliest).single()?, "Overlap::Earliest"); // 2026-11-01T05:30:00Z
+    // END dst-overlap
+    Ok(())
 }
 
-// ---------- 9 ----------
+fn timestamps() -> Result<(), Box<dyn Error>> {
+    println!("\n11. Timestamps");
+    println!("   Exact fractions and differences");
+    // BEGIN timestamps
+    let start = DateTime::from_timestamp(1_793_885_400, 250_000_000).unwrap();
+    let end = DateTime::from_timestamp(1_793_889_001, 0).unwrap();
+    row("chrono", start, ""); // 2026-11-05 13:30:00.250 UTC
+    row("chrono", end - start, ""); // PT3600.75S
+    row("chrono", TimeDelta::seconds(1) / 3, "rounded to nanoseconds"); // PT0.333333333S
 
-fn dst_gap(t: &mut Tour, rules: &Rules) {
-    t.section("9. DST gap");
-    match zone("America/New_York") {
-        Some(ny) => t.native("New_York.with_ymd_and_hms(2026, 3, 8, 2, 30, 0)", format!("{:?}", ny.with_ymd_and_hms(2026, 3, 8, 2, 30, 0))),
-        None => t.native("America/New_York", "zone not available in this chrono-tz build"),
-    }
-    t.note("chrono answers LocalResult::None too, and leaves choosing a replacement time to you.");
-
-    let gap = in_zone(date_time(2026, 3, 8, 2, 30), "America/New_York");
-    t.utv("resolve(&gap, &rules, None)", &resolve(&gap, rules, None), "none");
-    let shift = json!({"gap": "shift-forward-by-gap", "overlap": "reject"});
-    let r = resolve(&gap, rules, Some(&shift));
-    t.utv("resolve(&gap, &rules, Some(&shift_forward))", &r, "unique 2026-03-08T07:30:00Z");
-    if let Some(at) = r.value() {
-        t.utv("to_zone(&at, \"America/New_York\", &rules)", &to_zone(at, "America/New_York", rules), "unique 2026-03-08T03:30:00-04:00[America/New_York]");
-    }
-    t.note("02:30 doesn't exist that day; the named policy `shift-forward-by-gap` gives 03:30 EDT.");
+    let start = Instant::from_unix_seconds_nanos(1_793_885_400, 250_000_000);
+    let end = Instant::from_unix_seconds(1_793_889_001);
+    row("UTV", start, ""); // 2026-11-05T13:30:00.25Z
+    row("UTV", start.until(end), ""); // 3600.75 s (POSIX)
+    row("UTV", PosixSeconds::of_ratio(1, 3)?, "exact"); // 1/3 s (POSIX)
+    // END timestamps
+    Ok(())
 }
 
-// ---------- 10 ----------
+fn day_vs_24_hours(ctx: &TemporalContext) -> Result<(), Box<dyn Error>> {
+    println!("\n12. Durations vs periods");
+    println!("   One day vs 86,400 seconds across DST");
+    // BEGIN day-vs-24h
+    let noon = New_York.with_ymd_and_hms(2026, 10, 31, 12, 0, 0).unwrap();
+    row("chrono", noon + Days::new(1), "a calendar day"); // 2026-11-01 12:00:00 EST
+    row("chrono", noon + TimeDelta::days(1), "86,400 seconds"); // 2026-11-01 11:00:00 EST
 
-fn dst_overlap(t: &mut Tour, rules: &Rules) {
-    t.section("10. DST overlap");
-    match zone("America/New_York") {
-        Some(ny) => {
-            let r = ny.with_ymd_and_hms(2026, 11, 1, 1, 30, 0);
-            t.native("New_York.with_ymd_and_hms(2026, 11, 1, 1, 30, 0)", format!("{r:?}"));
-            t.native(".earliest()", format!("{:?}", r.earliest()));
-        }
-        None => t.native("America/New_York", "zone not available in this chrono-tz build"),
+    let noon = CivilDateTime::of(2026, 10, 31, 12, 0)?.in_zone("America/New_York");
+    row("UTV", noon.add_days(1), "a calendar day"); // 2026-11-01T12:00[America/New_York]
+    let start = noon.resolve(ctx).single()?;
+    let later = start.add(PosixSeconds::of(86_400));
+    row("UTV", later.in_zone("America/New_York", ctx).single()?, "86,400 POSIX seconds"); // 2026-11-01T11:00:00-05:00[America/New_York]
+    match start.add_elapsed(ElapsedSeconds::of(86_400)) {
+        Outcome::Unique(at, _) => row("UTV", at, "86,400 SI seconds"),
+        other => row("UTV", other, "SI seconds need a leap-second table"), // unsupported (needs-leap-seconds)
     }
-    t.note("chrono reports both (LocalResult::Ambiguous); .single() would give None, .earliest() the EDT one.");
-
-    let overlap = in_zone(date_time(2026, 11, 1, 1, 30), "America/New_York");
-    t.utv("resolve(&overlap, &rules, None)", &resolve(&overlap, rules, None), "multiple 2026-11-01T05:30:00Z, 2026-11-01T06:30:00Z");
-    let earliest = json!({"gap": "reject", "overlap": "earliest"});
-    t.utv("resolve(&overlap, &rules, Some(&earliest))", &resolve(&overlap, rules, Some(&earliest)), "unique 2026-11-01T05:30:00Z");
+    // END day-vs-24h
+    Ok(())
 }
 
-// ---------- 11 ----------
+fn ranges() -> Result<(), Box<dyn Error>> {
+    println!("\n13. Ranges");
+    println!("   November, open-ended and unknown ends");
+    // BEGIN ranges
+    let nov1 = NaiveDate::from_ymd_opt(2026, 11, 1).unwrap();
+    let november = nov1..NaiveDate::from_ymd_opt(2026, 12, 1).unwrap();
+    row("std", november.contains(&NaiveDate::from_ymd_opt(2026, 11, 15).unwrap()), "in 2026-11-01..2026-12-01"); // true
+    row("std", (nov1..).contains(&NaiveDate::from_ymd_opt(3000, 1, 1).unwrap()), "in 2026-11-01.."); // true
+    // An end nobody knows yet has no Range: an Option<NaiveDate> end makes you pick an answer.
 
-fn timestamps(t: &mut Tour) {
-    t.section("11. Timestamps");
-    let a = DateTime::from_timestamp(1_793_885_400, 250_000_000).expect("in range");
-    let b = DateTime::from_timestamp(1_793_971_800, 500_000_000).expect("in range");
-    t.native("DateTime::from_timestamp(1_793_885_400, 250_000_000)", a);
-    t.native("a.timestamp(), a.timestamp_subsec_nanos()", format!("{}, {}", a.timestamp(), a.timestamp_subsec_nanos()));
-    t.native("a.timestamp_millis() as f64 / 1000.0", a.timestamp_millis() as f64 / 1000.0);
-    t.native("b - a", b - a);
-
-    let (a, b) = (instant_with_nanos(1_793_885_400, 250_000_000), instant_with_nanos(1_793_971_800, 500_000_000));
-    t.utv("format_iso(&instant_with_nanos(1_793_885_400, 250_000_000))", &format_iso(&a), "unique 2026-11-05T13:30:00.25Z");
-    t.utv("posix_seconds_between(&a, &b)", &posix_seconds_between(&a, &b), "unique 345601/4 POSIX s");
-    t.note("UTV keeps the fraction as an exact rational (0.25 s is 1/4); no floating point anywhere.");
+    let nov1 = CivilDate::of(2026, 11, 1)?;
+    let november = Interval::half_open(nov1, CivilDate::of(2026, 12, 1)?)?;
+    row("UTV", november.contains(&CivilDate::of(2026, 11, 15)?), format!("in {november}")); // definitely  in [2026-11-01, 2026-12-01)
+    let open_ended = Interval::of(Bound::Included(nov1), Bound::Unbounded)?;
+    row("UTV", open_ended.contains(&CivilDate::of(3000, 1, 1)?), format!("in {open_ended}")); // definitely  in [2026-11-01, ..)
+    let unknown_end = Interval::of(Bound::Included(nov1), Bound::Unknown)?;
+    row("UTV", unknown_end.contains(&CivilDate::of(2027, 6, 1)?), format!("in {unknown_end}")); // possibly  in [2026-11-01, ?)
+    // END ranges
+    Ok(())
 }
 
-// ---------- 12 ----------
+fn round_trip() -> Result<(), Box<dyn Error>> {
+    println!("\n14. Round trip");
+    println!("   Native → UTV → native");
+    // BEGIN round-trip
+    let date = NaiveDate::from_ymd_opt(2026, 11, 5).unwrap();
+    let later = CivilDate::from(date).add_days(30);
+    row("UTV", later, "from a NaiveDate, plus 30 days"); // 2026-12-05
+    row("chrono", NaiveDate::try_from(later)?, "and back"); // 2026-12-05
+    match NaiveDate::try_from(CivilDate::of(275_760, 9, 13)?) {
+        Ok(date) => row("chrono", date, ""),
+        Err(why) => row("chrono", "refused", why), // year 275760 is outside chrono's range (out-of-native-range)
+    }
 
-fn durations_vs_periods(t: &mut Tour, rules: &Rules) {
-    t.section("12. Durations vs periods");
-    t.native("TimeDelta::days(1).num_seconds()", TimeDelta::days(1).num_seconds());
-    if let Some(ny) = zone("America/New_York") {
-        if let Some(noon) = ny.with_ymd_and_hms(2026, 10, 31, 12, 0, 0).single() {
-            t.native("noon_oct31_ny + TimeDelta::days(1)", noon + TimeDelta::days(1));
-            t.native("noon_oct31_ny + Days::new(1)", noon.checked_add_days(Days::new(1)).map_or("None".into(), |d| d.to_string()));
-        }
+    // A DateTime<FixedOffset> can mean two things; the type you convert to says which.
+    let written = DateTime::parse_from_rfc3339("2026-11-05T14:30:00+01:00")?;
+    row("UTV", Instant::try_from(written)?, "as an instant"); // 2026-11-05T13:30:00Z
+    row("UTV", FixedOffsetDateTime::try_from(written)?, "as a wall time at +01:00"); // 2026-11-05T14:30:00+01:00
+    // There is no conversion from DateTime<Local>: it depends on the host's zone.
+    // END round-trip
+    Ok(())
+}
+
+/// Prints one output row, aligned: who answered, the answer, and a note. A note that doesn't
+/// fit after the answer goes on the next line, so rows stay within 100 columns. Host-dependent
+/// rows end in ‡.
+fn row(who: &str, text: impl Display, note: impl Display) {
+    let (text, note) = (text.to_string(), note.to_string());
+    let note_column = if 41 + note.chars().count() <= 100 { 41 } else { 13 };
+    if note.is_empty() || (text.chars().count() <= 26 && note_column == 41) {
+        println!("{}", format!("     {who:<8}{text:<26}  {note}").trim_end());
     } else {
-        t.native("America/New_York", "zone not available in this chrono-tz build");
-    }
-    t.note("chrono has both: TimeDelta is exact seconds (11:00 after the clocks go back), Days is calendar days (12:00).");
-
-    let day = period(Period::days(1));
-    let secs = posix_seconds(86_400);
-    t.utv("period(Period::days(1))", &UtvResult::unique(day.clone()), "unique period {\"days\":\"1\"}");
-    t.utv("posix_seconds(86_400)", &UtvResult::unique(secs.clone()), "unique 86400 POSIX s");
-    let noon = in_zone(date_time(2026, 10, 31, 12, 0), "America/New_York");
-    let next = add(&noon, &day, None);
-    t.utv("add(&noon, &period(days 1), None)", &next, "unique 2026-11-01T12:00[America/New_York]");
-    if let Some(next) = next.value() {
-        t.utv("resolve(&that, &rules, None)", &resolve(next, rules, None), "unique 2026-11-01T17:00:00Z");
-    }
-    let start = resolve(&noon, rules, None);
-    if let Some(start) = start.value() {
-        let later = add(start, &secs, None);
-        t.utv("add(&resolve(&noon), &posix_seconds(86_400), None)", &later, "unique 2026-11-01T16:00:00Z");
-        if let Some(later) = later.value() {
-            t.utv("to_zone(&that, \"America/New_York\", &rules)", &to_zone(later, "America/New_York", rules), "unique 2026-11-01T11:00:00-05:00[America/New_York]");
-        }
-        // SI seconds differ from POSIX seconds across a leap second; this library has no leap-second table.
-        let elapsed = json!({"schema": "utv/1.0", "kind": "amount", "value": {"basis": "elapsed", "seconds": {"numerator": "86400", "denominator": "1"}}});
-        t.utv("add(&instant, &elapsed_si_86400, None)", &add(start, &elapsed, None), "unsupported");
-    }
-}
-
-// ---------- 13 ----------
-
-fn ranges(t: &mut Tour) {
-    t.section("13. Ranges");
-    let ymd = |y, m, d| NaiveDate::from_ymd_opt(y, m, d).expect("exists");
-    let november = ymd(2026, 11, 1)..ymd(2026, 12, 1);
-    let december = ymd(2026, 12, 1)..ymd(2027, 1, 1);
-    t.native("(nov1..dec1).contains(&nov15)", november.contains(&ymd(2026, 11, 15)));
-    t.native("nov.start < dec.end && dec.start < nov.end", november.start < december.end && december.start < november.end);
-    t.native("(nov1..).contains(&jan1_3000)", (ymd(2026, 11, 1)..).contains(&ymd(3000, 1, 1)));
-    let unknown_end: Option<NaiveDate> = None;
-    let x = ymd(2027, 6, 1);
-    t.native("end: None; end.is_none_or(|e| x < e)", ymd(2026, 11, 1) <= x && unknown_end.is_none_or(|e| x < e));
-    t.note("Rust ranges have no \"end unknown\": with Option you must pick an answer (here: treat it as open).");
-
-    let nov = interval(date(2026, 11, 1), date(2026, 12, 1));
-    let dec = interval(date(2026, 12, 1), date(2027, 1, 1));
-    t.utv("contains(&nov, &date(2026, 11, 15))", &contains(&nov, &date(2026, 11, 15)), "unique definitely");
-    t.utv("overlaps(&nov, &dec)", &overlaps(&nov, &dec), "unique impossible");
-    let open = interval_with(Endpoint::Included(date(2026, 11, 1)), Endpoint::Unbounded);
-    t.utv("contains(&[nov1, ∞), &date(3000, 1, 1))", &contains(&open, &date(3000, 1, 1)), "unique definitely");
-    let unknown = interval_with(Endpoint::Included(date(2026, 11, 1)), Endpoint::Unknown);
-    t.utv("contains(&[nov1, ?), &date(2027, 6, 1))", &contains(&unknown, &date(2027, 6, 1)), "unique possibly");
-    t.utv("contains(&[nov1, ?), &date(2026, 10, 1))", &contains(&unknown, &date(2026, 10, 1)), "unique impossible");
-}
-
-// ---------- 14 ----------
-
-fn round_trip(t: &mut Tour) {
-    t.section("14. Round trip");
-    let d = NaiveDate::from_ymd_opt(2026, 11, 5).expect("exists");
-    t.native("let d = NaiveDate::from_ymd_opt(2026, 11, 5)", d);
-    let v = from_naive_date(d);
-    t.utv("from_naive_date(d)", &v, "unique 2026-11-05");
-    let later = add(v.value().expect("unique"), &period(Period::days(30)), None);
-    t.back("to_naive_date(&add(.., days 30))", later.value().map_or_else(|| Err(later.clone()), to_naive_date), "ok 2026-12-05");
-
-    let odt = DateTime::parse_from_rfc3339("2026-11-05T14:30:00+01:00").expect("parses");
-    t.native("let odt = DateTime::parse_from_rfc3339(..+01:00)", odt);
-    t.utv("from_fixed_offset(odt, OffsetIntent::Instant)", &from_fixed_offset(odt, OffsetIntent::Instant), "unique 2026-11-05T13:30:00Z");
-    let as_wall = from_fixed_offset(odt, OffsetIntent::OffsetDateTime);
-    t.utv("from_fixed_offset(odt, OffsetIntent::OffsetDateTime)", &as_wall, "unique 2026-11-05T14:30:00+01:00");
-    t.back("to_fixed_offset(&that)", to_fixed_offset(as_wall.value().expect("unique")), "ok 2026-11-05 14:30:00 +01:00");
-
-    // Refusals: a host-local value, and conversions chrono couldn't hold exactly.
-    t.utv("from_local(Local::now())", &from_local(Local::now()), "unsupported");
-    t.back("to_naive_date(&date(275760, 9, 13))", to_naive_date(&date(275760, 9, 13)), "unsupported");
-    t.back("to_fixed_offset(&meeting_in_paris)", to_fixed_offset(&in_zone(date_time(2027, 6, 1, 9, 0), "Europe/Paris")), "unsupported");
-    t.note("Local depends on the host's zone, so it is refused; chrono's years stop near ±262000, and FixedOffset would drop Paris's rules.");
-}
-
-// ---------- printing and checking ----------
-
-#[derive(Default)]
-struct Tour {
-    mismatches: usize,
-}
-
-const W: usize = 52;
-
-/// A candidate as text: ISO 8601 where `format_iso` has a form, amounts compactly, else JSON.
-fn show(c: &Value) -> String {
-    if let Some(s) = c.as_str() {
-        return s.to_owned();
-    }
-    let v = &c["value"];
-    match (c["kind"].as_str(), v["basis"].as_str()) {
-        (Some("amount"), Some("clock-ticks")) => {
-            let (n, d) = (v["seconds"]["numerator"].as_str().unwrap_or("?"), v["seconds"]["denominator"].as_str().unwrap_or("?"));
-            return if d == "1" { format!("{n} POSIX s") } else { format!("{n}/{d} POSIX s") };
-        }
-        (Some("amount"), Some("calendar")) => return format!("period {}", v["components"]),
-        _ => {}
-    }
-    format_iso(c).as_str().map_or_else(|| c.to_string(), str::to_owned)
-}
-
-fn summary(r: &UtvResult) -> String {
-    let shown: Vec<String> = r.candidates.iter().map(show).collect();
-    if shown.is_empty() {
-        r.status.as_str().to_owned()
-    } else {
-        format!("{} {}", r.status.as_str(), shown.join(", "))
-    }
-}
-
-impl Tour {
-    fn section(&self, title: &str) {
-        println!("\n== {title} ==");
-    }
-
-    fn native(&self, code: &str, out: impl std::fmt::Display) {
-        println!("  native  {code:<W$} -> {out}");
-    }
-
-    fn note(&self, text: &str) {
-        println!("  note    {text}");
-    }
-
-    fn mismatch(&mut self, got: &str, expected: &str) {
-        println!("  MISMATCH: expected {expected}, got {got}");
-        self.mismatches += 1;
-    }
-
-    /// A UTV result: its status and candidates, plus the first diagnostic when there are none.
-    fn utv(&mut self, code: &str, r: &UtvResult, expected: &str) {
-        let got = summary(r);
-        match r.diagnostics.first() {
-            Some(d) if r.candidates.is_empty() => println!("  utv     {code:<W$} -> {got} ({}: {})", d.code, d.message),
-            _ => println!("  utv     {code:<W$} -> {got}"),
-        }
-        if got != expected {
-            self.mismatch(&got, expected);
-        }
-    }
-
-    /// A UTV result whose candidate varies between runs (the clock): only the status is checked.
-    fn utv_status(&mut self, code: &str, r: &UtvResult, expected: &str) {
-        println!("  utv     {code:<W$} -> {}", summary(r));
-        if r.status.as_str() != expected {
-            self.mismatch(r.status.as_str(), expected);
-        }
-    }
-
-    /// A conversion back to a native type: `ok <value>`, or the refusal's status and reason.
-    fn back<T: std::fmt::Display>(&mut self, code: &str, r: Result<T, UtvResult>, expected: &str) {
-        let got = match &r {
-            Ok(v) => format!("ok {v}"),
-            Err(e) => e.status.as_str().to_owned(),
-        };
-        match &r {
-            Err(e) if !e.diagnostics.is_empty() => println!("  utv     {code:<W$} -> {got} ({}: {})", e.diagnostics[0].code, e.diagnostics[0].message),
-            _ => println!("  utv     {code:<W$} -> {got}"),
-        }
-        if got != expected {
-            self.mismatch(&got, expected);
-        }
-    }
-
-    fn expect_eq(&mut self, what: &str, got: &str, expected: &str) {
-        println!("  utv     {what:<W$} -> {got}");
-        if got != expected {
-            self.mismatch(got, expected);
-        }
+        let host = if note.ends_with('‡') { " ‡" } else { "" };
+        println!("     {who:<8}{text}{host}");
+        println!("{:note_column$}{note}", "");
     }
 }

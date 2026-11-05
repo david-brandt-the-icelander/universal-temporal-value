@@ -17,7 +17,7 @@ use std::cmp::Ordering;
 use serde_json::{json, Value};
 
 use crate::model::{
-    done, fail, instant_json, kind, posix_seconds_json, range_err, read_amount, read_civil, read_instant, structural, Amount, Civil, Form, Zone, R,
+    done, fail, instant_json, kind, posix_seconds_json, range_err, read_amount, read_civil, read_instant, structural, year_month_text, Amount, Civil, Form, Zone, R,
 };
 use crate::num::{civil_from_days, days_from_civil, days_in_month, is_leap, Q};
 use crate::{Diagnostic, Severity, Status, UtvResult};
@@ -34,7 +34,7 @@ pub fn fields(value: &Value) -> UtvResult {
     done("fields", (|| {
         let c = read_civil(value)?;
         if !c.form.has_date() {
-            return fail(Status::Unsupported, "form", "/value/form", "fields applies to `date` and `datetime` values");
+            return fail(Status::Unsupported, "unsupported-operand", "/value/form", "fields applies to `date` and `datetime` values");
         }
         let days = c.day_number()?;
         let dow = (days + 3).rem_euclid(7) + 1;
@@ -80,27 +80,27 @@ pub fn add(value: &Value, amount: &Value, policy: Option<&Value>) -> UtvResult {
                 let t = read_instant(value)?;
                 match amt {
                     Amount::PosixSeconds(s) => Ok(UtvResult::unique(instant_json(checked(t.add(s))?))),
-                    Amount::Elapsed => fail(Status::Unsupported, "leap-seconds", "/amount", "adding SI (elapsed) seconds to a POSIX instant needs a leap-second table"),
-                    Amount::Calendar(_) => fail(Status::Invalid, "add.calendar-on-instant", "/amount", "an instant has no calendar; resolve a civil value or use posix_seconds"),
-                    Amount::Other(b) => fail(Status::Unsupported, "add.basis", "/amount", format!("amounts of basis `{b}` are not implemented")),
+                    Amount::Elapsed(_) => fail(Status::Unsupported, "needs-leap-seconds", "/amount", "adding SI (elapsed) seconds to a POSIX instant needs a leap-second table"),
+                    Amount::Calendar(_) => fail(Status::Invalid, "kind-mismatch", "/amount", "an instant has no calendar; resolve a civil value or use posix_seconds"),
+                    Amount::Other(b) => fail(Status::Unsupported, "unsupported-operand", "/amount", format!("amounts of basis `{b}` are not implemented")),
                 }
             }
             _ => {
                 let c = read_civil(value)?;
                 let Amount::Calendar(p) = amt else {
-                    return fail(Status::Unsupported, "add.basis", "/amount", "civil values take calendar amounts in this profile");
+                    return fail(Status::Unsupported, "unsupported-operand", "/amount", "civil values take calendar amounts in this profile");
                 };
                 let constrain = match policy.map(|p| p.get("monthEnd").and_then(Value::as_str)) {
                     None | Some(None) | Some(Some("reject")) => false,
                     Some(Some("constrain")) => true,
-                    Some(Some(other)) => return fail(Status::Unsupported, "policy", "/policy/monthEnd", format!("monthEnd policy `{other}` is not implemented")),
+                    Some(Some(other)) => return fail(Status::Unsupported, "unsupported-policy", "/policy/monthEnd", format!("monthEnd policy `{other}` is not implemented")),
                 };
                 let has_time = p.hours != 0 || p.minutes != 0 || p.seconds != 0;
                 match c.form {
-                    Form::Time => return fail(Status::Unsupported, "add.time", "/value/form", "adding to a time of day wraps past midnight and loses information"),
-                    Form::Date if has_time => return fail(Status::Invalid, "add.component", "/amount", "a date takes years, months, weeks and days only"),
+                    Form::Time => return fail(Status::Unsupported, "unsupported-operand", "/value/form", "adding to a time of day wraps past midnight and loses information"),
+                    Form::Date if has_time => return fail(Status::Invalid, "kind-mismatch", "/amount", "a date takes years, months, weeks and days only"),
                     Form::YearMonth if has_time || p.weeks != 0 || p.days != 0 => {
-                        return fail(Status::Invalid, "add.component", "/amount", "a year-month takes years and months only")
+                        return fail(Status::Invalid, "kind-mismatch", "/amount", "a year-month takes years and months only")
                     }
                     _ => {}
                 }
@@ -116,7 +116,7 @@ pub fn add(value: &Value, amount: &Value, policy: Option<&Value>) -> UtvResult {
                 let dim = days_in_month(r.year, r.month);
                 if r.day > dim {
                     if !constrain {
-                        return fail(Status::None, "month-end", "/value/fields/day", format!("{}-{:02} has no day {}; pass {{\"monthEnd\":\"constrain\"}} to clamp", r.year, r.month, r.day));
+                        return fail(Status::None, "month-end", "/value/fields/day", format!("{} has no day {}", year_month_text(r.year, r.month), r.day));
                     }
                     r.day = dim;
                 }
@@ -186,10 +186,10 @@ pub fn compare(a: &Value, b: &Value) -> UtvResult {
         ("civil", "civil") => {
             let (x, y) = (read_civil(a)?, read_civil(b)?);
             if [&x.zone, &y.zone].iter().any(|z| matches!(z, Zone::Iana(_))) {
-                return fail(Status::Unsupported, "compare.zoned", "", "ordering of zoned values depends on zone rules: resolve them to instants first");
+                return fail(Status::Unsupported, "needs-zone-rules", "", "ordering of zoned values depends on zone rules: resolve them to instants first");
             }
             if x.form != y.form {
-                return fail(Status::Unsupported, "compare.forms", "", format!("can't order a `{}` against a `{}`", x.form.as_str(), y.form.as_str()));
+                return fail(Status::Unsupported, "unsupported-operand", "", format!("can't order a `{}` against a `{}`", x.form.as_str(), y.form.as_str()));
             }
             match (&x.zone, &y.zone) {
                 (Zone::Floating, Zone::Floating) => Ok(UtvResult::unique(ordering(x.key().cmp(&y.key())))),
@@ -198,13 +198,13 @@ pub fn compare(a: &Value, b: &Value) -> UtvResult {
                     let ty = checked(y.local_seconds()?.sub(Q::int(*oy as i128)))?;
                     Ok(UtvResult::unique(ordering(checked(tx.cmp(ty))?)))
                 }
-                _ => fail(Status::Unsupported, "compare.zones", "", "these values have different or unsupported zone kinds"),
+                _ => fail(Status::Unsupported, "unsupported-operand", "", "these values have different or unsupported zone kinds"),
             }
         }
         _ => {
             structural(a)?;
             structural(b)?;
-            fail(Status::Unsupported, "compare.kinds", "", format!("can't order `{}` against `{}`", kind(a), kind(b)))
+            fail(Status::Unsupported, "unsupported-operand", "", format!("can't order `{}` against `{}`", kind(a), kind(b)))
         }
     })())
 }
@@ -214,7 +214,7 @@ pub fn compare(a: &Value, b: &Value) -> UtvResult {
 fn read_date(v: &Value) -> R<(i128, Zone)> {
     let c = read_civil(v)?;
     if c.form != Form::Date {
-        return fail(Status::Unsupported, "form", "/value/form", "expected a `date` value");
+        return fail(Status::Unsupported, "unsupported-operand", "/value/form", "expected a `date` value");
     }
     Ok((c.day_number()?, c.zone))
 }
@@ -225,7 +225,7 @@ fn same_zone<'a>(zones: impl IntoIterator<Item = &'a Zone>) -> R<()> {
     let mut zones = zones.into_iter();
     let first = zones.next();
     if zones.any(|z| Some(z) != first) {
-        return fail(Status::Unsupported, "zone.mixed", "", "dates in different zones (or zoned and unzoned) can't be related without zone rules");
+        return fail(Status::Unsupported, "different-zones", "", "dates in different zones (or zoned and unzoned) can't be related without zone rules");
     }
     Ok(())
 }
@@ -313,23 +313,23 @@ fn read_point(v: &Value, domain: Domain, zones: &mut Vec<Zone>) -> R<Q> {
             Q::int(d)
         }),
         (Domain::Instants, "instant") => read_instant(v),
-        _ => fail(Status::Unsupported, "interval.domain", "", "points must be dates in a civil/gregory interval and instants in a physical one"),
+        _ => fail(Status::Unsupported, "unsupported-operand", "", "points must be dates in a civil/gregory interval and instants in a physical one"),
     }
 }
 
 fn read_interval(v: &Value) -> R<Interval> {
     structural(v)?;
     if kind(v) != "interval" {
-        return fail(Status::Unsupported, "kind", "/kind", format!("expected an `interval`, got `{}`", kind(v)));
+        return fail(Status::Unsupported, "unsupported-operand", "/kind", format!("expected an `interval`, got `{}`", kind(v)));
     }
     let val = &v["value"];
     let domain = match val["domain"].as_str() {
         Some("civil/gregory") => Domain::Dates,
         Some("physical") => Domain::Instants,
-        _ => return fail(Status::Unsupported, "interval.domain", "/value/domain", "only civil/gregory and physical intervals are implemented"),
+        _ => return fail(Status::Unsupported, "unsupported-operand", "/value/domain", "only civil/gregory and physical intervals are implemented"),
     };
     if val.get("construction").is_some_and(|c| c != "start-end") {
-        return fail(Status::Unsupported, "interval.construction", "/value/construction", "only start-end intervals are implemented");
+        return fail(Status::Unsupported, "unsupported-operand", "/value/construction", "only start-end intervals are implemented");
     }
     let mut zones = Vec::new();
     let mut bound = |b: &Value| -> R<Bound> {
@@ -411,7 +411,7 @@ pub fn overlaps(a: &Value, b: &Value) -> UtvResult {
     done("overlaps", (|| {
         let (a, b) = (read_interval(a)?, read_interval(b)?);
         if a.domain != b.domain {
-            return fail(Status::Unsupported, "interval.domain", "", "can't relate intervals of different domains");
+            return fail(Status::Unsupported, "unsupported-operand", "", "can't relate intervals of different domains");
         }
         same_zone(a.zones.iter().chain(&b.zones))?;
         let (a, b) = (a.half_open()?, b.half_open()?);

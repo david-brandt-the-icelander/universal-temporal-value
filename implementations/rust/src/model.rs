@@ -13,7 +13,7 @@ pub(crate) fn fail<T>(status: Status, code: &str, path: &str, message: impl Into
 }
 
 pub(crate) fn range_err<T>(path: &str) -> R<T> {
-    fail(Status::Unsupported, "range", path, "value outside the range this library computes with (i128)")
+    fail(Status::Unsupported, "implementation-limit", path, "value outside the range this library computes with (i128)")
 }
 
 /// Unwrap a computation result (or the `UtvResult` for whatever went wrong), named after the operation.
@@ -98,6 +98,11 @@ pub(crate) enum Zone {
     Other(String),
 }
 
+/// `2026-02`: a year and month as text, for messages.
+pub(crate) fn year_month_text(year: i128, month: u32) -> String {
+    format!("{}-{month:02}", crate::iso::fmt_year(year))
+}
+
 /// Offsets beyond ±18:00 are invalid (RFC 3339 / ISO 8601 profile bound).
 pub(crate) const MAX_OFFSET: i64 = 18 * 3600;
 
@@ -139,7 +144,7 @@ impl Civil {
     /// Set date and time fields from local seconds; `second` is always set, `nano` when non-zero.
     pub fn set_from_seconds(&mut self, q: Q) -> R<()> {
         let Some(nano) = q.frac_nanos() else {
-            return fail(Status::Unsupported, "precision", "/value/subTick", "the fraction of a second is finer than a nanosecond, which civil fields can't hold");
+            return fail(Status::Unsupported, "implementation-limit", "/value/subTick", "the fraction of a second is finer than a nanosecond, which civil fields can't hold");
         };
         let secs = q.floor();
         let (days, sod) = (secs.div_euclid(86_400), secs.rem_euclid(86_400) as u32);
@@ -206,7 +211,7 @@ fn int_field(f: &Value, name: &str) -> R<Option<i64>> {
         None => Ok(None),
         Some(x) => match x.as_i64() {
             Some(n) => Ok(Some(n)),
-            None => fail(Status::Invalid, "civil.field", &format!("/value/fields/{name}"), format!("`{name}` must be an integer")),
+            None => fail(Status::Invalid, "malformed-value", &format!("/value/fields/{name}"), format!("`{name}` must be an integer")),
         },
     }
 }
@@ -217,23 +222,23 @@ fn int_field(f: &Value, name: &str) -> R<Option<i64>> {
 pub(crate) fn read_civil(v: &Value) -> R<Civil> {
     structural(v)?;
     if kind(v) != "civil" {
-        return fail(Status::Unsupported, "kind", "/kind", format!("expected a `civil` value, got `{}`", kind(v)));
+        return fail(Status::Unsupported, "unsupported-operand", "/kind", format!("expected a `civil` value, got `{}`", kind(v)));
     }
     let val = &v["value"];
     if val["calendar"]["id"] != "gregory" || val["calendar"]["chronology"] != "proleptic" {
-        return fail(Status::Unsupported, "calendar", "/value/calendar", "only the proleptic Gregorian calendar is implemented");
+        return fail(Status::Unsupported, "unsupported-calendar", "/value/calendar", "only the proleptic Gregorian calendar is implemented");
     }
     let form_s = val["form"].as_str().unwrap_or("");
     let Some(form) = Form::parse(form_s) else {
-        return fail(Status::Unsupported, "form", "/value/form", format!("form `{form_s}` is not part of the everyday API"));
+        return fail(Status::Unsupported, "unsupported-operand", "/value/form", format!("form `{form_s}` is not part of the everyday API"));
     };
     let f = &val["fields"];
     let names = f.as_object().map(|o| o.keys().cloned().collect::<Vec<_>>()).unwrap_or_default();
     if let Some(extra) = names.iter().find(|k| !form.fields().contains(&k.as_str())) {
-        return fail(Status::Invalid, "civil.field", &format!("/value/fields/{extra}"), format!("field `{extra}` doesn't belong to form `{form_s}`"));
+        return fail(Status::Invalid, "malformed-value", &format!("/value/fields/{extra}"), format!("field `{extra}` doesn't belong to form `{form_s}`"));
     }
     if let Some(missing) = form.required().iter().find(|k| f.get(**k).is_none()) {
-        return fail(Status::Invalid, "civil.field", "/value/fields", format!("form `{form_s}` needs field `{missing}`"));
+        return fail(Status::Invalid, "malformed-value", "/value/fields", format!("form `{form_s}` needs field `{missing}`"));
     }
     let mut c = Civil::new(form);
     if let Some(y) = f.get("year").and_then(Value::as_str) {
@@ -244,15 +249,21 @@ pub(crate) fn read_civil(v: &Value) -> R<Civil> {
     }
     let check = |name: &str, lo: i64, hi: i64| -> R<Option<u32>> {
         match int_field(f, name)? {
-            Some(n) if n < lo || n > hi => fail(Status::Invalid, &format!("civil.{name}"), &format!("/value/fields/{name}"), format!("{name} {n} is out of range {lo}..={hi}")),
+            Some(n) if n < lo || n > hi => fail(Status::Invalid, "field-out-of-range", &format!("/value/fields/{name}"), format!("{name} {n} is out of range {lo}..={hi}")),
             n => Ok(n.map(|n| n as u32)),
         }
     };
-    if let Some(m) = check("month", 1, 12)? {
-        c.month = m;
+    match int_field(f, "month")? {
+        Some(m) if !(1..=12).contains(&m) => return fail(Status::Invalid, "month-out-of-range", "/value/fields/month", format!("there is no month {m}")),
+        Some(m) => c.month = m as u32,
+        None => {}
     }
-    if let Some(d) = check("day", 1, days_in_month(c.year, c.month) as i64)? {
-        c.day = d;
+    match int_field(f, "day")? {
+        Some(d) if d < 1 || d > days_in_month(c.year, c.month) as i64 => {
+            return fail(Status::Invalid, "day-out-of-range", "/value/fields/day", format!("{} has no day {d}", year_month_text(c.year, c.month)))
+        }
+        Some(d) => c.day = d as u32,
+        None => {}
     }
     if let Some(h) = check("hour", 0, 23)? {
         c.hour = h;
@@ -273,7 +284,7 @@ pub(crate) fn read_civil(v: &Value) -> R<Civil> {
             "fixed-offset" => {
                 let s = z["seconds"].as_i64().unwrap_or(i64::MAX);
                 if s.abs() > MAX_OFFSET {
-                    return fail(Status::Invalid, "zone.offset", "/value/zone/seconds", "offset beyond ±18:00");
+                    return fail(Status::Invalid, "offset-out-of-range", "/value/zone/seconds", "offset beyond ±18:00");
                 }
                 Zone::Fixed(s)
             }
@@ -288,14 +299,14 @@ pub(crate) fn read_civil(v: &Value) -> R<Civil> {
 pub(crate) fn read_instant(v: &Value) -> R<Q> {
     structural(v)?;
     if kind(v) != "instant" {
-        return fail(Status::Unsupported, "kind", "/kind", format!("expected an `instant`, got `{}`", kind(v)));
+        return fail(Status::Unsupported, "unsupported-operand", "/kind", format!("expected an `instant`, got `{}`", kind(v)));
     }
     let val = &v["value"];
     if val["system"] != posix() {
-        return fail(Status::Unsupported, "timescale", "/value/system", "only the unix-posix timescale is implemented");
+        return fail(Status::Unsupported, "unsupported-operand", "/value/system", "only the unix-posix timescale is implemented");
     }
     let Some(ticks) = val["ticks"].as_str() else {
-        return fail(Status::Unsupported, "instant.coordinate", "/value", "instants given by `coordinate` are not implemented");
+        return fail(Status::Unsupported, "unsupported-form", "/value", "instants given by `coordinate` are not implemented");
     };
     let Ok(ticks) = ticks.parse::<i128>() else { return range_err("/value/ticks") };
     let total = match val.get("subTick") {
@@ -347,20 +358,21 @@ pub(crate) struct Components {
 pub(crate) enum Amount {
     Calendar(Components),
     PosixSeconds(Q),
-    Elapsed,
+    /// SI seconds, when given as an exact rational.
+    Elapsed(Option<Q>),
     Other(String),
 }
 
 pub(crate) fn read_amount(v: &Value) -> R<Amount> {
     structural(v)?;
     if kind(v) != "amount" {
-        return fail(Status::Invalid, "kind", "/kind", format!("expected an `amount`, got `{}`", kind(v)));
+        return fail(Status::Invalid, "kind-mismatch", "/kind", format!("expected an `amount`, got `{}`", kind(v)));
     }
     let val = &v["value"];
     match val["basis"].as_str().unwrap_or("") {
         "calendar" => {
             let Some(comps) = val.get("components").and_then(Value::as_object) else {
-                return fail(Status::Invalid, "amount.components", "/value", "a calendar amount needs `components`");
+                return fail(Status::Invalid, "malformed-value", "/value", "a calendar amount needs `components`");
             };
             let mut c = Components::default();
             for (k, x) in comps {
@@ -373,27 +385,27 @@ pub(crate) fn read_amount(v: &Value) -> R<Amount> {
                     "hours" => &mut c.hours,
                     "minutes" => &mut c.minutes,
                     "seconds" => &mut c.seconds,
-                    _ => return fail(Status::Unsupported, "amount.component", &path, format!("component `{k}` is not part of the everyday API")),
+                    _ => return fail(Status::Unsupported, "unsupported-operand", &path, format!("component `{k}` is not part of the everyday API")),
                 };
                 let s = x.as_str().unwrap_or("");
                 *slot = match s.parse::<i128>() {
                     Ok(n) => n,
-                    Err(_) if is_decimal(s) => return fail(Status::Unsupported, "amount.fraction", &path, "fractional or out-of-range components are not implemented"),
-                    Err(_) => return fail(Status::Invalid, "amount.component", &path, "components are decimal strings"),
+                    Err(_) if is_decimal(s) => return fail(Status::Unsupported, "unsupported-form", &path, "fractional or out-of-range components are not implemented"),
+                    Err(_) => return fail(Status::Invalid, "malformed-value", &path, "components are decimal strings"),
                 };
             }
             Ok(Amount::Calendar(c))
         }
         "clock-ticks" => {
             if val["rules"] != posix() {
-                return fail(Status::Unsupported, "amount.rules", "/value/rules", "only POSIX clock-tick amounts are implemented");
+                return fail(Status::Unsupported, "unsupported-operand", "/value/rules", "only POSIX clock-tick amounts are implemented");
             }
             match val.get("seconds").and_then(read_rational) {
                 Some(q) => Ok(Amount::PosixSeconds(q)),
-                None => fail(Status::Invalid, "amount.seconds", "/value/seconds", "a clock-ticks amount needs `seconds`"),
+                None => fail(Status::Invalid, "malformed-value", "/value/seconds", "a clock-ticks amount needs `seconds`"),
             }
         }
-        "elapsed" => Ok(Amount::Elapsed),
+        "elapsed" => Ok(Amount::Elapsed(val.get("seconds").and_then(read_rational))),
         other => Ok(Amount::Other(other.to_owned())),
     }
 }

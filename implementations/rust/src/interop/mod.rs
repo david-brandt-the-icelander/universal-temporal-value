@@ -15,7 +15,7 @@
 //!
 //! `std` has no calendar types, only [`SystemTime`], which maps to an instant. Calendar types
 //! come from the de-facto standard `chrono` crate, behind the optional cargo feature `chrono`
-//! (module [`chrono`](crate::interop::chrono)).
+//! (module [`chrono`]).
 
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
@@ -39,7 +39,7 @@ pub fn from_system_time(t: SystemTime) -> UtvResult {
         let q = Q::from_secs_nanos(d.as_secs() as i128, d.subsec_nanos()).and_then(|q| if sign < 0 { q.neg() } else { Some(q) });
         match q {
             Some(q) => UtvResult::unique(instant_json(q)),
-            None => UtvResult::fail(Status::Unsupported, "range", "", "SystemTime out of range"),
+            None => UtvResult::fail(Status::Unsupported, "implementation-limit", "", "SystemTime out of range"),
         }
     })
 }
@@ -54,14 +54,14 @@ pub fn to_system_time(instant: &Value) -> Result<SystemTime, UtvResult> {
         // Round-trip check: catches platforms with coarser resolution than nanoseconds.
         match from_system_time(t).value() {
             Some(back) if read_instant(back).ok() == Some(q) => Ok(t),
-            _ => lossy("precision", "SystemTime on this platform can't hold this instant exactly"),
+            _ => lossy("precision-loss", "SystemTime on this platform can't hold this instant exactly"),
         }
     })
 }
 
 fn system_time_of(q: Q) -> R<SystemTime> {
     let Some(nanos) = q.frac_nanos() else {
-        return lossy("precision", "SystemTime holds whole nanoseconds; this instant has a finer fraction");
+        return lossy("precision-loss", "SystemTime holds whole nanoseconds; this instant has a finer fraction");
     };
     let secs = q.floor();
     let t = if secs >= 0 {
@@ -75,7 +75,15 @@ fn system_time_of(q: Q) -> R<SystemTime> {
             .and_then(|s| UNIX_EPOCH.checked_sub(Duration::from_secs(s)))
             .and_then(|t| t.checked_add(Duration::from_nanos(nanos as u64)))
     };
-    t.map_or_else(|| lossy("range", "outside the range of SystemTime on this platform"), Ok)
+    t.map_or_else(|| lossy("out-of-native-range", "outside the range of SystemTime on this platform"), Ok)
+}
+
+impl TryFrom<crate::Instant> for SystemTime {
+    type Error = crate::Diagnostics;
+    /// `Err` (`out-of-native-range`, `precision-loss`) when `SystemTime` can't hold the instant exactly.
+    fn try_from(at: crate::Instant) -> Result<SystemTime, crate::Diagnostics> {
+        to_system_time(&at.to_json()).map_err(crate::typed::rejected)
+    }
 }
 
 /// Name a conversion's result after its operation, `convert`.
@@ -89,7 +97,7 @@ pub(crate) fn convert_back<T>(f: impl FnOnce() -> R<T>) -> Result<T, UtvResult> 
 }
 
 pub(crate) fn lossy<T>(code: &str, message: impl Into<String>) -> R<T> {
-    fail(Status::Unsupported, &format!("interop.{code}"), "", message)
+    fail(Status::Unsupported, code, "", message)
 }
 
 #[cfg(test)]

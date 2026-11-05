@@ -123,7 +123,7 @@ pub fn from_local(_dt: DateTime<Local>) -> UtvResult {
     convert({
         UtvResult::fail(
             Status::Unsupported,
-            "interop.local-zone",
+            "local-zone",
             "",
             "chrono::Local depends on the host's time zone; convert with an explicit intent (from_fixed_offset or from_utc) instead",
         )
@@ -136,7 +136,7 @@ fn instant_of(secs: i64, nanos: u32) -> UtvResult {
     }
     match Q::from_secs_nanos(secs as i128, nanos) {
         Some(q) => UtvResult::unique(instant_json(q)),
-        None => UtvResult::fail(Status::Unsupported, "range", "", "out of range"),
+        None => UtvResult::fail(Status::Unsupported, "implementation-limit", "", "out of range"),
     }
 }
 
@@ -145,11 +145,11 @@ fn instant_of(secs: i64, nanos: u32) -> UtvResult {
 fn read_form(v: &Value, form: Form, zone_ok: bool) -> R<Civil> {
     if kind(v) != "civil" {
         crate::model::structural(v)?;
-        return lossy("kind", format!("a `{}` value is not a chrono {}", kind(v), form.as_str()));
+        return lossy("unsupported-operand", format!("a `{}` value is not a chrono {}", kind(v), form.as_str()));
     }
     let c = read_civil(v)?;
     if c.form != form {
-        return lossy("form", format!("expected a `{}`, got a `{}`", form.as_str(), c.form.as_str()));
+        return lossy("unsupported-operand", format!("expected a `{}`, got a `{}`", form.as_str(), c.form.as_str()));
     }
     if !zone_ok && c.zone != Zone::Floating {
         return lossy("zone-dropped", "this chrono type has no zone or offset; converting would drop it");
@@ -161,12 +161,12 @@ fn naive_date(c: &Civil) -> R<NaiveDate> {
     i32::try_from(c.year)
         .ok()
         .and_then(|y| NaiveDate::from_ymd_opt(y, c.month, c.day))
-        .map_or_else(|| lossy("range", format!("year {} is outside chrono's range", c.year)), Ok)
+        .map_or_else(|| lossy("out-of-native-range", format!("year {} is outside chrono's range", c.year)), Ok)
 }
 
 fn naive_time(c: &Civil) -> R<NaiveTime> {
     NaiveTime::from_hms_nano_opt(c.hour, c.minute, c.second.unwrap_or(0), c.nano.unwrap_or(0))
-        .map_or_else(|| lossy("range", "time out of chrono's range"), Ok)
+        .map_or_else(|| lossy("out-of-native-range", "time out of chrono's range"), Ok)
 }
 
 /// A UTV `date` (unzoned) as a `NaiveDate`.
@@ -202,16 +202,16 @@ pub fn to_fixed_offset(v: &Value) -> Result<DateTime<FixedOffset>, UtvResult> {
                     "a named-zone intention can't become a FixedOffset without losing its rules; resolve it first",
                 )
             }
-            _ => return lossy("zone-missing", "an unzoned date-time has no offset; use to_naive_date_time"),
+            _ => return lossy("unsupported-operand", "an unzoned date-time has no offset; use to_naive_date_time"),
         };
         let off = i32::try_from(offset)
             .ok()
             .and_then(FixedOffset::east_opt)
-            .map_or_else(|| lossy("range", "offset outside chrono's range"), Ok)?;
+            .map_or_else(|| lossy("out-of-native-range", "offset outside chrono's range"), Ok)?;
         let local = NaiveDateTime::new(naive_date(&c)?, naive_time(&c)?);
         off.from_local_datetime(&local)
             .single()
-            .map_or_else(|| lossy("range", "outside chrono's range"), Ok)
+            .map_or_else(|| lossy("out-of-native-range", "outside chrono's range"), Ok)
     })
 }
 
@@ -221,13 +221,113 @@ pub fn to_utc(v: &Value) -> Result<DateTime<Utc>, UtvResult> {
     convert_back(|| {
         let q = read_instant(v)?;
         let Some(nanos) = q.frac_nanos() else {
-            return lossy("precision", "chrono holds whole nanoseconds; this instant has a finer fraction");
+            return lossy("precision-loss", "chrono holds whole nanoseconds; this instant has a finer fraction");
         };
         i64::try_from(q.floor())
             .ok()
             .and_then(|s| DateTime::from_timestamp(s, nanos))
-            .map_or_else(|| lossy("range", "outside chrono's range"), Ok)
+            .map_or_else(|| lossy("out-of-native-range", "outside chrono's range"), Ok)
     })
+}
+
+// ---------- typed values ----------
+//
+// The target type names the intent: `Instant::try_from(dt)` or `FixedOffsetDateTime::try_from(dt)`
+// for a `DateTime<FixedOffset>`. There is deliberately no conversion from `DateTime<Local>`.
+
+use crate::typed::{rejected, Typed};
+use crate::{CivilDate, CivilDateTime, CivilTime, Diagnostics, FixedOffsetDateTime, Instant};
+
+fn typed<T: Typed>(r: UtvResult) -> Result<T, Diagnostics> {
+    match r.value() {
+        Some(v) => T::read(v).map_err(rejected),
+        None => Err(rejected(r)),
+    }
+}
+
+fn native<T>(r: Result<T, UtvResult>) -> Result<T, Diagnostics> {
+    r.map_err(rejected)
+}
+
+impl From<NaiveDate> for CivilDate {
+    fn from(d: NaiveDate) -> CivilDate {
+        typed(from_naive_date(d)).expect("every NaiveDate is a civil date")
+    }
+}
+
+impl TryFrom<CivilDate> for NaiveDate {
+    type Error = Diagnostics;
+    /// `Err` (`out-of-native-range`) for years beyond chrono's range (about ±262 000).
+    fn try_from(d: CivilDate) -> Result<NaiveDate, Diagnostics> {
+        native(to_naive_date(&d.to_json()))
+    }
+}
+
+impl TryFrom<NaiveTime> for CivilTime {
+    type Error = Diagnostics;
+    /// Always with a second. `Err` (`leap-second`) for chrono's leap-second representation.
+    fn try_from(t: NaiveTime) -> Result<CivilTime, Diagnostics> {
+        typed(from_naive_time(t))
+    }
+}
+
+impl From<CivilTime> for NaiveTime {
+    /// A missing second becomes 0.
+    fn from(t: CivilTime) -> NaiveTime {
+        to_naive_time(&t.to_json()).expect("every civil time fits a NaiveTime")
+    }
+}
+
+impl TryFrom<NaiveDateTime> for CivilDateTime {
+    type Error = Diagnostics;
+    fn try_from(dt: NaiveDateTime) -> Result<CivilDateTime, Diagnostics> {
+        typed(from_naive_date_time(dt))
+    }
+}
+
+impl TryFrom<CivilDateTime> for NaiveDateTime {
+    type Error = Diagnostics;
+    fn try_from(dt: CivilDateTime) -> Result<NaiveDateTime, Diagnostics> {
+        native(to_naive_date_time(&dt.to_json()))
+    }
+}
+
+impl TryFrom<DateTime<FixedOffset>> for Instant {
+    type Error = Diagnostics;
+    /// The point on the timeline; the offset was only how it was written.
+    fn try_from(dt: DateTime<FixedOffset>) -> Result<Instant, Diagnostics> {
+        typed(from_fixed_offset(dt, OffsetIntent::Instant))
+    }
+}
+
+impl TryFrom<DateTime<FixedOffset>> for FixedOffsetDateTime {
+    type Error = Diagnostics;
+    /// The wall time at that offset.
+    fn try_from(dt: DateTime<FixedOffset>) -> Result<FixedOffsetDateTime, Diagnostics> {
+        typed(from_fixed_offset(dt, OffsetIntent::OffsetDateTime))
+    }
+}
+
+impl TryFrom<FixedOffsetDateTime> for DateTime<FixedOffset> {
+    type Error = Diagnostics;
+    fn try_from(dt: FixedOffsetDateTime) -> Result<DateTime<FixedOffset>, Diagnostics> {
+        native(to_fixed_offset(&dt.to_json()))
+    }
+}
+
+impl TryFrom<DateTime<Utc>> for Instant {
+    type Error = Diagnostics;
+    fn try_from(dt: DateTime<Utc>) -> Result<Instant, Diagnostics> {
+        typed(from_utc(dt))
+    }
+}
+
+impl TryFrom<Instant> for DateTime<Utc> {
+    type Error = Diagnostics;
+    /// `Err` (`out-of-native-range`, `precision-loss`) when chrono can't hold the instant exactly.
+    fn try_from(at: Instant) -> Result<DateTime<Utc>, Diagnostics> {
+        native(to_utc(&at.to_json()))
+    }
 }
 
 #[cfg(test)]
@@ -304,6 +404,29 @@ mod tests {
         assert!(unsupported(to_utc(&date(2026, 11, 5)).map(drop)));
         // Invalid input stays invalid.
         assert_eq!(to_naive_date(&date(2026, 2, 30)).unwrap_err().status, Status::Invalid);
+    }
+
+    #[test]
+    fn typed_conversions() {
+        let d = NaiveDate::from_ymd_opt(2026, 11, 5).unwrap();
+        let civil = CivilDate::from(d);
+        assert_eq!(civil.to_string(), "2026-11-05");
+        assert_eq!(NaiveDate::try_from(civil.add_days(30)), Ok(NaiveDate::from_ymd_opt(2026, 12, 5).unwrap()));
+        let far = CivilDate::of(275_760, 9, 13).unwrap();
+        assert_eq!(NaiveDate::try_from(far).unwrap_err().codes(), ["out-of-native-range"]);
+        let odt = DateTime::parse_from_rfc3339("2026-11-05T14:30:00+01:00").unwrap();
+        assert_eq!(Instant::try_from(odt).unwrap().to_string(), "2026-11-05T13:30:00Z");
+        let wall = FixedOffsetDateTime::try_from(odt).unwrap();
+        assert_eq!(wall.to_string(), "2026-11-05T14:30:00+01:00");
+        assert_eq!(DateTime::<FixedOffset>::try_from(wall), Ok(odt));
+        let t = NaiveTime::from_hms_opt(9, 30, 0).unwrap();
+        assert_eq!(NaiveTime::from(CivilTime::try_from(t).unwrap()), t);
+        let leap = NaiveTime::from_hms_nano_opt(23, 59, 59, 1_500_000_000).unwrap();
+        assert_eq!(CivilTime::try_from(leap).unwrap_err().codes(), ["leap-second"]);
+        let utc = DateTime::from_timestamp(1_793_885_400, 5).unwrap();
+        assert_eq!(DateTime::<Utc>::try_from(Instant::try_from(utc).unwrap()), Ok(utc));
+        let naive = d.and_hms_opt(23, 30, 0).unwrap();
+        assert_eq!(NaiveDateTime::try_from(CivilDateTime::try_from(naive).unwrap()), Ok(naive));
     }
 
     #[test]

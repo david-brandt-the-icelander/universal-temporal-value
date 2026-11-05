@@ -31,7 +31,7 @@ These rules apply to every type:
   - `TryOf` returns an `Outcome` instead of raising.
   - Rust has no exceptions, so its `of` returns `Result<T, Diagnostics>`.
 - **Years are arbitrary precision.** That's `BigInteger` in C# and Java, `int` in Python, `bigint` in TypeScript, and `i128` in Rust, where anything beyond the range gives `unsupported` with `implementation-limit`.
-- **Seconds are optional.** `CivilTime` and `CivilDateTime` remember whether a second was given (`09:30` and `09:30:00` are different texts). Comparisons treat a missing second as 0.
+- **Seconds are optional.** `CivilTime` and `CivilDateTime` remember whether a second was given (`09:30` and `09:30:00` are different texts). Comparisons treat a missing second as 0. Where a language requires ordering to agree with equality (Rust's `Ord`, Java's `compareTo` contract), ties between equal times break by representation, so `09:30` comes before `09:30:00`.
 - **Value semantics.** Equality is representation equality: same JSON, same value. Values are hashable and immutable.
 - **Text output.** `ToString()` (`__str__`, `Display`, `toString`) returns the [text form](text-form.md):
   - `PosixSeconds` and `ElapsedSeconds` have no text form, so they return a display string instead: `3600.75 s (POSIX)`, `86400 s (SI)`. Terminating fractions print as decimals; others as a fraction, `1/3 s (POSIX)`.
@@ -62,6 +62,8 @@ An operation returns a plain value when it can't fail for valid inputs. Only a p
 | `Period`, `PosixSeconds`, `ElapsedSeconds` | components; `Negate()`; equality | — |
 | `Interval<T>` | `Contains(T)` and `Overlaps(Interval<T>)` return `Truth` (`Definitely` / `Possibly` / `Impossible`); `Start`, `End` | — |
 
+**Offsets as arguments.** An offset argument can be out of range (beyond ±18:00), so `AtOffset(seconds)` validates like a constructor: it raises an argument error, or returns `Result` in Rust (`offset-out-of-range`).
+
 **Policy overloads.** A policy argument can't change the return type, so the total overload `AddMonths(n, monthEnd)` (and `AddYears`) accepts only `Constrain`. Passing `Reject` is a programming error (an argument exception, or `Err` in Rust). The rejecting form is the overload without a policy, which returns an `Outcome`. The same applies to any other policy overload documented as total.
 
 Every operation must agree with the JSON-level everyday API, and so with the fixtures. Implementations should call the 0.2 functions underneath rather than re-implement them.
@@ -86,7 +88,7 @@ Each language uses its own exhaustive sum type:
 |---|---|---|
 | C# | `abstract record Outcome<T>` with nested `sealed record`s `Unique(T Value)`, `Multiple(IReadOnlyList<T> Values)`, `None`, `Unsupported`, `Invalid` | `switch` expression with a type pattern per case |
 | Java 21 | `sealed interface Outcome<T>` with `record`s `Unique<T>(T value, …)`, `Multiple<T>`, `None<T>`, `Unsupported<T>`, `Invalid<T>` | pattern `switch` (the library moves to Java 21) |
-| Rust | `enum Outcome<T> { Unique(T), Multiple(Vec<T>), None(Diagnostics), Unsupported(Diagnostics), Invalid(Diagnostics) }`. Diagnostics for `Unique`/`Multiple` come from `.diagnostics()` | `match` |
+| Rust | `enum Outcome<T> { Unique(T, Diagnostics), Multiple(Vec<T>, Diagnostics), None(Diagnostics), Unsupported(Diagnostics), Invalid(Diagnostics) }`. Every case carries its diagnostics, and `.diagnostics()` works on all of them | `match`, e.g. `Outcome::Unique(date, _)` |
 | TypeScript | `type Outcome<T> = { status: "unique"; value: T; diagnostics } \| { status: "multiple"; values: T[]; … } \| { status: "none"; … } \| …` | `switch (o.status)` with an exhaustive `never` check |
 | Python | frozen dataclasses `Unique[T]`, `Multiple[T]`, `NoneOf[T]` (`None` is a keyword), `Unsupported[T]`, `Invalid[T]`, and `Outcome = Unique \| Multiple \| …` | `match` |
 
@@ -187,6 +189,7 @@ Names never stutter: `Parse`/`Format`, not `ParseIso`/`FormatIso`. The 0.2 names
 Where a name collides with the language itself, each library records the deviation in its README:
 - **Python:** `Period.of_days` / `of_months` / … because a `days` classmethod would clash with the `days` component; `TemporalContext(rules)` / `TemporalContext.with_rules(rules)` because `with` is a keyword.
 - **Java:** `TemporalValue.parse(text)` because `Utv.parse(String)` is the 0.2 JSON parser.
+- **Rust:** no overloads, so the total forms are separate methods, `add_months_constrained(n)` / `add_years_constrained(n)`, and `add_with(Period, MonthEnd)` takes a policy.
 
 ## 7. Examples (all five languages)
 

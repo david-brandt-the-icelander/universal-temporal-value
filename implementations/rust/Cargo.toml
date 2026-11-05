@@ -1,8 +1,8 @@
 [package]
 name = "utv"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
-description = "Universal Temporal Value (utv/1.0): validation and the everyday API (parse, format, add, compare, resolve)"
+description = "Universal Temporal Value (utv/1.0): typed dates, times, instants and periods with honest outcomes, over the JSON-level everyday API"
 license-file = "../../LICENSE"
 
 [features]
@@ -25,6 +25,9 @@ chrono-tz = "0.10"
 name = "everyday"
 required-features = ["chrono"]
 
+# Snapshot test of the example. No libtest harness: it runs the example in a child process
+# (itself, with an environment variable set) and compares the output with the snapshot.
 [[test]]
 name = "everyday_example"
 required-features = ["chrono"]
+harness = false
