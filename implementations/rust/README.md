@@ -16,9 +16,8 @@ println!("{}", jan31.add_months_constrained(1));              // 2026-02-28, bec
 ```
 
 ```
-cargo run --example everyday --features chrono    # 14 everyday tasks, chrono next to UTV
-cargo run --example traditional                   # the shared catalog of traditional tasks
-cargo test --all-features                         # everything, including the example's snapshot
+cargo test                    # everything, including the two example suites (UTV first, native first)
+cargo test --test utv_first   # just the examples, organized by UTV type and function
 ```
 
 Rust library for the Universal Temporal Value specification, wire version `utv/1.0`, results
@@ -168,24 +167,25 @@ years and day counts are `i128`, fractions reduced `i128` rationals; anything be
 
 ## Examples
 
-**Everyday** ([`examples/everyday.rs`](examples/everyday.rs)): the same 14 sections in every
-language (now, a date, invalid dates, adding, days between, times, offsets, time zones, DST gap,
-DST overlap, timestamps, durations vs periods, ranges, round trip). Each task is plain code:
-chrono first, then UTV, with a real `match` on the outcome where the answer can be none or
-many, and each printed line's output as a trailing comment. `// BEGIN <task-id>` / `// END
-<task-id>` markers feed `docs/side-by-side.md`. One small `row(who, text, note)` helper aligns
-the output; a note that doesn't fit after a long value goes on the next line, so every line
-stays within 100 columns. chrono and chrono-tz are dev-dependencies.
+There are no example programs: every example is a unit test, so it runs with `cargo test` and
+can't drift from what the library does. Two suites cover the scenarios of
+[`docs/example-tests.md`](../../docs/example-tests.md) from opposite ends, written as
+[`AGENTS.md`](../../AGENTS.md) describes. std has no calendar types, so the other side is
+`chrono` and `chrono-tz` (plus `std::time::SystemTime`, `std::ops` ranges and `serde_json`).
 
-The output is committed as [`examples/everyday.expected.txt`](examples/everyday.expected.txt), and
-`tests/everyday_example.rs` compares every line with it, except lines ending in ` ‡`, which
-depend on the host's clock or zone. After an intended change, record it again with
-`cargo run --example everyday --features chrono > examples/everyday.expected.txt`.
+| Suite | Organized by | Expected values come from |
+|---|---|---|
+| [`tests/utv_first`](tests/utv_first) | UTV type, then function: `civil_date::add_months::returns_none_when_the_day_is_missing_from_the_target_month` | chrono where the two agree; otherwise a literal, and the doc comment says what chrono does |
+| [`tests/native_first`](tests/native_first) | chrono (or std, serde_json) type, then function: `naive_date::checked_add_months::clamps_to_the_last_day_when_the_day_is_missing_from_the_target_month` | UTV where the two agree; otherwise a literal, and the doc comment says what UTV does |
 
-**Traditional** ([`examples/traditional.rs`](examples/traditional.rs)): builds two dates and
-matches on the result status, then tours the shared catalog
-[`examples/traditional.json`](../../examples/traditional.json) of 37 traditional date/time tasks
-with the JSON-layer validators. It exits non-zero if any outcome differs from the catalog.
+Every test's doc comment says what it verifies and, in a second sentence starting
+`Compared with:`, what the other side does. UTV's zone operations use the pinned rules of
+`conformance/rules/demo-zones.json` through the shared fixture in `tests/fixtures/mod.rs`;
+chrono-tz uses the tz database compiled into it, never the host's. UTV-first tests wrapped in
+`// BEGIN <task-id>` / `// END <task-id>` feed [`docs/side-by-side.md`](../../docs/side-by-side.md).
+
+The suites need the `chrono` adapters, so the crate is its own dev-dependency with that feature
+on, and plain `cargo test` builds and runs them. chrono and chrono-tz are dev-dependencies.
 
 ## Tests
 
@@ -194,18 +194,19 @@ cargo test --all-features
 cargo clippy --all-features --all-targets
 ```
 
-`--all-features` also builds the `chrono` adapters and runs the example's snapshot test. Shared
-files are read from the repository, relative to `CARGO_MANIFEST_DIR`.
+The tests depend on the crate with the `chrono` feature on (see Examples), so plain `cargo test`
+builds and tests the `chrono` adapters too, and `--all-features` builds the same thing today.
+Shared files are read from the repository, relative to `CARGO_MANIFEST_DIR`.
 
 | Test | Checks |
 |---|---|
 | `tests/everyday.rs` | every fixture of `conformance/operations/everyday.json`: status, candidates, operation and the `expect.diagnostics` codes |
 | `tests/text_form.rs` | every fixture of `conformance/operations/text-form.json` through `parse_text` / `format_text` |
 | `tests/typed.rs` | the typed layer: each row of library-api §2, `to_string` → `parse` and `to_json` → `from_json` round trips, constructor refusals, outcome helpers |
-| `tests/everyday_example.rs` | the example's output against its snapshot (no libtest harness: it runs the example in a child process) |
+| `tests/utv_first/`, `tests/native_first/` | the examples: every scenario of `docs/example-tests.md`, UTV next to chrono (see Examples) |
 | `tests/purity.rs` | library code never reads the clock, the host zone or locale, or environment variables |
 | `tests/operations.rs` | JSON-layer rules the fixtures don't exercise |
-| `tests/conformance.rs`, `tests/traditional.rs` | validation against `conformance/examples/` and the traditional catalog |
+| `tests/conformance.rs` | validation against `conformance/examples/` |
 | unit tests in `src/` | exact arithmetic, ISO and text round trips, display strings, native adapters |
 
 ## Not implemented

@@ -379,6 +379,7 @@ dependencies = [
  "regex",
  "serde",
  "serde_json",
+ "utv",
 ]
 
 [[package]]

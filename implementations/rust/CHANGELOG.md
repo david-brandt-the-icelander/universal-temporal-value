@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+- **Examples are unit tests.** Two suites cover every scenario of `docs/example-tests.md` and run
+  with plain `cargo test`: `tests/utv_first` (by UTV type and function, compared with chrono,
+  chrono-tz, `SystemTime`, `std::ops` ranges and `serde_json`; expected values from chrono where
+  the two agree) and `tests/native_first` (by chrono, std or serde_json type and function,
+  compared with UTV; expected values from UTV where the two agree). Each test has a "Verifies
+  that …" / "Compared with: …" doc comment and follows `AGENTS.md`; UTV-first tests carry the
+  `// BEGIN`/`// END` task markers for `docs/side-by-side.md`. A shared fixture
+  (`tests/fixtures/mod.rs`) loads the pinned demo zone rules.
+- The crate is its own dev-dependency with the `chrono` feature on, so the suites need no flags.
+- **Removed:** the example programs (the everyday side-by-side tour and the traditional tour),
+  the everyday output snapshot and its snapshot test, and the test of the shared traditional
+  task list, whose scenarios now live in the two suites.
+
 ## 0.3.0
 
 The typed layer of `docs/library-api.md`, on top of the 0.2 JSON layer, which keeps its
