@@ -66,6 +66,52 @@ public void Test_FromDateTimeOffset_ReturnsTheSameMoment_WhenGivenAClockReading(
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that Instant.from takes a clock reading as an input when the program reads the clock.
+ * Compared with: {@code java.time.Instant.now()} reads the clock itself; UTV never does, so tests can fix "now".
+ */
+@Test
+void returnsTheSameMoment_whenGivenAClockReading() {
+    // GIVEN: a clock reading, as java.time.Instant.now() would return it
+    java.time.Instant givenReading = java.time.Instant.parse("2026-11-05T13:30:00.123456789Z");
+
+    // WHEN
+    Instant actualNow = Instant.from(givenReading);
+
+    // EXPECTATIONS: the same moment, counted as java.time counts it: seconds since 1970 and nanoseconds
+    Instant expectedNow = Instant.fromUnixSeconds(givenReading.getEpochSecond(), givenReading.getNano());
+
+    // THEN
+    assertEquals(expectedNow, actualNow);
+}
+
+/**
+ * Verifies that JavaTime.fromDate returns unsupported when asked for the wall time of a java.util.Date.
+ * Compared with: {@code Date.toString()} and {@code LocalDateTime.now()} take the wall time from
+ * {@code ZoneId.systemDefault()}, a zone that only means something on this machine.
+ */
+@Test
+void returnsUnsupported_whenAskedForTheWallTime() {
+    // GIVEN: a reading shaped like new Date()'s, whose fields come from the host's default zone
+    Date givenReading = Date.from(java.time.Instant.parse("2026-11-05T13:30:00Z"));
+    JavaTime.As givenIntent = JavaTime.As.LOCAL_DATE_TIME;
+
+    // WHEN
+    UtvResult actualResult = JavaTime.fromDate(givenReading, givenIntent);
+
+    // EXPECTATIONS: refused, because the host's zone is hidden input
+    Status expectedStatus = Status.UNSUPPORTED;
+    String expectedCode = "local-zone";
+
+    // THEN
+    assertEquals(expectedStatus, actualResult.status());
+    assertTrue(actualResult.diagnostics().stream().anyMatch(d -> d.code().equals(expectedCode)), actualResult.toJson().toString());
+}
+```
+
 **Python**
 
 ```python
@@ -111,6 +157,50 @@ def test_returns_unsupported_when_a_naive_datetime_is_asked_for_an_instant(self)
     self.assertIn(expected_code, actual_outcome.codes)
 ```
 
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that fromDate returns unsupported when asked for the Date's local wall time.
+ * Compared with: `getHours()` and the other local methods read the host's time zone, so the same Date shows a
+ * different wall time on every machine.
+ */
+it("returns unsupported when the intent is local", () => {
+  // GIVEN: a reading as Date.now() would give it, and a request for its wall time on this machine
+  const givenReading = new Date(1_793_885_400_123);
+  const givenIntent = "local";
+
+  // WHEN
+  const actualResult: UtvResult = fromDate(givenReading, givenIntent);
+
+  // EXPECTATIONS: refused, because the host's zone is hidden input; name a zone or an offset instead
+  const expectedStatus = "unsupported";
+  const expectedCodes = ["local-zone"];
+
+  // THEN
+  assert.equal(actualResult.status, expectedStatus);
+  assert.deepEqual(actualResult.diagnostics.map((diagnostic) => diagnostic.code), expectedCodes);
+});
+
+/**
+ * Verifies that Instant.fromUnixMilliseconds takes a clock reading as an input when the program reads the clock.
+ * Compared with: `Date.now()` reads the clock itself; UTV never does, so tests can fix "now".
+ */
+it("returns the same moment when given a clock reading", () => {
+  // GIVEN: a clock reading, as Date.now() would return it
+  const givenReading = 1_793_885_400_123;
+
+  // WHEN
+  const actualNow: Instant = Instant.fromUnixMilliseconds(givenReading);
+
+  // EXPECTATIONS: the same moment, as Date writes it
+  const expectedText = new Date(1_793_885_400_123).toISOString();
+
+  // THEN
+  assert.equal(actualNow.toString(), expectedText);
+});
+```
+
 ## 2. A date
 
 ### 5 November 2026
@@ -143,6 +233,33 @@ public void Test_Of_CreatesTheDate_WhenTheFieldsNameARealDay()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that CivilDate.of creates the date when the fields name a real day.
+ * Compared with: {@code LocalDate.of(2026, 11, 5)} names the same day and writes the same text.
+ */
+@Test
+void createsTheDate_whenTheFieldsNameARealDay() {
+    // GIVEN: 5 November 2026
+    int givenYear = 2026;
+    int givenMonth = 11;
+    int givenDay = 5;
+
+    // WHEN
+    CivilDate actualDate = CivilDate.of(givenYear, givenMonth, givenDay);
+
+    // EXPECTATIONS: the same day as java.time's LocalDate
+    CivilDate expectedDate = CivilDate.from(LocalDate.of(2026, 11, 5));
+    String expectedText = LocalDate.of(2026, 11, 5).toString();
+
+    // THEN
+    assertEquals(expectedDate, actualDate);
+    assertEquals(expectedText, actualDate.toString());
+}
+```
+
 **Python**
 
 ```python
@@ -166,6 +283,33 @@ def test_creates_the_date_when_the_fields_name_a_real_day(self):
     # THEN
     self.assertEqual(expected_date, actual_date)
     self.assertEqual(expected_text, str(actual_date))
+```
+
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that CivilDate.of creates the date when the fields name a real day.
+ * Compared with: `new Date(Date.UTC(2026, 10, 5))` names the same day as midnight UTC, with months counted from 0.
+ */
+it("creates the date when the fields name a real day", () => {
+  // GIVEN: 5 November 2026
+  const givenYear = 2026;
+  const givenMonth = 11;
+  const givenDay = 5;
+
+  // WHEN
+  const actualDate: CivilDate = CivilDate.of(givenYear, givenMonth, givenDay);
+
+  // EXPECTATIONS: the same day as JavaScript's Date
+  const tmpDate = new Date(Date.UTC(2026, 10, 5));
+  const expectedDate = CivilDate.of(tmpDate.getUTCFullYear(), tmpDate.getUTCMonth() + 1, tmpDate.getUTCDate());
+  const expectedText = "2026-11-05";
+
+  // THEN
+  assert.equal(String(actualDate), String(expectedDate));
+  assert.equal(actualDate.toString(), expectedText);
+});
 ```
 
 ### Day of week and ISO week
@@ -214,6 +358,49 @@ public void Test_IsoWeek_Returns45_WhenTheDateIs5November2026()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that CivilDate.dayOfWeek returns Thursday when the date is 5 November 2026.
+ * Compared with: {@code LocalDate.getDayOfWeek} names the same day, and numbers it the same ISO way, Monday 1
+ * to Sunday 7.
+ */
+@Test
+void returnsThursday_whenTheDateIs5November2026() {
+    // SYSTEM UNDER TEST: 5 November 2026
+    CivilDate sut = CivilDate.of(2026, 11, 5);
+
+    // WHEN
+    Weekday actualWeekday = sut.dayOfWeek();
+
+    // EXPECTATIONS: the weekday java.time numbers for the same day
+    Weekday expectedWeekday = Weekday.of(LocalDate.of(2026, 11, 5).getDayOfWeek().getValue());
+
+    // THEN
+    assertEquals(expectedWeekday, actualWeekday);
+}
+
+/**
+ * Verifies that CivilDate.isoWeek returns 45 when the date is 5 November 2026.
+ * Compared with: {@code LocalDate.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR)} gives the same ISO 8601 week.
+ */
+@Test
+void returns45_whenTheDateIs5November2026() {
+    // SYSTEM UNDER TEST: 5 November 2026
+    CivilDate sut = CivilDate.of(2026, 11, 5);
+
+    // WHEN
+    int actualWeek = sut.isoWeek();
+
+    // EXPECTATIONS: the ISO week java.time computes for the same day
+    int expectedWeek = LocalDate.of(2026, 11, 5).get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+
+    // THEN
+    assertEquals(expectedWeek, actualWeek);
+}
+```
+
 **Python**
 
 ```python
@@ -254,6 +441,48 @@ def test_returns_45_when_the_date_is_5_november_2026(self):
     self.assertEqual(expected_week, actual_week)
 ```
 
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that CivilDate.dayOfWeek returns the weekday of the date.
+ * Compared with: `getUTCDay()` returns 4 for the same day, numbering Sunday 0 where ISO numbers it 7;
+ * `Intl.DateTimeFormat` names it.
+ */
+it("returns Thursday when the date is 5 November 2026", () => {
+  // SYSTEM UNDER TEST: 5 November 2026
+  const sut = CivilDate.of(2026, 11, 5);
+
+  // WHEN
+  const actualWeekday: Weekday = sut.dayOfWeek;
+
+  // EXPECTATIONS: the weekday Intl names for the same day
+  const expectedName = new Intl.DateTimeFormat("en-US", { weekday: "long", timeZone: "UTC" }).format(Date.UTC(2026, 10, 5));
+
+  // THEN
+  assert.equal(Weekday[actualWeekday], expectedName);
+});
+
+/**
+ * Verifies that CivilDate.isoWeek returns the ISO 8601 week number of the date.
+ * Compared with: Date has no week numbers; code computes them by hand from `getUTCDay()` and the year's first
+ * Thursday.
+ */
+it("returns 45 when the date is 5 November 2026", () => {
+  // SYSTEM UNDER TEST: 5 November 2026
+  const sut = CivilDate.of(2026, 11, 5);
+
+  // WHEN
+  const actualWeek = sut.isoWeek;
+
+  // EXPECTATIONS: week 45, the week from Monday 2 to Sunday 8 November
+  const expectedWeek = 45;
+
+  // THEN
+  assert.equal(actualWeek, expectedWeek);
+});
+```
+
 ## 3. Invalid dates
 
 ### 30 February 2026
@@ -286,6 +515,33 @@ public void Test_TryOf_ReturnsInvalid_WhenTheDayIs30February()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that CivilDate.tryOf returns invalid when the day is 30 February.
+ * Compared with: {@code LocalDate.of(2026, 2, 30)} throws; tryOf reports the problem as a value instead.
+ */
+@Test
+void returnsInvalid_whenTheDayIs30February() {
+    // GIVEN: 30 February 2026
+    int givenYear = 2026;
+    int givenMonth = 2;
+    int givenDay = 30;
+
+    // WHEN
+    Outcome<CivilDate> actualOutcome = CivilDate.tryOf(givenYear, givenMonth, givenDay);
+
+    // EXPECTATIONS: invalid, because February 2026 has 28 days
+    Status expectedStatus = Status.INVALID;
+    String expectedCode = "day-out-of-range";
+
+    // THEN
+    assertEquals(expectedStatus, actualOutcome.status());
+    assertTrue(actualOutcome.diagnostics().stream().anyMatch(d -> d.code().equals(expectedCode)), actualOutcome.why());
+}
+```
+
 **Python**
 
 ```python
@@ -309,6 +565,33 @@ def test_returns_invalid_when_the_day_is_30_february(self):
     # THEN
     self.assertIsInstance(actual_outcome, expected_outcome_type)
     self.assertIn(expected_code, actual_outcome.codes)
+```
+
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that CivilDate.tryOf returns invalid when the day is 30 February.
+ * Compared with: `new Date(2026, 1, 30)` rolls over to 2 March without a word; tryOf reports the problem as a
+ * value instead.
+ */
+it("returns invalid when the day is 30 February", () => {
+  // GIVEN: 30 February 2026
+  const givenYear = 2026;
+  const givenMonth = 2;
+  const givenDay = 30;
+
+  // WHEN
+  const actualOutcome: Outcome<CivilDate> = CivilDate.tryOf(givenYear, givenMonth, givenDay);
+
+  // EXPECTATIONS: invalid, because February 2026 has 28 days
+  const expectedStatus = "invalid";
+  const expectedCodes = ["day-out-of-range"];
+
+  // THEN
+  assert.equal(actualOutcome.status, expectedStatus);
+  assert.deepEqual(actualOutcome.diagnostics.map((diagnostic) => diagnostic.code), expectedCodes);
+});
 ```
 
 ## 4. Adding
@@ -342,6 +625,32 @@ public void Test_AddDays_ReturnsTheLaterDate_WhenTheDaysCrossAMonthEnd()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that CivilDate.addDays returns the date that many days later when the days cross a month end.
+ * Compared with: {@code LocalDate.plusDays} gives the same date.
+ */
+@Test
+void returnsTheLaterDate_whenTheDaysCrossAMonthEnd() {
+    // GIVEN: 30 days, more than remain in November
+    int givenDays = 30;
+
+    // SYSTEM UNDER TEST: 5 November 2026
+    CivilDate sut = CivilDate.of(2026, 11, 5);
+
+    // WHEN
+    CivilDate actualDate = sut.addDays(givenDays);
+
+    // EXPECTATIONS: the date java.time computes for the same addition
+    CivilDate expectedDate = CivilDate.from(LocalDate.of(2026, 11, 5).plusDays(30));
+
+    // THEN
+    assertEquals(expectedDate, actualDate);
+}
+```
+
 **Python**
 
 ```python
@@ -364,6 +673,33 @@ def test_returns_the_later_date_when_the_days_cross_a_month_end(self):
 
     # THEN
     self.assertEqual(expected_date, actual_date)
+```
+
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that CivilDate.addDays returns the date that many days later, carrying into the next month.
+ * Compared with: `setUTCDate(getUTCDate() + 30)` reaches the same date, by changing the Date in place.
+ */
+it("returns the later date when the days cross a month end", () => {
+  // GIVEN: 30 days, more than remain in November
+  const givenDays = 30;
+
+  // SYSTEM UNDER TEST: 5 November 2026
+  const sut = CivilDate.of(2026, 11, 5);
+
+  // WHEN
+  const actualDate: CivilDate = sut.addDays(givenDays);
+
+  // EXPECTATIONS: the date Date reaches with the same addition
+  const tmpDate = new Date(Date.UTC(2026, 10, 5));
+  tmpDate.setUTCDate(tmpDate.getUTCDate() + 30);
+  const expectedDate = CivilDate.of(tmpDate.getUTCFullYear(), tmpDate.getUTCMonth() + 1, tmpDate.getUTCDate());
+
+  // THEN
+  assert.equal(String(actualDate), String(expectedDate));
+});
 ```
 
 ### 31 Jan 2026 + 1 month
@@ -422,6 +758,58 @@ public void Test_AddMonths_ReturnsTheLastDayOfTheMonth_WhenConstrainIsRequested(
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that CivilDate.addMonths returns none when the day is missing from the target month.
+ * Compared with: {@code LocalDate.plusMonths} clamps 31 January to 28 February without saying so.
+ */
+@Test
+void returnsNone_whenTheDayIsMissingFromTheTargetMonth() {
+    // GIVEN: one month, into a February that has no day 31
+    int givenMonths = 1;
+
+    // SYSTEM UNDER TEST: 31 January 2026
+    CivilDate sut = CivilDate.of(2026, 1, 31);
+
+    // WHEN
+    Outcome<CivilDate> actualOutcome = sut.addMonths(givenMonths);
+
+    // EXPECTATIONS: no such date, explained by the month-end diagnostic
+    Status expectedStatus = Status.NONE;
+    String expectedCode = "month-end";
+
+    // THEN
+    assertEquals(expectedStatus, actualOutcome.status());
+    assertTrue(actualOutcome.diagnostics().stream().anyMatch(d -> d.code().equals(expectedCode)), actualOutcome.why());
+}
+
+/**
+ * Verifies that CivilDate.addMonths with MonthEnd.CONSTRAIN returns the last day of the target month when the
+ * day is missing from it.
+ * Compared with: {@code LocalDate.plusMonths} gives the same date, but without being asked.
+ */
+@Test
+void returnsTheLastDayOfTheMonth_whenConstrainIsRequested() {
+    // GIVEN: one month, constrained to the end of the target month
+    int givenMonths = 1;
+    MonthEnd givenPolicy = MonthEnd.CONSTRAIN;
+
+    // SYSTEM UNDER TEST: 31 January 2026
+    CivilDate sut = CivilDate.of(2026, 1, 31);
+
+    // WHEN
+    CivilDate actualDate = sut.addMonths(givenMonths, givenPolicy);
+
+    // EXPECTATIONS: the date java.time clamps to
+    CivilDate expectedDate = CivilDate.from(LocalDate.of(2026, 1, 31).plusMonths(1));
+
+    // THEN
+    assertEquals(expectedDate, actualDate);
+}
+```
+
 **Python**
 
 ```python
@@ -471,6 +859,57 @@ def test_returns_the_last_day_of_the_month_when_constrain_is_requested(self):
     self.assertEqual(expected_date, actual_date)
 ```
 
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that CivilDate.addMonths returns none when the day is missing from the target month.
+ * Compared with: `setUTCMonth(getUTCMonth() + 1)` on 31 January rolls over to 3 March without saying so.
+ */
+it("returns none when the day is missing from the target month", () => {
+  // GIVEN: one month, into a February that has no day 31
+  const givenMonths = 1;
+
+  // SYSTEM UNDER TEST: 31 January 2026
+  const sut = CivilDate.of(2026, 1, 31);
+
+  // WHEN
+  const actualOutcome: Outcome<CivilDate> = sut.addMonths(givenMonths);
+
+  // EXPECTATIONS: no such date, explained by the month-end diagnostic
+  const expectedStatus = "none";
+  const expectedCodes = ["month-end"];
+
+  // THEN
+  assert.equal(actualOutcome.status, expectedStatus);
+  assert.deepEqual(actualOutcome.diagnostics.map((diagnostic) => diagnostic.code), expectedCodes);
+});
+
+/**
+ * Verifies that CivilDate.addMonths with MonthEnd.Constrain returns the last day of the target month when the
+ * day is missing from it.
+ * Compared with: `setUTCMonth` gives 3 March instead; the by-hand clamp, day 0 of the month after, gives this date.
+ */
+it("returns the last day of the month when Constrain is requested", () => {
+  // GIVEN: one month, constrained to the end of the target month
+  const givenMonths = 1;
+  const givenPolicy = MonthEnd.Constrain;
+
+  // SYSTEM UNDER TEST: 31 January 2026
+  const sut = CivilDate.of(2026, 1, 31);
+
+  // WHEN
+  const actualDate: CivilDate = sut.addMonths(givenMonths, givenPolicy);
+
+  // EXPECTATIONS: the last day of February, which Date finds as day 0 of March (month index 2)
+  const tmpDate = new Date(Date.UTC(2026, 2, 0));
+  const expectedDate = CivilDate.of(tmpDate.getUTCFullYear(), tmpDate.getUTCMonth() + 1, tmpDate.getUTCDate());
+
+  // THEN
+  assert.equal(String(actualDate), String(expectedDate));
+});
+```
+
 ## 5. Days between
 
 ### 5 Nov → 25 Dec
@@ -502,6 +941,32 @@ public void Test_DaysUntil_ReturnsTheDayCount_WhenTheOtherDateIsLater()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that CivilDate.daysUntil returns the number of days when the other date is later.
+ * Compared with: {@code LocalDate.until(other, ChronoUnit.DAYS)} gives the same count.
+ */
+@Test
+void returnsTheDayCount_whenTheOtherDateIsLater() {
+    // GIVEN: Christmas Day 2026
+    CivilDate givenChristmas = CivilDate.of(2026, 12, 25);
+
+    // SYSTEM UNDER TEST: 5 November 2026
+    CivilDate sut = CivilDate.of(2026, 11, 5);
+
+    // WHEN
+    long actualDays = sut.daysUntil(givenChristmas);
+
+    // EXPECTATIONS: the count java.time computes
+    long expectedDays = LocalDate.of(2026, 11, 5).until(LocalDate.of(2026, 12, 25), ChronoUnit.DAYS);
+
+    // THEN
+    assertEquals(expectedDays, actualDays);
+}
+```
+
 **Python**
 
 ```python
@@ -524,6 +989,32 @@ def test_returns_the_day_count_when_the_other_date_is_later(self):
 
     # THEN
     self.assertEqual(expected_days, actual_days)
+```
+
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that CivilDate.daysUntil returns the number of days to a later date.
+ * Compared with: the difference of the two time values at midnight UTC, divided by 86,400,000 ms, is the same;
+ * local midnights would leave a fraction of a day whenever a DST change falls in between.
+ */
+it("returns the day count when the other date is later", () => {
+  // GIVEN: Christmas Day 2026
+  const givenChristmas = CivilDate.of(2026, 12, 25);
+
+  // SYSTEM UNDER TEST: 5 November 2026
+  const sut = CivilDate.of(2026, 11, 5);
+
+  // WHEN
+  const actualDays: number = sut.daysUntil(givenChristmas);
+
+  // EXPECTATIONS: the difference of Date's time values at midnight UTC, in days
+  const expectedDays = (Date.UTC(2026, 11, 25) - Date.UTC(2026, 10, 5)) / 86_400_000;
+
+  // THEN
+  assert.equal(actualDays, expectedDays);
+});
 ```
 
 ### Which comes first
@@ -584,6 +1075,61 @@ public void Test_Compare_ReturnsMultiple_WhenBothWallTimesFallInAnOverlap()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that CivilDate.isBefore returns true when this date comes first.
+ * Compared with: {@code LocalDate.isBefore} gives the same answer. Plain dates always have an order.
+ */
+@Test
+void returnsTrue_whenThisDateComesFirst() {
+    // GIVEN: Christmas Day 2026
+    CivilDate givenChristmas = CivilDate.of(2026, 12, 25);
+
+    // SYSTEM UNDER TEST: 5 November 2026
+    CivilDate sut = CivilDate.of(2026, 11, 5);
+
+    // WHEN
+    boolean actualComesFirst = sut.isBefore(givenChristmas);
+
+    // EXPECTATIONS: java.time's answer for the same two days
+    boolean expectedComesFirst = LocalDate.of(2026, 11, 5).isBefore(LocalDate.of(2026, 12, 25));
+
+    // THEN
+    assertEquals(expectedComesFirst, actualComesFirst);
+}
+
+/**
+ * Verifies that TemporalContext.compare returns both orders when both wall times fall in the same overlap.
+ * Compared with: {@code ZonedDateTime.isBefore} gives both the earlier, daylight-time offset and always says
+ * "before".
+ */
+@Test
+void returnsMultiple_whenBothWallTimesFallInAnOverlap() {
+    // GIVEN: a call at 01:30 and a stand-up at 01:45, on the night New York's clocks go back from 02:00 to 01:00
+    ZonedIntent givenCall = CivilDateTime.of(2026, 11, 1, 1, 30).inZone("America/New_York");
+    ZonedIntent givenStandup = CivilDateTime.of(2026, 11, 1, 1, 45).inZone("America/New_York");
+
+    // SETUP: the pinned demo zone rules, never the host's tz database
+    ZoneRules envRules = Fixtures.demoZoneRules();
+
+    // SYSTEM UNDER TEST
+    TemporalContext sut = TemporalContext.with(envRules);
+
+    // WHEN
+    Outcome<Ordering> actualOutcome = sut.compare(givenCall, givenStandup);
+
+    // EXPECTATIONS: either could come first (01:30 standard time is after 01:45 daylight time)
+    Status expectedStatus = Status.MULTIPLE;
+    String expectedCode = "ambiguous";
+
+    // THEN
+    assertEquals(expectedStatus, actualOutcome.status());
+    assertTrue(actualOutcome.diagnostics().stream().anyMatch(d -> d.code().equals(expectedCode)), actualOutcome.why());
+}
+```
+
 **Python**
 
 ```python
@@ -635,6 +1181,61 @@ def test_returns_multiple_when_both_wall_times_fall_in_an_overlap(self):
     self.assertIn(expected_code, actual_outcome.codes)
 ```
 
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that CivilDate.isBefore is true when this date comes first.
+ * Compared with: `<` on two Dates compares their time values and gives the same answer; `===` would compare the
+ * objects instead. Plain dates always have an order.
+ */
+it("returns true when this date comes first", () => {
+  // GIVEN: Christmas Day 2026
+  const givenChristmas = CivilDate.of(2026, 12, 25);
+
+  // SYSTEM UNDER TEST: 5 November 2026
+  const sut = CivilDate.of(2026, 11, 5);
+
+  // WHEN
+  const actualComesFirst = sut.isBefore(givenChristmas);
+
+  // EXPECTATIONS: Date's answer for the same two days
+  const expectedComesFirst = new Date(Date.UTC(2026, 10, 5)) < new Date(Date.UTC(2026, 11, 25));
+
+  // THEN
+  assert.equal(actualComesFirst, expectedComesFirst);
+});
+
+/**
+ * Verifies that TemporalContext.compare returns both orders when both wall times fall in the same overlap.
+ * Compared with: JavaScript has no zoned type; two Dates built from the wall times with `Date.UTC` compare by
+ * wall time and always say 01:30 comes first.
+ */
+it("returns multiple when both wall times fall in an overlap", () => {
+  // GIVEN: a call at 01:30 and a stand-up at 01:45, on the night New York's clocks go back from 02:00 to 01:00
+  const givenCall = CivilDateTime.of(2026, 11, 1, 1, 30).inZone("America/New_York");
+  const givenStandup = CivilDateTime.of(2026, 11, 1, 1, 45).inZone("America/New_York");
+
+  // SETUP: the pinned demo zone rules, never the host's tz database
+  const envRules = demoZoneRules();
+
+  // SYSTEM UNDER TEST
+  const sut = TemporalContext.with(envRules);
+
+  // WHEN
+  const actualOutcome: Outcome<Ordering> = sut.compare(givenCall, givenStandup);
+
+  // EXPECTATIONS: either could come first (01:30 standard time is after 01:45 daylight time); one diagnostic per
+  // ambiguous wall time
+  const expectedStatus = "multiple";
+  const expectedCodes = ["ambiguous", "ambiguous"];
+
+  // THEN
+  assert.equal(actualOutcome.status, expectedStatus);
+  assert.deepEqual(actualOutcome.diagnostics.map((diagnostic) => diagnostic.code), expectedCodes);
+});
+```
+
 ## 6. Times and date-times
 
 ### 09:30
@@ -667,6 +1268,33 @@ public void Test_Of_WritesNoSeconds_WhenNoSecondsAreGiven()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that CivilTime.of writes no seconds when no seconds are given.
+ * Compared with: {@code LocalTime.of(9, 30)} writes the same text, {@code 09:30}.
+ */
+@Test
+void writesNoSeconds_whenNoSecondsAreGiven() {
+    // GIVEN: half past nine, to the minute
+    int givenHour = 9;
+    int givenMinute = 30;
+
+    // WHEN
+    CivilTime actualTime = CivilTime.of(givenHour, givenMinute);
+
+    // EXPECTATIONS: the same hour and minute as java.time, and the same text
+    LocalTime expectedTime = LocalTime.of(9, 30);
+    String expectedText = LocalTime.of(9, 30).toString();
+
+    // THEN
+    assertEquals(expectedTime.getHour(), actualTime.hour());
+    assertEquals(expectedTime.getMinute(), actualTime.minute());
+    assertEquals(expectedText, actualTime.toString());
+}
+```
+
 **Python**
 
 ```python
@@ -690,6 +1318,33 @@ def test_writes_no_seconds_when_no_seconds_are_given(self):
     self.assertEqual(expected_time.hour, actual_time.hour)
     self.assertEqual(expected_time.minute, actual_time.minute)
     self.assertEqual(expected_text, str(actual_time))
+```
+
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that CivilTime.of keeps the time to the minute when no seconds are given.
+ * Compared with: a Date needs a date first; `new Date(Date.UTC(1970, 0, 1, 9, 30)).toISOString()` writes
+ * `1970-01-01T09:30:00.000Z`, with seconds and milliseconds nobody gave.
+ */
+it("writes no seconds when no seconds are given", () => {
+  // GIVEN: half past nine, to the minute
+  const givenHour = 9;
+  const givenMinute = 30;
+
+  // WHEN
+  const actualTime: CivilTime = CivilTime.of(givenHour, givenMinute);
+
+  // EXPECTATIONS: the same hour and minute as Date's stand-in, and no seconds in the text
+  const expectedTime = new Date(Date.UTC(1970, 0, 1, 9, 30));
+  const expectedText = "09:30";
+
+  // THEN
+  assert.equal(actualTime.hour, expectedTime.getUTCHours());
+  assert.equal(actualTime.minute, expectedTime.getUTCMinutes());
+  assert.equal(actualTime.toString(), expectedText);
+});
 ```
 
 ### 23:30 + 2 hours
@@ -721,6 +1376,33 @@ public void Test_AddHours_CarriesIntoTheNextDay_WhenTheHoursPassMidnight()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that CivilDateTime.addHours carries into the next day when the hours pass midnight.
+ * Compared with: {@code LocalDateTime.plusHours} gives the same wall time; {@code LocalTime.plusHours} would
+ * lose the day.
+ */
+@Test
+void carriesIntoTheNextDay_whenTheHoursPassMidnight() {
+    // GIVEN: two hours, past midnight
+    int givenHours = 2;
+
+    // SYSTEM UNDER TEST: 23:30 on 5 November 2026
+    CivilDateTime sut = CivilDateTime.of(2026, 11, 5, 23, 30);
+
+    // WHEN
+    CivilDateTime actualDateTime = sut.addHours(givenHours);
+
+    // EXPECTATIONS: the wall time java.time computes for the same addition
+    LocalDateTime expectedDateTime = LocalDateTime.of(2026, 11, 5, 23, 30).plusHours(2);
+
+    // THEN
+    assertEquals(expectedDateTime, actualDateTime.toLocalDateTime().single());
+}
+```
+
 **Python**
 
 ```python
@@ -743,6 +1425,35 @@ def test_carries_into_the_next_day_when_the_hours_pass_midnight(self):
 
     # THEN
     self.assertEqual(expected_date_time, to_native(actual_date_time).single())
+```
+
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that CivilDateTime.addHours carries into the next day when the hours pass midnight.
+ * Compared with: `setUTCHours(getUTCHours() + 2)` on the UTC stand-in gives the same wall time; the local
+ * `setHours` would add the hours in the host's zone, DST changes included.
+ */
+it("carries into the next day when the hours pass midnight", () => {
+  // GIVEN: two hours, past midnight
+  const givenHours = 2;
+
+  // SYSTEM UNDER TEST: 23:30 on 5 November 2026
+  const sut = CivilDateTime.of(2026, 11, 5, 23, 30);
+
+  // WHEN
+  const actualDateTime: CivilDateTime = sut.addHours(givenHours);
+
+  // EXPECTATIONS: the wall time Date computes for the same addition
+  const tmpDate = new Date(Date.UTC(2026, 10, 5, 23, 30));
+  tmpDate.setUTCHours(tmpDate.getUTCHours() + 2);
+  const expectedDateTime = CivilDateTime.of(
+    tmpDate.getUTCFullYear(), tmpDate.getUTCMonth() + 1, tmpDate.getUTCDate(), tmpDate.getUTCHours(), tmpDate.getUTCMinutes());
+
+  // THEN
+  assert.equal(String(actualDateTime), String(expectedDateTime));
+});
 ```
 
 ## 7. Parsing with offsets
@@ -798,6 +1509,53 @@ public void Test_Parse_ReturnsAFixedOffsetDateTime_WhenTheTextEndsInPlusZero()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that TemporalValue.parse returns an Instant when the text ends in Z.
+ * Compared with: {@code OffsetDateTime.parse} gives an offset of +00:00, the same as for the text "+00:00".
+ */
+@Test
+void returnsAnInstant_whenTheTextEndsInZ() {
+    // GIVEN: 14:30 UTC, written with Z: a moment, with no local wall time implied
+    String givenText = "2026-11-05T14:30:00Z";
+
+    // WHEN
+    Outcome<TemporalValue> actualOutcome = TemporalValue.parse(givenText);
+
+    // EXPECTATIONS: the moment java.time parses from the same text
+    Instant expectedInstant = Instant.from(OffsetDateTime.parse("2026-11-05T14:30:00Z").toInstant());
+
+    // THEN
+    Instant actualInstant = assertInstanceOf(Instant.class, actualOutcome.single());
+    assertEquals(expectedInstant, actualInstant);
+}
+
+/**
+ * Verifies that TemporalValue.parse returns a FixedOffsetDateTime when the text ends in +00:00.
+ * Compared with: {@code OffsetDateTime.parse} cannot tell this text from the one ending in Z, and writes both as
+ * {@code 2026-11-05T14:30Z}.
+ */
+@Test
+void returnsAFixedOffsetDateTime_whenTheTextEndsInPlusZero() {
+    // GIVEN: 14:30 at offset +00:00: a wall time somewhere that is at UTC+0 right now
+    String givenText = "2026-11-05T14:30:00+00:00";
+
+    // WHEN
+    Outcome<TemporalValue> actualOutcome = TemporalValue.parse(givenText);
+
+    // EXPECTATIONS: the value java.time parses from the same text, and the text kept as written
+    FixedOffsetDateTime expectedDateTime = FixedOffsetDateTime.from(OffsetDateTime.parse("2026-11-05T14:30:00+00:00"));
+    String expectedText = "2026-11-05T14:30:00+00:00";
+
+    // THEN
+    FixedOffsetDateTime actualDateTime = assertInstanceOf(FixedOffsetDateTime.class, actualOutcome.single());
+    assertEquals(expectedDateTime, actualDateTime);
+    assertEquals(expectedText, actualDateTime.toString());
+}
+```
+
 **Python**
 
 ```python
@@ -842,6 +1600,53 @@ def test_returns_a_fixed_offset_date_time_when_the_text_ends_in_plus_zero(self):
     self.assertIsInstance(actual_outcome.single(), expected_type)
     self.assertEqual(expected_date_time, actual_outcome.single())
     self.assertEqual(expected_text, str(actual_outcome.single()))
+```
+
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that parse returns an Instant when the text ends in Z.
+ * Compared with: `new Date("2026-11-05T14:30:00Z")` holds the same moment, and the same Date as the text ending in
+ * +00:00.
+ */
+it("returns an Instant when the text ends in Z", () => {
+  // GIVEN: 14:30 UTC, written with Z: a moment, with no local wall time implied
+  const givenText = "2026-11-05T14:30:00Z";
+
+  // WHEN
+  const actualOutcome: Outcome<UtvValue> = parse(givenText);
+
+  // EXPECTATIONS: the moment Date parses from the same text
+  const expectedInstant = Instant.fromDate(new Date("2026-11-05T14:30:00Z"));
+
+  // THEN
+  const actualValue = actualOutcome.single();
+  assert.ok(actualValue instanceof Instant);
+  assert.equal(String(actualValue), String(expectedInstant));
+});
+
+/**
+ * Verifies that parse returns a FixedOffsetDateTime when the text ends in +00:00.
+ * Compared with: `new Date("2026-11-05T14:30:00+00:00")` cannot be told apart from the Date for the text ending in Z.
+ */
+it("returns a FixedOffsetDateTime when the text ends in +00:00", () => {
+  // GIVEN: 14:30 at offset +00:00: a wall time somewhere that is at UTC+0 right now
+  const givenText = "2026-11-05T14:30:00+00:00";
+
+  // WHEN
+  const actualOutcome = parse(givenText);
+
+  // EXPECTATIONS: the moment Date parses from the same text, and the text kept as written
+  const expectedInstant = Instant.fromDate(new Date("2026-11-05T14:30:00+00:00"));
+  const expectedText = "2026-11-05T14:30:00+00:00";
+
+  // THEN
+  const actualValue = actualOutcome.single();
+  assert.ok(actualValue instanceof FixedOffsetDateTime);
+  assert.equal(String(actualValue.toInstant()), String(expectedInstant));
+  assert.equal(actualValue.toString(), expectedText);
+});
 ```
 
 ## 8. Time zones
@@ -907,6 +1712,61 @@ public void Test_Resolve_ReturnsTheInstant_WhenTheWallTimeHappensOnce()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that Instant.inZone returns the local wall time and offset when the zone has rules for the instant.
+ * Compared with: {@code java.time.Instant.atZone} gives the same wall time from the host's tz database.
+ */
+@Test
+void returnsTheLocalWallTime_whenTheZoneHasRules() {
+    // GIVEN: New York
+    String givenZoneId = "America/New_York";
+
+    // SETUP: the pinned demo zone rules, never the host's tz database
+    TemporalContext envContext = TemporalContext.with(Fixtures.demoZoneRules());
+
+    // SYSTEM UNDER TEST: 07:00 UTC on 1 June 2027, when the meeting starts in Paris
+    Instant sut = Instant.from(java.time.Instant.parse("2027-06-01T07:00:00Z"));
+
+    // WHEN
+    Outcome<ZonedIntent> actualOutcome = sut.inZone(givenZoneId, envContext);
+
+    // EXPECTATIONS: the wall time java.time computes, with the offset UTV asserts alongside it
+    ZonedDateTime tmpNative = java.time.Instant.parse("2027-06-01T07:00:00Z").atZone(ZoneId.of("America/New_York"));
+    CivilDateTime expectedWallTime = CivilDateTime.from(tmpNative.toLocalDateTime());
+    String expectedText = "2027-06-01T03:00:00-04:00[America/New_York]";
+
+    // THEN
+    assertEquals(expectedWallTime, actualOutcome.single().dateTime());
+    assertEquals(expectedText, actualOutcome.single().toString());
+}
+
+/**
+ * Verifies that ZonedIntent.resolve returns the one instant when the wall time happens exactly once.
+ * Compared with: {@code ZonedDateTime.of(...).toInstant()} finds the same instant in the host's tz database.
+ */
+@Test
+void returnsTheInstant_whenTheWallTimeHappensOnce() {
+    // SETUP: the pinned demo zone rules, never the host's tz database
+    TemporalContext envContext = TemporalContext.with(Fixtures.demoZoneRules());
+
+    // SYSTEM UNDER TEST: a meeting at 09:00 on 1 June 2027 in Paris
+    ZonedIntent sut = CivilDateTime.of(2027, 6, 1, 9, 0).inZone("Europe/Paris");
+
+    // WHEN
+    Outcome<Instant> actualOutcome = sut.resolve(envContext);
+
+    // EXPECTATIONS: the instant java.time finds for the same wall time
+    ZonedDateTime tmpMeeting = ZonedDateTime.of(LocalDateTime.of(2027, 6, 1, 9, 0), ZoneId.of("Europe/Paris"));
+    Instant expectedInstant = Instant.from(tmpMeeting.toInstant());
+
+    // THEN
+    assertEquals(expectedInstant, actualOutcome.single());
+}
+```
+
 **Python**
 
 ```python
@@ -958,6 +1818,69 @@ def test_returns_the_instant_when_the_wall_time_happens_once(self):
 
     # THEN
     self.assertEqual(expected_instant, actual_outcome.single())
+```
+
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that Instant.inZone returns the wall time and offset in the zone when the zone has rules for it.
+ * Compared with: `Intl.DateTimeFormat` with `timeZone: "America/New_York"` shows the same wall time, from the
+ * host's tz database, as text to be taken apart with `formatToParts`.
+ */
+it("returns the local wall time when the zone has rules", () => {
+  // GIVEN: New York
+  const givenZoneId = "America/New_York";
+
+  // SETUP: the pinned demo zone rules, never the host's tz database
+  const envContext = TemporalContext.with(demoZoneRules());
+
+  // SYSTEM UNDER TEST: 07:00 UTC on 1 June 2027, when the meeting starts in Paris
+  const sut = Instant.fromUnixSeconds(1_811_833_200);
+
+  // WHEN
+  const actualOutcome: Outcome<ZonedIntent> = sut.inZone(givenZoneId, envContext);
+
+  // EXPECTATIONS: the wall time Intl shows in New York for the same moment, and the offset UTV asserts with it
+  const tmpParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York", hourCycle: "h23",
+    year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric",
+  }).formatToParts(Date.UTC(2027, 5, 1, 7, 0));
+  const tmpFields = Object.fromEntries(tmpParts.map((part) => [part.type, part.value]));
+  const expectedWallTime = CivilDateTime.of(
+    Number(tmpFields["year"]), Number(tmpFields["month"]), Number(tmpFields["day"]),
+    Number(tmpFields["hour"]), Number(tmpFields["minute"]), Number(tmpFields["second"]));
+  const expectedText = "2027-06-01T03:00:00-04:00[America/New_York]";
+
+  // THEN
+  assert.equal(String(actualOutcome.single().dateTime), String(expectedWallTime));
+  assert.equal(actualOutcome.single().toString(), expectedText);
+});
+
+/**
+ * Verifies that ZonedIntent.resolve returns the one instant when the wall time happens exactly once.
+ * Compared with: JavaScript has no call for this; subtracting the offset `Intl.DateTimeFormat` reports for Paris
+ * (from the host's tz database) gives the same instant.
+ */
+it("returns the instant when the wall time happens once", () => {
+  // SETUP: the pinned demo zone rules, never the host's tz database
+  const envContext = TemporalContext.with(demoZoneRules());
+
+  // SYSTEM UNDER TEST: a meeting at 09:00 on 1 June 2027 in Paris
+  const sut: ZonedIntent = CivilDateTime.of(2027, 6, 1, 9, 0).inZone("Europe/Paris");
+
+  // WHEN
+  const actualOutcome: Outcome<Instant> = sut.resolve(envContext);
+
+  // EXPECTATIONS: 09:00 minus the offset Intl reports for Paris that morning ("GMT+02:00")
+  const tmpWallTimeAsUtc = Date.UTC(2027, 5, 1, 9, 0);
+  const tmpOffsetName = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Paris", timeZoneName: "longOffset" })
+    .formatToParts(tmpWallTimeAsUtc).find((part) => part.type === "timeZoneName")?.value;
+  const expectedInstant = Instant.fromUnixMilliseconds(tmpWallTimeAsUtc - Number(tmpOffsetName?.slice(3, 6)) * 3_600_000);
+
+  // THEN
+  assert.equal(String(actualOutcome.single()), String(expectedInstant));
+});
 ```
 
 ## 9. DST gap
@@ -1019,6 +1942,61 @@ public void Test_Resolve_ShiftsForwardByTheGap_WhenShiftForwardIsRequested()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that ZonedIntent.resolve returns none when the wall time falls in a daylight-saving gap.
+ * Compared with: {@code ZonedDateTime.of} moves the wall time to 03:30 daylight time without saying so.
+ */
+@Test
+void returnsNone_whenTheWallTimeFallsInAGap() {
+    // SETUP: the pinned demo zone rules, never the host's tz database
+    TemporalContext envContext = TemporalContext.with(Fixtures.demoZoneRules());
+
+    // SYSTEM UNDER TEST: 02:30 on 8 March 2026 in New York, when clocks jump from 02:00 to 03:00
+    ZonedIntent sut = CivilDateTime.of(2026, 3, 8, 2, 30).inZone("America/New_York");
+
+    // WHEN
+    Outcome<Instant> actualOutcome = sut.resolve(envContext);
+
+    // EXPECTATIONS: no such instant, explained by the gap diagnostic
+    Status expectedStatus = Status.NONE;
+    String expectedCode = "gap";
+
+    // THEN
+    assertEquals(expectedStatus, actualOutcome.status());
+    assertTrue(actualOutcome.diagnostics().stream().anyMatch(d -> d.code().equals(expectedCode)), actualOutcome.why());
+}
+
+/**
+ * Verifies that ZonedIntent.resolve with Gap.SHIFT_FORWARD moves the wall time forward by the length of the gap
+ * when asked to.
+ * Compared with: {@code ZonedDateTime.of} gives the same instant, but without being asked.
+ */
+@Test
+void shiftsForwardByTheGap_whenShiftForwardIsRequested() {
+    // GIVEN: the policy that moves a skipped wall time forward by the gap
+    Gap givenPolicy = Gap.SHIFT_FORWARD;
+
+    // SETUP: the pinned demo zone rules, never the host's tz database
+    TemporalContext envContext = TemporalContext.with(Fixtures.demoZoneRules());
+
+    // SYSTEM UNDER TEST: 02:30 on 8 March 2026 in New York, when clocks jump from 02:00 to 03:00
+    ZonedIntent sut = CivilDateTime.of(2026, 3, 8, 2, 30).inZone("America/New_York");
+
+    // WHEN
+    Outcome<Instant> actualOutcome = sut.resolve(envContext, givenPolicy);
+
+    // EXPECTATIONS: 03:30 daylight time, the instant java.time moves to on its own
+    ZonedDateTime tmpShifted = ZonedDateTime.of(LocalDateTime.of(2026, 3, 8, 2, 30), ZoneId.of("America/New_York"));
+    Instant expectedInstant = Instant.from(tmpShifted.toInstant());
+
+    // THEN
+    assertEquals(expectedInstant, actualOutcome.single());
+}
+```
+
 **Python**
 
 ```python
@@ -1070,6 +2048,59 @@ def test_shifts_forward_by_the_gap_when_shift_forward_is_requested(self):
 
     # THEN
     self.assertEqual(expected_instant, actual_outcome.single())
+```
+
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that ZonedIntent.resolve returns none when the wall time falls in a daylight-saving gap.
+ * Compared with: JavaScript has no call for this; the by-hand conversion with `Intl.DateTimeFormat` offsets
+ * always returns some instant, 01:30 EST or 03:30 EDT, without an error.
+ */
+it("returns none when the wall time falls in a gap", () => {
+  // SETUP: the pinned demo zone rules, never the host's tz database
+  const envContext = TemporalContext.with(demoZoneRules());
+
+  // SYSTEM UNDER TEST: 02:30 on 8 March 2026 in New York, when clocks jump from 02:00 to 03:00
+  const sut = CivilDateTime.of(2026, 3, 8, 2, 30).inZone("America/New_York");
+
+  // WHEN
+  const actualOutcome = sut.resolve(envContext);
+
+  // EXPECTATIONS: no such instant, explained by the gap diagnostic
+  const expectedStatus = "none";
+  const expectedCodes = ["gap"];
+
+  // THEN
+  assert.equal(actualOutcome.status, expectedStatus);
+  assert.deepEqual(actualOutcome.diagnostics.map((diagnostic) => diagnostic.code), expectedCodes);
+});
+
+/**
+ * Verifies that ZonedIntent.resolve with Gap.ShiftForward moves the wall time forward by the length of the gap.
+ * Compared with: JavaScript has no such policy; which side of the gap the by-hand conversion lands on depends on
+ * which offset it guesses first.
+ */
+it("shifts forward by the gap when ShiftForward is requested", () => {
+  // GIVEN: the policy that moves a skipped wall time forward by the gap
+  const givenPolicy: ResolutionPolicy = { gap: Gap.ShiftForward };
+
+  // SETUP: the pinned demo zone rules, never the host's tz database
+  const envContext = TemporalContext.with(demoZoneRules());
+
+  // SYSTEM UNDER TEST: 02:30 on 8 March 2026 in New York, when clocks jump from 02:00 to 03:00
+  const sut = CivilDateTime.of(2026, 3, 8, 2, 30).inZone("America/New_York");
+
+  // WHEN
+  const actualOutcome = sut.resolve(envContext, givenPolicy);
+
+  // EXPECTATIONS: 03:30 daylight time, four hours behind UTC
+  const expectedInstant = Instant.fromDate(new Date("2026-03-08T03:30:00-04:00"));
+
+  // THEN
+  assert.equal(String(actualOutcome.single()), String(expectedInstant));
+});
 ```
 
 ## 10. DST overlap
@@ -1140,6 +2171,66 @@ public void Test_Resolve_ReturnsTheEarlierInstant_WhenEarliestIsRequested()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that ZonedIntent.resolve returns both instants when the wall time falls in an overlap.
+ * Compared with: {@code ZonedDateTime.of} silently picks one of them, the earlier, daylight-time one.
+ */
+@Test
+void returnsBothInstants_whenTheWallTimeFallsInAnOverlap() {
+    // SETUP: the pinned demo zone rules, never the host's tz database
+    TemporalContext envContext = TemporalContext.with(Fixtures.demoZoneRules());
+
+    // SYSTEM UNDER TEST: 01:30 on 1 November 2026 in New York, when clocks go back from 02:00 to 01:00
+    ZonedIntent sut = CivilDateTime.of(2026, 11, 1, 1, 30).inZone("America/New_York");
+
+    // WHEN
+    Outcome<Instant> actualOutcome = sut.resolve(envContext);
+
+    // EXPECTATIONS: 01:30 daylight time, then 01:30 standard time; java.time's single answer is one of them
+    List<Instant> expectedInstants = List.of(
+            Instant.from(OffsetDateTime.of(2026, 11, 1, 1, 30, 0, 0, ZoneOffset.ofHours(-4)).toInstant()),
+            Instant.from(OffsetDateTime.of(2026, 11, 1, 1, 30, 0, 0, ZoneOffset.ofHours(-5)).toInstant()));
+    String expectedCode = "ambiguous";
+    ZonedDateTime tmpNativePick = ZonedDateTime.of(LocalDateTime.of(2026, 11, 1, 1, 30), ZoneId.of("America/New_York"));
+    Instant expectedNativePick = Instant.from(tmpNativePick.toInstant());
+
+    // THEN
+    Outcome.Multiple<?> actualMultiple = assertInstanceOf(Outcome.Multiple.class, actualOutcome);
+    assertEquals(expectedInstants, actualMultiple.values());
+    assertTrue(actualOutcome.diagnostics().stream().anyMatch(d -> d.code().equals(expectedCode)), actualOutcome.why());
+    assertTrue(actualMultiple.values().contains(expectedNativePick));
+}
+
+/**
+ * Verifies that ZonedIntent.resolve with Overlap.EARLIEST returns the first of the two instants when asked to.
+ * Compared with: {@code ZonedDateTime.of} picks the same, earlier instant, but without being asked.
+ */
+@Test
+void returnsTheEarlierInstant_whenEarliestIsRequested() {
+    // GIVEN: the policy that picks the earlier of two instants
+    Overlap givenPolicy = Overlap.EARLIEST;
+
+    // SETUP: the pinned demo zone rules, never the host's tz database
+    TemporalContext envContext = TemporalContext.with(Fixtures.demoZoneRules());
+
+    // SYSTEM UNDER TEST: 01:30 on 1 November 2026 in New York, when clocks go back from 02:00 to 01:00
+    ZonedIntent sut = CivilDateTime.of(2026, 11, 1, 1, 30).inZone("America/New_York");
+
+    // WHEN
+    Outcome<Instant> actualOutcome = sut.resolve(envContext, givenPolicy);
+
+    // EXPECTATIONS: 01:30 daylight time, the instant java.time picks on its own
+    ZonedDateTime tmpNativePick = ZonedDateTime.of(LocalDateTime.of(2026, 11, 1, 1, 30), ZoneId.of("America/New_York"));
+    Instant expectedInstant = Instant.from(tmpNativePick.toInstant());
+
+    // THEN
+    assertEquals(expectedInstant, actualOutcome.single());
+}
+```
+
 **Python**
 
 ```python
@@ -1199,6 +2290,68 @@ def test_returns_the_earlier_instant_when_earliest_is_requested(self):
     self.assertEqual(expected_instant, actual_outcome.single())
 ```
 
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that ZonedIntent.resolve returns both instants when the wall time happens twice.
+ * Compared with: the by-hand conversion with the offset `Intl.DateTimeFormat` reports silently picks one of them,
+ * here the daylight-time one.
+ */
+it("returns both instants when the wall time falls in an overlap", () => {
+  // SETUP: the pinned demo zone rules, never the host's tz database
+  const envContext = TemporalContext.with(demoZoneRules());
+
+  // SYSTEM UNDER TEST: 01:30 on 1 November 2026 in New York, when clocks go back from 02:00 to 01:00
+  const sut = CivilDateTime.of(2026, 11, 1, 1, 30).inZone("America/New_York");
+
+  // WHEN
+  const actualOutcome = sut.resolve(envContext);
+
+  // EXPECTATIONS: 01:30 daylight time, then 01:30 standard time; JavaScript's single answer is one of them
+  const expectedInstants = [
+    Instant.fromDate(new Date("2026-11-01T01:30:00-04:00")),
+    Instant.fromDate(new Date("2026-11-01T01:30:00-05:00")),
+  ];
+  const expectedCodes = ["ambiguous"];
+  const tmpWallTimeAsUtc = Date.UTC(2026, 10, 1, 1, 30);
+  const tmpOffsetName = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", timeZoneName: "longOffset" })
+    .formatToParts(tmpWallTimeAsUtc).find((part) => part.type === "timeZoneName")?.value;
+  const expectedNativePick = Instant.fromUnixMilliseconds(tmpWallTimeAsUtc - Number(tmpOffsetName?.slice(3, 6)) * 3_600_000);
+
+  // THEN
+  assert.ok(actualOutcome instanceof Multiple);
+  assert.deepEqual(actualOutcome.values.map(String), expectedInstants.map(String));
+  assert.deepEqual(actualOutcome.diagnostics.map((diagnostic) => diagnostic.code), expectedCodes);
+  assert.ok(actualOutcome.values.map(String).includes(String(expectedNativePick)));
+});
+
+/**
+ * Verifies that ZonedIntent.resolve with Overlap.Earliest returns the first of the two instants.
+ * Compared with: JavaScript has no such policy; the by-hand conversion picks whichever its offset guess leads to,
+ * and does not say that there was a choice.
+ */
+it("returns the earlier instant when Earliest is requested", () => {
+  // GIVEN: the policy that picks the earlier of two instants
+  const givenPolicy: ResolutionPolicy = { overlap: Overlap.Earliest };
+
+  // SETUP: the pinned demo zone rules, never the host's tz database
+  const envContext = TemporalContext.with(demoZoneRules());
+
+  // SYSTEM UNDER TEST: 01:30 on 1 November 2026 in New York, when clocks go back from 02:00 to 01:00
+  const sut = CivilDateTime.of(2026, 11, 1, 1, 30).inZone("America/New_York");
+
+  // WHEN
+  const actualOutcome = sut.resolve(envContext, givenPolicy);
+
+  // EXPECTATIONS: 01:30 daylight time, the first time the clock shows it
+  const expectedInstant = Instant.fromDate(new Date("2026-11-01T01:30:00-04:00"));
+
+  // THEN
+  assert.equal(String(actualOutcome.single()), String(expectedInstant));
+});
+```
+
 ## 11. Timestamps
 
 ### Exact fractions and differences
@@ -1233,6 +2386,36 @@ public void Test_Until_ReturnsAnExactFraction_WhenTheInstantsAreAFractionOfASeco
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that Instant.until returns the exact number of seconds, as a fraction, when the instants are a
+ * fraction of a second apart.
+ * Compared with: {@code Duration.between} gives the same amount, exact to the nanosecond.
+ */
+@Test
+void returnsAnExactFraction_whenTheInstantsAreAFractionOfASecondApart() {
+    // GIVEN: one hour, 0.75 seconds later
+    Instant givenLater = Instant.fromUnixSeconds(1_793_889_001);
+
+    // SYSTEM UNDER TEST: 13:30:00.25 on 5 November 2026
+    Instant sut = Instant.fromUnixSeconds(1_793_885_400, 250_000_000);
+
+    // WHEN
+    PosixSeconds actualSeconds = sut.until(givenLater);
+
+    // EXPECTATIONS: exactly 14403/4 seconds, the amount java.time measures
+    Duration tmpNative = Duration.between(java.time.Instant.ofEpochMilli(1_793_885_400_250L), java.time.Instant.ofEpochSecond(1_793_889_001));
+    PosixSeconds expectedSeconds = PosixSeconds.from(tmpNative);
+    String expectedText = "3600.75 s (POSIX)";
+
+    // THEN
+    assertEquals(expectedSeconds, actualSeconds);
+    assertEquals(expectedText, actualSeconds.toString());
+}
+```
+
 **Python**
 
 ```python
@@ -1260,6 +2443,33 @@ def test_returns_an_exact_fraction_when_the_instants_are_a_fraction_of_a_second_
     # THEN
     self.assertEqual(expected_seconds, actual_seconds)
     self.assertEqual(expected_approximation, float(actual_seconds.seconds))
+```
+
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that Instant.until returns the exact number of seconds, as a fraction, between two instants.
+ * Compared with: subtracting two Dates gives milliseconds as a number; seconds are a floating-point division.
+ */
+it("returns an exact fraction when the instants are a fraction of a second apart", () => {
+  // GIVEN: one hour and 0.75 seconds later
+  const givenLater = Instant.fromUnixSeconds(1_793_889_001);
+
+  // SYSTEM UNDER TEST: 13:30:00.25 on 5 November 2026
+  const sut = Instant.fromUnixSeconds(1_793_885_400, 250_000_000);
+
+  // WHEN
+  const actualSeconds: PosixSeconds = sut.until(givenLater);
+
+  // EXPECTATIONS: exactly 14403/4 seconds, the number Date approximates as a float
+  const expectedSeconds = PosixSeconds.of(14_403, 4);
+  const expectedApproximation = (new Date(1_793_889_001_000).getTime() - new Date(1_793_885_400_250).getTime()) / 1000;
+
+  // THEN
+  assert.equal(String(actualSeconds), String(expectedSeconds));
+  assert.equal(Number(actualSeconds.numerator) / Number(actualSeconds.denominator), expectedApproximation);
+});
 ```
 
 ## 12. Durations vs periods
@@ -1318,6 +2528,61 @@ public void Test_AddDays_KeepsTheWallTime_WhenTheDayCrossesADstChange()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that Instant.add with SI seconds returns unsupported when no leap-second table is available.
+ * Compared with: {@code Duration} has one kind of second, so java.time cannot tell SI seconds from POSIX
+ * seconds.
+ */
+@Test
+void returnsUnsupported_whenGivenSiSecondsWithoutALeapSecondTable() {
+    // GIVEN: 86,400 SI seconds, as a physicist measures a day
+    ElapsedSeconds givenSeconds = ElapsedSeconds.of(86_400);
+
+    // SYSTEM UNDER TEST: noon on 7 March 2026 in New York
+    Instant sut = Instant.from(OffsetDateTime.of(2026, 3, 7, 12, 0, 0, 0, ZoneOffset.ofHours(-5)).toInstant());
+
+    // WHEN
+    Outcome<Instant> actualOutcome = sut.add(givenSeconds);
+
+    // EXPECTATIONS: unsupported, because SI seconds on a POSIX timescale need leap seconds
+    Status expectedStatus = Status.UNSUPPORTED;
+    String expectedCode = "needs-leap-seconds";
+
+    // THEN
+    assertEquals(expectedStatus, actualOutcome.status());
+    assertTrue(actualOutcome.diagnostics().stream().anyMatch(d -> d.code().equals(expectedCode)), actualOutcome.why());
+}
+
+/**
+ * Verifies that ZonedIntent.addDays keeps the wall time when the day crosses a daylight-saving change.
+ * Compared with: {@code ZonedDateTime.plusDays} keeps noon too; {@code OffsetDateTime.plusDays} keeps the offset
+ * instead, so the wall time moves to 13:00.
+ */
+@Test
+void keepsTheWallTime_whenTheDayCrossesADstChange() {
+    // GIVEN: one calendar day
+    int givenDays = 1;
+
+    // SYSTEM UNDER TEST: noon on 7 March 2026 in New York, the day before clocks spring forward
+    ZonedIntent sut = CivilDateTime.of(2026, 3, 7, 12, 0).inZone("America/New_York");
+
+    // WHEN
+    ZonedIntent actualNextNoon = sut.addDays(givenDays);
+
+    // EXPECTATIONS: the wall time java.time reaches, in the same zone
+    ZonedDateTime tmpNextNoon = ZonedDateTime.of(LocalDateTime.of(2026, 3, 7, 12, 0), ZoneId.of("America/New_York")).plusDays(1);
+    ZonedIntent expectedNextNoon = CivilDateTime.of(
+            tmpNextNoon.getYear(), tmpNextNoon.getMonthValue(), tmpNextNoon.getDayOfMonth(),
+            tmpNextNoon.getHour(), tmpNextNoon.getMinute()).inZone("America/New_York");
+
+    // THEN
+    assertEquals(expectedNextNoon, actualNextNoon);
+}
+```
+
 **Python**
 
 ```python
@@ -1367,6 +2632,54 @@ def test_keeps_the_wall_time_when_the_day_crosses_a_dst_change(self):
 
     # THEN
     self.assertEqual(expected_next_noon, actual_next_noon)
+```
+
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that Instant.add with SI seconds returns unsupported when no leap-second table is available.
+ * Compared with: JavaScript has one kind of millisecond, so it cannot tell SI seconds from POSIX seconds.
+ */
+it("returns unsupported when given SI seconds without a leap-second table", () => {
+  // GIVEN: 86,400 SI seconds, as a physicist measures a day
+  const givenSeconds = ElapsedSeconds.of(86_400);
+
+  // SYSTEM UNDER TEST: noon on 7 March 2026 in New York
+  const sut = CivilDateTime.of(2026, 3, 7, 12, 0).atOffset(-5 * 3600).toInstant();
+
+  // WHEN
+  const actualOutcome: Outcome<Instant> = sut.add(givenSeconds);
+
+  // EXPECTATIONS: unsupported, because SI seconds on a POSIX timescale need leap seconds
+  const expectedStatus = "unsupported";
+  const expectedCodes = ["needs-leap-seconds"];
+
+  // THEN
+  assert.equal(actualOutcome.status, expectedStatus);
+  assert.deepEqual(actualOutcome.diagnostics.map((diagnostic) => diagnostic.code), expectedCodes);
+});
+
+/**
+ * Verifies that ZonedIntent.addDays keeps the wall time when the day crosses a daylight-saving change.
+ * Compared with: adding 86,400,000 ms to the Date for noon lands on 13:00 in New York, as Intl shows it.
+ */
+it("keeps the wall time when the day crosses a DST change", () => {
+  // GIVEN: one calendar day
+  const givenDays = 1;
+
+  // SYSTEM UNDER TEST: noon on 7 March 2026 in New York, the day before clocks spring forward
+  const sut = CivilDateTime.of(2026, 3, 7, 12, 0).inZone("America/New_York");
+
+  // WHEN
+  const actualNextNoon: ZonedIntent = sut.addDays(givenDays);
+
+  // EXPECTATIONS: noon again, on the next date
+  const expectedNextNoon = CivilDateTime.of(2026, 3, 8, 12, 0).inZone("America/New_York");
+
+  // THEN
+  assert.equal(String(actualNextNoon), String(expectedNextNoon));
+});
 ```
 
 ## 13. Ranges
@@ -1452,6 +2765,83 @@ public void Test_Of_PossiblyContainsALaterDay_WhenTheEndIsUnknown()
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that a half-open Interval definitely contains the day when the day is between its ends.
+ * Compared with: {@code !day.isBefore(first) && day.isBefore(end)} on {@code LocalDate} values says the same.
+ */
+@Test
+void definitelyContainsTheDay_whenTheDayIsBetweenTheEnds() {
+    // GIVEN: 15 November 2026
+    CivilDate givenDay = CivilDate.of(2026, 11, 15);
+
+    // SYSTEM UNDER TEST: November 2026, from the 1st up to but not including 1 December
+    Interval<CivilDate> sut = Interval.halfOpen(CivilDate.of(2026, 11, 1), CivilDate.of(2026, 12, 1));
+
+    // WHEN
+    Truth actualContains = sut.contains(givenDay);
+
+    // EXPECTATIONS: the answer java.time's hand-written bounds give
+    LocalDate tmpDay = LocalDate.of(2026, 11, 15);
+    boolean tmpNativeContains = !tmpDay.isBefore(LocalDate.of(2026, 11, 1)) && tmpDay.isBefore(LocalDate.of(2026, 12, 1));
+    Truth expectedContains = tmpNativeContains ? Truth.DEFINITELY : Truth.IMPOSSIBLE;
+
+    // THEN
+    assertEquals(expectedContains, actualContains);
+}
+
+/**
+ * Verifies that a half-open Interval cannot contain the day when the day is its excluded end.
+ * Compared with: the hand-written {@code day.isBefore(end)} excludes it too, if nobody writes
+ * {@code !day.isAfter(end)} by mistake.
+ */
+@Test
+void cannotContainTheDay_whenTheDayIsTheExcludedEnd() {
+    // GIVEN: 1 December 2026, the end of the interval
+    CivilDate givenDay = CivilDate.of(2026, 12, 1);
+
+    // SYSTEM UNDER TEST: November 2026, from the 1st up to but not including 1 December
+    Interval<CivilDate> sut = Interval.halfOpen(CivilDate.of(2026, 11, 1), CivilDate.of(2026, 12, 1));
+
+    // WHEN
+    Truth actualContains = sut.contains(givenDay);
+
+    // EXPECTATIONS: impossible, and written with the end's bracket open
+    Truth expectedContains = Truth.IMPOSSIBLE;
+    String expectedText = "[2026-11-01, 2026-12-01)";
+
+    // THEN
+    assertEquals(expectedContains, actualContains);
+    assertEquals(expectedText, sut.toString());
+}
+
+/**
+ * Verifies that an Interval only possibly contains a later day when its end is unknown.
+ * Compared with: the same {@code null} end would be read as "no end", and the answer would wrongly be "yes".
+ */
+@Test
+void possiblyContainsALaterDay_whenTheEndIsUnknown() {
+    // GIVEN: 1 June 2027
+    CivilDate givenDay = CivilDate.of(2027, 6, 1);
+
+    // SYSTEM UNDER TEST: from 1 November 2026, until an end nobody knows yet
+    Interval<CivilDate> sut = Interval.of(Bound.included(CivilDate.of(2026, 11, 1)), Bound.unknown());
+
+    // WHEN
+    Truth actualContains = sut.contains(givenDay);
+
+    // EXPECTATIONS: possibly, and written with "?" for the unknown end
+    Truth expectedContains = Truth.POSSIBLY;
+    String expectedText = "[2026-11-01, ?)";
+
+    // THEN
+    assertEquals(expectedContains, actualContains);
+    assertEquals(expectedText, sut.toString());
+}
+```
+
 **Python**
 
 ```python
@@ -1521,6 +2911,79 @@ def test_possibly_contains_a_later_day_when_the_end_is_unknown(self):
     self.assertEqual(expected_text, str(sut))
 ```
 
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that a half-open Interval definitely contains a day between its ends.
+ * Compared with: `day >= first && day < end` on Dates says the same.
+ */
+it("definitely contains the day when the day is between the ends", () => {
+  // GIVEN: 15 November 2026
+  const givenDay = CivilDate.of(2026, 11, 15);
+
+  // SYSTEM UNDER TEST: November 2026, from the 1st up to but not including 1 December
+  const sut = Interval.halfOpen(CivilDate.of(2026, 11, 1), CivilDate.of(2026, 12, 1));
+
+  // WHEN
+  const actualContains: Truth = sut.contains(givenDay);
+
+  // EXPECTATIONS: the answer the hand-written bounds give
+  const tmpDay = new Date(Date.UTC(2026, 10, 15));
+  const tmpNativeContains = tmpDay >= new Date(Date.UTC(2026, 10, 1)) && tmpDay < new Date(Date.UTC(2026, 11, 1));
+  const expectedContains = tmpNativeContains ? Truth.Definitely : Truth.Impossible;
+
+  // THEN
+  assert.equal(actualContains, expectedContains);
+});
+
+/**
+ * Verifies that a half-open Interval cannot contain its excluded end.
+ * Compared with: the hand-written `day < end` excludes it too, if nobody writes `<=` by mistake.
+ */
+it("cannot contain the day when the day is the excluded end", () => {
+  // GIVEN: 1 December 2026, the end of the interval
+  const givenDay = CivilDate.of(2026, 12, 1);
+
+  // SYSTEM UNDER TEST: November 2026, from the 1st up to but not including 1 December
+  const sut = Interval.halfOpen(CivilDate.of(2026, 11, 1), CivilDate.of(2026, 12, 1));
+
+  // WHEN
+  const actualContains = sut.contains(givenDay);
+
+  // EXPECTATIONS: impossible, and written with the end's bracket open
+  const expectedContains = Truth.Impossible;
+  const expectedText = "[2026-11-01, 2026-12-01)";
+
+  // THEN
+  assert.equal(actualContains, expectedContains);
+  assert.equal(sut.toString(), expectedText);
+});
+
+/**
+ * Verifies that an Interval with an unknown end only possibly contains a later day.
+ * Compared with: the same `null` end would be read as "no end", and the answer would wrongly be `true`.
+ */
+it("possibly contains a later day when the end is unknown", () => {
+  // GIVEN: 1 June 2027
+  const givenDay = CivilDate.of(2027, 6, 1);
+
+  // SYSTEM UNDER TEST: from 1 November 2026, until an end nobody knows yet
+  const sut = Interval.of(Bound.included(CivilDate.of(2026, 11, 1)), Bound.unknown);
+
+  // WHEN
+  const actualContains = sut.contains(givenDay);
+
+  // EXPECTATIONS: possibly, and written with "?" for the unknown end
+  const expectedContains = Truth.Possibly;
+  const expectedText = "[2026-11-01, ?)";
+
+  // THEN
+  assert.equal(actualContains, expectedContains);
+  assert.equal(sut.toString(), expectedText);
+});
+```
+
 ## 14. Round trip
 
 ### Native → UTV → native
@@ -1552,6 +3015,33 @@ public void Test_ToDateTimeOffset_ReturnsTheOriginal_WhenTheValueCameFromADateTi
 }
 ```
 
+**Java**
+
+```java
+/**
+ * Verifies that FixedOffsetDateTime.toOffsetDateTime gives back exactly the native value when the value came
+ * from an OffsetDateTime.
+ * Compared with: {@code OffsetDateTime.equals} checks the wall time and the offset, not just the instant.
+ */
+@Test
+void returnsTheOriginal_whenTheValueCameFromAnOffsetDateTime() {
+    // GIVEN: lunch at 14:30 on 5 November 2026, one hour east of UTC
+    OffsetDateTime givenLunch = OffsetDateTime.of(2026, 11, 5, 14, 30, 0, 0, ZoneOffset.ofHours(1));
+
+    // SYSTEM UNDER TEST: the same lunch as a UTV value
+    FixedOffsetDateTime sut = FixedOffsetDateTime.from(givenLunch);
+
+    // WHEN
+    Outcome<OffsetDateTime> actualOutcome = sut.toOffsetDateTime();
+
+    // EXPECTATIONS: the very same native value
+    OffsetDateTime expectedLunch = OffsetDateTime.of(2026, 11, 5, 14, 30, 0, 0, ZoneOffset.ofHours(1));
+
+    // THEN
+    assertEquals(expectedLunch, actualOutcome.single());
+}
+```
+
 **Python**
 
 ```python
@@ -1577,6 +3067,33 @@ def test_returns_the_original_when_the_value_came_from_a_datetime(self):
     self.assertEqual(expected_lunch.utcoffset(), actual_outcome.single().utcoffset())
 ```
 
+**TypeScript**
+
+```typescript
+/**
+ * Verifies that Instant.toDate gives back exactly the Date the instant was made from.
+ * Compared with: `getTime()` of the Date that comes back equals the original's, to the millisecond.
+ */
+it("returns the original when the instant came from a Date", () => {
+  // GIVEN: a Date for 13:30:00.25 UTC on 5 November 2026
+  const givenDate = new Date(Date.UTC(2026, 10, 5, 13, 30, 0, 250));
+
+  // SYSTEM UNDER TEST: the same moment as a UTV Instant
+  const sut = Instant.fromDate(givenDate);
+
+  // WHEN
+  const actualOutcome: Outcome<Date> = sut.toDate();
+
+  // EXPECTATIONS: the very same time value, with nothing lost
+  const expectedTime = Date.UTC(2026, 10, 5, 13, 30, 0, 250);
+  const expectedCodes: string[] = [];
+
+  // THEN
+  assert.equal(actualOutcome.single().getTime(), expectedTime);
+  assert.deepEqual(actualOutcome.diagnostics.map((diagnostic) => diagnostic.code), expectedCodes);
+});
+```
+
 ## Missing
 
-These tasks have no marked code yet: Java:now, TypeScript:now, Rust:now, Java:a-date, TypeScript:a-date, Rust:a-date, Java:weekday-week, TypeScript:weekday-week, Rust:weekday-week, Java:feb-30, TypeScript:feb-30, Rust:feb-30, Java:add-days, TypeScript:add-days, Rust:add-days, Java:month-end, TypeScript:month-end, Rust:month-end, Java:days-between, TypeScript:days-between, Rust:days-between, Java:compare-dates, TypeScript:compare-dates, Rust:compare-dates, Java:time-of-day, TypeScript:time-of-day, Rust:time-of-day, Java:datetime-plus-hours, TypeScript:datetime-plus-hours, Rust:datetime-plus-hours, Java:parse-offsets, TypeScript:parse-offsets, Rust:parse-offsets, Java:meeting-in-paris, TypeScript:meeting-in-paris, Rust:meeting-in-paris, Java:dst-gap, TypeScript:dst-gap, Rust:dst-gap, Java:dst-overlap, TypeScript:dst-overlap, Rust:dst-overlap, Java:timestamps, TypeScript:timestamps, Rust:timestamps, Java:day-vs-24h, TypeScript:day-vs-24h, Rust:day-vs-24h, Java:ranges, TypeScript:ranges, Rust:ranges, Java:round-trip, TypeScript:round-trip, Rust:round-trip
+These tasks have no marked code yet: Rust:now, Rust:a-date, Rust:weekday-week, Rust:feb-30, Rust:add-days, Rust:month-end, Rust:days-between, Rust:compare-dates, Rust:time-of-day, Rust:datetime-plus-hours, Rust:parse-offsets, Rust:meeting-in-paris, Rust:dst-gap, Rust:dst-overlap, Rust:timestamps, Rust:day-vs-24h, Rust:ranges, Rust:round-trip
