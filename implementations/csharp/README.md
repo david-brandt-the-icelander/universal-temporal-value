@@ -15,9 +15,8 @@ Console.WriteLine(CivilDate.Of(2026, 1, 31).AddMonths(1, MonthEnd.Constrain));  
 
 ```
 cd implementations/csharp
-dotnet run --project examples/Everyday       # 14 everyday tasks, .NET next to UTV
-dotnet run --project examples/Traditional    # the shared catalog of 37 traditional tasks
-dotnet test                                  # fixtures, text form, typed layer, example snapshot
+dotnet test                                    # everything: fixtures, text form, typed layer, examples
+dotnet test tests/Utv.Examples.Tests           # only the examples, which are unit tests
 ```
 
 - **Library version:** 0.3.0 (NuGet package `Utv`), .NET 8 (`net8.0`). No runtime dependencies beyond the BCL.
@@ -225,26 +224,57 @@ not the failures inside each alternative.
 
 `dotnet test` reads the shared material from the repository root (resolved relative to the test project at build time):
 
-- the schema (the embedded copy must equal it), `conformance/examples/*.json`, and the catalog `examples/traditional.json`;
+- the schema (the embedded copy must equal it) and `conformance/examples/*.json`;
 - every fixture of `conformance/operations/everyday.json`, checking status, candidates and `expect.diagnostics`
   (each fixture is its own test, named by its id, and one more test reports all failures at once);
 - every fixture of `conformance/operations/text-form.json` through `TextForm.Parse` / `TextForm.Format`;
 - the typed layer (`TypedApiTests`: each row of library-api §2, `ToString`/`Parse` and `ToJson`/`FromJson` round
   trips, constructors, outcomes, policies, interop);
-- the **snapshot** of the Everyday example (`EverydayExampleTests`): it runs the example in-process and compares every
-  line with `examples/Everyday/everyday.expected.txt`, skipping lines that end in ` ‡` (they depend on this machine's
-  clock or time zone database). It also checks that lines stay within 100 columns and that every task is marked.
-  To record a new snapshot: `dotnet run --project examples/Everyday > examples/Everyday/everyday.expected.txt`.
+- the examples (`tests/Utv.Examples.Tests`), described below.
 
 ## Examples
 
-`examples/Everyday` (`Program.cs`) is the main example: 14 sections of everyday tasks, each written twice, first with
-.NET's own types (`DateOnly`, `DateTime`, `DateTimeOffset`, `TimeOnly`, `TimeZoneInfo`), then with UTV. It is plain
-top-level code: each task sits between `// BEGIN <task-id>` and `// END <task-id>` markers (they feed
-`docs/side-by-side.md`), the month-end and DST tasks `switch` on the outcome, and every printed row has its output as
-a trailing comment. The demo zone rules are linked from `conformance/rules/demo-zones.json` and copied next to the
-program at build time.
+The examples are unit tests in [`tests/Utv.Examples.Tests`](tests/Utv.Examples.Tests), so they run with
+`dotnet test` and can't drift from what the library does. They are written for the maintainer, as
+[`AGENTS.md`](../../AGENTS.md) describes, and they cover the scenarios of
+[`docs/example-tests.md`](../../docs/example-tests.md) from both ends:
 
-`examples/Traditional` is a tour of the shared catalog [`examples/traditional.json`](../../examples/traditional.json)
-at the JSON layer. It ends with `37 examples, every outcome as expected.` (exit code 0), and `dotnet test` checks the
-catalog too.
+| Folder | Organized by | Each test shows |
+|---|---|---|
+| [`UtvFirst/`](tests/Utv.Examples.Tests/UtvFirst) | UTV class (`CivilDateTests`), then function (`#region AddMonths`) | how to do a task with UTV, with the expected value computed by .NET wherever the two agree |
+| [`NativeFirst/`](tests/Utv.Examples.Tests/NativeFirst) | .NET namespace (`Globalization/`, `Text/Json/`), class (`DateOnlyTests`), then method | what .NET does for the same task, with the expected value computed by UTV wherever the two agree |
+
+Each test's summary says what it verifies and, in a second sentence starting "Compared with:", what the other side
+does. For example, from `UtvFirst/CivilDateTests.cs`:
+
+```csharp
+/// <summary>
+/// Verifies that CivilDate.AddMonths returns none when the day is missing from the target month.
+/// Compared with: <c>DateOnly.AddMonths</c> clamps 31 January to 28 February without saying so.
+/// </summary>
+[Fact]
+public void Test_AddMonths_ReturnsNone_WhenTheDayIsMissingFromTheTargetMonth()
+{
+    // GIVEN: one month, into a February that has no day 31
+    int givenMonths = 1;
+
+    // SYSTEM UNDER TEST: 31 January 2026
+    CivilDate sut = CivilDate.Of(2026, 1, 31);
+
+    // WHEN
+    Outcome<CivilDate> actualOutcome = sut.AddMonths(givenMonths);
+
+    // EXPECTATIONS: no such date, explained by the month-end diagnostic
+    UtvStatus expectedStatus = UtvStatus.None;
+    string expectedCode = "month-end";
+
+    // THEN
+    Assert.Equal(expectedStatus, actualOutcome.Status);
+    Assert.Contains(expectedCode, actualOutcome.Diagnostics.Codes);
+}
+```
+
+UTV's zone operations use the pinned rules of `conformance/rules/demo-zones.json` (through `Fixtures.DemoZoneRules()`).
+`TimeZoneInfo` reads this machine's tz database, so the native-first zone tests need one that knows the 2026–2027
+rules of New York and Paris. UTV-first tests marked `// BEGIN <task-id>` … `// END <task-id>` also appear on the
+cross-language page [`docs/side-by-side.md`](../../docs/side-by-side.md).

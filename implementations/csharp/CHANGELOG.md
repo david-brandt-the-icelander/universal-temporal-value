@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- **Examples are unit tests.** The new test project `tests/Utv.Examples.Tests` replaces the example programs. It has
+  two suites over the scenarios of `docs/example-tests.md`: `UtvFirst/` (organized by UTV class and function, each
+  test comparing UTV with .NET's own types) and `NativeFirst/` (organized by .NET namespace, class and method, each
+  test comparing .NET with UTV). Tests follow the repository's `AGENTS.md`.
+- **Removed** `examples/Everyday` (and its snapshot `everyday.expected.txt` and `EverydayExampleTests`) and
+  `examples/Traditional` (and `TraditionalCatalogTests`). The shared catalog `examples/traditional.json` is gone; its
+  entries are now example tests. No library changes.
+
 ## 0.3.0
 
 Implements [`docs/library-api.md`](../../docs/library-api.md) (typed values, outcomes, one vocabulary) and

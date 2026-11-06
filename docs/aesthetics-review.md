@@ -5,6 +5,8 @@
 > - **R5, text form:** see [`text-form.md`](text-form.md). The canonical interval notation uses brackets instead of EDTF's slash, because EDTF's `a/b` can't say whether an end is excluded; EDTF slash forms are accepted as input.
 > - **Deferred:** the shorter JSON *authoring* form, also proposed under R5, needs spec 1.1 (OI-18).
 > - **Deferred:** EDTF qualifiers (`1347~`) need a mapping to the `uncertain` kind.
+> - **Superseded:** R6's example programs and their snapshot tests, and the traditional catalog tour, were later
+>   replaced by example unit tests in every library; see [`example-tests.md`](example-tests.md).
 >
 > The findings below describe the 0.2 libraries.
 
