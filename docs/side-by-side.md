@@ -201,6 +201,52 @@ it("returns the same moment when given a clock reading", () => {
 });
 ```
 
+**Rust**
+
+```rust
+/// Verifies that Instant::from_system_time takes a clock reading as an input when the program reads the clock.
+/// Compared with: `Utc::now()` and `SystemTime::now()` read the clock themselves; UTV never does, so a test can
+/// fix "now".
+#[test]
+fn returns_the_same_moment_when_given_a_clock_reading() -> Result<(), Box<dyn Error>> {
+    // GIVEN: a clock reading, as SystemTime::now() would return it: 13:30:00.123 UTC on 5 November 2026
+    let given_reading: SystemTime = UNIX_EPOCH + Duration::new(1_793_885_400, 123_000_000);
+
+    // WHEN
+    let actual_now = Instant::from_system_time(given_reading);
+
+    // EXPECTATIONS: the same moment, as chrono reads it from the same SystemTime
+    let expected_now = Instant::try_from(DateTime::<Utc>::from(given_reading))?;
+
+    // THEN
+    assert_eq!(expected_now, actual_now);
+    Ok(())
+}
+
+/// Verifies that interop::chrono::from_local returns unsupported whatever the `DateTime<Local>` holds.
+/// Compared with: `Local::now()` returns a `DateTime<Local>`, a wall time that only means something on this
+/// machine, so UTV offers no typed conversion from it at all.
+///
+/// Making the given value reads this machine's zone on purpose, because a `DateTime<Local>` cannot be made
+/// without it; the outcome is the same for every zone and every moment.
+#[test]
+fn returns_unsupported_when_given_a_local_date_time() {
+    // GIVEN: a reading shaped like Local::now()'s: 13:30 UTC on 5 November 2026, in this machine's zone
+    let given_reading: DateTime<Local> = DateTime::from_timestamp(1_793_885_400, 0).unwrap().with_timezone(&Local);
+
+    // WHEN
+    let actual_result = from_local(given_reading);
+
+    // EXPECTATIONS: refused, because the host's zone is hidden input
+    let expected_status = Status::Unsupported;
+    let expected_code = "local-zone";
+
+    // THEN
+    assert_eq!(expected_status, actual_result.status);
+    assert!(actual_result.diagnostics.iter().any(|d| d.code == expected_code));
+}
+```
+
 ## 2. A date
 
 ### 5 November 2026
@@ -310,6 +356,32 @@ it("creates the date when the fields name a real day", () => {
   assert.equal(String(actualDate), String(expectedDate));
   assert.equal(actualDate.toString(), expectedText);
 });
+```
+
+**Rust**
+
+```rust
+/// Verifies that CivilDate::of creates the date when the fields name a real day.
+/// Compared with: `NaiveDate::from_ymd_opt(2026, 11, 5)` names the same day.
+#[test]
+fn creates_the_date_when_the_fields_name_a_real_day() -> Result<(), Box<dyn Error>> {
+    // GIVEN: 5 November 2026
+    let given_year = 2026;
+    let given_month = 11;
+    let given_day = 5;
+
+    // WHEN
+    let actual_date = CivilDate::of(given_year, given_month, given_day)?;
+
+    // EXPECTATIONS: the same day as chrono's NaiveDate
+    let expected_date = CivilDate::from(NaiveDate::from_ymd_opt(2026, 11, 5).unwrap());
+    let expected_text = "2026-11-05";
+
+    // THEN
+    assert_eq!(expected_date, actual_date);
+    assert_eq!(expected_text, actual_date.to_string());
+    Ok(())
+}
 ```
 
 ### Day of week and ISO week
@@ -483,6 +555,49 @@ it("returns 45 when the date is 5 November 2026", () => {
 });
 ```
 
+**Rust**
+
+```rust
+/// Verifies that CivilDate::day_of_week returns the weekday of the date, numbered the ISO way.
+/// Compared with: `NaiveDate::weekday` names the same day; its `number_from_monday` is the ISO number, while
+/// `num_days_from_monday` counts from 0.
+#[test]
+fn returns_thursday_when_the_date_is_5_november_2026() -> Result<(), Box<dyn Error>> {
+    // SYSTEM UNDER TEST: 5 November 2026
+    let sut = CivilDate::of(2026, 11, 5)?;
+
+    // WHEN
+    let actual_weekday = sut.day_of_week();
+
+    // EXPECTATIONS: Thursday, the ISO number chrono gives for the same day
+    let expected_weekday = Weekday::Thursday;
+    let expected_number = NaiveDate::from_ymd_opt(2026, 11, 5).unwrap().weekday().number_from_monday();
+
+    // THEN
+    assert_eq!(expected_weekday, actual_weekday);
+    assert_eq!(expected_number, actual_weekday.number());
+    Ok(())
+}
+
+/// Verifies that CivilDate::iso_week returns the ISO 8601 week number of the date.
+/// Compared with: `NaiveDate::iso_week().week()` gives the same week.
+#[test]
+fn returns_45_when_the_date_is_5_november_2026() -> Result<(), Box<dyn Error>> {
+    // SYSTEM UNDER TEST: 5 November 2026
+    let sut = CivilDate::of(2026, 11, 5)?;
+
+    // WHEN
+    let actual_week = sut.iso_week();
+
+    // EXPECTATIONS: the ISO week chrono computes for the same day
+    let expected_week = NaiveDate::from_ymd_opt(2026, 11, 5).unwrap().iso_week().week();
+
+    // THEN
+    assert_eq!(expected_week, actual_week);
+    Ok(())
+}
+```
+
 ## 3. Invalid dates
 
 ### 30 February 2026
@@ -594,6 +709,31 @@ it("returns invalid when the day is 30 February", () => {
 });
 ```
 
+**Rust**
+
+```rust
+/// Verifies that CivilDate::of returns an error, with the reason, when the day is 30 February.
+/// Compared with: `NaiveDate::from_ymd_opt(2026, 2, 30)` returns `None` and gives no reason.
+#[test]
+fn returns_day_out_of_range_when_the_day_is_30_february() {
+    // GIVEN: 30 February 2026
+    let given_year = 2026;
+    let given_month = 2;
+    let given_day = 30;
+
+    // WHEN
+    let actual_result = CivilDate::of(given_year, given_month, given_day);
+
+    // EXPECTATIONS: no date, as chrono finds too, because February 2026 has 28 days
+    let expected_is_err = NaiveDate::from_ymd_opt(2026, 2, 30).is_none();
+    let expected_codes = vec!["day-out-of-range"];
+
+    // THEN
+    assert_eq!(expected_is_err, actual_result.is_err());
+    assert_eq!(expected_codes, actual_result.unwrap_err().codes());
+}
+```
+
 ## 4. Adding
 
 ### 5 Nov + 30 days
@@ -700,6 +840,32 @@ it("returns the later date when the days cross a month end", () => {
   // THEN
   assert.equal(String(actualDate), String(expectedDate));
 });
+```
+
+**Rust**
+
+```rust
+/// Verifies that CivilDate::add_days returns the date that many days later, carrying into the next month.
+/// Compared with: `NaiveDate::checked_add_days(Days::new(30))` gives the same date.
+#[test]
+fn returns_the_later_date_when_the_days_cross_a_month_end() -> Result<(), Box<dyn Error>> {
+    // GIVEN: 30 days, more than remain in November
+    let given_days = 30;
+
+    // SYSTEM UNDER TEST: 5 November 2026
+    let sut = CivilDate::of(2026, 11, 5)?;
+
+    // WHEN
+    let actual_date = sut.add_days(given_days);
+
+    // EXPECTATIONS: the date chrono computes for the same addition
+    let tmp_native = NaiveDate::from_ymd_opt(2026, 11, 5).unwrap().checked_add_days(Days::new(30)).unwrap();
+    let expected_date = CivilDate::from(tmp_native);
+
+    // THEN
+    assert_eq!(expected_date, actual_date);
+    Ok(())
+}
 ```
 
 ### 31 Jan 2026 + 1 month
@@ -910,6 +1076,56 @@ it("returns the last day of the month when Constrain is requested", () => {
 });
 ```
 
+**Rust**
+
+```rust
+/// Verifies that CivilDate::add_months returns none when the day is missing from the target month.
+/// Compared with: `NaiveDate::checked_add_months` clamps 31 January to 28 February without saying so.
+#[test]
+fn returns_none_when_the_day_is_missing_from_the_target_month() -> Result<(), Box<dyn Error>> {
+    // GIVEN: one month, into a February that has no day 31
+    let given_months = 1;
+
+    // SYSTEM UNDER TEST: 31 January 2026
+    let sut = CivilDate::of(2026, 1, 31)?;
+
+    // WHEN
+    let actual_outcome = sut.add_months(given_months);
+
+    // EXPECTATIONS: no such date, explained by the month-end diagnostic
+    let expected_status = Status::None;
+    let expected_code = "month-end";
+
+    // THEN
+    assert_eq!(expected_status, actual_outcome.status());
+    assert!(actual_outcome.diagnostics().contains(expected_code));
+    Ok(())
+}
+
+/// Verifies that CivilDate::add_months_constrained returns the last day of the target month when the day is
+/// missing from it.
+/// Compared with: `NaiveDate::checked_add_months` gives the same date, but without being asked.
+#[test]
+fn returns_the_last_day_of_the_month_when_the_day_is_missing_from_it() -> Result<(), Box<dyn Error>> {
+    // GIVEN: one month, constrained to the end of the target month
+    let given_months = 1;
+
+    // SYSTEM UNDER TEST: 31 January 2026
+    let sut = CivilDate::of(2026, 1, 31)?;
+
+    // WHEN
+    let actual_date = sut.add_months_constrained(given_months);
+
+    // EXPECTATIONS: the date chrono clamps to
+    let tmp_native = NaiveDate::from_ymd_opt(2026, 1, 31).unwrap().checked_add_months(Months::new(1)).unwrap();
+    let expected_date = CivilDate::from(tmp_native);
+
+    // THEN
+    assert_eq!(expected_date, actual_date);
+    Ok(())
+}
+```
+
 ## 5. Days between
 
 ### 5 Nov → 25 Dec
@@ -1015,6 +1231,32 @@ it("returns the day count when the other date is later", () => {
   // THEN
   assert.equal(actualDays, expectedDays);
 });
+```
+
+**Rust**
+
+```rust
+/// Verifies that CivilDate::days_until returns the number of days to a later date.
+/// Compared with: `NaiveDate::signed_duration_since(..).num_days()` gives the same count.
+#[test]
+fn returns_the_day_count_when_the_other_date_is_later() -> Result<(), Box<dyn Error>> {
+    // GIVEN: Christmas Day 2026
+    let given_christmas = CivilDate::of(2026, 12, 25)?;
+
+    // SYSTEM UNDER TEST: 5 November 2026
+    let sut = CivilDate::of(2026, 11, 5)?;
+
+    // WHEN
+    let actual_days = sut.days_until(given_christmas);
+
+    // EXPECTATIONS: the days chrono counts between the same two dates
+    let tmp_christmas = NaiveDate::from_ymd_opt(2026, 12, 25).unwrap();
+    let expected_days = tmp_christmas.signed_duration_since(NaiveDate::from_ymd_opt(2026, 11, 5).unwrap()).num_days();
+
+    // THEN
+    assert_eq!(expected_days, actual_days);
+    Ok(())
+}
 ```
 
 ### Which comes first
@@ -1236,6 +1478,64 @@ it("returns multiple when both wall times fall in an overlap", () => {
 });
 ```
 
+**Rust**
+
+```rust
+/// Verifies that CivilDate's less-than operator is true when the left date comes first.
+/// Compared with: `NaiveDate`'s operator gives the same answer. Plain dates always have an order.
+#[test]
+fn returns_true_when_the_left_date_comes_first() -> Result<(), Box<dyn Error>> {
+    // GIVEN: Christmas Day 2026
+    let given_christmas = CivilDate::of(2026, 12, 25)?;
+
+    // SYSTEM UNDER TEST: 5 November 2026
+    let sut = CivilDate::of(2026, 11, 5)?;
+
+    // WHEN
+    let actual_comes_first = sut < given_christmas;
+
+    // EXPECTATIONS: chrono's answer for the same two days
+    let expected_comes_first = NaiveDate::from_ymd_opt(2026, 11, 5).unwrap() < NaiveDate::from_ymd_opt(2026, 12, 25).unwrap();
+
+    // THEN
+    assert_eq!(expected_comes_first, actual_comes_first);
+    Ok(())
+}
+
+/// Verifies that TemporalContext::compare returns both orders when both wall times fall in the same overlap.
+/// Compared with: two `NaiveDateTime`s compare by wall time and always say "earlier"; two chrono-tz
+/// `DateTime`s can't even be made until `LocalResult::earliest` or `latest` has picked an instant for each.
+#[test]
+fn returns_multiple_when_both_wall_times_fall_in_an_overlap() -> Result<(), Box<dyn Error>> {
+    // GIVEN: a call at 01:30 and a stand-up at 01:45, on the night New York's clocks go back from 02:00 to 01:00
+    let given_call = CivilDateTime::of(2026, 11, 1, 1, 30)?.in_zone("America/New_York");
+    let given_standup = CivilDateTime::of(2026, 11, 1, 1, 45)?.in_zone("America/New_York");
+
+    // SETUP: the pinned demo zone rules, never this machine's tz database
+    let env_rules = demo_zone_rules();
+
+    // SYSTEM UNDER TEST
+    let sut = TemporalContext::with(env_rules);
+
+    // WHEN
+    let actual_outcome = sut.compare(&given_call, &given_standup);
+
+    // EXPECTATIONS: either could come first (01:30 standard time is after 01:45 daylight time)
+    let expected_orders = vec![Ordering::Less, Ordering::Greater];
+    let expected_code = "ambiguous";
+
+    // THEN
+    match actual_outcome {
+        Outcome::Multiple(actual_orders, actual_diagnostics) => {
+            assert_eq!(expected_orders, actual_orders);
+            assert!(actual_diagnostics.contains(expected_code));
+        }
+        other => panic!("expected both orders, got {other:?}"),
+    }
+    Ok(())
+}
+```
+
 ## 6. Times and date-times
 
 ### 09:30
@@ -1347,6 +1647,32 @@ it("writes no seconds when no seconds are given", () => {
 });
 ```
 
+**Rust**
+
+```rust
+/// Verifies that CivilTime::of keeps the time to the minute when no seconds are given.
+/// Compared with: `NaiveTime::from_hms_opt(9, 30, 0)` always has seconds, and prints them: `09:30:00`.
+#[test]
+fn writes_no_seconds_when_no_seconds_are_given() -> Result<(), Box<dyn Error>> {
+    // GIVEN: half past nine, to the minute
+    let given_hour = 9;
+    let given_minute = 30;
+
+    // WHEN
+    let actual_time = CivilTime::of(given_hour, given_minute)?;
+
+    // EXPECTATIONS: the same hour and minute as chrono, and no seconds in the text
+    let expected_time = NaiveTime::from_hms_opt(9, 30, 0).unwrap();
+    let expected_text = "09:30";
+
+    // THEN
+    assert_eq!(expected_time.hour(), actual_time.hour());
+    assert_eq!(expected_time.minute(), actual_time.minute());
+    assert_eq!(expected_text, actual_time.to_string());
+    Ok(())
+}
+```
+
 ### 23:30 + 2 hours
 
 **C#**
@@ -1454,6 +1780,32 @@ it("carries into the next day when the hours pass midnight", () => {
   // THEN
   assert.equal(String(actualDateTime), String(expectedDateTime));
 });
+```
+
+**Rust**
+
+```rust
+/// Verifies that CivilDateTime::add_hours carries into the next day when the hours pass midnight.
+/// Compared with: `NaiveDateTime + TimeDelta::hours(2)` gives the same wall time; `NaiveTime` alone would wrap
+/// and lose the day.
+#[test]
+fn carries_into_the_next_day_when_the_hours_pass_midnight() -> Result<(), Box<dyn Error>> {
+    // GIVEN: two hours, past midnight
+    let given_hours = 2;
+
+    // SYSTEM UNDER TEST: 23:30 on 5 November 2026
+    let sut = CivilDateTime::of(2026, 11, 5, 23, 30)?;
+
+    // WHEN
+    let actual_date_time = sut.add_hours(given_hours);
+
+    // EXPECTATIONS: the wall time chrono computes for the same addition
+    let expected_date_time = NaiveDate::from_ymd_opt(2026, 11, 5).unwrap().and_hms_opt(23, 30, 0).unwrap() + TimeDelta::hours(2);
+
+    // THEN
+    assert_eq!(expected_date_time, NaiveDateTime::try_from(actual_date_time)?);
+    Ok(())
+}
 ```
 
 ## 7. Parsing with offsets
@@ -1647,6 +1999,50 @@ it("returns a FixedOffsetDateTime when the text ends in +00:00", () => {
   assert.equal(String(actualValue.toInstant()), String(expectedInstant));
   assert.equal(actualValue.toString(), expectedText);
 });
+```
+
+**Rust**
+
+```rust
+/// Verifies that utv::parse returns an Instant when the text ends in Z.
+/// Compared with: `DateTime::parse_from_rfc3339` gives a `DateTime<FixedOffset>` at +00:00, the same as for the
+/// text "+00:00".
+#[test]
+fn returns_an_instant_when_the_text_ends_in_z() -> Result<(), Box<dyn Error>> {
+    // GIVEN: 14:30 UTC, written with Z: a moment, with no local wall time implied
+    let given_text = "2026-11-05T14:30:00Z";
+
+    // WHEN
+    let actual_outcome = utv::parse(given_text);
+
+    // EXPECTATIONS: the moment chrono parses from the same text
+    let expected_instant = Instant::try_from(DateTime::parse_from_rfc3339("2026-11-05T14:30:00Z")?)?;
+
+    // THEN
+    assert_eq!(Some(Value::Instant(expected_instant)), actual_outcome.unique());
+    Ok(())
+}
+
+/// Verifies that utv::parse returns a FixedOffsetDateTime when the text ends in +00:00.
+/// Compared with: `DateTime::parse_from_rfc3339` cannot tell this text from the one ending in Z.
+#[test]
+fn returns_a_fixed_offset_date_time_when_the_text_ends_in_plus_zero() -> Result<(), Box<dyn Error>> {
+    // GIVEN: 14:30 at offset +00:00: a wall time somewhere that is at UTC+0 right now
+    let given_text = "2026-11-05T14:30:00+00:00";
+
+    // WHEN
+    let actual_outcome = utv::parse(given_text);
+
+    // EXPECTATIONS: the value chrono parses from the same text, and the text kept as written
+    let expected_date_time = FixedOffsetDateTime::try_from(DateTime::parse_from_rfc3339("2026-11-05T14:30:00+00:00")?)?;
+    let expected_text = "2026-11-05T14:30:00+00:00";
+
+    // THEN
+    let actual_value = actual_outcome.single()?;
+    assert_eq!(Value::FixedOffset(expected_date_time), actual_value);
+    assert_eq!(expected_text, actual_value.to_string());
+    Ok(())
+}
 ```
 
 ## 8. Time zones
@@ -1883,6 +2279,59 @@ it("returns the instant when the wall time happens once", () => {
 });
 ```
 
+**Rust**
+
+```rust
+/// Verifies that Instant::in_zone returns the wall time and offset in the zone when the zone has rules for it.
+/// Compared with: `DateTime::with_timezone(&New_York)` gives the same wall time from chrono-tz's rules.
+#[test]
+fn returns_the_local_wall_time_when_the_zone_has_rules() -> Result<(), Box<dyn Error>> {
+    // GIVEN: New York
+    let given_zone_id = "America/New_York";
+
+    // SETUP: the pinned demo zone rules, never this machine's tz database
+    let env_context = TemporalContext::with(demo_zone_rules());
+
+    // SYSTEM UNDER TEST: 07:00 UTC on 1 June 2027, when the meeting starts in Paris
+    let sut = Instant::try_from(Utc.with_ymd_and_hms(2027, 6, 1, 7, 0, 0).unwrap())?;
+
+    // WHEN
+    let actual_outcome = sut.in_zone(given_zone_id, &env_context);
+
+    // EXPECTATIONS: the wall time chrono-tz computes, with the offset UTV asserts alongside it
+    let expected_wall_time = Utc.with_ymd_and_hms(2027, 6, 1, 7, 0, 0).unwrap().with_timezone(&New_York).naive_local();
+    let expected_text = "2027-06-01T03:00:00-04:00[America/New_York]";
+
+    // THEN
+    let actual_there = actual_outcome.single()?;
+    assert_eq!(expected_wall_time, NaiveDateTime::try_from(actual_there.date_time())?);
+    assert_eq!(expected_text, actual_there.to_string());
+    Ok(())
+}
+
+/// Verifies that ZonedIntent::resolve returns the one instant when the wall time happens exactly once.
+/// Compared with: chrono-tz's `Paris.with_ymd_and_hms(2027, 6, 1, 9, 0, 0)` finds the same instant.
+#[test]
+fn returns_the_instant_when_the_wall_time_happens_once() -> Result<(), Box<dyn Error>> {
+    // SETUP: the pinned demo zone rules, never this machine's tz database
+    let env_context = TemporalContext::with(demo_zone_rules());
+
+    // SYSTEM UNDER TEST: a meeting at 09:00 on 1 June 2027 in Paris
+    let sut = CivilDateTime::of(2027, 6, 1, 9, 0)?.in_zone("Europe/Paris");
+
+    // WHEN
+    let actual_outcome = sut.resolve(&env_context);
+
+    // EXPECTATIONS: the instant chrono-tz finds for the same wall time
+    let tmp_native = Paris.with_ymd_and_hms(2027, 6, 1, 9, 0, 0).single().unwrap();
+    let expected_instant = Instant::try_from(tmp_native.with_timezone(&Utc))?;
+
+    // THEN
+    assert_eq!(Some(expected_instant), actual_outcome.unique());
+    Ok(())
+}
+```
+
 ## 9. DST gap
 
 ### 02:30 on 8 March 2026 in New York
@@ -2101,6 +2550,57 @@ it("shifts forward by the gap when ShiftForward is requested", () => {
   // THEN
   assert.equal(String(actualOutcome.single()), String(expectedInstant));
 });
+```
+
+**Rust**
+
+```rust
+/// Verifies that ZonedIntent::resolve returns none when the wall time falls in a daylight-saving gap.
+/// Compared with: chrono-tz's `with_ymd_and_hms` returns `LocalResult::None` too, without saying why.
+#[test]
+fn returns_none_when_the_wall_time_falls_in_a_gap() -> Result<(), Box<dyn Error>> {
+    // SETUP: the pinned demo zone rules, never this machine's tz database
+    let env_context = TemporalContext::with(demo_zone_rules());
+
+    // SYSTEM UNDER TEST: 02:30 on 8 March 2026 in New York, when clocks jump from 02:00 to 03:00
+    let sut = CivilDateTime::of(2026, 3, 8, 2, 30)?.in_zone("America/New_York");
+
+    // WHEN
+    let actual_outcome = sut.resolve(&env_context);
+
+    // EXPECTATIONS: no such instant, explained by the gap diagnostic
+    let expected_status = Status::None;
+    let expected_code = "gap";
+
+    // THEN
+    assert_eq!(expected_status, actual_outcome.status());
+    assert!(actual_outcome.diagnostics().contains(expected_code));
+    Ok(())
+}
+
+/// Verifies that ZonedIntent::resolve_with and Gap::ShiftForward move the wall time forward by the length of the gap.
+/// Compared with: chrono has no such policy; it returns `LocalResult::None` and leaves the choice to the caller.
+#[test]
+fn shifts_forward_by_the_gap_when_shift_forward_is_requested() -> Result<(), Box<dyn Error>> {
+    // GIVEN: the policy that moves a skipped wall time forward by the gap
+    let given_policy = ResolutionPolicy::new(Gap::ShiftForward, Overlap::Reject);
+
+    // SETUP: the pinned demo zone rules, never this machine's tz database
+    let env_context = TemporalContext::with(demo_zone_rules());
+
+    // SYSTEM UNDER TEST: 02:30 on 8 March 2026 in New York, when clocks jump from 02:00 to 03:00
+    let sut = CivilDateTime::of(2026, 3, 8, 2, 30)?.in_zone("America/New_York");
+
+    // WHEN
+    let actual_outcome = sut.resolve_with(&env_context, given_policy);
+
+    // EXPECTATIONS: 03:30 daylight time, four hours behind UTC
+    let expected_instant = CivilDateTime::of(2026, 3, 8, 3, 30)?.at_offset(-4 * 3600)?.to_instant();
+
+    // THEN
+    assert_eq!(Some(expected_instant), actual_outcome.unique());
+    Ok(())
+}
 ```
 
 ## 10. DST overlap
@@ -2352,6 +2852,68 @@ it("returns the earlier instant when Earliest is requested", () => {
 });
 ```
 
+**Rust**
+
+```rust
+/// Verifies that ZonedIntent::resolve returns both instants when the wall time happens twice.
+/// Compared with: chrono-tz's `with_ymd_and_hms` returns `LocalResult::Ambiguous` with the same two instants;
+/// chrono is the one standard API that reports both.
+#[test]
+fn returns_both_instants_when_the_wall_time_falls_in_an_overlap() -> Result<(), Box<dyn Error>> {
+    // SETUP: the pinned demo zone rules, never this machine's tz database
+    let env_context = TemporalContext::with(demo_zone_rules());
+
+    // SYSTEM UNDER TEST: 01:30 on 1 November 2026 in New York, when clocks go back from 02:00 to 01:00
+    let sut = CivilDateTime::of(2026, 11, 1, 1, 30)?.in_zone("America/New_York");
+
+    // WHEN
+    let actual_outcome = sut.resolve(&env_context);
+
+    // EXPECTATIONS: 01:30 daylight time, then 01:30 standard time, as chrono-tz finds them
+    let tmp_native = New_York.with_ymd_and_hms(2026, 11, 1, 1, 30, 0);
+    let expected_instants = vec![
+        Instant::try_from(tmp_native.earliest().unwrap().with_timezone(&Utc))?,
+        Instant::try_from(tmp_native.latest().unwrap().with_timezone(&Utc))?,
+    ];
+    let expected_code = "ambiguous";
+
+    // THEN
+    match actual_outcome {
+        Outcome::Multiple(actual_instants, actual_diagnostics) => {
+            assert_eq!(expected_instants, actual_instants);
+            assert!(actual_diagnostics.contains(expected_code));
+        }
+        other => panic!("expected both instants, got {other:?}"),
+    }
+    Ok(())
+}
+
+/// Verifies that ZonedIntent::resolve_with and Overlap::Earliest return the first of the two instants.
+/// Compared with: chrono's `LocalResult::earliest` picks the same one.
+#[test]
+fn returns_the_earlier_instant_when_earliest_is_requested() -> Result<(), Box<dyn Error>> {
+    // GIVEN: the policy that picks the earlier of two instants
+    let given_policy = ResolutionPolicy::new(Gap::Reject, Overlap::Earliest);
+
+    // SETUP: the pinned demo zone rules, never this machine's tz database
+    let env_context = TemporalContext::with(demo_zone_rules());
+
+    // SYSTEM UNDER TEST: 01:30 on 1 November 2026 in New York, when clocks go back from 02:00 to 01:00
+    let sut = CivilDateTime::of(2026, 11, 1, 1, 30)?.in_zone("America/New_York");
+
+    // WHEN
+    let actual_outcome = sut.resolve_with(&env_context, given_policy);
+
+    // EXPECTATIONS: 01:30 daylight time, the first time the clock shows it, as chrono picks it
+    let tmp_native = New_York.with_ymd_and_hms(2026, 11, 1, 1, 30, 0).earliest().unwrap();
+    let expected_instant = Instant::try_from(tmp_native.with_timezone(&Utc))?;
+
+    // THEN
+    assert_eq!(Some(expected_instant), actual_outcome.unique());
+    Ok(())
+}
+```
+
 ## 11. Timestamps
 
 ### Exact fractions and differences
@@ -2470,6 +3032,35 @@ it("returns an exact fraction when the instants are a fraction of a second apart
   assert.equal(String(actualSeconds), String(expectedSeconds));
   assert.equal(Number(actualSeconds.numerator) / Number(actualSeconds.denominator), expectedApproximation);
 });
+```
+
+**Rust**
+
+```rust
+/// Verifies that Instant::until returns the exact number of seconds, as a fraction, between two instants.
+/// Compared with: subtracting two `DateTime<Utc>`s gives a `TimeDelta` of the same length, exact to the
+/// nanosecond; `TimeDelta::seconds(1) / 3` shows where that stops, while `PosixSeconds::of_ratio(1, 3)` is exact.
+#[test]
+fn returns_an_exact_fraction_when_the_instants_are_a_fraction_of_a_second_apart() -> Result<(), Box<dyn Error>> {
+    // GIVEN: one hour and 0.75 seconds later
+    let given_later = Instant::from_unix_seconds(1_793_889_001);
+
+    // SYSTEM UNDER TEST: 13:30:00.25 on 5 November 2026
+    let sut = Instant::from_unix_seconds_nanos(1_793_885_400, 250_000_000);
+
+    // WHEN
+    let actual_seconds = sut.until(given_later);
+
+    // EXPECTATIONS: exactly 14403/4 seconds, the length chrono's TimeDelta gives in nanoseconds
+    let tmp_delta = DateTime::from_timestamp(1_793_889_001, 0).unwrap() - DateTime::from_timestamp(1_793_885_400, 250_000_000).unwrap();
+    let expected_seconds = PosixSeconds::of_ratio(tmp_delta.num_nanoseconds().unwrap().into(), 1_000_000_000)?;
+    let expected_text = "3600.75 s (POSIX)";
+
+    // THEN
+    assert_eq!(expected_seconds, actual_seconds);
+    assert_eq!(expected_text, actual_seconds.to_string());
+    Ok(())
+}
 ```
 
 ## 12. Durations vs periods
@@ -2680,6 +3271,58 @@ it("keeps the wall time when the day crosses a DST change", () => {
   // THEN
   assert.equal(String(actualNextNoon), String(expectedNextNoon));
 });
+```
+
+**Rust**
+
+```rust
+/// Verifies that Instant::add_elapsed returns unsupported when no leap-second table is available.
+/// Compared with: `TimeDelta` has one kind of second, so chrono cannot tell SI seconds from POSIX seconds.
+#[test]
+fn returns_unsupported_when_given_si_seconds_without_a_leap_second_table() -> Result<(), Box<dyn Error>> {
+    // GIVEN: 86,400 SI seconds, as a physicist measures a day
+    let given_seconds = ElapsedSeconds::of(86_400);
+
+    // SYSTEM UNDER TEST: noon on 7 March 2026 in New York
+    let sut = CivilDateTime::of(2026, 3, 7, 12, 0)?.at_offset(-5 * 3600)?.to_instant();
+
+    // WHEN
+    let actual_outcome = sut.add_elapsed(given_seconds);
+
+    // EXPECTATIONS: unsupported, because SI seconds on a POSIX timescale need leap seconds
+    let expected_status = Status::Unsupported;
+    let expected_code = "needs-leap-seconds";
+
+    // THEN
+    assert_eq!(expected_status, actual_outcome.status());
+    assert!(actual_outcome.diagnostics().contains(expected_code));
+    Ok(())
+}
+
+/// Verifies that ZonedIntent::add_days keeps the wall time when the day crosses a daylight-saving change.
+/// Compared with: `DateTime<Tz> + Days::new(1)` keeps noon too; `+ TimeDelta::days(1)` adds 86,400 seconds and
+/// lands on 13:00.
+#[test]
+fn keeps_the_wall_time_when_the_day_crosses_a_dst_change() -> Result<(), Box<dyn Error>> {
+    // GIVEN: one calendar day
+    let given_days = 1;
+
+    // SYSTEM UNDER TEST: noon on 7 March 2026 in New York, the day before clocks spring forward
+    let sut = CivilDateTime::of(2026, 3, 7, 12, 0)?.in_zone("America/New_York");
+
+    // WHEN
+    let actual_next_noon = sut.add_days(given_days);
+
+    // EXPECTATIONS: noon again, on the next date, in the same zone, as chrono's calendar days give it
+    let tmp_native = New_York.with_ymd_and_hms(2026, 3, 7, 12, 0, 0).unwrap() + Days::new(1);
+    let expected_wall_time = tmp_native.naive_local();
+    let expected_zone_id = "America/New_York";
+
+    // THEN
+    assert_eq!(expected_wall_time, NaiveDateTime::try_from(actual_next_noon.date_time())?);
+    assert_eq!(expected_zone_id, actual_next_noon.zone_id());
+    Ok(())
+}
 ```
 
 ## 13. Ranges
@@ -2984,6 +3627,80 @@ it("possibly contains a later day when the end is unknown", () => {
 });
 ```
 
+**Rust**
+
+```rust
+/// Verifies that a half-open Interval definitely contains a day between its ends.
+/// Compared with: `(nov1..dec1).contains(&day)` on `NaiveDate`s says the same.
+#[test]
+fn definitely_contains_the_day_when_the_day_is_between_the_ends() -> Result<(), Box<dyn Error>> {
+    // GIVEN: 15 November 2026
+    let given_day = CivilDate::of(2026, 11, 15)?;
+
+    // SYSTEM UNDER TEST: November 2026, from the 1st up to but not including 1 December
+    let sut = Interval::half_open(CivilDate::of(2026, 11, 1)?, CivilDate::of(2026, 12, 1)?)?;
+
+    // WHEN
+    let actual_contains = sut.contains(&given_day);
+
+    // EXPECTATIONS: the answer std's half-open range gives
+    let tmp_november = NaiveDate::from_ymd_opt(2026, 11, 1).unwrap()..NaiveDate::from_ymd_opt(2026, 12, 1).unwrap();
+    let tmp_native_contains = tmp_november.contains(&NaiveDate::from_ymd_opt(2026, 11, 15).unwrap());
+    let expected_contains = if tmp_native_contains { Truth::Definitely } else { Truth::Impossible };
+
+    // THEN
+    assert_eq!(expected_contains, actual_contains);
+    Ok(())
+}
+
+/// Verifies that a half-open Interval cannot contain its excluded end.
+/// Compared with: `(nov1..dec1).contains(&dec1)` is false too.
+#[test]
+fn cannot_contain_the_day_when_the_day_is_the_excluded_end() -> Result<(), Box<dyn Error>> {
+    // GIVEN: 1 December 2026, the end of the interval
+    let given_day = CivilDate::of(2026, 12, 1)?;
+
+    // SYSTEM UNDER TEST: November 2026, from the 1st up to but not including 1 December
+    let sut = Interval::half_open(CivilDate::of(2026, 11, 1)?, CivilDate::of(2026, 12, 1)?)?;
+
+    // WHEN
+    let actual_contains = sut.contains(&given_day);
+
+    // EXPECTATIONS: impossible, and written with the end's bracket open
+    let expected_contains = Truth::Impossible;
+    let expected_text = "[2026-11-01, 2026-12-01)";
+
+    // THEN
+    assert_eq!(expected_contains, actual_contains);
+    assert_eq!(expected_text, sut.to_string());
+    Ok(())
+}
+
+/// Verifies that an Interval with an unknown end only possibly contains a later day.
+/// Compared with: std has no range with an unknown end; an `Option<NaiveDate>` end of `None` has to be read as
+/// `nov1..` (no end), and the answer would wrongly be "yes".
+#[test]
+fn possibly_contains_a_later_day_when_the_end_is_unknown() -> Result<(), Box<dyn Error>> {
+    // GIVEN: 1 June 2027
+    let given_day = CivilDate::of(2027, 6, 1)?;
+
+    // SYSTEM UNDER TEST: from 1 November 2026, until an end nobody knows yet
+    let sut = Interval::of(Bound::Included(CivilDate::of(2026, 11, 1)?), Bound::Unknown)?;
+
+    // WHEN
+    let actual_contains = sut.contains(&given_day);
+
+    // EXPECTATIONS: possibly, and "?" written for the unknown end
+    let expected_contains = Truth::Possibly;
+    let expected_text = "[2026-11-01, ?)";
+
+    // THEN
+    assert_eq!(expected_contains, actual_contains);
+    assert_eq!(expected_text, sut.to_string());
+    Ok(())
+}
+```
+
 ## 14. Round trip
 
 ### Native → UTV → native
@@ -3094,6 +3811,31 @@ it("returns the original when the instant came from a Date", () => {
 });
 ```
 
-## Missing
+**Rust**
 
-These tasks have no marked code yet: Rust:now, Rust:a-date, Rust:weekday-week, Rust:feb-30, Rust:add-days, Rust:month-end, Rust:days-between, Rust:compare-dates, Rust:time-of-day, Rust:datetime-plus-hours, Rust:parse-offsets, Rust:meeting-in-paris, Rust:dst-gap, Rust:dst-overlap, Rust:timestamps, Rust:day-vs-24h, Rust:ranges, Rust:round-trip
+```rust
+/// Verifies that converting a FixedOffsetDateTime into a `DateTime<FixedOffset>` gives back exactly the native
+/// value it was made from.
+/// Compared with: chrono's `==` on `DateTime` compares only the instant, so the offset is compared on its own.
+#[test]
+fn returns_the_original_when_the_value_came_from_a_date_time() -> Result<(), Box<dyn Error>> {
+    // GIVEN: lunch at 14:30 on 5 November 2026, one hour east of UTC
+    let given_lunch = DateTime::parse_from_rfc3339("2026-11-05T14:30:00+01:00")?;
+
+    // SYSTEM UNDER TEST: the same lunch as a UTV value
+    let sut = FixedOffsetDateTime::try_from(given_lunch)?;
+
+    // WHEN
+    let actual_result: Result<DateTime<FixedOffset>, Diagnostics> = sut.try_into();
+
+    // EXPECTATIONS: the very same native value, instant and offset
+    let expected_lunch = DateTime::parse_from_rfc3339("2026-11-05T14:30:00+01:00")?;
+    let expected_offset = FixedOffset::east_opt(3600).unwrap();
+
+    // THEN
+    let actual_lunch = actual_result?;
+    assert_eq!(expected_lunch, actual_lunch);
+    assert_eq!(expected_offset, *actual_lunch.offset());
+    Ok(())
+}
+```
