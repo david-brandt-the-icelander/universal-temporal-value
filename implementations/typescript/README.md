@@ -12,8 +12,7 @@ String(jan31.addMonths(1, MonthEnd.Constrain)); // "2026-02-28", because you ask
 ```
 
 ```sh
-npm test           # build, then every test: fixtures, typed layer, example snapshot
-npm run everyday   # the side-by-side example: Date and Intl, then UTV
+npm test   # build, then every test: fixtures, typed layer, and the examples, which are unit tests
 ```
 
 - **Library version:** 0.3.0
@@ -137,31 +136,29 @@ npm test   # tsc -p . && node --test "dist/test/**/*.test.js"
 | `test/everyday.test.ts` | every fixture in `conformance/operations/everyday.json`: status, results and `expect.diagnostics` codes |
 | `test/text-form.test.ts` | every fixture in `conformance/operations/text-form.json`, through `parseText` / `formatText` |
 | `test/typed.test.ts` | the typed layer: each row of library-api §2, `parse(String(v))` and `fromJson(v.toJSON())` round trips, constructors, an exhaustiveness check that must fail to compile |
-| `test/everyday-example.test.ts` | runs the example and compares its output with `examples/everyday.expected.txt` |
-| `test/traditional.test.ts` | every outcome of the shared catalog `examples/traditional.json` |
+| `test/examples/utv-first/*.test.ts` | the UTV-first examples: each task done with UTV, compared with `Date`, `Intl.DateTimeFormat` and `JSON` |
+| `test/examples/native-first/*.test.ts` | the native-first examples: each task done with `Date`, `Intl.DateTimeFormat` and `JSON`, compared with UTV |
+| `test/examples/fixtures.test.ts` | the shared example fixture `demoZoneRules()` |
 | `test/native.test.ts` | native interop, and that library sources never read the clock, host zone or locale |
 | `test/conformance.test.ts`, `test/envelope.test.ts`, `test/civil.test.ts`, `test/api.test.ts` | validation and the 0.2 API |
 
-## Everyday example
+## Examples
 
-```sh
-npm run everyday            # tsc -p . && node dist/examples/everyday.js
-npm run everyday:snapshot   # record examples/everyday.expected.txt again, then review the diff
-```
+The examples are unit tests, so they run with `npm test` and cannot drift from what the library does. They cover the
+scenario catalog in [`docs/example-tests.md`](../../docs/example-tests.md) and follow the test directives in
+[`AGENTS.md`](../../AGENTS.md). There are two suites:
 
-[`examples/everyday.ts`](examples/everyday.ts) runs fourteen everyday tasks top to bottom: first with `Date` and
-`Intl`, then with UTV, printing one aligned row per result with the output as a trailing comment in the source.
-Month ends, DST gaps and DST overlaps are handled with a real `switch` on the `Outcome`. Rows ending in `‡` depend on
-the host (its clock, time zone or tz database); the snapshot test skips them. Each task sits between
-`// BEGIN <task-id>` and `// END <task-id>` markers for the cross-language page.
+- **UTV first**, [`test/examples/utv-first/`](test/examples/utv-first): one file per UTV class or JSON-layer function
+  (`civil-date.test.ts`, `zoned-intent.test.ts`, `validate-structural.test.ts`, …), with a `describe` per class and
+  function. Each test does a task with UTV and compares the result with `Date`, `Intl.DateTimeFormat` or `JSON`. Where
+  they agree, the expected value is computed with the standard API; where they differ, it is a literal and the doc
+  comment says what the standard API does instead. Tests wrapped in `// BEGIN <task-id>` / `// END <task-id>` appear
+  on [`docs/side-by-side.md`](../../docs/side-by-side.md).
+- **Native first**, [`test/examples/native-first/`](test/examples/native-first): one file per standard object
+  (`date.test.ts`, `intl-date-time-format.test.ts`, `json.test.ts`), with a `describe` per method. Each test does the
+  task with the standard API and compares the result with UTV, which supplies the expected value where they agree.
 
-## Traditional catalog tour
-
-```sh
-npm run example   # tsc -p . && node dist/examples/traditional.js
-```
-
-[`examples/traditional.ts`](examples/traditional.ts) validates two hand-built dates, then walks the shared catalog
-[`examples/traditional.json`](../../examples/traditional.json) (see [`examples/README.md`](../../examples/README.md)),
-printing each task's usual library call and this library's structural and Gregorian statuses. Any outcome that
-differs from the catalog is printed as `MISMATCH` and the process exits with code 1.
+UTV's zone operations use the pinned rules of
+[`conformance/rules/demo-zones.json`](../../conformance/rules/demo-zones.json) through `demoZoneRules()` in
+[`test/examples/fixtures.ts`](test/examples/fixtures.ts). The `Intl.DateTimeFormat` comparisons read the host's tz
+database, which must know the 2026–2027 rules of New York and Paris.
