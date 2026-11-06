@@ -17,11 +17,9 @@ match jan31.add_months(1):                          # Outcome[CivilDate]
 print(jan31.add_months(1, MonthEnd.CONSTRAIN))      # 2026-02-28, because you asked
 ```
 
-Run it, the other everyday tasks, and the tests, from `implementations/python`:
+Run the tests, the worked examples among them, from `implementations/python`:
 
 ```
-PYTHONPATH=src python3 examples/everyday.py          # Python's datetime and UTV, task by task
-PYTHONPATH=src python3 examples/traditional.py       # the shared catalog of traditional tasks
 PYTHONPATH=src python3 -m unittest discover -s tests
 ```
 
@@ -184,18 +182,24 @@ raise for semantic outcomes; wrong Python types raise `TypeError`.
 
 ## Examples
 
-[`examples/everyday.py`](examples/everyday.py) is the main example: 14 sections and 18 tasks (now, a
-date, invalid dates, adding, days between, times, parsing with offsets, time zones, DST gap, DST
-overlap, timestamps, durations vs periods, ranges, round trip). Each task does the ordinary thing with
-`datetime`/`zoneinfo`, then with UTV, as plain code you can copy; the comments show what it prints.
-A value too long for its column puts its note on the next line, so rows stay aligned within 100
-columns. Rows marked `‡` depend on the machine (the clock, its tz database or the Python version). Without a tz
-database the Python rows that need one are skipped; the UTV rows never change, because UTV uses only
-`conformance/rules/demo-zones.json`. Each task sits between `# BEGIN <task-id>` and `# END <task-id>`.
+The examples are unit tests, so they run with the tests and can't drift from what the library does. Two suites
+cover the scenarios of [`docs/example-tests.md`](../../docs/example-tests.md) from opposite ends:
 
-[`examples/traditional.py`](examples/traditional.py) builds two dates by hand and walks the shared
-catalog [`examples/traditional.json`](../../examples/traditional.json): 37 traditional tasks, each with
-the outcome every UTV library must report. It exits with status 1 if any outcome differs.
+- [`tests/examples/utv_first/`](tests/examples/utv_first) shows how to do each task with UTV, one module per UTV
+  class (`test_civil_date.py`, …, `test_parse.py` for `utv.parse`, `test_interop.py` for `from_native` /
+  `to_native`, `test_validate.py` and `test_gregorian.py` for the JSON layer) and one `TestCase` per function
+  (`TestAddMonths`). Each test compares the result with `datetime`, `zoneinfo`, `calendar` or `json`: where they
+  agree, the expected value is computed with the standard library; where they differ, it is a literal and the
+  docstring says what the standard library does instead. Tests that illustrate a task of
+  [`docs/side-by-side.md`](../../docs/side-by-side.md) sit between `# BEGIN <task-id>` and `# END <task-id>`.
+- [`tests/examples/native_first/`](tests/examples/native_first) does each task with the standard library, one
+  module per module and class (`test_datetime_date.py`, `test_zoneinfo_zone_info.py`, `test_json.py`, …), and
+  compares the result with UTV the same way round.
+
+Every test follows [`AGENTS.md`](../../AGENTS.md): labelled sections, role-prefixed names, and a docstring that
+says what it verifies and, after `Compared with:`, what the other side does. UTV's zone operations use
+`conformance/rules/demo-zones.json` through `tests/examples/fixtures.py`; the standard library's read this
+machine's tz database, so the zone examples need one that knows the 2026–2027 rules of New York and Paris.
 
 ## Tests
 
@@ -209,15 +213,13 @@ They read the shared files from the repository root (never copies):
   `expect.diagnostics` (`tests/test_everyday_fixtures.py`);
 - `conformance/operations/text-form.json`: every fixture, through `parse_text` / `format_text`
   (`tests/test_text_form.py`);
-- `conformance/examples/*.json` and `examples/traditional.json`.
+- `conformance/examples/*.json`;
+- `conformance/rules/demo-zones.json`, the zone rules of the examples (`tests/examples/fixtures.py`).
 
 `tests/test_typed.py` covers each row of the table above, outcomes, policies, the context, round trips
-(`parse(str(v))` and `from_json(to_json(v))`) and constructor checks. `tests/test_examples.py` runs
-`examples/everyday.py` and compares its output with
-[`examples/everyday.expected.txt`](examples/everyday.expected.txt), skipping rows that end in `‡`;
-it also runs it with no tz database. After an intended change to the example, record the snapshot
-again with `PYTHONPATH=src python3 examples/everyday.py > examples/everyday.expected.txt`. Other tests
-cover the native adapters and check that library code never reads the clock, time zone or locale.
+(`parse(str(v))` and `from_json(to_json(v))`) and constructor checks. `tests/examples/` holds the two
+example suites described above. Other tests cover the native adapters and check that library code never
+reads the clock, time zone or locale.
 
 ## What is not implemented
 

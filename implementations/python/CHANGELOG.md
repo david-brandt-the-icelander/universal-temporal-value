@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+- **Examples are now unit tests**, in two suites that cover the scenarios of
+  [`docs/example-tests.md`](../../docs/example-tests.md) and follow [`AGENTS.md`](../../AGENTS.md):
+  - `tests/examples/utv_first/`: each task done with UTV, one module per UTV class and one
+    `TestCase` per function, compared with `datetime`, `zoneinfo`, `calendar` and `json`.
+    Tests of the side-by-side tasks sit between `# BEGIN <task-id>` / `# END <task-id>`.
+  - `tests/examples/native_first/`: each task done with the standard library, one module per
+    standard module and class, compared with UTV.
+  - `tests/examples/fixtures.py` loads `conformance/rules/demo-zones.json` for both, and has a
+    test of its own.
+- Removed: the example programs `everyday.py` and `traditional.py`, the snapshot of the
+  everyday tour's output, the tour of the shared traditional catalog and the test that ran them.
+  The library is unchanged.
+
 ## 0.3.0
 
 The typed layer of [`docs/library-api.md`](../../docs/library-api.md), on top of the
