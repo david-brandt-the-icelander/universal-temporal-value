@@ -33,6 +33,8 @@ Standard libraries usually choose one of these simplifications for you. They put
 
 A standard library can't easily fix this: its value is in being simple, and the simplifications are the simple part. **UTV aims to be correct as far as possible, not merely convenient.** It is a single, serializable value model whose types encode what is actually known about a moment, a span or a schedule. When a question has no single answer, it says so.
 
+For the full reasoning, with documented real-world cases and the trade-offs involved, see [`docs/rationale.md`](docs/rationale.md).
+
 ## What "correct" means here
 
 UTV doesn't claim to know everything about time. It claims to **never invent knowledge it doesn't have**. In practice:
@@ -128,7 +130,7 @@ conformance/            Language-neutral test material shared by all implementat
   scenarios/              Semantic scenarios every engine must eventually satisfy
 implementations/        Language libraries (one directory per language)
 tools/                  Repository tooling (structural validation)
-docs/                   Background, including how the design evolved
+docs/                   Rationale, design history, library API contracts, side-by-side examples
 ```
 
 Start with `spec/SPECIFICATION.md`, then `spec/DECISIONS.md` and `spec/RESULT-CONTRACT.md`. The JSON Schema checks shapes only. A value can pass it and still be semantically invalid or unresolvable.
