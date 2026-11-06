@@ -1,0 +1,1212 @@
+{
+  "description": "Traditional date/time tasks, expressed as UTV 1.0 values, with the outcome every UTV library must report today. Each language's example runner walks this file.",
+  "specVersion": "1.0",
+  "checks": {
+    "structural": "Structural validation: is this well-formed UTV?",
+    "gregorian": "Semantic check of proleptic Gregorian civil dates. Runs structural validation first; other calendars and kinds are `unsupported`."
+  },
+  "entries": [
+    {
+      "id": "date",
+      "section": "Dates",
+      "title": "A calendar date",
+      "usual": "date(2026, 11, 5)",
+      "point": "A date is fields in a named calendar, not midnight UTC. No time and no zone are invented.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "2026",
+            "month": 11,
+            "day": 5
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "valid"
+      },
+      "later": "Day of week, ISO week and day of year are the planned `fields` operation (milestone M3)."
+    },
+    {
+      "id": "leap-day",
+      "section": "Dates",
+      "title": "A leap day",
+      "usual": "date(2024, 2, 29)",
+      "point": "2024 is a leap year, so 29 February exists.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "2024",
+            "month": 2,
+            "day": 29
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "valid"
+      }
+    },
+    {
+      "id": "not-a-leap-day",
+      "section": "Dates",
+      "title": "29 February in a common year",
+      "usual": "date(2026, 2, 29)",
+      "point": "Well-formed, but it doesn't exist. Structure and meaning are separate checks, and the semantic check says so instead of rolling over to 1 March.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "2026",
+            "month": 2,
+            "day": 29
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "invalid"
+      }
+    },
+    {
+      "id": "century-rule",
+      "section": "Dates",
+      "title": "1900 was not a leap year",
+      "usual": "date(1900, 2, 29)",
+      "point": "Divisible by 100 but not by 400: no 29 February.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "1900",
+            "month": 2,
+            "day": 29
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "invalid"
+      }
+    },
+    {
+      "id": "four-hundred-rule",
+      "section": "Dates",
+      "title": "2000 was a leap year",
+      "usual": "date(2000, 2, 29)",
+      "point": "Divisible by 400: 29 February exists.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "2000",
+            "month": 2,
+            "day": 29
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "valid"
+      }
+    },
+    {
+      "id": "february-30",
+      "section": "Dates",
+      "title": "30 February",
+      "usual": "date(2026, 2, 30)",
+      "point": "Rejected rather than normalized to 2 March. (Sweden did have a 30 February in 1712, in its own calendar; that would need a registered calendar, not the Gregorian one.)",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "2026",
+            "month": 2,
+            "day": 30
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "invalid"
+      }
+    },
+    {
+      "id": "month-13",
+      "section": "Dates",
+      "title": "Month 13",
+      "usual": "date(2026, 13, 1)",
+      "point": "The schema only says `month` is an integer; whether 13 means anything depends on the calendar. Some calendars do have a thirteenth month.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "2026",
+            "month": 13,
+            "day": 1
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "invalid"
+      }
+    },
+    {
+      "id": "far-future",
+      "section": "Dates",
+      "title": "A date after year 9999",
+      "usual": "date(275760, 9, 13)",
+      "point": "Years are arbitrary-precision decimal strings. There is no 9999 or 2038 ceiling.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "275760",
+            "month": 9,
+            "day": 13
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "valid"
+      }
+    },
+    {
+      "id": "negative-year",
+      "section": "Dates",
+      "title": "A date before year 1",
+      "usual": "date(-500, 3, 1)",
+      "point": "Proleptic Gregorian with astronomical year numbering: year 0 exists and -500 is 501 BCE. A historical source almost certainly used another calendar; converting is a `convert` operation, never an assumption.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "-500",
+            "month": 3,
+            "day": 1
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "valid"
+      }
+    },
+    {
+      "id": "year-month",
+      "section": "Dates",
+      "title": "A month: November 2026",
+      "usual": "YearMonth.of(2026, 11)",
+      "point": "A granularity, not 1 November at 00:00.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "year-month",
+          "fields": {
+            "year": "2026",
+            "month": 11
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "valid"
+      }
+    },
+    {
+      "id": "year-only",
+      "section": "Dates",
+      "title": "A year: 1347",
+      "usual": "year = 1347",
+      "point": "Year precision only. Nothing pretends it was 1 January.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "year",
+          "fields": {
+            "year": "1347"
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "valid"
+      }
+    },
+    {
+      "id": "hebrew-date",
+      "section": "Dates",
+      "title": "A date in another calendar",
+      "usual": "HebrewDate(5787, 2, 14)",
+      "point": "Structurally fine. This library has no Hebrew calendar rules installed, so it says `unsupported` instead of guessing.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "5787",
+            "month": 2,
+            "day": 14
+          },
+          "calendar": {
+            "id": "hebrew",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "unsupported"
+      }
+    },
+    {
+      "id": "time",
+      "section": "Times",
+      "title": "A time of day",
+      "usual": "time(9, 30)",
+      "point": "A wall-clock time with no date and no zone. It can't be turned into an instant until both are supplied.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "time",
+          "fields": {
+            "hour": 9,
+            "minute": 30
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      }
+    },
+    {
+      "id": "leap-second-label",
+      "section": "Times",
+      "title": "23:59:60",
+      "usual": "datetime(2016, 12, 31, 23, 59, 60)  # usually an error",
+      "point": "A legal UTC label on 31 December 2016. Confirming it needs a leap-second table, which is a registry dependency; here it is only structurally checked.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "datetime",
+          "fields": {
+            "year": "2016",
+            "month": 12,
+            "day": 31,
+            "hour": 23,
+            "minute": 59,
+            "second": 60
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          },
+          "zone": {
+            "type": "fixed-offset",
+            "seconds": 0
+          },
+          "zoneIntent": "fixed-offset"
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      },
+      "later": "Validating leap-second labels needs a leap-second registry (milestone M4)."
+    },
+    {
+      "id": "local-datetime",
+      "section": "Date-times",
+      "title": "A local date-time with no zone",
+      "usual": "LocalDateTime.of(2026, 11, 5, 14, 30)",
+      "point": "\"Floating\": the same wall time wherever you are. Stored as such, not silently pinned to the server's zone.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "datetime",
+          "fields": {
+            "year": "2026",
+            "month": 11,
+            "day": 5,
+            "hour": 14,
+            "minute": 30
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          },
+          "zone": {
+            "type": "floating"
+          },
+          "zoneIntent": "floating-wall"
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "valid"
+      }
+    },
+    {
+      "id": "offset-datetime",
+      "section": "Date-times",
+      "title": "A date-time with a UTC offset",
+      "usual": "OffsetDateTime(2026-11-05T14:30+01:00)",
+      "point": "A fixed offset is not a time zone: +01:00 doesn't tell you what Paris does next March.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "datetime",
+          "fields": {
+            "year": "2026",
+            "month": 11,
+            "day": 5,
+            "hour": 14,
+            "minute": 30
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          },
+          "zone": {
+            "type": "fixed-offset",
+            "seconds": 3600
+          },
+          "zoneIntent": "fixed-offset"
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "valid"
+      }
+    },
+    {
+      "id": "zoned-meeting",
+      "section": "Date-times",
+      "title": "A future meeting in a named zone",
+      "usual": "ZonedDateTime(2027-06-01T09:00[Europe/Paris])",
+      "point": "Stored as the wall-clock intention plus the zone. If France changes its daylight saving rules before then, the meeting stays at 09:00 local time.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "datetime",
+          "fields": {
+            "year": "2027",
+            "month": 6,
+            "day": 1,
+            "hour": 9,
+            "minute": 0
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          },
+          "zone": {
+            "type": "iana",
+            "id": "Europe/Paris"
+          },
+          "zoneIntent": "follow-zone-id",
+          "resolutionPolicy": {
+            "gap": "reject",
+            "overlap": "reject"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "valid"
+      },
+      "later": "Resolving to an instant is the `resolve` operation with pinned tzdb rules (milestone M5)."
+    },
+    {
+      "id": "dst-gap",
+      "section": "Date-times",
+      "title": "A local time that never happened",
+      "usual": "datetime(2026, 3, 8, 2, 30, tz=New_York)",
+      "point": "On 8 March 2026 New York jumps from 02:00 to 03:00. Most libraries quietly return 03:30 or 01:30. This value is valid, and resolving it under strict rules gives `none`.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "datetime",
+          "fields": {
+            "year": "2026",
+            "month": 3,
+            "day": 8,
+            "hour": 2,
+            "minute": 30
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          },
+          "zone": {
+            "type": "iana",
+            "id": "America/New_York"
+          },
+          "zoneIntent": "follow-zone-id",
+          "resolutionPolicy": {
+            "gap": "preserve-unresolved",
+            "overlap": "all"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "valid"
+      },
+      "later": "`resolve` would return status `none` (milestone M5)."
+    },
+    {
+      "id": "dst-overlap",
+      "section": "Date-times",
+      "title": "A local time that happened twice",
+      "usual": "datetime(2026, 11, 1, 1, 30, tz=New_York)",
+      "point": "On 1 November 2026, 01:30 happens in EDT and again in EST. Libraries pick one; UTV keeps both.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "civil",
+        "value": {
+          "form": "datetime",
+          "fields": {
+            "year": "2026",
+            "month": 11,
+            "day": 1,
+            "hour": 1,
+            "minute": 30
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          },
+          "zone": {
+            "type": "iana",
+            "id": "America/New_York"
+          },
+          "zoneIntent": "follow-zone-id",
+          "resolutionPolicy": {
+            "gap": "reject",
+            "overlap": "all"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid",
+        "gregorian": "valid"
+      },
+      "later": "`resolve` would return status `multiple` with both instants (milestone M5)."
+    },
+    {
+      "id": "timestamp",
+      "section": "Date-times",
+      "title": "A timestamp",
+      "usual": "Instant.ofEpochSecond(0)",
+      "point": "An exact coordinate in a named timescale. POSIX time is one timescale among several (UTC, TAI, GPS, …), and they are not interchangeable.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "instant",
+        "value": {
+          "system": {
+            "system": "utv.timescale",
+            "id": "unix-posix",
+            "version": "1"
+          },
+          "ticks": "0"
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      }
+    },
+    {
+      "id": "precise-timestamp",
+      "section": "Date-times",
+      "title": "A timestamp with a fraction of a second",
+      "usual": "Instant.ofEpochSecond(1793795400, 123456789)",
+      "point": "Exact rational sub-second part, no floating point. Precision is not accuracy: add a `quality` block to say how good the clock was.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "instant",
+        "value": {
+          "system": {
+            "system": "utv.timescale",
+            "id": "unix-posix",
+            "version": "1"
+          },
+          "ticks": "1793795400",
+          "subTick": {
+            "numerator": "123456789",
+            "denominator": "1000000000"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      }
+    },
+    {
+      "id": "elapsed",
+      "section": "Durations",
+      "title": "90 minutes of elapsed time",
+      "usual": "timedelta(minutes=90)",
+      "point": "Elapsed time is SI seconds, as an exact rational.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "amount",
+        "value": {
+          "basis": "elapsed",
+          "seconds": {
+            "numerator": "5400",
+            "denominator": "1"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      }
+    },
+    {
+      "id": "si-day",
+      "section": "Durations",
+      "title": "Exactly 86,400 seconds",
+      "usual": "timedelta(days=1)",
+      "point": "Some libraries call this \"a day\". It isn't: see the next example.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "amount",
+        "value": {
+          "basis": "elapsed",
+          "seconds": {
+            "numerator": "86400",
+            "denominator": "1"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      }
+    },
+    {
+      "id": "calendar-day",
+      "section": "Durations",
+      "title": "One calendar day",
+      "usual": "Period.ofDays(1)",
+      "point": "A calendar day can be 23, 24 or 25 hours long, or skipped altogether. This is a different kind of amount from the previous one.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "amount",
+        "value": {
+          "basis": "calendar",
+          "components": {
+            "days": "1"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      }
+    },
+    {
+      "id": "one-month",
+      "section": "Durations",
+      "title": "One month",
+      "usual": "relativedelta(months=1)",
+      "point": "ISO `P1M`, not `PT1M`. What 31 January + 1 month is depends on an explicit month-end policy.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "amount",
+        "value": {
+          "basis": "calendar",
+          "components": {
+            "months": "1"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      },
+      "later": "`add` with an arithmetic policy (milestone M3). Under the strict policy, 31 Jan + 1 month gives `none`."
+    },
+    {
+      "id": "half-open-range",
+      "section": "Intervals",
+      "title": "November 2026 as a half-open date range",
+      "usual": "range(date(2026,11,1), date(2026,12,1))",
+      "point": "[1 Nov, 1 Dec): the usual safe shape. It's a range of civil dates, not of UTC instants.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "interval",
+        "value": {
+          "domain": "civil/gregory",
+          "start": {
+            "state": "included",
+            "point": {
+              "schema": "utv/1.0",
+              "kind": "civil",
+              "value": {
+                "form": "date",
+                "fields": {
+                  "year": "2026",
+                  "month": 11,
+                  "day": 1
+                },
+                "calendar": {
+                  "id": "gregory",
+                  "chronology": "proleptic"
+                }
+              }
+            }
+          },
+          "end": {
+            "state": "excluded",
+            "point": {
+              "schema": "utv/1.0",
+              "kind": "civil",
+              "value": {
+                "form": "date",
+                "fields": {
+                  "year": "2026",
+                  "month": 12,
+                  "day": 1
+                },
+                "calendar": {
+                  "id": "gregory",
+                  "chronology": "proleptic"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      }
+    },
+    {
+      "id": "closed-range",
+      "section": "Intervals",
+      "title": "The same month as a closed range",
+      "usual": "between(date(2026,11,1), date(2026,11,30))",
+      "point": "[1 Nov, 30 Nov]: inclusive both ends. Endpoint status is explicit, so the two forms can't be confused.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "interval",
+        "value": {
+          "domain": "civil/gregory",
+          "start": {
+            "state": "included",
+            "point": {
+              "schema": "utv/1.0",
+              "kind": "civil",
+              "value": {
+                "form": "date",
+                "fields": {
+                  "year": "2026",
+                  "month": 11,
+                  "day": 1
+                },
+                "calendar": {
+                  "id": "gregory",
+                  "chronology": "proleptic"
+                }
+              }
+            }
+          },
+          "end": {
+            "state": "included",
+            "point": {
+              "schema": "utv/1.0",
+              "kind": "civil",
+              "value": {
+                "form": "date",
+                "fields": {
+                  "year": "2026",
+                  "month": 11,
+                  "day": 30
+                },
+                "calendar": {
+                  "id": "gregory",
+                  "chronology": "proleptic"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      }
+    },
+    {
+      "id": "open-ended",
+      "section": "Intervals",
+      "title": "From 1 November onwards",
+      "usual": "range(start=date(2026,11,1), end=None)",
+      "point": "`unbounded` means there is no end, which is different from not knowing it.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "interval",
+        "value": {
+          "domain": "civil/gregory",
+          "start": {
+            "state": "included",
+            "point": {
+              "schema": "utv/1.0",
+              "kind": "civil",
+              "value": {
+                "form": "date",
+                "fields": {
+                  "year": "2026",
+                  "month": 11,
+                  "day": 1
+                },
+                "calendar": {
+                  "id": "gregory",
+                  "chronology": "proleptic"
+                }
+              }
+            }
+          },
+          "end": {
+            "state": "unbounded"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      }
+    },
+    {
+      "id": "unknown-end",
+      "section": "Intervals",
+      "title": "Started 1 November, end not known yet",
+      "usual": "range(start=..., end=None)  # same code, different meaning",
+      "point": "`unknown` means an end exists (or will) but isn't known. Most libraries can't tell this apart from the previous example.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "interval",
+        "value": {
+          "domain": "civil/gregory",
+          "start": {
+            "state": "included",
+            "point": {
+              "schema": "utv/1.0",
+              "kind": "civil",
+              "value": {
+                "form": "date",
+                "fields": {
+                  "year": "2026",
+                  "month": 11,
+                  "day": 1
+                },
+                "calendar": {
+                  "id": "gregory",
+                  "chronology": "proleptic"
+                }
+              }
+            }
+          },
+          "end": {
+            "state": "unknown"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      }
+    },
+    {
+      "id": "start-plus-duration",
+      "section": "Intervals",
+      "title": "A two-hour meeting",
+      "usual": "Interval(start, start + timedelta(hours=2))",
+      "point": "Stored as start plus amount, as written. The end is derived when needed, and the derivation can depend on rules.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "interval",
+        "value": {
+          "domain": "physical",
+          "construction": "start-amount",
+          "start": {
+            "state": "included",
+            "point": {
+              "schema": "utv/1.0",
+              "kind": "instant",
+              "value": {
+                "system": {
+                  "system": "utv.timescale",
+                  "id": "unix-posix",
+                  "version": "1"
+                },
+                "ticks": "1793795400"
+              }
+            }
+          },
+          "amount": {
+            "schema": "utv/1.0",
+            "kind": "amount",
+            "value": {
+              "basis": "elapsed",
+              "seconds": {
+                "numerator": "7200",
+                "denominator": "1"
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      }
+    },
+    {
+      "id": "disjoint-ranges",
+      "section": "Intervals",
+      "title": "Two separate ranges",
+      "usual": "[range(...), range(...)]",
+      "point": "A set of intervals with an explicit set operation.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "set",
+        "value": {
+          "operation": "union",
+          "members": [
+            {
+              "schema": "utv/1.0",
+              "kind": "interval",
+              "value": {
+                "domain": "civil/gregory",
+                "start": {
+                  "state": "included",
+                  "point": {
+                    "schema": "utv/1.0",
+                    "kind": "civil",
+                    "value": {
+                      "form": "date",
+                      "fields": {
+                        "year": "2026",
+                        "month": 11,
+                        "day": 1
+                      },
+                      "calendar": {
+                        "id": "gregory",
+                        "chronology": "proleptic"
+                      }
+                    }
+                  }
+                },
+                "end": {
+                  "state": "excluded",
+                  "point": {
+                    "schema": "utv/1.0",
+                    "kind": "civil",
+                    "value": {
+                      "form": "date",
+                      "fields": {
+                        "year": "2026",
+                        "month": 11,
+                        "day": 6
+                      },
+                      "calendar": {
+                        "id": "gregory",
+                        "chronology": "proleptic"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "schema": "utv/1.0",
+              "kind": "interval",
+              "value": {
+                "domain": "civil/gregory",
+                "start": {
+                  "state": "included",
+                  "point": {
+                    "schema": "utv/1.0",
+                    "kind": "civil",
+                    "value": {
+                      "form": "date",
+                      "fields": {
+                        "year": "2026",
+                        "month": 11,
+                        "day": 20
+                      },
+                      "calendar": {
+                        "id": "gregory",
+                        "chronology": "proleptic"
+                      }
+                    }
+                  }
+                },
+                "end": {
+                  "state": "excluded",
+                  "point": {
+                    "schema": "utv/1.0",
+                    "kind": "civil",
+                    "value": {
+                      "form": "date",
+                      "fields": {
+                        "year": "2026",
+                        "month": 11,
+                        "day": 26
+                      },
+                      "calendar": {
+                        "id": "gregory",
+                        "chronology": "proleptic"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      }
+    },
+    {
+      "id": "weekly",
+      "section": "Recurrence",
+      "title": "Every Tuesday at 09:00 in Paris",
+      "usual": "rrule(WEEKLY, byweekday=TU, dtstart=...)",
+      "point": "The rule is anchored in local time and a named zone, and names its standard (RFC 5545).",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "recurrence",
+        "value": {
+          "intent": {
+            "schema": "utv/1.0",
+            "kind": "civil",
+            "value": {
+              "form": "datetime",
+              "fields": {
+                "year": "2026",
+                "month": 11,
+                "day": 3,
+                "hour": 9,
+                "minute": 0
+              },
+              "calendar": {
+                "id": "gregory",
+                "chronology": "proleptic"
+              },
+              "zone": {
+                "type": "iana",
+                "id": "Europe/Paris"
+              },
+              "zoneIntent": "follow-zone-id"
+            }
+          },
+          "algorithm": {
+            "system": "rfc",
+            "id": "5545",
+            "version": "1"
+          },
+          "rule": "FREQ=WEEKLY;BYDAY=TU"
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      },
+      "later": "`expand` with a window and budget (milestone M7)."
+    },
+    {
+      "id": "circa",
+      "section": "Uncertainty",
+      "title": "Sometime between 1340 and 1355",
+      "usual": "date(1347, 1, 1)  # and hope nobody asks",
+      "point": "Uncertainty is part of the value. Bounds are labelled as a possible range, not a confidence interval.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "uncertain",
+        "value": {
+          "target": {
+            "schema": "utv/1.0",
+            "kind": "civil",
+            "value": {
+              "form": "year",
+              "fields": {
+                "year": "1347"
+              },
+              "calendar": {
+                "id": "gregory",
+                "chronology": "proleptic"
+              }
+            }
+          },
+          "model": "bounds",
+          "parameters": {
+            "earliest": {
+              "year": "1340"
+            },
+            "latest": {
+              "year": "1355"
+            },
+            "interpretation": "possible range, not 95% confidence"
+          }
+        }
+      },
+      "expect": {
+        "structural": "valid"
+      }
+    },
+    {
+      "id": "future-version",
+      "section": "Refusals",
+      "title": "A value from a newer specification",
+      "usual": "(most libraries: parse error)",
+      "point": "Well-formed but from a version this library doesn't implement: `unsupported`, not `invalid`.",
+      "value": {
+        "schema": "utv/2.0",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "2026",
+            "month": 11,
+            "day": 5
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "unsupported"
+      }
+    },
+    {
+      "id": "draft-version",
+      "section": "Refusals",
+      "title": "A malformed version label",
+      "usual": "(n/a)",
+      "point": "`utv/4` was an unreleased draft label and isn't a valid identifier.",
+      "value": {
+        "schema": "utv/4",
+        "kind": "civil",
+        "value": {
+          "form": "date",
+          "fields": {
+            "year": "2026",
+            "month": 11,
+            "day": 5
+          },
+          "calendar": {
+            "id": "gregory",
+            "chronology": "proleptic"
+          }
+        }
+      },
+      "expect": {
+        "structural": "invalid"
+      }
+    },
+    {
+      "id": "duplicate-key",
+      "section": "Refusals",
+      "title": "Duplicate JSON keys",
+      "usual": "(most JSON parsers: last one wins)",
+      "point": "Two different months in one value is a contradiction, not something to resolve by taking the last one.",
+      "text": "{\"schema\":\"utv/1.0\",\"kind\":\"civil\",\"value\":{\"form\":\"date\",\"fields\":{\"year\":\"2026\",\"month\":11,\"month\":12,\"day\":5},\"calendar\":{\"id\":\"gregory\",\"chronology\":\"proleptic\"}}}",
+      "expect": {
+        "structural": "invalid"
+      }
+    },
+    {
+      "id": "unknown-kind",
+      "section": "Refusals",
+      "title": "An unknown kind",
+      "usual": "(n/a)",
+      "point": "Fail closed: an unknown kind is rejected, not ignored.",
+      "value": {
+        "schema": "utv/1.0",
+        "kind": "moment",
+        "value": {}
+      },
+      "expect": {
+        "structural": "invalid"
+      }
+    }
+  ]
+}

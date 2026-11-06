@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Utv.Examples</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Utv/Utv.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The demo zone rules are linked from the repository (never copied into it) and placed next to the program. -->
+    <None Include="$(MSBuildThisFileDirectory)../../../../conformance/rules/demo-zones.json"
+          Link="demo-zones.json"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Update="everyday.expected.txt" CopyToOutputDirectory="Never" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+{
+  "name": "@utv/core",
+  "version": "0.3.0",
+  "description": "Universal Temporal Value (utv/1.0) core library: typed values and outcomes over the JSON-level everyday API (text form, calendar arithmetic, zone resolution)",
+  "license": "SEE LICENSE IN ../../LICENSE",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "tsc -p . && node --test \"dist/test/**/*.test.js\"",
+    "everyday": "tsc -p . && node dist/examples/everyday.js",
+    "everyday:snapshot": "tsc -p . && node dist/examples/everyday.js > examples/everyday.expected.txt",
+    "example": "tsc -p . && node dist/examples/traditional.js"
+  },
+  "devDependencies": {
+    "typescript": "6.0.2"
+  }
+}

@@ -1,0 +1,113 @@
+Everyday date and time tasks: Date and Intl, then UTV
+
+1. Now
+   Now
+     Date  2026-11-05T22:22:49.216Z         this host's clock ‡
+     UTV   2026-11-05T22:22:49.216Z         the same reading ‡
+
+2. A date
+   5 November 2026
+     Date  2026-11-05T00:00:00.000Z         local midnight, in UTC ‡
+     Date  2026-11-05T00:00:00.000Z         date-only text is UTC
+     UTV   2026-11-05                       a date, not an instant
+   Day of week and ISO week
+     Date  4                                Sunday is 0; no ISO week
+     UTV   Thursday, ISO week 45            day 309
+
+3. Invalid dates
+   30 February 2026
+     Date  Mon Mar 02 2026                  rolled over silently
+     Date  2026-03-02T00:00:00.000Z         parsed, rolled over
+     UTV   RangeError: 2026-02 has no day 30 (day-out-of-range)
+     UTV   invalid (day-out-of-range)       parsing returns an Outcome
+
+4. Adding
+   5 Nov + 30 days
+     Date  Sat Dec 05 2026
+     UTV   2026-12-05                       can't fail: a plain CivilDate
+   31 Jan 2026 + 1 month
+     Date  Tue Mar 03 2026                  rolled over silently
+     UTV   no such date                     2026-02 has no day 31 (month-end)
+     UTV   2026-02-28                       MonthEnd.Constrain clamps
+
+5. Days between
+   5 Nov → 25 Dec
+     Date  50                               milliseconds ÷ msPerDay
+     UTV   50                               whole days
+   Which comes first
+     Date  true                             < compares time values
+     Date  false                            === compares objects
+     UTV   true                             isBefore
+     UTV   true                             equals compares values
+     UTV   -1                               compare gives -1, 0 or 1
+
+6. Times and date-times
+   09:30
+     Date  1970-01-01T09:30:00.000Z         a made-up date, in UTC ‡
+     UTV   09:30                            a time of day
+     UTV   09:30:00                         seconds you give are kept
+   23:30 + 2 hours
+     Date  06/11/2026, 01:30:00             in the host's zone
+     UTV   2026-11-06T01:30                 no zone, no DST
+
+7. Parsing with offsets
+   Z vs +00:00
+     Date  2026-11-05T14:30:00.000Z         the +00:00 is gone
+     Date  true                             the same Date
+     UTV   2026-11-05T14:30:00Z             an Instant: offset unknown
+     UTV   2026-11-05T14:30:00+00:00        a wall clock at +00:00
+     UTV   true                             same moment, different facts
+     UTV   invalid (kind-mismatch)          +00:00 is not Z
+
+8. Time zones
+   09:00 in Paris, seen from New York
+     Intl  01/06/2027, 03:00:00             in New York ‡
+     UTV   2027-06-01T09:00[Europe/Paris]
+     UTV   2027-06-01T07:00:00Z
+     UTV   2027-06-01T03:00:00-04:00[America/New_York]
+
+9. DST gap
+   02:30 on 8 March 2026 in New York
+     Intl  08/03/2026, 01:30:00             no error ‡
+     UTV   no such time                     America/New_York skips this wall time (gap)
+     UTV   2026-03-08T03:30:00-04:00[America/New_York] Gap.ShiftForward
+
+10. DST overlap
+   01:30 on 1 November 2026 in New York
+     Intl  01/11/2026, 1:30:00 GMT-4        one of two, silently ‡
+     UTV   2026-11-01T01:30:00-04:00[America/New_York] ambiguous
+     UTV   2026-11-01T01:30:00-05:00[America/New_York] ambiguous
+     UTV   2026-11-01T05:30:00Z             Overlap.Earliest
+
+11. Timestamps
+   Exact fractions and differences
+     Date  2026-11-05T13:30:00.123Z         milliseconds only
+     JS    0.20000004768371582              float seconds
+     UTV   2026-11-05T13:30:00.123456Z      microseconds kept
+     UTV   0.2 s (POSIX)                    exact
+
+12. Durations vs periods
+   One day vs 86,400 seconds across DST
+     Intl  08/03/2026, 13:00:00             + 86,400,000 ms ‡
+     UTV   2026-03-08T12:00[America/New_York] + 1 day
+     UTV   2026-03-08T13:00:00-04:00[America/New_York] + 86,400 s
+     UTV   unsupported (needs-leap-seconds) SI seconds
+
+13. Ranges
+   November, open-ended and unknown ends
+     Date  true                             by hand
+     UTV   [2026-11-01, 2026-12-01)
+     UTV   definitely                       15 November
+     UTV   impossible                       1 December
+     UTV   [2026-11-01, ..)                 no end
+     UTV   definitely                       3000-01-01
+     UTV   [2026-11-01, ?)                  an end nobody knows yet
+     UTV   possibly                         2027-06-01
+
+14. Round trip
+   Native → UTV → native
+     Date  2026-11-05T13:30:00.250Z
+     UTV   2026-11-05T13:30:00.25Z          Instant.fromDate
+     Date  2026-11-05T13:30:00.250Z         same time value: true
+     UTV   2026-11-05T13:30:00.123456789Z
+     Date  2026-11-05T13:30:00.123Z         warning: precision-loss

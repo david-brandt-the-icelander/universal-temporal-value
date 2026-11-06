@@ -1,0 +1,33 @@
+{
+  "ruleSet": { "system": "utv.demo", "id": "demo-zones", "version": "2026-11-05" },
+  "note": "DEMO DATA for examples and tests only. Transitions for three zones, valid only from 2026-01-01T00:00:00Z (inclusive) to 2028-01-01T00:00:00Z (exclusive), taken from IANA tzdb. Outside that window, or for any other zone, a resolver must return `unsupported`, never extrapolate. Real applications load a pinned tzdb release instead.",
+  "validFrom": "1767225600",
+  "validUntil": "1830297600",
+  "zones": {
+    "America/New_York": {
+      "initialOffset": -18000,
+      "initialAbbreviation": "EST",
+      "transitions": [
+        { "at": "1772953200", "offset": -14400, "abbreviation": "EDT" },
+        { "at": "1793512800", "offset": -18000, "abbreviation": "EST" },
+        { "at": "1805007600", "offset": -14400, "abbreviation": "EDT" },
+        { "at": "1825567200", "offset": -18000, "abbreviation": "EST" }
+      ]
+    },
+    "Europe/Paris": {
+      "initialOffset": 3600,
+      "initialAbbreviation": "CET",
+      "transitions": [
+        { "at": "1774746000", "offset": 7200, "abbreviation": "CEST" },
+        { "at": "1792890000", "offset": 3600, "abbreviation": "CET" },
+        { "at": "1806195600", "offset": 7200, "abbreviation": "CEST" },
+        { "at": "1824944400", "offset": 3600, "abbreviation": "CET" }
+      ]
+    },
+    "Atlantic/Reykjavik": {
+      "initialOffset": 0,
+      "initialAbbreviation": "GMT",
+      "transitions": []
+    }
+  }
+}
