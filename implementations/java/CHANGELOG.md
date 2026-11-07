@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **`TemporalContext.compare` reports one `ambiguous` diagnostic.** When the order depends on a DST overlap it used to
+  copy each side's `resolve` diagnostic, so two wall times in the same overlap gave `multiple (ambiguous, ambiguous)`.
+  It now reports a single `ambiguous` warning that names the possible orders, as the C# library does.
 - **Duplicate keys are reported as `duplicate-key`.** `Utv.validateStructural` (and so `GregorianCivil.validate`)
   now gives a repeated JSON object key the shared code `duplicate-key`, with the JSON pointer of the repeated key as
   its path, like the other libraries. Text that isn't JSON is still `utv.json.malformed`. Before, both were

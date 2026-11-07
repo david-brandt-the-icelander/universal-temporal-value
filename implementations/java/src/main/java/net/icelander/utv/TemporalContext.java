@@ -1,6 +1,5 @@
 package net.icelander.utv;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.TreeSet;
@@ -50,9 +49,10 @@ public final class TemporalContext {
         TreeSet<Ordering> orders = new TreeSet<>();
         for (Instant p : xs.value()) for (Instant q : ys.value()) orders.add(Ordering.of(p.compareTo(q)));
         if (orders.size() == 1) return Outcome.unique(orders.first());
-        List<Diagnostic> d = new ArrayList<>(xs.diagnostics());
-        d.addAll(ys.diagnostics());
-        return new Outcome.Multiple<>(List.copyOf(orders), d);
+        // One diagnostic for the comparison, however many sides fall in an overlap.
+        List<String> choices = orders.stream().map(Ordering::wire).toList();
+        return new Outcome.Multiple<>(List.copyOf(orders), List.of(new Diagnostic("ambiguous", "warning", "",
+                "the order depends on which side of a DST overlap is meant: " + String.join(" or ", choices))));
     }
 
     /** Every instant a value can name: one for an instant or an offset date-time, one or two for a zoned value. */
