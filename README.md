@@ -8,7 +8,7 @@
 | Wire identifier | `utv/1.0` |
 | Structural schema | [`schema/utv-1.0.schema.json`](schema/utv-1.0.schema.json) (JSON Schema 2020-12) |
 | Implementations | C#, Java, Python, Rust and TypeScript libraries (0.3) under [`implementations/`](implementations/) |
-| Side by side | [`docs/side-by-side.md`](docs/side-by-side.md): everyday tasks with each language's own date/time API next to UTV |
+| Examples | Unit tests in every library, from UTV to each language's own date/time API and back ([`docs/example-tests.md`](docs/example-tests.md)); [`docs/side-by-side.md`](docs/side-by-side.md) shows everyday tasks across the five languages |
 | License | [MPL-2.0](LICENSE) |
 
 ---
@@ -129,8 +129,9 @@ conformance/            Language-neutral test material shared by all implementat
   examples/               Structurally valid and invalid values
   scenarios/              Semantic scenarios every engine must eventually satisfy
 implementations/        Language libraries (one directory per language)
-tools/                  Repository tooling (structural validation)
-docs/                   Rationale, design history, library API contracts, side-by-side examples
+tools/                  Repository tooling (structural validation, the side-by-side page)
+docs/                   Rationale, design history, library API contracts, example tests, side by side
+AGENTS.md               How tests and examples are written, for people and coding agents
 ```
 
 Start with `spec/SPECIFICATION.md`, then `spec/DECISIONS.md` and `spec/RESULT-CONTRACT.md`. The JSON Schema checks shapes only. A value can pass it and still be semantically invalid or unresolvable.
@@ -149,6 +150,6 @@ No finite specification can anticipate every future calendar, physical theory or
 
 The specification, the wire identifier and the schema share one version number. **This is version 1.0.** Language libraries are versioned independently and declare which specification versions they support. See [VERSIONING.md](VERSIONING.md) and [CHANGELOG.md](CHANGELOG.md).
 
-## Contributing an implementation
+## Contributing
 
-See [`implementations/README.md`](implementations/README.md) for the layout and the minimum obligations every language library must meet.
+See [`implementations/README.md`](implementations/README.md) for the layout and the minimum obligations every language library must meet, and [`AGENTS.md`](AGENTS.md) for how tests and examples are written (it applies to people and coding agents alike).

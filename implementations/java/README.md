@@ -12,9 +12,7 @@ CivilDate.of(2026, 1, 31).addMonths(1, MonthEnd.CONSTRAIN); // 2026-02-28, becau
 ```
 
 ```
-mvn test                                  # everything: fixtures, typed API, snapshot
-mvn -q test-compile exec:java@everyday    # the everyday example, java.time and UTV side by side
-mvn -q test-compile exec:java             # the traditional catalog tour
+mvn test    # everything: shared fixtures, typed API and the examples, which are unit tests
 ```
 
 - **Library version:** 0.3.0 (`net.icelander.utv:utv-core:0.3.0`), **Java 21+** (it was 17 up to 0.2; 0.3 uses sealed interfaces, records and pattern `switch`).
@@ -95,20 +93,18 @@ Helpers never pick an answer silently: `single()` (throws `OutcomeException` unl
 
 The codes are the shared table in library-api §5 (`syntax`, `malformed-value`, `day-out-of-range`, `month-end`, `gap`, `ambiguous`, `needs-leap-seconds`, `unknown-zone`, …). The 0.1 validation API (`Utv.validateStructural`, `GregorianCivil.validate`) keeps its structural `utv.*` codes; operations report those beside `malformed-value`.
 
-## The everyday example
+## Examples
 
-`net.icelander.utv.examples.Everyday` takes 14 sections of everyday tasks (now, a date, invalid dates, adding, days between, times, offsets, time zones, the DST gap and overlap, timestamps, durations vs periods, ranges, the native round trip). Each task is plain code: the `java.time` way, then the UTV way, with a pattern `switch` wherever UTV returns an `Outcome`. Each printed row has its output as a trailing comment, and each task sits between `// BEGIN <task-id>` and `// END <task-id>` markers.
+The examples are unit tests, so they run with `mvn test` and can't drift from what the library does. There are two suites, covering the scenarios of [`docs/example-tests.md`](../../docs/example-tests.md) from opposite ends, written in the style of [`AGENTS.md`](../../AGENTS.md):
 
-```
-mvn -q test-compile exec:java@everyday
-```
+| Suite | Where | Organized by | Expected values come from |
+|---|---|---|---|
+| **UTV first** | [`src/test/java/net/icelander/utv/examples/utvfirst/`](src/test/java/net/icelander/utv/examples/utvfirst) | UTV class and method: `CivilDateTest` → `@Nested class AddMonths` → `returnsNone_whenTheDayIsMissingFromTheTargetMonth()` | `java.time` wherever the two agree; otherwise a literal, and the Javadoc says what `java.time` does instead |
+| **Native first** | [`src/test/java/net/icelander/utv/examples/nativefirst/`](src/test/java/net/icelander/utv/examples/nativefirst) | the `java.time` package, class and method: `time/LocalDateTest` → `@Nested class PlusMonths`, `time/temporal/IsoFieldsTest`, `time/chrono/HijrahDateTest`, `time/zone/ZoneRulesTest` | UTV wherever the two agree; otherwise a literal, and the Javadoc says what UTV does instead |
 
-- **Snapshot.** The output of one run is committed as [`src/examples/resources/everyday.expected.txt`](src/examples/resources/everyday.expected.txt). `EverydayTest` runs the example and compares every line with it, also under an unusual default zone and locale, and checks the task markers and the 100-column limit.
-- **Layout.** The `row` helper aligns values in a 30-column field; a longer value (a zoned date-time) gets its note on the next line, so rows stay aligned and within 100 columns.
-- **Host-dependent rows** end in ` ‡` (every line of them, when the note wraps) and are skipped by the comparison: they read the clock, the default zone or the JDK's own tz database.
-- **Re-recording** after a deliberate change: `mvn -q test-compile exec:java@everyday > src/examples/resources/everyday.expected.txt`.
+Every test has a Javadoc of two sentences, "Verifies that …" and "Compared with: …", and labelled `GIVEN` / `SETUP` / `SYSTEM UNDER TEST` / `WHEN` / `EXPECTATIONS` / `THEN` sections. UTV-first tests that illustrate a task of [`docs/side-by-side.md`](../../docs/side-by-side.md) sit between `// BEGIN <task-id>` and `// END <task-id>` markers.
 
-The UTV rows use the demo rules in [`conformance/rules/demo-zones.json`](../../conformance/rules/demo-zones.json), loaded explicitly.
+UTV's zone operations use the pinned rules in [`conformance/rules/demo-zones.json`](../../conformance/rules/demo-zones.json), loaded by `Fixtures.demoZoneRules()`. `java.time` reads the JDK's tz database, so the zone tests need one that knows the 2026–2027 rules of New York and Paris.
 
 ## The JSON layer (0.2, unchanged)
 
@@ -130,16 +126,6 @@ The 0.2 API stays: it's the wire boundary, the shared fixtures test it, and the 
 
 Structural validation is **partial**: nested value types, enums, `$ref` sub-schemas and `oneOf` alternatives are not fully enforced. Everything outside the everyday API (convert, expand, other calendars, recurrence …) returns `unsupported`.
 
-## The traditional catalog tour
-
-`net.icelander.utv.examples.Traditional` builds two dates in code (5 November 2026 and 30 February 2026), shows how a caller handles each validation status, then walks the shared catalog [`examples/traditional.json`](../../examples/traditional.json) and checks every outcome. It exits with status 1 if any differs.
-
-```
-mvn -q test-compile exec:java            # or exec:java@traditional
-```
-
-The example sources are in `src/examples/java`, added as a *test* source root by `build-helper-maven-plugin`, so they never ship in the library jar. That's why the commands say `test-compile`.
-
 ## Testing
 
 ```
@@ -151,8 +137,9 @@ cd implementations/java && mvn test
 | `EverydayFixturesTest` | every fixture in `conformance/operations/everyday.json`: status, candidates and the codes in `expect.diagnostics` |
 | `TextFormFixturesTest` | every fixture in `conformance/operations/text-form.json`, through `TextForm.parseText` / `formatText` |
 | `TypedApiTest` | the typed layer: each row of library-api §2, outcome helpers, `toString`/`parse` and `toJson`/`fromJson` round trips, constructors rejecting invalid values, interop |
-| `EverydayTest` | the example snapshot (above) |
-| `ConformanceTest`, `GregorianCivilTest`, `TraditionalTest` | structural and Gregorian validation against `conformance/examples/*.json` and `examples/traditional.json` |
+| `ConformanceTest`, `GregorianCivilTest` | structural and Gregorian validation against `conformance/examples/*.json` |
 | `JavaTimeTest` | the JSON-layer `java.time` adapters |
+| `examples.utvfirst.*`, `examples.nativefirst.*` | the examples (above): each task done with UTV and with `java.time`, and compared |
+| `examples.FixturesTest` | the shared test fixture, `Fixtures.demoZoneRules()` |
 
 All shared files are read in place from the repository root, relative to this directory.

@@ -36,59 +36,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.3.1</version>
       </plugin>
-      <!-- Runnable examples live in src/examples/java. They are added as a *test* source
-           root, so they are compiled into target/test-classes and never ship in the library
-           jar, and the tests can reuse them to check examples/traditional.json. -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.6.0</version>
-        <executions>
-          <execution>
-            <id>add-example-sources</id>
-            <phase>generate-test-sources</phase>
-            <goals>
-              <goal>add-test-source</goal>
-            </goals>
-            <configuration>
-              <sources>
-                <source>src/examples/java</source>
-              </sources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <!-- mvn -q test-compile exec:java@everyday  (the everyday side-by-side example)
-           mvn -q test-compile exec:java            (the traditional catalog tour, also exec:java@traditional) -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.5.0</version>
-        <configuration>
-          <mainClass>net.icelander.utv.examples.Traditional</mainClass>
-          <classpathScope>test</classpathScope>
-          <arguments>
-            <argument>${project.basedir}/../../examples/traditional.json</argument>
-          </arguments>
-        </configuration>
-        <executions>
-          <execution>
-            <id>everyday</id>
-            <configuration>
-              <mainClass>net.icelander.utv.examples.Everyday</mainClass>
-              <arguments>
-                <argument>${project.basedir}/../../conformance/rules/demo-zones.json</argument>
-              </arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>traditional</id>
-            <configuration>
-              <mainClass>net.icelander.utv.examples.Traditional</mainClass>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
 </project>

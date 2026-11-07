@@ -106,7 +106,7 @@ UTV asks more of its users than a conventional date-time type does. That cost is
 
 ## 7. How native APIs compare
 
-[`side-by-side.md`](side-by-side.md) shows everyday tasks in C#, Java, Python, Rust and TypeScript, with each language's standard date/time API next to UTV. The native APIs behave differently from one another, each according to its own documented design. Some examples, observed when the examples were run:
+[`side-by-side.md`](side-by-side.md) shows everyday tasks in C#, Java, Python, Rust and TypeScript, with each language's standard date/time API next to UTV. The native APIs behave differently from one another, each according to its own documented design. Each library's native-first example tests ([`example-tests.md`](example-tests.md)) assert what its standard API does. Some of what they observe:
 
 | Task | Native behaviour observed | UTV |
 |---|---|---|

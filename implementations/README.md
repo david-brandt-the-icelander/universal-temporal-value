@@ -23,6 +23,9 @@ Each `implementations/<language>/` directory is a self-contained project in that
   - which registries (tzdb, leap-second table, calendars, …) it ships or can load.
 - `CHANGELOG.md` for the library's own versions.
 - A test target that runs the shared conformance material (below).
+- Two example test suites, *UTV first* and *native first*, covering the scenarios of
+  [`docs/example-tests.md`](../docs/example-tests.md). Examples are unit tests, never separate programs, and every
+  test follows [`AGENTS.md`](../AGENTS.md).
 
 Libraries are versioned independently with SemVer and tagged `<language>/vX.Y.Z`; see `VERSIONING.md`.
 

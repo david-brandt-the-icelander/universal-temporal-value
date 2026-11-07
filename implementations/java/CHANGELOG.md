@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **Examples are unit tests** ([`docs/example-tests.md`](../../docs/example-tests.md), test style in [`AGENTS.md`](../../AGENTS.md)). Two suites run with `mvn test`:
+  - **UTV first** (`src/test/java/net/icelander/utv/examples/utvfirst/`): one test class per UTV class, one `@Nested` class per method. Each test does a task with UTV and compares the result with `java.time`; tests for the tasks of `docs/side-by-side.md` sit between `// BEGIN` / `// END` markers.
+  - **Native first** (`src/test/java/net/icelander/utv/examples/nativefirst/`): the same scenarios organized by `java.time` package, class and method (`time/LocalDateTest`, `time/temporal/IsoFieldsTest`, `time/chrono/HijrahDateTest`, `time/zone/ZoneRulesTest` …), compared with UTV.
+  - A shared fixture, `Fixtures.demoZoneRules()`, loads `conformance/rules/demo-zones.json`, and has a test of its own.
+- **Removed** the example programs `Everyday` and `Traditional` (`src/examples/`), the `everyday.expected.txt` snapshot and `EverydayTest`, the tour of `examples/traditional.json` and `TraditionalTest`, and the `build-helper-maven-plugin` and `exec-maven-plugin` configuration that served them. The library itself is unchanged.
+
 ## 0.3.0
 
 - **Java 21.** The build moves from `maven.compiler.release` 17 to **21**, so `Outcome` can be a `sealed interface` with `record` cases taken apart with pattern `switch`. Java 21 or later is now required.

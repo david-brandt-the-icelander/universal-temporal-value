@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- **Examples are unit tests** ([`docs/example-tests.md`](../../docs/example-tests.md), [`AGENTS.md`](../../AGENTS.md)):
+  two suites that run with `npm test`. `test/examples/utv-first/` is organized by UTV class and function and compares
+  each task with `Date`, `Intl.DateTimeFormat` and `JSON`; `test/examples/native-first/` is organized by standard
+  object and method and compares the other way round. Zone operations use the shared fixture `demoZoneRules()`
+  (`test/examples/fixtures.ts`). UTV-first tests carry the `// BEGIN` / `// END` task markers for
+  `docs/side-by-side.md`.
+- **Removed**: the example programs (the everyday side-by-side tour and the traditional catalog tour), the everyday
+  output snapshot and its snapshot test, the test of the shared traditional catalog, and the `everyday`,
+  `everyday:snapshot` and `example` npm scripts.
+
 ## 0.3.0 (unreleased)
 
 Implements [`docs/library-api.md`](../../docs/library-api.md) (typed layer) and [`docs/text-form.md`](../../docs/text-form.md).

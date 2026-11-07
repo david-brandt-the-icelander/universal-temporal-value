@@ -17,17 +17,9 @@ regex = "1"
 chrono = { version = "0.4.38", optional = true }
 
 [dev-dependencies]
-# The "native" side of examples/everyday.rs and its test. std has no calendar types.
+# The example suites (tests/utv_first, tests/native_first) compare UTV with chrono and
+# chrono-tz, because std has no calendar types. They need the `chrono` adapters, so the tests
+# depend on this crate with that feature on: plain `cargo test` builds and runs them.
+utv = { path = ".", features = ["chrono"] }
 chrono = "0.4.38"
 chrono-tz = "0.10"
-
-[[example]]
-name = "everyday"
-required-features = ["chrono"]
-
-# Snapshot test of the example. No libtest harness: it runs the example in a child process
-# (itself, with an environment variable set) and compares the output with the snapshot.
-[[test]]
-name = "everyday_example"
-required-features = ["chrono"]
-harness = false

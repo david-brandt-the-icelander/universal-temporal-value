@@ -2,7 +2,7 @@
 
 This is the contract for version 0.3 of every UTV library. It implements recommendations R1–R4 and R6–R9 of [`aesthetics-review.md`](aesthetics-review.md). [`text-form.md`](text-form.md) covers R5.
 
-0.3 adds a **typed layer** on top of the JSON-level everyday API from 0.2 ([`everyday-api.md`](everyday-api.md)). The JSON layer stays: it's the wire boundary, and the shared fixtures keep testing it. The typed layer is what the README and the examples show.
+0.3 adds a **typed layer** on top of the JSON-level everyday API from 0.2 ([`everyday-api.md`](everyday-api.md)). The JSON layer stays: it's the wire boundary, and the shared fixtures keep testing it. The typed layer is what the README and the example tests show.
 
 Where this document says "C#", the same rule applies in every language, in that language's idiom and casing. The [naming table](#naming) gives the exact spelling for each language.
 
@@ -195,25 +195,25 @@ Where a name collides with the language itself, each library records the deviati
 
 ## 7. Examples (all five languages)
 
-Each library's `everyday` example is rewritten as **plain, copyable code**:
+Each library's examples are **unit tests**, not programs, so they run with the library's normal test command and
+can't drift from what the library does. [`example-tests.md`](example-tests.md) is the catalog of scenarios they
+cover, and [`AGENTS.md`](../AGENTS.md) sets out how they are written.
 
-- **No harness.** No `Check(label, call, expected)` helpers. Each task is ordinary statements: build the native value and print it, then build the UTV value and print it. Where the operation is partial, the code shows a real `switch` / `match` on the `Outcome`. At minimum this applies to tasks `month-end`, `dst-gap` and `dst-overlap`.
-- **Output comments.** Each print line has its expected output as a trailing comment, e.g. `// 2026-02-28 (clamped silently)`.
-- **Printing helper.** One small `Row(who, text, note = "")` helper is allowed, to align output. It only prints.
-- **Output layout.** Use one block per task, with native and UTV rows aligned, as below. Print the status word only when the answer isn't unique. Keep lines within 100 columns, and print a calendar day's fields as words (`Thursday, ISO week 45`), never as JSON.
-  ```
-  4. Adding
-     31 Jan 2026 + 1 month
-       .NET   2026-02-28        clamped silently
-       UTV    no such date      2026-02 has no day 31 (month-end)
-       UTV    2026-02-28        with MonthEnd.Constrain
-  ```
-- **Snapshot test.**
-  - **Recording.** Commit the full output of one run as `examples/everyday.expected.txt` (C#: `examples/Everyday/everyday.expected.txt`).
-  - **What the test compares.** A test runs the example and compares every line with the snapshot, except rows marked *host-dependent*.
-  - **Host-dependent rows.** These depend on the clock, the host's tz database, or the language or runtime version (for example, Python 3.10's `fromisoformat` rejects `Z`). The row helper prints them with a trailing ` ‡`, and the test skips any line ending in ` ‡`.
-  - **Effect.** The snapshot replaces the old in-example assertions, so the output comments can't drift unnoticed.
-- **Task markers.** These feed the generated cross-language page `docs/side-by-side.md`. Wrap each task's code in comment markers: `// BEGIN <task-id>` … `// END <task-id>`, or `#` in Python. Use these ids and titles in every language:
+- **Two suites.**
+  - *UTV first*, organized by UTV class and function: each test does a task with UTV and compares the result with
+    the language's standard date/time API.
+  - *Native first*, organized by the standard API's namespace, class and function: each test does the same task
+    with the standard API and compares the result with UTV.
+- **Comparison.** Wherever the two sides agree, a test computes its expected value with the other side. Where they
+  differ, the expected value is a literal, and the doc comment says what the other side does instead
+  ("Compared with: …"). The opposite suite asserts that behavior.
+- **Partial operations.** Tests of partial operations assert the outcome's status and its diagnostic code, which
+  proves which branch the library took. At minimum this applies to tasks `month-end`, `dst-gap` and `dst-overlap`.
+- **Zone rules.** UTV zone operations use `conformance/rules/demo-zones.json` through a shared fixture, never the
+  host's tz database.
+- **Task markers.** These feed the generated cross-language page `docs/side-by-side.md`. In the UTV-first suite,
+  wrap the tests that illustrate a task in comment markers: `// BEGIN <task-id>` … `// END <task-id>`, or `#` in
+  Python. A task may be marked more than once. Every library marks every task:
 
   | Section | Task ids (title) |
   |---|---|
@@ -233,9 +233,10 @@ Each library's `everyday` example is rewritten as **plain, copyable code**:
   | 14. Round trip | `round-trip` (Native → UTV → native) |
 
   The code between markers is shown verbatim on the page, so it should read well on its own.
-- **README.** Each library README opens with a before/after snippet of five to ten lines (task `month-end` is a good one), followed by the run commands.
+- **README.** Each library README opens with a before/after snippet of five to ten lines (task `month-end` is a good
+  one), and describes its two example suites.
 
-The traditional catalog tour stays as it is (it exercises the JSON layer). The 0.2 JSON-level API and its fixtures stay, unchanged.
+The 0.2 JSON-level API and its fixtures stay, unchanged.
 
 ## 8. Tests each library must have
 
@@ -246,4 +247,4 @@ The traditional catalog tour stays as it is (it exercises the JSON layer). The 0
    - `ToString()` round-trips through `Parse`;
    - `FromJson(ToJson(v)) == v`;
    - constructors reject invalid values.
-5. **Example snapshot.** The test described in §7.
+5. **Example tests.** The two suites described in §7, covering every scenario of [`example-tests.md`](example-tests.md).
