@@ -1,5 +1,6 @@
 package net.icelander.utv;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,10 +32,27 @@ public final class Utv {
         JsonNode node;
         try {
             node = parse(json);
+        } catch (JsonParseException e) {
+            if (isDuplicateKey(e)) {
+                String path = ((JsonParser) e.getProcessor()).getParsingContext().pathAsPointer().toString();
+                return result(Status.INVALID, List.of(Diagnostic.error("duplicate-key", path, "Duplicate JSON key: " + e.getOriginalMessage())));
+            }
+            return malformed(e);
         } catch (java.io.IOException e) {
-            return result(Status.INVALID, List.of(Diagnostic.error("utv.json.malformed", "", "Malformed JSON or duplicate key: " + e.getMessage())));
+            return malformed(e);
         }
         return validateStructural(node);
+    }
+
+    /** Jackson's STRICT_DUPLICATE_DETECTION reports a repeated key only through this message. */
+    private static boolean isDuplicateKey(JsonParseException e) {
+        return e.getProcessor() instanceof JsonParser
+                && e.getOriginalMessage() != null
+                && e.getOriginalMessage().startsWith("Duplicate field ");
+    }
+
+    private static UtvResult malformed(java.io.IOException e) {
+        return result(Status.INVALID, List.of(Diagnostic.error("utv.json.malformed", "", "Malformed JSON: " + e.getMessage())));
     }
 
     /** Structurally validate an already-parsed UTV value. */

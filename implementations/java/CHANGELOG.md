@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **`TemporalContext.compare` reports one `ambiguous` diagnostic.** When the order depends on a DST overlap it used to
+  copy each side's `resolve` diagnostic, so two wall times in the same overlap gave `multiple (ambiguous, ambiguous)`.
+  It now reports a single `ambiguous` warning that names the possible orders, as the C# library does.
+- **Duplicate keys are reported as `duplicate-key`.** `Utv.validateStructural` (and so `GregorianCivil.validate`)
+  now gives a repeated JSON object key the shared code `duplicate-key`, with the JSON pointer of the repeated key as
+  its path, like the other libraries. Text that isn't JSON is still `utv.json.malformed`. Before, both were
+  `utv.json.malformed`.
 - **Examples are unit tests** ([`docs/example-tests.md`](../../docs/example-tests.md), test style in [`AGENTS.md`](../../AGENTS.md)). Two suites run with `mvn test`:
   - **UTV first** (`src/test/java/net/icelander/utv/examples/utvfirst/`): one test class per UTV class, one `@Nested` class per method. Each test does a task with UTV and compares the result with `java.time`; tests for the tasks of `docs/side-by-side.md` sit between `// BEGIN` / `// END` markers.
   - **Native first** (`src/test/java/net/icelander/utv/examples/nativefirst/`): the same scenarios organized by `java.time` package, class and method (`time/LocalDateTest`, `time/temporal/IsoFieldsTest`, `time/chrono/HijrahDateTest`, `time/zone/ZoneRulesTest` …), compared with UTV.
