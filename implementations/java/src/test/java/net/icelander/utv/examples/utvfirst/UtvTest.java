@@ -260,16 +260,13 @@ class UtvTest {
             // WHEN
             UtvResult actualResult = Utv.validateStructural(givenJson);
 
-            // EXPECTATIONS: invalid, rather than whichever month a parser happens to keep. This library reports a
-            // duplicate key with the code of any malformed JSON, so the message proves which branch was taken.
+            // EXPECTATIONS: invalid, rather than whichever month a parser happens to keep
             Status expectedStatus = Status.INVALID;
-            String expectedCode = "utv.json.malformed";
-            String expectedMessagePart = "Duplicate field 'month'";
+            String expectedCode = "duplicate-key";
 
             // THEN
             assertEquals(expectedStatus, actualResult.status());
             assertTrue(actualResult.diagnostics().stream().anyMatch(d -> d.code().equals(expectedCode)), actualResult.toJson().toString());
-            assertTrue(actualResult.diagnostics().stream().anyMatch(d -> d.message().contains(expectedMessagePart)), actualResult.toJson().toString());
         }
 
         /**

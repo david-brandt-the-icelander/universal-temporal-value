@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Duplicate keys are reported as `duplicate-key`.** `validate_structural` and `validate_gregorian_civil` now give
+  a repeated JSON object key the shared code `duplicate-key`, like the other libraries. Text that isn't JSON is still
+  `syntax`. Before, both were `syntax`.
 - **Examples are unit tests.** Two suites cover every scenario of `docs/example-tests.md` and run
   with plain `cargo test`: `tests/utv_first` (by UTV type and function, compared with chrono,
   chrono-tz, `SystemTime`, `std::ops` ranges and `serde_json`; expected values from chrono where

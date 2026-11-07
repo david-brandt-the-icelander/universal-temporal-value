@@ -238,10 +238,23 @@ impl<'de> Visitor<'de> for StrictVisitor {
 
 /// Parse JSON text, rejecting duplicate object keys.
 pub fn parse_strict(text: &str) -> Result<Json, String> {
+    deserialize_strict(text).map_err(|e| e.to_string())
+}
+
+fn deserialize_strict(text: &str) -> Result<Json, serde_json::Error> {
     let mut de = serde_json::Deserializer::from_str(text);
-    let Strict(v) = serde::Deserialize::deserialize(&mut de).map_err(|e| e.to_string())?;
-    de.end().map_err(|e| e.to_string())?;
+    let Strict(v) = serde::Deserialize::deserialize(&mut de)?;
+    de.end()?;
     Ok(v)
+}
+
+/// Parse UTV JSON text for validation. A repeated object key is `duplicate-key`; text that isn't JSON is `syntax`.
+fn parse_for_validation(text: &str) -> Result<Json, UtvResult> {
+    deserialize_strict(text).map_err(|e| {
+        // StrictVisitor accepts every JSON value, so the only data error it raises is a duplicate key.
+        let code = if e.classify() == serde_json::error::Category::Data { "duplicate-key" } else { "syntax" };
+        UtvResult::fail(Status::Invalid, code, "", e.to_string())
+    })
 }
 
 // ---------- envelope ----------
@@ -436,9 +449,9 @@ fn validate_shape(v: &Json) -> UtvResult {
 
 /// Parse UTV JSON text and validate it structurally.
 pub fn validate_structural(text: &str) -> UtvResult {
-    match parse_strict(text) {
+    match parse_for_validation(text) {
         Ok(v) => validate_value(&v),
-        Err(e) => UtvResult::fail(Status::Invalid, "syntax", "", e),
+        Err(failure) => failure,
     }
 }
 
@@ -461,9 +474,9 @@ pub fn days_in_month(year: i128, month: u32) -> Option<u32> {
 /// structural validity and semantic validity are different questions (implementations/README.md).
 /// Other kinds, calendars and chronologies return `unsupported`.
 pub fn validate_gregorian_civil(text: &str) -> UtvResult {
-    let v = match parse_strict(text) {
+    let v = match parse_for_validation(text) {
         Ok(v) => v,
-        Err(e) => return UtvResult::fail(Status::Invalid, "syntax", "", e),
+        Err(failure) => return failure,
     };
     let structural = validate_value(&v);
     if structural.status != Status::Valid { return structural; }

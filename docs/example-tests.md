@@ -129,10 +129,6 @@ Some values have no typed API yet and no standard counterpart at all. They are w
 | Duplicate keys | `UtvValidator.ValidateStructural` returns invalid (`duplicate-key`) | `JsonDocument.Parse` keeps the last value |
 | Unknown kind | `UtvValidator.ValidateStructural` returns invalid | — |
 
-Known difference: for duplicate keys, the C#, Python and TypeScript validators report `duplicate-key`, but the Java
-validator reports `utv.json.malformed` and the Rust validator reports `syntax`. Their example tests assert the
-code each library actually reports, and say so in the doc comment, until the libraries are aligned.
-
 ### Shared fixture
 
 | Fixture | Test |

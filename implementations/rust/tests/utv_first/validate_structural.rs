@@ -214,9 +214,6 @@ fn returns_invalid_when_the_version_label_is_malformed() {
 
 /// Verifies that validate_structural returns invalid when a key appears twice.
 /// Compared with: `serde_json::from_str` accepts the text and keeps the last month.
-///
-/// This library reports the duplicate as `syntax` (invalid JSON text), with the key in the message; the C#, Java,
-/// Python and TypeScript libraries report `duplicate-key`.
 #[test]
 fn returns_invalid_when_a_key_appears_twice() {
     // GIVEN: a date with two different months
@@ -227,7 +224,7 @@ fn returns_invalid_when_a_key_appears_twice() {
 
     // EXPECTATIONS: invalid, rather than whichever month a parser happens to keep
     let expected_status = Status::Invalid;
-    let expected_code = "syntax";
+    let expected_code = "duplicate-key";
 
     // THEN
     assert_eq!(expected_status, actual_result.status);
