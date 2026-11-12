@@ -1,0 +1,39 @@
+{
+  "$schema": "../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Universal Temporal Value",
+  "folder": ".",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Universal Temporal Value (UTV)",
+      "summary": "A temporal data model that tells the truth about time, including when the truth is \"it depends\" or \"nobody knows\": a specification, its schema and conformance material, and libraries in five languages.",
+      "purpose": "Holds UTV 1.0 and everything that implements and checks it: the normative specification (spec/), the structural JSON Schema (schema/), language-neutral conformance material (conformance/), the C#, Java, Python, Rust and TypeScript libraries (implementations/), the library contracts and rationale (docs/), the repository's checks (tools/, run by .github/workflows/), and the HASD skills and knowledge catalogue copied into Meta/.",
+      "boundaries": [
+        "The specification, the schema and the conformance material share one version number; each library is versioned on its own (VERSIONING.md).",
+        "No example programs: every example is a unit test in a library (AGENTS.md section 2).",
+        "Meta/ is a copy of HASD's Agents/Skills and Agents/Knowledge, changed there and copied here, so it has no .dev of its own.",
+        "Licensed MPL-2.0."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "README.md",
+          "symbol": "Repository layout"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Versioning"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "2. Examples are unit tests"
+        },
+        {
+          "path": "LICENSE",
+          "symbol": "Mozilla Public License Version 2.0"
+        }
+      ]
+    }
+  ]
+}

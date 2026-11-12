@@ -1,0 +1,391 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-capability/schema.json",
+  "kind": "capability",
+  "title": "utv package capabilities",
+  "folder": "implementations/python/src/utv",
+  "description": "What the utv package can do for an application developer's code.",
+  "sources": [
+    {
+      "path": "implementations/python/src/utv/__init__.py",
+      "symbol": "__all__"
+    }
+  ],
+  "entities": [
+    {
+      "id": "civil-calendar-arithmetic",
+      "name": "Civil calendar arithmetic",
+      "description": "Dates, months, times of day and wall-clock date-times in the proleptic Gregorian calendar, and arithmetic on them.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilYearMonth.of"
+        }
+      ],
+      "responsibility": "Makes civil values that can exist, adds days, weeks, months, years and periods to them, counts days and derives weekday and ISO week, and says when a month step has no answer.",
+      "operations": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilYearMonth.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilTime.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDateTime.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.add_days"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDateTime.add_hours"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.add_months"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.add"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.days_until"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "fields"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "days_between"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv is a library imported into the caller's own process, and any code that imports it may call it."
+      ]
+    },
+    {
+      "id": "zone-resolution",
+      "name": "Zone resolution",
+      "description": "Wall times intended in IANA zones or pinned to offsets, turned into instants and back under explicit zone rules.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "ZoneRules.load"
+        },
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext"
+        }
+      ],
+      "responsibility": "Loads rule bundles, holds them in a TemporalContext, resolves zoned wall times with gap and overlap policies, and shows instants in zones and at offsets.",
+      "operations": [
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "ZoneRules.load"
+        },
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDateTime.in_zone"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDateTime.at_offset"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "ZonedIntent.resolve"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant.in_zone"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "ZonedIntent.add_days"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "FixedOffsetDateTime.to_instant"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant.at_offset"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "to_zone"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv is a library imported into the caller's own process, and any code that imports it may call it."
+      ]
+    },
+    {
+      "id": "exact-timeline",
+      "name": "Exact timestamps and amounts",
+      "description": "Instants on the POSIX timescale and amounts of time, exact to any fraction of a second.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant.from_unix_seconds"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Period.of"
+        }
+      ],
+      "responsibility": "Makes instants from clock readings the caller passes in, adds and measures exact POSIX seconds, keeps calendar periods, POSIX seconds and SI seconds apart, and refuses SI arithmetic without a leap-second table.",
+      "operations": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant.from_unix_seconds"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Period.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant.add"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant.until"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "posix_seconds_between"
+        },
+        {
+          "path": "implementations/python/src/utv/build.py",
+          "symbol": "date"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv is a library imported into the caller's own process, and any code that imports it may call it."
+      ]
+    },
+    {
+      "id": "ordering",
+      "name": "Ordering values",
+      "description": "Which of two values comes first, including when nobody can say.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_Ordered.__lt__"
+        },
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.compare"
+        }
+      ],
+      "responsibility": "Orders values of one type with comparison operators, orders zoned values through a context, and answers with every possible order when it depends on a DST overlap.",
+      "operations": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_Ordered.__lt__"
+        },
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.compare"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "compare"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv is a library imported into the caller's own process, and any code that imports it may call it."
+      ]
+    },
+    {
+      "id": "ranges",
+      "name": "Ranges with explicit ends",
+      "description": "Intervals of dates or instants whose ends are included, excluded, unbounded or unknown.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Interval.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Interval.contains"
+        }
+      ],
+      "responsibility": "Makes ranges that can exist and answers containment and overlap as definitely, possibly or impossible.",
+      "operations": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Interval.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Interval.contains"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "contains"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv is a library imported into the caller's own process, and any code that imports it may call it."
+      ]
+    },
+    {
+      "id": "text-form",
+      "name": "Text form",
+      "description": "The utv-text/1 text form and ISO 8601 / RFC 3339 / RFC 9557 text, read and written.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/python/src/utv/iso.py",
+          "symbol": "parse_iso"
+        }
+      ],
+      "responsibility": "Writes every value that has a lossless text form, reads it back to the type it describes, and reports text it can't or won't read as an outcome.",
+      "operations": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/python/src/utv/iso.py",
+          "symbol": "parse_iso"
+        },
+        {
+          "path": "implementations/python/src/utv/iso.py",
+          "symbol": "format_iso"
+        },
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "parse_text"
+        },
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "format_text"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv is a library imported into the caller's own process, and any code that imports it may call it."
+      ]
+    },
+    {
+      "id": "utv-json-validation",
+      "name": "UTV JSON validation",
+      "description": "UTV JSON checked for structure and Gregorian date fields, and read into typed values.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "validate_structural"
+        },
+        {
+          "path": "implementations/python/src/utv/gregorian.py",
+          "symbol": "validate_gregorian_date"
+        }
+      ],
+      "responsibility": "Validates UTV JSON text structurally against the bundled schema, failing closed, checks civil date fields, and reads JSON into the typed value that holds it exactly.",
+      "operations": [
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "validate_structural"
+        },
+        {
+          "path": "implementations/python/src/utv/gregorian.py",
+          "symbol": "validate_gregorian_date"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "from_json"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv is a library imported into the caller's own process, and any code that imports it may call it."
+      ]
+    },
+    {
+      "id": "native-interop",
+      "name": "Native interop",
+      "description": "Conversions between UTV values and Python's date, time, datetime and timedelta.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/interop.py",
+          "symbol": "from_native"
+        },
+        {
+          "path": "implementations/python/src/utv/interop.py",
+          "symbol": "to_native"
+        }
+      ],
+      "responsibility": "Brings native values in with a meaning the caller names, takes values out to the native types, and refuses or reports what the native types can't hold.",
+      "operations": [
+        {
+          "path": "implementations/python/src/utv/interop.py",
+          "symbol": "from_native"
+        },
+        {
+          "path": "implementations/python/src/utv/interop.py",
+          "symbol": "to_native"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "from_datetime"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "to_datetime"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv is a library imported into the caller's own process, and any code that imports it may call it."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/python/src/utv",
+      "path": "implementations/python/src/utv/.dev/operation.json",
+      "relationship": "The operations through which each capability is reached."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/python/src/utv",
+      "path": "implementations/python/src/utv/.dev/feature.json",
+      "relationship": "The features the capabilities offer."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/python/src/utv",
+      "path": "implementations/python/src/utv/.dev/use-case.json",
+      "relationship": "The use cases that use them."
+    }
+  ]
+}

@@ -1,0 +1,636 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "UTV-first examples verification",
+  "folder": "implementations/rust/tests/utv_first",
+  "description": "Checks are named by file and by the inner module of the function under test; each module holds one test per branch. All run with cargo test from implementations/rust.",
+  "entities": [
+    {
+      "id": "dates",
+      "title": "Dates and months, UTV first",
+      "summary": "CivilDate and CivilYearMonth for every date scenario of the catalog, against chrono's NaiveDate.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/typed/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "month-end"
+        }
+      ],
+      "criteria": [
+        "CivilDate::of creates 5 November 2026, 29 February 2024 and 2000, +275760-09-13 and -0500-03-01",
+        "CivilDate::of refuses 30 February and 29 February in 2026 and 1900 with day-out-of-range, and month 13 with month-out-of-range",
+        "CivilDate::parse reads 2026-11-05 and answers invalid (day-out-of-range) for 2026-02-30",
+        "day_of_week is Thursday and iso_week 45 for 5 November 2026; is_leap_year agrees with chrono for every kind of year",
+        "add_days crosses a month end; days_until counts the days from 5 November to 25 December as chrono does; < orders dates",
+        "add_months and add(Period) answer none (month-end) for 31 January + 1 month; add_months_constrained gives 28 February",
+        "NaiveDate::try_from answers out-of-native-range for a year beyond chrono's range",
+        "CivilYearMonth::of makes a month without a day, and add_months carries into the next year"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date.rs",
+          "symbol": "of",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date.rs",
+          "symbol": "parse",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date.rs",
+          "symbol": "day_of_week",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date.rs",
+          "symbol": "iso_week",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date.rs",
+          "symbol": "is_leap_year",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date.rs",
+          "symbol": "add_days",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date.rs",
+          "symbol": "add_months",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date.rs",
+          "symbol": "add_months_constrained",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date.rs",
+          "symbol": "add",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date.rs",
+          "symbol": "days_until",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date.rs",
+          "symbol": "lt",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date.rs",
+          "symbol": "try_into",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_year_month.rs",
+          "symbol": "of",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_year_month.rs",
+          "symbol": "add_months",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/utv_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "times-and-date-times",
+      "title": "Times, date-times and offsets, UTV first",
+      "summary": "CivilTime, CivilDateTime, FixedOffsetDateTime and utv::parse against NaiveTime, NaiveDateTime and DateTime<FixedOffset>.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/typed/.dev/feature.json",
+          "entityId": "text-display"
+        },
+        {
+          "path": "implementations/rust/src/interop/.dev/feature.json",
+          "entityId": "intent-named-by-target"
+        },
+        {
+          "path": "implementations/rust/src/interop/.dev/feature.json",
+          "entityId": "no-local-zone"
+        }
+      ],
+      "criteria": [
+        "CivilTime::of writes 09:30 with no seconds, and of_hms writes them",
+        "CivilDateTime::of makes a wall-clock date-time with no zone; of_hms refuses second 60 with leap-second",
+        "add_hours carries 23:30 + 2 hours into the next day",
+        "in_zone keeps the wall time and the zone; at_offset pins the wall time to the offset",
+        "FixedOffsetDateTime round-trips DateTime<FixedOffset> exactly, and to_instant gives the UTC moment",
+        "utv::parse answers an Instant for ...Z and a FixedOffsetDateTime for ...+00:00",
+        "interop::chrono::from_local answers unsupported (local-zone) for any DateTime<Local>"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_time.rs",
+          "symbol": "of",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_time.rs",
+          "symbol": "of_hms",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date_time.rs",
+          "symbol": "of",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date_time.rs",
+          "symbol": "of_hms",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date_time.rs",
+          "symbol": "add_hours",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date_time.rs",
+          "symbol": "in_zone",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/civil_date_time.rs",
+          "symbol": "at_offset",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/fixed_offset_date_time.rs",
+          "symbol": "try_from",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/fixed_offset_date_time.rs",
+          "symbol": "try_into",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/fixed_offset_date_time.rs",
+          "symbol": "to_instant",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/parse.rs",
+          "symbol": "returns_an_instant_when_the_text_ends_in_z",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/parse.rs",
+          "symbol": "returns_a_fixed_offset_date_time_when_the_text_ends_in_plus_zero",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/interop_chrono.rs",
+          "symbol": "from_local",
+          "command": "cargo test",
+          "description": "Builds a DateTime<Local> in the host's zone on purpose; the outcome is the same for every zone."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/utv_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "zones",
+      "title": "Zones, gaps and overlaps, UTV first",
+      "summary": "ZonedIntent, Instant::in_zone and TemporalContext::compare with the pinned demo rules, against chrono-tz.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "path": "implementations/rust/src/typed/.dev/feature.json",
+          "entityId": "ordering-without-rules"
+        },
+        {
+          "path": "implementations/rust/src/typed/.dev/feature.json",
+          "entityId": "explicit-context"
+        }
+      ],
+      "criteria": [
+        "09:00 in Paris on 1 June 2027 resolves to one instant, which is 03:00 in New York",
+        "02:30 on 8 March 2026 in New York resolves to none (gap); with Gap::ShiftForward to 03:30 EDT",
+        "01:30 on 1 November 2026 in New York resolves to both instants (ambiguous); with Overlap::Earliest to the first",
+        "TemporalContext::compare answers multiple (ambiguous) for 01:30 against 01:45 that night",
+        "ZonedIntent::add_days keeps noon in New York across the spring-forward night of 8 March 2026"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/zoned_intent.rs",
+          "symbol": "resolve",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/zoned_intent.rs",
+          "symbol": "resolve_with",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/zoned_intent.rs",
+          "symbol": "add_days",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/instant.rs",
+          "symbol": "in_zone",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/temporal_context.rs",
+          "symbol": "compare",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/utv_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules",
+          "description": "Through tests/fixtures."
+        }
+      ]
+    },
+    {
+      "id": "timestamps-and-amounts",
+      "title": "Timestamps and amounts, UTV first",
+      "summary": "Instant, Period, PosixSeconds and ElapsedSeconds against chrono's DateTime<Utc> and TimeDelta and std's SystemTime.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "exact-arithmetic"
+        },
+        {
+          "path": "implementations/rust/src/interop/.dev/feature.json",
+          "entityId": "clock-as-input"
+        }
+      ],
+      "criteria": [
+        "Instant::from_system_time takes a clock reading as an input",
+        "from_unix_seconds(0) is the epoch; from_unix_seconds_nanos keeps nine digits and a quarter second",
+        "until answers exactly 14403/4 s, and 82,800 s across a spring-forward night",
+        "add(PosixSeconds) moves by exactly those seconds; add_elapsed answers unsupported (needs-leap-seconds)",
+        "Period::days(1) is not 86,400 seconds and Period::months(1) writes P1M",
+        "ElapsedSeconds holds 90 minutes, and 86,400 SI seconds are neither a calendar day nor POSIX seconds"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/instant.rs",
+          "symbol": "from_system_time",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/instant.rs",
+          "symbol": "from_unix_seconds",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/instant.rs",
+          "symbol": "from_unix_seconds_nanos",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/instant.rs",
+          "symbol": "until",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/instant.rs",
+          "symbol": "add",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/instant.rs",
+          "symbol": "add_elapsed",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/period.rs",
+          "symbol": "days",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/period.rs",
+          "symbol": "months",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/elapsed_seconds.rs",
+          "symbol": "of",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/utv_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "ranges",
+      "title": "Ranges, UTV first",
+      "summary": "Interval with included, excluded, unbounded and unknown ends, against std::ops ranges of NaiveDate.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "three-valued-ranges"
+        }
+      ],
+      "criteria": [
+        "November as [2026-11-01, 2026-12-01) definitely contains 15 November and cannot contain 1 December",
+        "November as a closed interval definitely contains 30 November",
+        "An unbounded end definitely contains 1 January 3000; an unknown end possibly contains 1 June 2027"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/interval.rs",
+          "symbol": "half_open",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/interval.rs",
+          "symbol": "closed",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/interval.rs",
+          "symbol": "of",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/utv_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "json-layer",
+      "title": "UTV JSON, UTV first",
+      "summary": "validate_structural and validate_gregorian_civil on values chrono has no type for.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        },
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "separate-semantic-check"
+        }
+      ],
+      "criteria": [
+        "validate_gregorian_civil answers valid for a real date and for the year 1347, invalid (day-out-of-range) for 29 February 2026, unsupported for a Hebrew date",
+        "validate_structural answers valid for the year 1347, 23:59:60 UTC, a start-plus-amount meeting, two separate ranges, a weekly recurrence and an uncertain year",
+        "validate_structural answers unsupported for utv/2.0, and invalid for utv/4, a repeated key and an unknown kind"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_gregorian_civil.rs",
+          "symbol": "returns_valid_when_the_date_exists",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_gregorian_civil.rs",
+          "symbol": "returns_invalid_when_well_formed_json_names_a_missing_day",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_gregorian_civil.rs",
+          "symbol": "returns_unsupported_when_the_calendar_is_not_gregorian",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_gregorian_civil.rs",
+          "symbol": "returns_valid_when_the_value_is_only_a_year",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_structural.rs",
+          "symbol": "returns_valid_when_the_value_is_only_a_year",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_structural.rs",
+          "symbol": "returns_valid_when_the_second_is_a_leap_second",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_structural.rs",
+          "symbol": "returns_valid_when_the_interval_is_a_start_plus_an_amount",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_structural.rs",
+          "symbol": "returns_valid_when_the_value_is_a_union_of_ranges",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_structural.rs",
+          "symbol": "returns_valid_when_the_value_is_a_weekly_recurrence",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_structural.rs",
+          "symbol": "returns_valid_when_the_year_is_uncertain",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_structural.rs",
+          "symbol": "returns_unsupported_when_the_version_is_newer",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_structural.rs",
+          "symbol": "returns_invalid_when_the_version_label_is_malformed",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_structural.rs",
+          "symbol": "returns_invalid_when_a_key_appears_twice",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/utv_first/validate_structural.rs",
+          "symbol": "returns_invalid_when_the_kind_is_unknown",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/utv_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "task-markers",
+      "title": "Side-by-side task markers",
+      "summary": "Every task of docs/side-by-side.md is marked at least once in this suite, and the page matches the marked code.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers"
+        }
+      ],
+      "criteria": [
+        "Each of the 18 task ids (now, a-date, weekday-week, feb-30, add-days, month-end, days-between, compare-dates, time-of-day, datetime-plus-hours, parse-offsets, meeting-in-paris, dst-gap, dst-overlap, timestamps, day-vs-24h, ranges, round-trip) has a // BEGIN / // END pair in a file of this folder",
+        "docs/side-by-side.md is what tools/side_by_side.py generates from the marked code"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "tools/side_by_side.py",
+          "symbol": "--check",
+          "command": "python3 tools/side_by_side.py --check",
+          "description": "Run from the repository root. It reads implementations/rust/tests/utv_first/*.rs."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/utv_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,636 @@
+{
+  "$schema": "../../../../Meta/Agents/Skills/describe-feature/schema.json",
+  "kind": "feature",
+  "title": "TypeScript library features",
+  "folder": "implementations/typescript/src",
+  "description": "What the library offers an application developer: values that cannot be wrong, answers that may be plural or absent, explicit zone rules, exact numbers, a lossless text form, fail-closed JSON and native interop that names its intent.",
+  "sources": [
+    {
+      "path": "implementations/typescript/src/values.ts",
+      "symbol": "TemporalValue"
+    },
+    {
+      "path": "implementations/typescript/src/outcome.ts",
+      "symbol": "Outcome"
+    },
+    {
+      "path": "implementations/typescript/src/zones.ts",
+      "symbol": "resolve"
+    },
+    {
+      "path": "implementations/typescript/src/ops.ts",
+      "symbol": "add"
+    }
+  ],
+  "entities": [
+    {
+      "id": "valid-by-construction",
+      "name": "Typed values are valid by construction",
+      "description": "A typed value that can't exist can't be built: 30 February, hour 25, an offset beyond ±18:00 or a reversed interval.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "orThrow"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.tryOf"
+        },
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "readCivil"
+        }
+      ],
+      "behavior": "Each factory builds the value's UTV JSON with a builder and reads it back with the JSON layer's checked readers. `of` throws a RangeError whose message ends in the diagnostic code (`day-out-of-range`, `month-out-of-range`, `field-out-of-range`, `offset-out-of-range`, `reversed-interval`, `unsupported-form`, `leap-second`); `tryOf` returns the same failure as an Outcome. Every value is immutable: its JSON is deep-frozen and its fields are private.",
+      "outcome": "Code that holds a CivilDate, a CivilTime or an Interval holds a value that exists, and never has to check it again.",
+      "constraints": [
+        "Years are bigint; a number argument must be a safe integer, or the factory fails with field-out-of-range.",
+        "FixedOffsetDateTime and ZonedIntent have no factory of their own: they come from dateTime.atOffset(seconds) and dateTime.inZone(id), or from parse and fromJson.",
+        "inZone checks only that the text looks like an IANA zone name; whether the zone exists is decided by the rules when the value is resolved.",
+        "Second 60 makes CivilTime.of and CivilDateTime.of throw (leap-second): it needs a leap-second table."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "orThrow"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "attempt"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "integer"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "checkInterval"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "deepFreeze"
+        },
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "readCivil"
+        }
+      ]
+    },
+    {
+      "id": "outcomes-for-partial-operations",
+      "name": "Total operations return values; partial ones return Outcome",
+      "description": "Only an operation that can fail for valid inputs returns an Outcome, so every Outcome in user code marks a question time can refuse to answer.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "Outcome"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "constrainOnly"
+        }
+      ],
+      "behavior": "Outcome<T> is a union of Unique (value), Multiple (values, ascending), None, Unsupported and Invalid, discriminated on `status`, and every case carries diagnostics. `assertNever` makes a missing case in a `switch` fail to type-check. The helpers never pick an answer: `uniqueOr(fallback)`, `single()` (throws OutcomeError with the status and diagnostics), `toString()` (`2026-02-28` or `none (month-end)`) and `toResult()` (the utv-result/1.0 envelope). Overloads give `addMonths(n, MonthEnd.Constrain)` and `addYears(n, MonthEnd.Constrain)` a plain return type.",
+      "outcome": "A developer cannot use an answer that might not exist without first saying what to do when it doesn't.",
+      "constraints": [
+        "The total overloads take only MonthEnd.Constrain; passing MonthEnd.Reject or any other value throws a RangeError (library-api §2, Policy overloads).",
+        "An Outcome has five cases; a JSON-layer status outside them (symbolic, error) reaching the typed layer throws an Error.",
+        "A total operation whose JSON-layer answer is not unique throws an internal Error rather than returning a guess."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "OutcomeBase"
+        },
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "assertNever"
+        },
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "outcomeOf"
+        },
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "failed"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "constrainOnly"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "total"
+        }
+      ]
+    },
+    {
+      "id": "month-end-none",
+      "name": "Month arithmetic that says when the day is missing",
+      "description": "31 January + 1 month is `none (month-end)`, never a silent 28 February or 3 March.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.addMonths"
+        }
+      ],
+      "behavior": "Years and months are added together as 12·years + months. If the day does not exist in the resulting month, the default policy `reject` answers `none` with diagnostic `month-end`; `constrain` clamps to the last day of the month. Weeks and days are added next, then hours, minutes and seconds as wall-clock time carried into days.",
+      "outcome": "Billing dates, renewals and \"same day next month\" never drift without the developer choosing how.",
+      "constraints": [
+        "A date takes years, months, weeks and days; an hour, minute or second component gives invalid (kind-mismatch).",
+        "A year-month takes only years and months; a time of day can't be added to (unsupported-operand), because wrapping past midnight loses the day.",
+        "A monthEnd policy other than reject or constrain gives unsupported (unsupported-policy) in the JSON layer."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.addMonths"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.addYears"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.add"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDateTime.addMonths"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "ZonedIntent.addMonths"
+        }
+      ]
+    },
+    {
+      "id": "wall-clock-arithmetic",
+      "name": "Wall-clock arithmetic that keeps the zone",
+      "description": "Adding days or hours to a date-time, zoned or not, moves its wall clock, and a zoned value stays an intention in its zone.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "ZonedIntent.addDays"
+        }
+      ],
+      "behavior": "CivilDateTime and ZonedIntent add days, weeks, hours, minutes and seconds to the wall clock and carry into days. A zone is carried over unchanged. An asserted offset is dropped, because it may no longer hold; the JSON layer reports this with an info diagnostic `offset-assertion-dropped`. CivilTime has no arithmetic at all.",
+      "outcome": "Noon plus one day in New York is noon the next day, even across a DST change; turning it into an instant is left to resolve.",
+      "constraints": [
+        "There is no DST in wall-clock arithmetic; elapsed time between instants is Instant.until.",
+        "The typed ZonedIntent.add* methods return the value only, so the offset-assertion-dropped diagnostic is visible only in the JSON layer."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDateTime.addHours"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "ZonedIntent.addDays"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "ZonedIntent.addHours"
+        }
+      ]
+    },
+    {
+      "id": "dst-gap-and-overlap",
+      "name": "DST gaps and overlaps are answered, not guessed",
+      "description": "Resolving a wall time in a zone gives one instant, none (gap) or several (overlap), and a policy can choose explicitly.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "candidatesFor"
+        }
+      ],
+      "behavior": "The wall time is read as if it were UTC (L). For each offset o in force within a day of L, L − o is a candidate when the zone's offset at that instant is exactly o. An asserted offset keeps only its own candidate. One candidate is `unique`. None is `none` with diagnostic `gap`, unless the gap policy is `shift-forward-by-gap`, which gives L minus the offset before the gap (02:30 becomes 03:30). Two are `multiple`, ascending, with diagnostic `ambiguous` under `reject` and without it under `all`; `earliest` and `latest` pick one. The policy is the argument, else the value's own resolutionPolicy, else reject for both.",
+      "outcome": "A 02:30 meeting on spring-forward night, or a 01:30 alarm on fall-back night, is reported as the problem it is, and the developer chooses the fix.",
+      "constraints": [
+        "preserve-unresolved answers like reject: none (gap).",
+        "An asserted offset that matches no candidate gives invalid (offset-mismatch), before any policy applies, even with shift-forward-by-gap.",
+        "A policy value outside the lists gives unsupported (unsupported-policy).",
+        "A fixed-offset date-time resolves without rules; an unzoned one is symbolic (no-zone) in the JSON layer and has no resolve in the typed layer."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "candidatesFor"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "ZonedIntent.resolve"
+        },
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "ResolutionPolicy"
+        }
+      ]
+    },
+    {
+      "id": "explicit-zone-rules",
+      "name": "Zone rules are an explicit, bounded input",
+      "description": "Every zoned answer comes from a rule bundle the caller supplied, and only inside the window the bundle covers.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "ZoneRules"
+        },
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "TemporalContext.with"
+        }
+      ],
+      "behavior": "The caller makes a ZoneRules with ZoneRules.load(path), ZoneRules.parse(text) or loadRules, and holds it in a TemporalContext; there is no default context. A malformed bundle throws RulesError. resolve and toZone report the bundle's ruleSet in the result's manifest dependencies. A zone missing from the bundle gives unsupported (unknown-zone). A wall time within a day of the window's edges, or an instant outside validFrom ≤ t < validUntil, gives unsupported (outside-rule-window): nothing is extrapolated.",
+      "outcome": "The same code gives the same answer on every machine, and a stale or missing rule is reported instead of guessed.",
+      "constraints": [
+        "The demo bundle conformance/rules/demo-zones.json covers America/New_York, Europe/Paris and Atlantic/Reykjavik for 2026 and 2027 only.",
+        "Zone rules embedded in a value (zone.rules) are unsupported (unsupported-operand)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "loadRules"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "ZoneRules.load"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "ZoneRules.covers"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "toZone"
+        },
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "TemporalContext"
+        }
+      ]
+    },
+    {
+      "id": "no-hidden-environment",
+      "name": "No clock, host zone or locale",
+      "description": "Library code never reads the system clock, the host's time zone or tz database, or its locale.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromDate"
+        },
+        {
+          "path": "implementations/typescript/src/node.d.ts",
+          "symbol": "node:fs"
+        }
+      ],
+      "behavior": "\"Now\" is an input: the caller reads Date.now() and passes it to Instant.fromUnixMilliseconds. A Date is read only through getTime(). A request for a Date's local wall time is refused (local-zone). The only Node built-in the library uses is readFileSync, for the rule file the caller names.",
+      "outcome": "Results are reproducible: they depend only on the arguments and the rules passed in.",
+      "constraints": [
+        "test/native.test.ts fails if a library source mentions Date.now, new Date(), Intl., getTimezoneOffset, toLocale…, process., performance. or a local Date getter."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromDate"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.fromUnixMilliseconds"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "ZoneRules.load"
+        }
+      ]
+    },
+    {
+      "id": "zoned-ordering-needs-context",
+      "name": "Zoned values are ordered only through a context",
+      "description": "Dates, times, fixed-offset date-times and instants compare directly; a zoned wall time compares only after resolving, and the answer may be several orders.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "TemporalContext.compare"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Ordered"
+        }
+      ],
+      "behavior": "Ordered values have compare (−1, 0, 1), isBefore and isAfter; a FixedOffsetDateTime orders by the instant it names. ZonedIntent has none. TemporalContext.compare resolves each zoned side strictly, compares every pair of candidates and answers unique with one order or multiple with each possible order. A side that resolves to none, unsupported or invalid makes the comparison that outcome. The diagnostics are both sides' resolve diagnostics. The JSON-layer compare answers unsupported (needs-zone-rules) for any named zone.",
+      "outcome": "Two meetings at 01:30 and 01:45 on fall-back night are reported as possibly either order, not sorted by their wall clocks.",
+      "constraints": [
+        "TemporalContext.compare takes ZonedIntent or Instant values.",
+        "Two wall times in the same overlap report ambiguous twice, one per side; the C# and Java libraries report one compare-level ambiguous warning (see backlog compare-ambiguous-diagnostics).",
+        "Comparison of civil values treats a missing second as 0; equals still tells 09:30 from 09:30:00."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "TemporalContext.compare"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Ordered.compare"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "compare"
+        }
+      ]
+    },
+    {
+      "id": "exact-arithmetic",
+      "name": "Exact years, days and seconds",
+      "description": "No floating point and no fixed-width integers between the input and the answer.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/rational.ts",
+          "symbol": "rat"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.subSecond"
+        }
+      ],
+      "behavior": "Years and day counts are bigint. Seconds are exact rationals on bigint, kept in lowest terms with a positive denominator, so a sub-second fraction is written reduced. Instant.until gives an exact PosixSeconds (a quarter second stays 1/4). POSIX seconds and SI (elapsed) seconds are different types: adding ElapsedSeconds to a POSIX instant gives unsupported (needs-leap-seconds), and a calendar Period on an instant gives invalid (kind-mismatch). Instant.nanoseconds is the floor of the fraction; Instant.subSecond is exact.",
+      "outcome": "A quarter second, a third of a second or the year 10^30 survive every operation unchanged.",
+      "constraints": [
+        "daysBetween and daysUntil answer a JavaScript number. Beyond Number.MAX_SAFE_INTEGER days, daysBetween gives unsupported (implementation-limit) and the total daysUntil throws an Error (see backlog days-until-beyond-safe-integer).",
+        "Converting an instant finer than a nanosecond to a civil date-time gives unsupported (implementation-limit); formatting it gives unsupported (no-text-form).",
+        "PosixSeconds and ElapsedSeconds have display strings only: a terminating decimal (3600.75 s (POSIX)) or a fraction (1/3 s (POSIX))."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/rational.ts",
+          "symbol": "rat"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "posixSecondsBetween"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "daysBetween"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.add"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "decimal"
+        }
+      ]
+    },
+    {
+      "id": "three-valued-ranges",
+      "name": "Ranges that can say \"possibly\"",
+      "description": "An interval's ends can be included, excluded, unbounded or unknown, and membership is definitely, possibly or impossible.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "contains"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "overlaps"
+        }
+      ],
+      "behavior": "Each end gives a condition that is true, false or unknown (included ≤, excluded <, unbounded always true, unknown unknown), combined with three-valued AND: impossible if any is false, definitely if all are true, possibly otherwise. For overlaps, date intervals are first normalized to half-open; an interval that is provably empty never overlaps anything.",
+      "outcome": "A contract with an unknown end date possibly covers next June, instead of being treated as open-ended or as already over.",
+      "constraints": [
+        "Only start-end intervals of civil dates (domain civil/gregory, unzoned or all in the same zone) or POSIX instants (domain physical).",
+        "Mixing domains is unsupported in the JSON layer; the typed Interval<T> prevents it at compile time."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "contains"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "overlaps"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "halfOpen"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Interval.contains"
+        }
+      ]
+    },
+    {
+      "id": "lossless-text-form",
+      "name": "A text form that reads back exactly",
+      "description": "toString writes the UTV text form and parse reads it, defined only where the round trip is lossless.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "parseText"
+        },
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "formatText"
+        },
+        {
+          "path": "implementations/typescript/src/iso.ts",
+          "symbol": "parseIso"
+        }
+      ],
+      "behavior": "Points use ISO 8601 extended and RFC 3339 / RFC 9557 forms: `Z` or `-00:00` gives an Instant, `+00:00` a FixedOffsetDateTime, `[Area/Location]` a ZonedIntent (with an asserted offset if one is written). Years outside 0000–9999 carry a sign. Seconds are written only if given. Periods use ISO 8601 durations with whole components, all-negative ones with a leading minus. Intervals use brackets, with `..` for unbounded and `?` for unknown ends; EDTF slash intervals are accepted on input. Typed `parse` returns the type the text describes; `T.parse` checks it is a T.",
+      "outcome": "Values in logs, tests and documentation are readable, and reading them back gives the same value.",
+      "constraints": [
+        "A value with no text form (a mixed-sign period, a zoned date, an empty or start-amount interval) gives unsupported (no-text-form) from formatText; a typed value's toString then prints its JSON instead.",
+        "Second 60 gives unsupported (leap-second) and 24:00 unsupported (end-of-day).",
+        "Week dates, ordinal dates, basic format, decimal period components and EDTF qualifiers give unsupported (unsupported-form); an annotation other than one [Area/Location] gives unsupported (unsupported-annotation).",
+        "Lower-case t or z, a space instead of T and out-of-range fields give invalid (syntax, or the field's range code).",
+        "A reversed interval gives invalid (reversed-interval); endpoints of different kinds or forms give invalid (kind-mismatch); an interval with no point gives unsupported (unsupported-form)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/iso.ts",
+          "symbol": "parseIso"
+        },
+        {
+          "path": "implementations/typescript/src/iso.ts",
+          "symbol": "formatIso"
+        },
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "parseText"
+        },
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "formatText"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "TemporalValue.toString"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "parse"
+        }
+      ]
+    },
+    {
+      "id": "fail-closed-json",
+      "name": "UTV JSON that fails closed",
+      "description": "JSON is checked structurally before anything interprets it, and anything unknown is rejected.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/json.ts",
+          "symbol": "parseStrict"
+        },
+        {
+          "path": "implementations/typescript/src/structural.ts",
+          "symbol": "checkEnvelope"
+        }
+      ],
+      "behavior": "parseStrict rejects a repeated object key (duplicate-key) and malformed text (malformed-json), where JSON.parse would keep the last value. An envelope needs schema, kind and value and may have only provenance and extensions besides. utv/1.0 is read; any other well-formed utv/M.N is unsupported (unsupported-version) and anything else invalid (invalid-schema-identifier). An unknown kind, a missing required or an unknown core property is invalid, and nested envelopes are checked the same way. Every JSON-layer operation runs this check first.",
+      "outcome": "A value from a newer writer, a typo or a smuggled duplicate key is refused instead of being half understood.",
+      "constraints": [
+        "Structural only: a value can pass and still be semantically invalid or unresolvable.",
+        "The per-kind property lists are transcribed from schema/utv-1.0.schema.json, not read from it (see backlog kinds-transcribed-from-schema).",
+        "extensions is checked only for being an object; criticality of extensions is not interpreted."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/json.ts",
+          "symbol": "parseStrict"
+        },
+        {
+          "path": "implementations/typescript/src/structural.ts",
+          "symbol": "checkEnvelope"
+        },
+        {
+          "path": "implementations/typescript/src/structural.ts",
+          "symbol": "KINDS"
+        },
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "envelope"
+        }
+      ]
+    },
+    {
+      "id": "separate-validity-checks",
+      "name": "Structural and semantic validity are separate checks",
+      "description": "validateStructural checks shapes; validateSemantic then checks that a proleptic Gregorian civil value names something that exists.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/civil.ts",
+          "symbol": "validateSemantic"
+        }
+      ],
+      "behavior": "validateSemantic runs the structural check first and returns its result if it fails. A civil value in the proleptic Gregorian calendar is then checked field by field: month 1–12 (month-out-of-range), day within the month of that year (day-out-of-range), year a decimal integer string. Without a year, 29 February is admissible. Both answer with a utv-result/1.0 result whose status is valid, invalid or unsupported.",
+      "outcome": "\"Well-formed\" and \"exists\" are two answers a developer can tell apart.",
+      "constraints": [
+        "Other kinds give unsupported (unsupported-operand); other calendars or chronologies give unsupported (unsupported-calendar)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/civil.ts",
+          "symbol": "validateSemantic"
+        },
+        {
+          "path": "implementations/typescript/src/structural.ts",
+          "symbol": "validateStructural"
+        }
+      ]
+    },
+    {
+      "id": "native-interop-with-intent",
+      "name": "Native interop that names its intent and reports loss",
+      "description": "Explicit adapters between UTV values and Date, epoch milliseconds and plain date objects.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromDate"
+        },
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "toDate"
+        }
+      ],
+      "behavior": "fromDate takes a Date and an intent: \"instant\", { offsetSeconds } or { zone, rules }; \"local\" is refused with unsupported (local-zone). toDate takes an instant or a fixed-offset date-time; sub-millisecond precision is floored with a precision-loss warning, and a fixed offset is reported dropped (zone-dropped). A zoned date-time gives unsupported (needs-zone-rules) and an unzoned one unsupported (local-zone). A value outside a Date's ±8.64e15 ms gives unsupported (out-of-native-range). fromPlainDate refuses a day that doesn't exist (invalid) instead of rolling over. The typed layer offers Instant.fromUnixMilliseconds, Instant.fromDate and instant.toDate().",
+      "outcome": "Bringing a Date in or taking one out never changes the meaning of a value without saying so.",
+      "constraints": [
+        "Temporal is not a target: it is not available by default in Node 22 (native.ts).",
+        "Epoch milliseconds must be a safe integer or a bigint (invalid, not-an-integer).",
+        "toPlainDate takes only an unzoned date whose year fits a safe integer (out-of-native-range)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromDate"
+        },
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "toDate"
+        },
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromEpochMilliseconds"
+        },
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromPlainDate"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.toDate"
+        }
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/typescript/src",
+      "path": "implementations/typescript/src/.dev/capability.json",
+      "relationship": "The capabilities these features make up."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/typescript/src",
+      "path": "implementations/typescript/src/.dev/operation.json",
+      "relationship": "The operations that carry them out."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/typescript/src",
+      "path": "implementations/typescript/src/.dev/use-case.json",
+      "relationship": "The use cases that exercise them."
+    }
+  ]
+}

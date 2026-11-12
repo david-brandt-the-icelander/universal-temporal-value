@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "GitHub workflows",
+  "folder": ".github/workflows",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "GitHub workflows",
+      "summary": "The repository's only CI workflow, Validate specification.",
+      "purpose": "Runs the repository's structural checks and the side-by-side page check on GitHub Actions for every push and pull request.",
+      "boundaries": [
+        "It runs the scripts in tools/ and nothing else: no library's build or tests, and no deployment or release.",
+        "The workflow token is read-only (permissions: contents: read).",
+        ".github/ holds nothing but this folder, so it has no .dev of its own."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": ".github/workflows/validate.yml",
+          "symbol": "jobs.structural"
+        },
+        {
+          "path": ".github/workflows/validate.yml",
+          "symbol": "permissions"
+        }
+      ]
+    }
+  ]
+}

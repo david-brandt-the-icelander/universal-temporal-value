@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "TypeScript example tests",
+  "folder": "implementations/typescript/test/examples",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "TypeScript example tests",
+      "summary": "The library's examples, as unit tests: the UTV-first and native-first suites, and the shared fixture they use for zone rules.",
+      "purpose": "Groups the two example suites of docs/example-tests.md and holds fixtures.ts, whose demoZoneRules() loads the pinned rules of conformance/rules/demo-zones.json for every UTV zone operation in the examples, with its own test.",
+      "boundaries": [
+        "The examples follow AGENTS.md: GIVEN … THEN sections, one doc comment with \"Verifies that …\" and \"Compared with: …\", role-prefixed names.",
+        "UTV zone operations use demoZoneRules(), never the host's tz database; the Intl.DateTimeFormat comparisons necessarily read the host's."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/fixtures.ts",
+          "symbol": "demoZoneRules"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "2. Examples are unit tests"
+        }
+      ]
+    }
+  ]
+}

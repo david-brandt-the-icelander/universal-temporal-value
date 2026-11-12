@@ -1,0 +1,76 @@
+{
+  "$schema": "../../../Meta/Agents/Skills/describe-deployment-diagram/schema.json",
+  "kind": "deployment",
+  "title": "Rust library deployment diagram",
+  "folder": "implementations/rust",
+  "description": "How the crate is used: it is built from source with Cargo and compiled into the caller's application, where it runs in-process as ordinary function calls. It starts no process or thread, opens no connection and reads only the rule file the caller names. Nothing in the repository shows it published to a registry: Cargo.toml names no repository or registry, and this checkout has no rust/vX.Y.Z tag (VERSIONING.md says library releases are tagged so). Because the schema is compiled in from outside the package's folder, it builds only inside a checkout of the repository.",
+  "sources": [
+    {
+      "path": "implementations/rust/Cargo.toml",
+      "symbol": "package"
+    },
+    {
+      "path": "implementations/rust/src/lib.rs",
+      "symbol": "SCHEMA_TEXT"
+    },
+    {
+      "path": "implementations/rust/src/zones.rs",
+      "symbol": "Rules::load"
+    },
+    {
+      "path": "VERSIONING.md",
+      "symbol": "Implementation versions"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "host",
+      "name": "Caller's machine",
+      "kind": "host",
+      "description": "Wherever the caller's application runs; nothing in this folder names one."
+    },
+    {
+      "id": "app",
+      "name": "Caller's application process",
+      "kind": "process",
+      "description": "The application that depends on utv. The library runs inside it: there is no service, server or network protocol."
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "crate",
+      "name": "utv library (rlib)",
+      "source": "implementations/rust/Cargo.toml",
+      "deployedTo": "app",
+      "description": "The crate compiled into the application, with serde_json, serde and regex, and chrono when the feature chrono is on."
+    },
+    {
+      "id": "schema",
+      "name": "Structural schema",
+      "source": "schema/utv-1.0.schema.json",
+      "deployedTo": "app",
+      "description": "Compiled into the crate with include_str!; parsed once on first validation."
+    },
+    {
+      "id": "rules",
+      "name": "Zone rule bundle",
+      "source": "conformance/rules/demo-zones.json",
+      "deployedTo": "host",
+      "description": "A JSON file in this format, which the caller loads with ZoneRules::load(path) or passes as text to ZoneRules::parse. The demo bundle covers New York, Paris and Reykjavik for 2026 and 2027 only; production rules are the caller's to supply."
+    }
+  ],
+  "relationships": [
+    {
+      "from": "host",
+      "to": "app",
+      "kind": "hosts",
+      "description": "Runs the application, with the crate inside it."
+    },
+    {
+      "from": "app",
+      "to": "host",
+      "kind": "connects-to",
+      "description": "Reads the rule bundle file the caller names (std::fs::read_to_string in Rules::load); nothing else on the host is read."
+    }
+  ]
+}

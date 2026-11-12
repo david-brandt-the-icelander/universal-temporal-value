@@ -1,0 +1,88 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/limitations.schema.json",
+  "kind": "limitations",
+  "title": "C# library limitations",
+  "folder": "implementations/csharp",
+  "entities": [
+    {
+      "id": "everyday-subset-only",
+      "title": "Only the everyday subset of operations",
+      "summary": "The library implements validation, the everyday API of docs/everyday-api.md, the text form and .NET interop; nothing else of docs/operations.md.",
+      "impact": "convert, expand, equivalent and the other operations of docs/operations.md are absent; so are canonical JSON round-tripping and writing, other calendars, zones beyond a supplied bundle, recurrences, and semantic validation of any kind other than Gregorian civil dates.",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "What is not implemented"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "implementations/csharp/.dev/roadmap.json",
+          "entityId": "m2-typed-model",
+          "description": "The milestones that would add them."
+        }
+      ]
+    },
+    {
+      "id": "no-profiles-claimed",
+      "title": "No conformance profile claimed",
+      "summary": "The README and the package description claim no conformance profile (core-civil, zoned, …).",
+      "impact": "Under VERSIONING.md the library cannot reach 1.0.0 until it passes the structural material and every semantic scenario of the profiles it claims.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Utv.csproj",
+          "symbol": "Description"
+        },
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "Utv (C#)"
+        }
+      ]
+    },
+    {
+      "id": "scenarios-not-run",
+      "title": "Semantic scenarios are not run",
+      "summary": "conformance/scenarios/*.json are not executable yet (OI-12), and the tests do not run them.",
+      "impact": "Nothing checks this library against the 94 semantic scenarios.",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "What is not implemented"
+        },
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "OI-12"
+        }
+      ]
+    },
+    {
+      "id": "no-registries",
+      "title": "No registries ship with the library",
+      "summary": "No tzdb, leap-second table or non-Gregorian calendar is included; zone rules are passed in as a ZoneRules bundle.",
+      "impact": "Zone operations work only for the zones and years of the bundle the caller supplies; the repository's demo bundle covers New York, Paris and Reykjavik for 2026 and 2027.",
+      "workaround": "Supply a bundle in the demo-zones.json format with the zones and years needed.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "Utv (C#)"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+          "symbol": "ZoneRules"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "implementations/csharp/src/Utv/.dev/limitations.json",
+          "entityId": "no-leap-seconds"
+        }
+      ]
+    }
+  ]
+}

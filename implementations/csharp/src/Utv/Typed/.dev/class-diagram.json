@@ -1,0 +1,1029 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Skills/describe-class-diagram/schema.json",
+  "kind": "class",
+  "title": "Typed layer classes",
+  "folder": "implementations/csharp/src/Utv/Typed",
+  "description": "The typed API of library 0.3 (namespace Utv): one immutable sealed record per everyday value, Outcome<T> for partial operations, the typed policies, and TemporalContext, which holds the zone rules. Every operation calls the JSON layer underneath.",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+      "symbol": "ITemporalValue"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+      "symbol": "Outcome"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+      "symbol": "CivilDate"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+      "symbol": "TemporalContext"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+      "symbol": "Interval"
+    }
+  ],
+  "types": [
+    {
+      "id": "typed.ITemporalValue",
+      "name": "ITemporalValue",
+      "kind": "interface",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Temporal.cs"
+      ],
+      "members": [
+        "string ToString()",
+        "JsonElement ToJson()"
+      ]
+    },
+    {
+      "id": "typed.IIntervalPoint",
+      "name": "IIntervalPoint",
+      "kind": "interface",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Temporal.cs"
+      ],
+      "members": [
+        "internal string Domain"
+      ]
+    },
+    {
+      "id": "typed.Temporal",
+      "name": "Temporal",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Temporal.cs"
+      ],
+      "members": [
+        "static Outcome<ITemporalValue> Parse(string text)",
+        "static Outcome<ITemporalValue> FromJson(JsonElement json)",
+        "static Outcome<ITemporalValue> FromJson(string json)"
+      ]
+    },
+    {
+      "id": "typed.Typed",
+      "name": "Typed",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Temporal.cs"
+      ],
+      "members": [
+        "static Outcome<T> FromJson<T>(JsonElement json, string expected)",
+        "static Outcome<T> Parse<T>(string text, string expected)",
+        "static ITemporalValue Read(JsonElement json)",
+        "static T Trusted<T>(JsonElement json)",
+        "static T Total<T>(UtvResult result, Func<JsonElement, T> read)",
+        "static Outcome<T> ToOutcome<T>(UtvResult result)",
+        "static Outcome<T> ToOutcome<T>(NativeResult<T> result, string operation)",
+        "static Outcome<T> Failure<T>(string operation, UtvStatus status, IEnumerable<Diagnostic> diagnostics)",
+        "static string Text(ITemporalValue value)",
+        "static T OrThrow<T>(Outcome<T> outcome)"
+      ]
+    },
+    {
+      "id": "typed.CivilDate",
+      "name": "CivilDate",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/CivilDate.cs"
+      ],
+      "members": [
+        "BigInteger Year",
+        "int Month",
+        "int Day",
+        "static CivilDate Of(BigInteger year, int month, int day)",
+        "static Outcome<CivilDate> TryOf(BigInteger year, int month, int day)",
+        "static Outcome<CivilDate> Parse(string text)",
+        "static Outcome<CivilDate> FromJson(JsonElement json)",
+        "static CivilDate FromDateOnly(DateOnly date)",
+        "Weekday DayOfWeek",
+        "int DayOfYear",
+        "int IsoWeek",
+        "BigInteger IsoWeekYear",
+        "int DaysInMonth",
+        "bool IsLeapYear",
+        "CivilDate AddDays(long days)",
+        "CivilDate AddWeeks(long weeks)",
+        "Outcome<CivilDate> AddMonths(long months)",
+        "CivilDate AddMonths(long months, MonthEnd monthEnd)",
+        "Outcome<CivilDate> AddYears(long years)",
+        "CivilDate AddYears(long years, MonthEnd monthEnd)",
+        "Outcome<CivilDate> Add(Period period, MonthEnd monthEnd = MonthEnd.Reject)",
+        "long DaysUntil(CivilDate other)",
+        "CivilDateTime At(CivilTime time)",
+        "Outcome<DateOnly> ToDateOnly()",
+        "JsonElement ToJson()",
+        "int CompareTo(CivilDate? other)",
+        "operators < > <= >="
+      ]
+    },
+    {
+      "id": "typed.CivilYearMonth",
+      "name": "CivilYearMonth",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/CivilYearMonth.cs"
+      ],
+      "members": [
+        "BigInteger Year",
+        "int Month",
+        "static CivilYearMonth Of(BigInteger year, int month)",
+        "static Outcome<CivilYearMonth> TryOf(BigInteger year, int month)",
+        "static Outcome<CivilYearMonth> Parse(string text)",
+        "static Outcome<CivilYearMonth> FromJson(JsonElement json)",
+        "CivilYearMonth AddMonths(long months)",
+        "CivilYearMonth AddYears(long years)",
+        "JsonElement ToJson()",
+        "int CompareTo(CivilYearMonth? other)",
+        "operators < > <= >="
+      ]
+    },
+    {
+      "id": "typed.CivilTime",
+      "name": "CivilTime",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/CivilTime.cs"
+      ],
+      "members": [
+        "int Hour",
+        "int Minute",
+        "int? Second",
+        "int Nanosecond",
+        "static CivilTime Of(int hour, int minute[, int second[, int nanosecond]])",
+        "static Outcome<CivilTime> TryOf(int hour, int minute[, int second[, int nanosecond]])",
+        "static Outcome<CivilTime> Parse(string text)",
+        "static Outcome<CivilTime> FromJson(JsonElement json)",
+        "static CivilTime FromTimeOnly(TimeOnly time)",
+        "Outcome<TimeOnly> ToTimeOnly()",
+        "JsonElement ToJson()",
+        "int CompareTo(CivilTime? other)",
+        "operators < > <= >="
+      ]
+    },
+    {
+      "id": "typed.CivilDateTime",
+      "name": "CivilDateTime",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/CivilDateTime.cs"
+      ],
+      "members": [
+        "CivilDate Date",
+        "CivilTime Time",
+        "static CivilDateTime Of(BigInteger year, int month, int day, int hour, int minute[, int second[, int nanosecond]])",
+        "static Outcome<CivilDateTime> TryOf(BigInteger year, int month, int day, int hour, int minute[, int second[, int nanosecond]])",
+        "static Outcome<CivilDateTime> Parse(string text)",
+        "static Outcome<CivilDateTime> FromJson(JsonElement json)",
+        "static Outcome<CivilDateTime> FromDateTime(DateTime value)",
+        "CivilDateTime AddDays/AddWeeks/AddHours/AddMinutes/AddSeconds(long n)",
+        "Outcome<CivilDateTime> AddMonths(long months)",
+        "CivilDateTime AddMonths(long months, MonthEnd monthEnd)",
+        "Outcome<CivilDateTime> Add(Period period, MonthEnd monthEnd = MonthEnd.Reject)",
+        "ZonedIntent InZone(string zoneId)",
+        "FixedOffsetDateTime AtOffset(int offsetSeconds)",
+        "Outcome<DateTime> ToDateTime()",
+        "JsonElement ToJson()",
+        "int CompareTo(CivilDateTime? other)",
+        "operators < > <= >="
+      ]
+    },
+    {
+      "id": "typed.FixedOffsetDateTime",
+      "name": "FixedOffsetDateTime",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/ZonedValues.cs"
+      ],
+      "members": [
+        "CivilDateTime DateTime",
+        "int OffsetSeconds",
+        "static Outcome<FixedOffsetDateTime> Parse(string text)",
+        "static Outcome<FixedOffsetDateTime> FromJson(JsonElement json)",
+        "static FixedOffsetDateTime FromDateTimeOffset(DateTimeOffset value)",
+        "Instant ToInstant()",
+        "Outcome<DateTimeOffset> ToDateTimeOffset()",
+        "JsonElement ToJson()",
+        "int CompareTo(FixedOffsetDateTime? other)",
+        "operators < > <= >="
+      ]
+    },
+    {
+      "id": "typed.ZonedIntent",
+      "name": "ZonedIntent",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/ZonedValues.cs"
+      ],
+      "members": [
+        "CivilDateTime DateTime",
+        "string ZoneId",
+        "int? AssertedOffsetSeconds",
+        "static Outcome<ZonedIntent> Parse(string text)",
+        "static Outcome<ZonedIntent> FromJson(JsonElement json)",
+        "ZonedIntent AddDays/AddWeeks/AddHours/AddMinutes/AddSeconds(long n)",
+        "Outcome<ZonedIntent> AddMonths(long months)",
+        "Outcome<Instant> Resolve(TemporalContext context, ResolutionPolicy? policy = null)",
+        "Outcome<Instant> Resolve(TemporalContext context, Gap gap)",
+        "Outcome<Instant> Resolve(TemporalContext context, Overlap overlap)",
+        "JsonElement ToJson()"
+      ]
+    },
+    {
+      "id": "typed.TemporalContext",
+      "name": "TemporalContext",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/ZonedValues.cs"
+      ],
+      "members": [
+        "ZoneRules Rules",
+        "static TemporalContext With(ZoneRules rules)",
+        "Outcome<Instant> Resolve(ZonedIntent zoned, ResolutionPolicy? policy = null)",
+        "Outcome<ZonedIntent> InZone(Instant instant, string zoneId)",
+        "Outcome<Ordering> Compare(ZonedIntent a, ZonedIntent b)",
+        "Outcome<Ordering> Compare(ZonedIntent a, Instant b)",
+        "Outcome<Ordering> Compare(Instant a, ZonedIntent b)"
+      ]
+    },
+    {
+      "id": "typed.Instant",
+      "name": "Instant",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Instant.cs"
+      ],
+      "members": [
+        "BigInteger UnixSeconds",
+        "int Nanoseconds",
+        "PosixSeconds SubSecond",
+        "static Instant FromUnixSeconds(long seconds, long nanoseconds = 0)",
+        "static Instant FromUnixNanoseconds(long nanoseconds)",
+        "static Instant FromDateTimeOffset(DateTimeOffset value)",
+        "static Outcome<Instant> FromDateTime(DateTime value)",
+        "static Outcome<Instant> Parse(string text)",
+        "static Outcome<Instant> FromJson(JsonElement json)",
+        "Instant Add(PosixSeconds seconds)",
+        "Outcome<Instant> Add(ElapsedSeconds seconds)",
+        "PosixSeconds Until(Instant other)",
+        "FixedOffsetDateTime AtOffset(int offsetSeconds)",
+        "Outcome<ZonedIntent> InZone(string zoneId, TemporalContext context)",
+        "Outcome<DateTimeOffset> ToDateTimeOffset()",
+        "JsonElement ToJson()",
+        "int CompareTo(Instant? other)",
+        "operator +(Instant, PosixSeconds)",
+        "operators < > <= >="
+      ]
+    },
+    {
+      "id": "typed.PeriodComponents",
+      "name": "PeriodComponents",
+      "kind": "struct",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Amounts.cs"
+      ],
+      "members": [
+        "long Years, Months, Weeks, Days, Hours, Minutes, Seconds"
+      ]
+    },
+    {
+      "id": "typed.Period",
+      "name": "Period",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Amounts.cs"
+      ],
+      "members": [
+        "static Period Zero",
+        "PeriodComponents Components",
+        "static Period Of(long years = 0, long months = 0, long weeks = 0, long days = 0, long hours = 0, long minutes = 0, long seconds = 0)",
+        "static Period Years/Months/Weeks/Days/Hours/Minutes/Seconds(long n)",
+        "static Outcome<Period> Parse(string text)",
+        "static Outcome<Period> FromJson(JsonElement json)",
+        "Period Negate()",
+        "JsonElement ToJson()"
+      ]
+    },
+    {
+      "id": "typed.PosixSeconds",
+      "name": "PosixSeconds",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Amounts.cs"
+      ],
+      "members": [
+        "BigInteger Numerator",
+        "BigInteger Denominator",
+        "static PosixSeconds Of(long seconds)",
+        "static PosixSeconds Of(BigInteger numerator, BigInteger denominator)",
+        "static PosixSeconds FromTimeSpan(TimeSpan value)",
+        "static Outcome<PosixSeconds> FromJson(JsonElement json)",
+        "PosixSeconds Negate()",
+        "Outcome<TimeSpan> ToTimeSpan()",
+        "JsonElement ToJson()"
+      ]
+    },
+    {
+      "id": "typed.ElapsedSeconds",
+      "name": "ElapsedSeconds",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Amounts.cs"
+      ],
+      "members": [
+        "BigInteger Numerator",
+        "BigInteger Denominator",
+        "static ElapsedSeconds Of(long seconds)",
+        "static ElapsedSeconds Of(BigInteger numerator, BigInteger denominator)",
+        "static Outcome<ElapsedSeconds> FromJson(JsonElement json)",
+        "ElapsedSeconds Negate()",
+        "JsonElement ToJson()"
+      ]
+    },
+    {
+      "id": "typed.SecondsDisplay",
+      "name": "SecondsDisplay",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Amounts.cs"
+      ],
+      "members": [
+        "static string Of(Rational value, string basis)"
+      ]
+    },
+    {
+      "id": "typed.Interval`1",
+      "name": "Interval<T>",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Interval.cs"
+      ],
+      "members": [
+        "Bound<T> Start",
+        "Bound<T> End",
+        "static Outcome<Interval<T>> Parse(string text)",
+        "static Outcome<Interval<T>> FromJson(JsonElement json)",
+        "Truth Contains(T point)",
+        "Truth Overlaps(Interval<T> other)",
+        "JsonElement ToJson()"
+      ]
+    },
+    {
+      "id": "typed.Bound`1",
+      "name": "Bound<T>",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Interval.cs"
+      ],
+      "members": [
+        "BoundState State",
+        "T? Point",
+        "static implicit operator Bound<T>(OpenBound bound)"
+      ]
+    },
+    {
+      "id": "typed.OpenBound",
+      "name": "OpenBound",
+      "kind": "struct",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Interval.cs"
+      ],
+      "members": [
+        "BoundState State"
+      ]
+    },
+    {
+      "id": "typed.Bound",
+      "name": "Bound",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Interval.cs"
+      ],
+      "members": [
+        "static OpenBound Unbounded",
+        "static OpenBound Unknown",
+        "static Bound<T> Included<T>(T point)",
+        "static Bound<T> Excluded<T>(T point)"
+      ]
+    },
+    {
+      "id": "typed.Interval",
+      "name": "Interval",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Interval.cs"
+      ],
+      "members": [
+        "static Interval<T> HalfOpen<T>(T start, T end)",
+        "static Interval<T> Closed<T>(T start, T end)",
+        "static Interval<T> Of<T>(Bound<T> start, Bound<T> end)"
+      ]
+    },
+    {
+      "id": "typed.Outcome`1",
+      "name": "Outcome<T>",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Outcome.cs"
+      ],
+      "members": [
+        "Diagnostics Diagnostics",
+        "abstract UtvStatus Status",
+        "bool TryGetUnique(out T value)",
+        "T UniqueOr(T fallback)",
+        "T Single()",
+        "UtvResult ToResult()",
+        "sealed override string ToString()"
+      ]
+    },
+    {
+      "id": "typed.Outcome`1.Unique",
+      "name": "Outcome<T>.Unique",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Outcome.cs"
+      ],
+      "members": [
+        "Unique(T value, Diagnostics? diagnostics = null)",
+        "T Value",
+        "void Deconstruct(out T value)"
+      ]
+    },
+    {
+      "id": "typed.Outcome`1.Multiple",
+      "name": "Outcome<T>.Multiple",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Outcome.cs"
+      ],
+      "members": [
+        "Multiple(IEnumerable<T> values, Diagnostics? diagnostics = null)",
+        "IReadOnlyList<T> Values",
+        "void Deconstruct(out IReadOnlyList<T> values)"
+      ]
+    },
+    {
+      "id": "typed.Outcome`1.None",
+      "name": "Outcome<T>.None",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Outcome.cs"
+      ],
+      "members": [
+        "None(Diagnostics diagnostics)",
+        "void Deconstruct(out Diagnostics why)"
+      ]
+    },
+    {
+      "id": "typed.Outcome`1.Unsupported",
+      "name": "Outcome<T>.Unsupported",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Outcome.cs"
+      ],
+      "members": [
+        "Unsupported(Diagnostics diagnostics)",
+        "void Deconstruct(out Diagnostics why)"
+      ]
+    },
+    {
+      "id": "typed.Outcome`1.Invalid",
+      "name": "Outcome<T>.Invalid",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Outcome.cs"
+      ],
+      "members": [
+        "Invalid(Diagnostics diagnostics)",
+        "void Deconstruct(out Diagnostics why)"
+      ]
+    },
+    {
+      "id": "typed.Diagnostics",
+      "name": "Diagnostics",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Outcome.cs"
+      ],
+      "members": [
+        "Diagnostics(IEnumerable<Diagnostic> items)",
+        "static Diagnostics Empty",
+        "int Count",
+        "Diagnostic this[int index]",
+        "IReadOnlyList<string> Codes",
+        "bool Has(string code)",
+        "override string ToString()"
+      ]
+    },
+    {
+      "id": "typed.OutcomeException",
+      "name": "OutcomeException",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Outcome.cs"
+      ],
+      "members": [
+        "OutcomeException(UtvStatus status, Diagnostics diagnostics)",
+        "UtvStatus Status",
+        "Diagnostics Diagnostics"
+      ]
+    },
+    {
+      "id": "typed.MonthEnd",
+      "name": "MonthEnd",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Enums.cs"
+      ],
+      "members": [
+        "Reject",
+        "Constrain"
+      ]
+    },
+    {
+      "id": "typed.Gap",
+      "name": "Gap",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Enums.cs"
+      ],
+      "members": [
+        "Reject",
+        "PreserveUnresolved",
+        "ShiftForward"
+      ]
+    },
+    {
+      "id": "typed.Overlap",
+      "name": "Overlap",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Enums.cs"
+      ],
+      "members": [
+        "Reject",
+        "All",
+        "Earliest",
+        "Latest"
+      ]
+    },
+    {
+      "id": "typed.Truth",
+      "name": "Truth",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Enums.cs"
+      ],
+      "members": [
+        "Definitely",
+        "Possibly",
+        "Impossible"
+      ]
+    },
+    {
+      "id": "typed.Ordering",
+      "name": "Ordering",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Enums.cs"
+      ],
+      "members": [
+        "Before = -1",
+        "Equal = 0",
+        "After = 1"
+      ]
+    },
+    {
+      "id": "typed.Weekday",
+      "name": "Weekday",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Enums.cs"
+      ],
+      "members": [
+        "Monday = 1",
+        "Tuesday = 2",
+        "Wednesday = 3",
+        "Thursday = 4",
+        "Friday = 5",
+        "Saturday = 6",
+        "Sunday = 7"
+      ]
+    },
+    {
+      "id": "typed.BoundState",
+      "name": "BoundState",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Enums.cs"
+      ],
+      "members": [
+        "Included",
+        "Excluded",
+        "Unbounded",
+        "Unknown"
+      ]
+    },
+    {
+      "id": "typed.TypedWire",
+      "name": "TypedWire",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Enums.cs"
+      ],
+      "members": [
+        "static string ToWireString(this Ordering ordering)",
+        "static string ToWireString(this Truth truth)"
+      ]
+    },
+    {
+      "id": "utv.ResolutionPolicy",
+      "name": "ResolutionPolicy",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Policies.cs"
+      ],
+      "members": []
+    },
+    {
+      "id": "utv.ZoneRules",
+      "name": "ZoneRules",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/ZoneRules.cs"
+      ],
+      "members": []
+    },
+    {
+      "id": "utv.UtvResult",
+      "name": "UtvResult",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/UtvResult.cs"
+      ],
+      "members": []
+    },
+    {
+      "id": "utv.Diagnostic",
+      "name": "Diagnostic",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Diagnostic.cs"
+      ],
+      "members": []
+    },
+    {
+      "id": "bcl.IComparable`1",
+      "name": "System.IComparable<T>",
+      "kind": "interface",
+      "sources": [],
+      "members": [],
+      "external": true
+    },
+    {
+      "id": "bcl.IReadOnlyList`1",
+      "name": "System.Collections.Generic.IReadOnlyList<T>",
+      "kind": "interface",
+      "sources": [],
+      "members": [],
+      "external": true
+    },
+    {
+      "id": "bcl.InvalidOperationException",
+      "name": "System.InvalidOperationException",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "typed.IIntervalPoint",
+      "to": "typed.ITemporalValue",
+      "kind": "inherits",
+      "description": "A value that can be an interval's end."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.IIntervalPoint",
+      "kind": "implements",
+      "description": "Domain civil/gregory."
+    },
+    {
+      "from": "typed.Instant",
+      "to": "typed.IIntervalPoint",
+      "kind": "implements",
+      "description": "Domain physical."
+    },
+    {
+      "from": "typed.CivilYearMonth",
+      "to": "typed.ITemporalValue",
+      "kind": "implements",
+      "description": "A civil year-month."
+    },
+    {
+      "from": "typed.CivilTime",
+      "to": "typed.ITemporalValue",
+      "kind": "implements",
+      "description": "A civil time."
+    },
+    {
+      "from": "typed.CivilDateTime",
+      "to": "typed.ITemporalValue",
+      "kind": "implements",
+      "description": "An unzoned civil date-time."
+    },
+    {
+      "from": "typed.FixedOffsetDateTime",
+      "to": "typed.ITemporalValue",
+      "kind": "implements",
+      "description": "A civil date-time with a fixed-offset zone."
+    },
+    {
+      "from": "typed.ZonedIntent",
+      "to": "typed.ITemporalValue",
+      "kind": "implements",
+      "description": "A civil date-time following an IANA zone."
+    },
+    {
+      "from": "typed.Period",
+      "to": "typed.ITemporalValue",
+      "kind": "implements",
+      "description": "A calendar amount."
+    },
+    {
+      "from": "typed.PosixSeconds",
+      "to": "typed.ITemporalValue",
+      "kind": "implements",
+      "description": "A clock-ticks amount of POSIX seconds."
+    },
+    {
+      "from": "typed.ElapsedSeconds",
+      "to": "typed.ITemporalValue",
+      "kind": "implements",
+      "description": "An elapsed (SI) amount."
+    },
+    {
+      "from": "typed.Interval`1",
+      "to": "typed.ITemporalValue",
+      "kind": "implements",
+      "description": "A start-end interval of dates or instants."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "bcl.IComparable`1",
+      "kind": "implements",
+      "description": "Ordered without rules; so are CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime (by instant) and Instant. ZonedIntent is not."
+    },
+    {
+      "from": "typed.CivilDateTime",
+      "to": "typed.CivilDate",
+      "kind": "depends-on",
+      "description": "Date part."
+    },
+    {
+      "from": "typed.CivilDateTime",
+      "to": "typed.CivilTime",
+      "kind": "depends-on",
+      "description": "Time part."
+    },
+    {
+      "from": "typed.FixedOffsetDateTime",
+      "to": "typed.CivilDateTime",
+      "kind": "depends-on",
+      "description": "The wall time at the offset."
+    },
+    {
+      "from": "typed.ZonedIntent",
+      "to": "typed.CivilDateTime",
+      "kind": "depends-on",
+      "description": "The wall time in the zone."
+    },
+    {
+      "from": "typed.ZonedIntent",
+      "to": "typed.TemporalContext",
+      "kind": "depends-on",
+      "description": "Resolve(ctx) is ctx.Resolve(this)."
+    },
+    {
+      "from": "typed.TemporalContext",
+      "to": "utv.ZoneRules",
+      "kind": "depends-on",
+      "description": "Holds the rules once; there is no default context."
+    },
+    {
+      "from": "typed.TemporalContext",
+      "to": "utv.ResolutionPolicy",
+      "kind": "depends-on",
+      "description": "ResolutionPolicy.Strict unless a policy is passed."
+    },
+    {
+      "from": "typed.TemporalContext",
+      "to": "typed.Ordering",
+      "kind": "depends-on",
+      "description": "Compare answers with one or several orderings."
+    },
+    {
+      "from": "typed.Instant",
+      "to": "typed.PosixSeconds",
+      "kind": "depends-on",
+      "description": "Add, Until and SubSecond."
+    },
+    {
+      "from": "typed.Instant",
+      "to": "typed.ElapsedSeconds",
+      "kind": "depends-on",
+      "description": "Add(ElapsedSeconds) is always unsupported (needs-leap-seconds)."
+    },
+    {
+      "from": "typed.Period",
+      "to": "typed.PeriodComponents",
+      "kind": "depends-on",
+      "description": "Read as period.Components.Days."
+    },
+    {
+      "from": "typed.PosixSeconds",
+      "to": "typed.SecondsDisplay",
+      "kind": "depends-on",
+      "description": "ToString is a display string, 3600.75 s (POSIX)."
+    },
+    {
+      "from": "typed.ElapsedSeconds",
+      "to": "typed.SecondsDisplay",
+      "kind": "depends-on",
+      "description": "ToString is a display string, 86400 s (SI)."
+    },
+    {
+      "from": "typed.Interval`1",
+      "to": "typed.Bound`1",
+      "kind": "depends-on",
+      "description": "Start and End."
+    },
+    {
+      "from": "typed.Interval`1",
+      "to": "typed.Truth",
+      "kind": "depends-on",
+      "description": "Contains and Overlaps."
+    },
+    {
+      "from": "typed.Bound`1",
+      "to": "typed.BoundState",
+      "kind": "depends-on",
+      "description": "Included, Excluded, Unbounded or Unknown."
+    },
+    {
+      "from": "typed.Bound`1",
+      "to": "typed.OpenBound",
+      "kind": "depends-on",
+      "description": "Bound.Unbounded and Bound.Unknown convert implicitly to any Bound<T>."
+    },
+    {
+      "from": "typed.Bound",
+      "to": "typed.Bound`1",
+      "kind": "depends-on",
+      "description": "Builds bounds."
+    },
+    {
+      "from": "typed.Interval",
+      "to": "typed.Interval`1",
+      "kind": "depends-on",
+      "description": "Builds intervals; throws ArgumentException for reversed-interval or no point."
+    },
+    {
+      "from": "typed.Outcome`1.Unique",
+      "to": "typed.Outcome`1",
+      "kind": "inherits",
+      "description": "Exactly one answer."
+    },
+    {
+      "from": "typed.Outcome`1.Multiple",
+      "to": "typed.Outcome`1",
+      "kind": "inherits",
+      "description": "Several answers, ascending."
+    },
+    {
+      "from": "typed.Outcome`1.None",
+      "to": "typed.Outcome`1",
+      "kind": "inherits",
+      "description": "Proven: no answer."
+    },
+    {
+      "from": "typed.Outcome`1.Unsupported",
+      "to": "typed.Outcome`1",
+      "kind": "inherits",
+      "description": "This library lacks the rules or the capability."
+    },
+    {
+      "from": "typed.Outcome`1.Invalid",
+      "to": "typed.Outcome`1",
+      "kind": "inherits",
+      "description": "The input contradicts itself or the rules."
+    },
+    {
+      "from": "typed.Outcome`1",
+      "to": "typed.Diagnostics",
+      "kind": "depends-on",
+      "description": "Every case carries diagnostics, possibly empty."
+    },
+    {
+      "from": "typed.Outcome`1",
+      "to": "typed.OutcomeException",
+      "kind": "depends-on",
+      "description": "Single() throws it for anything but Unique."
+    },
+    {
+      "from": "typed.Outcome`1",
+      "to": "utv.UtvResult",
+      "kind": "depends-on",
+      "description": "ToResult() is the bridge to the utv-result/1.0 envelope."
+    },
+    {
+      "from": "typed.Diagnostics",
+      "to": "bcl.IReadOnlyList`1",
+      "kind": "implements",
+      "description": "A read-only list of Diagnostic."
+    },
+    {
+      "from": "typed.Diagnostics",
+      "to": "utv.Diagnostic",
+      "kind": "depends-on",
+      "description": "The items."
+    },
+    {
+      "from": "typed.OutcomeException",
+      "to": "bcl.InvalidOperationException",
+      "kind": "inherits",
+      "description": "Carries the status and diagnostics."
+    },
+    {
+      "from": "typed.Temporal",
+      "to": "typed.Typed",
+      "kind": "depends-on",
+      "description": "Parse and FromJson read any typed value."
+    },
+    {
+      "from": "typed.Typed",
+      "to": "utv.UtvResult",
+      "kind": "depends-on",
+      "description": "Converts JSON-layer results into plain values (Total) or outcomes (ToOutcome)."
+    },
+    {
+      "from": "typed.Typed",
+      "to": "typed.Outcome`1",
+      "kind": "depends-on",
+      "description": "Builds the outcome cases."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.MonthEnd",
+      "kind": "depends-on",
+      "description": "The total AddMonths and AddYears overloads take only MonthEnd.Constrain."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.Weekday",
+      "kind": "depends-on",
+      "description": "DayOfWeek, Monday = 1."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.Period",
+      "kind": "depends-on",
+      "description": "Add(Period)."
+    },
+    {
+      "from": "typed.ZonedIntent",
+      "to": "typed.Gap",
+      "kind": "depends-on",
+      "description": "Resolve(ctx, Gap)."
+    },
+    {
+      "from": "typed.ZonedIntent",
+      "to": "typed.Overlap",
+      "kind": "depends-on",
+      "description": "Resolve(ctx, Overlap)."
+    },
+    {
+      "from": "utv.ResolutionPolicy",
+      "to": "typed.Gap",
+      "kind": "depends-on",
+      "description": "new ResolutionPolicy(Gap, Overlap) maps the typed names to the schema's policies."
+    },
+    {
+      "from": "typed.TypedWire",
+      "to": "typed.Ordering",
+      "kind": "depends-on",
+      "description": "Wire strings before, equal, after."
+    },
+    {
+      "from": "typed.TypedWire",
+      "to": "typed.Truth",
+      "kind": "depends-on",
+      "description": "Wire strings definitely, possibly, impossible."
+    }
+  ]
+}

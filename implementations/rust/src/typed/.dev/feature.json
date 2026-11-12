@@ -1,0 +1,303 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-feature/schema.json",
+  "kind": "feature",
+  "title": "Typed layer features",
+  "folder": "implementations/rust/src/typed",
+  "description": "What the typed layer adds on top of the JSON layer's behaviour; month ends, gaps and overlaps, exact arithmetic and ranges are the JSON layer's features, which the typed operations call.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/typed/mod.rs",
+      "symbol": "module documentation"
+    },
+    {
+      "path": "implementations/rust/src/typed/outcome.rs",
+      "symbol": "Outcome"
+    }
+  ],
+  "entities": [
+    {
+      "id": "valid-by-construction",
+      "name": "Valid by construction",
+      "description": "A typed value that exists is a value that can exist: constructors refuse 30 February, hour 25 or a reversed interval.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "read_as"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "rejected"
+        },
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval::checked"
+        }
+      ],
+      "behavior": "The civil constructors (of, of_hms, of_hms_nano, at_offset) build the value's UTV JSON and read it back with the JSON layer's reader, so the same checks apply as for incoming JSON; Interval::of checks its points and order, and of_ratio its denominator, directly. A refusal is Err(Diagnostics) with the shared code (day-out-of-range, month-out-of-range, field-out-of-range, leap-second, offset-out-of-range, reversed-interval, unsupported-form, implementation-limit), and Diagnostics implements std::error::Error, so ? works.",
+      "outcome": "Code that holds a CivilDate never has to ask whether it is a real date, and a bad input is reported with the reason, never a panic.",
+      "constraints": [
+        "Rust has no exceptions, so of returns Result<T, Diagnostics>; there is no separate try_of.",
+        "Constructors also refuse a year whose day numbers leave i128 (implementation-limit), so later total operations can compute with it."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "of"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "read_as"
+        },
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval::checked"
+        },
+        {
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "ratio"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "rejected"
+        }
+      ]
+    },
+    {
+      "id": "total-or-outcome",
+      "name": "Total operations return values, partial ones an Outcome",
+      "description": "Only an operation that time can refuse to answer returns an Outcome, so every Outcome in user code marks such a question.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/outcome.rs",
+          "symbol": "Outcome"
+        },
+        {
+          "path": "implementations/rust/src/typed/outcome.rs",
+          "symbol": "outcome"
+        },
+        {
+          "path": "implementations/rust/src/typed/outcome.rs",
+          "symbol": "total"
+        }
+      ],
+      "behavior": "Total operations (add_days, add_months_constrained, days_until, Instant::add, Interval::contains) return the value itself. Partial ones (add_months, add, resolve, compare, parse, from_json) return Outcome<T>: Unique(T, Diagnostics), Multiple(Vec<T>, Diagnostics) ascending, None, Unsupported or Invalid, each with its diagnostics. Helpers never pick an answer: unique() and unique_or() take only Unique, single() turns anything else into an OutcomeError carrying the status and codes, and Display prints none (month-end).",
+      "outcome": "A developer matches on the cases that can happen and cannot silently get one of two DST instants.",
+      "constraints": [
+        "A JSON-layer status other than none and invalid (symbolic, error, ...) becomes Unsupported.",
+        "A total operation panics if the JSON layer refuses anyway, which for valid values means arithmetic beyond i128, the way integer overflow panics in Rust.",
+        "Never use Outcome::*: its None would shadow Option::None."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/typed/outcome.rs",
+          "symbol": "outcome"
+        },
+        {
+          "path": "implementations/rust/src/typed/outcome.rs",
+          "symbol": "failure"
+        },
+        {
+          "path": "implementations/rust/src/typed/outcome.rs",
+          "symbol": "total"
+        },
+        {
+          "path": "implementations/rust/src/typed/outcome.rs",
+          "symbol": "Outcome::single"
+        },
+        {
+          "path": "implementations/rust/src/typed/outcome.rs",
+          "symbol": "Outcome::unique_or"
+        }
+      ]
+    },
+    {
+      "id": "typed-policies",
+      "name": "Typed policies",
+      "description": "Month-end, gap and overlap policies are enums, and the policy that can't fail has its own method.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "MonthEnd"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "ResolutionPolicy"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_months_constrained"
+        }
+      ],
+      "behavior": "MonthEnd { Reject, Constrain }, Gap { Reject, PreserveUnresolved, ShiftForward }, Overlap { Reject, All, Earliest, Latest } and ResolutionPolicy (STRICT, the default; ALL_CANDIDATES; new(gap, overlap)) are written into the JSON layer's policy objects. The clamping month arithmetic is a separate total method (add_months_constrained, add_years_constrained); add_months and add_years reject, and add_with(period, month_end) takes either policy.",
+      "outcome": "A policy is checked by the compiler, and MonthEnd::Reject can never reach a method that has to return a plain value.",
+      "constraints": [
+        "Rust has no overloads, so the total forms are separate methods rather than add_months(n, MonthEnd::Constrain).",
+        "Every policy value the enums allow is implemented, so unsupported-policy can't arise from the typed layer."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "MonthEnd::json"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "ResolutionPolicy::json"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_with"
+        }
+      ]
+    },
+    {
+      "id": "ordering-without-rules",
+      "name": "Order only where the rules can't change it",
+      "description": "Values compare with < only when their order doesn't depend on zone rules; zoned values compare through the context.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilTime::key"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "FixedOffsetDateTime"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "ZonedIntent"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::compare"
+        }
+      ],
+      "behavior": "CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime (by instant, then offset, then wall time) and Instant (exactly) implement Ord. A missing second counts as 0, then 09:30 comes before 09:30:00, so that Ord agrees with Eq. ZonedIntent has no Ord: TemporalContext::compare resolves both strictly and answers Outcome<Ordering>, Multiple when the order depends on an overlap.",
+      "outcome": "No comparison operator can return an order that a change of zone rules would make false.",
+      "constraints": [
+        "Equality is representation: 09:30 and 09:30:00 are different values.",
+        "compare refuses with the resolution's own outcome (gap, unknown-zone, outside-rule-window, offset-mismatch)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "impl Ord for CivilTime"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "impl Ord for FixedOffsetDateTime"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "impl Ord for Instant"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::compare"
+        }
+      ]
+    },
+    {
+      "id": "text-display",
+      "name": "Values print as their text form",
+      "description": "Display is the UTV text form, Debug names the type, and exact second counts print as display strings.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "typed_value"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "text_of"
+        },
+        {
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "display_seconds"
+        }
+      ],
+      "behavior": "Display on a typed value is format_text of its JSON (2026-11-05, P1M, [2026-11-01, ..)); where the text form can't express the value losslessly it prints the JSON instead. Debug is CivilDate(2026-11-05). PosixSeconds and ElapsedSeconds have no text form and print 3600.75 s (POSIX), 1/3 s (POSIX) or 86400 s (SI). parse and FromStr read the text form back.",
+      "outcome": "A value can be logged and read back without loss, and a second count can't be mistaken for a parseable value.",
+      "constraints": [
+        "PosixSeconds and ElapsedSeconds have no parse or FromStr.",
+        "An Instant with a fraction that has no finite decimal (1/3 s) has no text form and prints as JSON."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "text_of"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "debug"
+        },
+        {
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "display_seconds"
+        }
+      ]
+    },
+    {
+      "id": "explicit-context",
+      "name": "Zone rules held in an explicit context",
+      "description": "Zoned operations take a TemporalContext built from rules the caller loaded; there is no global or default one.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "ZoneRules"
+        }
+      ],
+      "behavior": "TemporalContext::with(ZoneRules::load(path)?) holds one rule bundle. resolve, resolve_with, in_zone and compare use only those rules; ZonedIntent::resolve(&ctx) and Instant::in_zone(id, &ctx) are the same operations.",
+      "outcome": "Which rules produced an answer is visible in the code that asked, and nothing reads the host's tz database.",
+      "constraints": [
+        "ZoneRules is the JSON layer's Rules; zones it doesn't list and times outside its window are unsupported."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::with"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::resolve_with"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::in_zone"
+        }
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/capability.json",
+      "relationship": "The capabilities these features belong to."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/operation.json",
+      "relationship": "The operations that carry them out."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/use-case.json",
+      "relationship": "The use cases that exercise them."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/feature.json",
+      "relationship": "The JSON-layer behaviour underneath: month end, DST gaps and overlaps, exact arithmetic, ranges, fail-closed JSON."
+    }
+  ]
+}

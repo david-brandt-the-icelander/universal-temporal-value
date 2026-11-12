@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "UTV-first examples",
+  "folder": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "UTV-first examples",
+      "summary": "One test class per UTV type or class (CivilDateTests, ZonedIntentTests, UtvValidatorTests, …), grouped by function in #regions: how to do each task with UTV, compared with .NET.",
+      "purpose": "Organized by UTV's classes and functions. Where UTV and .NET agree, the expected value is computed with .NET in EXPECTATIONS; where they differ, it is a literal and the doc comment's Compared with: sentence says what .NET does. Partial operations assert the outcome's status and diagnostic code. Tests that illustrate a side-by-side task are wrapped in // BEGIN <task-id> … // END <task-id>.",
+      "boundaries": [
+        "The code between task markers appears verbatim on docs/side-by-side.md; after changing it, regenerate the page (runbooks.json).",
+        "Zone operations use Fixtures.DemoZoneRules(), never the host's tz database."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/CivilDateTests.cs",
+          "symbol": "CivilDateTests"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/ZonedIntentTests.cs",
+          "symbol": "ZonedIntentTests"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1132 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-class-diagram/schema.json",
+  "kind": "class",
+  "title": "Typed layer classes",
+  "folder": "implementations/rust/src/typed",
+  "description": "Every type the typed layer declares: the eleven value types and Value, Outcome and its helpers, the interval point traits, the policies and TemporalContext. Each value type implements the crate-internal Typed trait, through which it reads and writes UTV JSON with the JSON layer; the typed_value! macro adds to_json, from_json, parse, Display, Debug, FromStr and ToJson. JSON-layer and std types appear as lightweight nodes.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/typed/mod.rs",
+      "symbol": "Typed"
+    },
+    {
+      "path": "implementations/rust/src/typed/mod.rs",
+      "symbol": "typed_value"
+    },
+    {
+      "path": "implementations/rust/src/typed/outcome.rs",
+      "symbol": "Outcome"
+    },
+    {
+      "path": "implementations/rust/src/typed/civil.rs",
+      "symbol": "CivilDate"
+    },
+    {
+      "path": "implementations/rust/src/typed/context.rs",
+      "symbol": "TemporalContext"
+    },
+    {
+      "path": "implementations/rust/src/typed/interval.rs",
+      "symbol": "Interval"
+    },
+    {
+      "path": "implementations/rust/src/typed/value.rs",
+      "symbol": "Value"
+    }
+  ],
+  "types": [
+    {
+      "id": "typed.Typed",
+      "name": "Typed",
+      "kind": "interface",
+      "sources": [
+        "implementations/rust/src/typed/mod.rs"
+      ],
+      "members": [
+        "fn read(json: &Json) -> Result<Self, UtvResult>",
+        "fn json(&self) -> Json"
+      ]
+    },
+    {
+      "id": "typed.Diagnostics",
+      "name": "Diagnostics",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/outcome.rs"
+      ],
+      "members": [
+        "pub fn codes(&self) -> Vec<&str>",
+        "pub fn contains(&self, code: &str) -> bool",
+        "pub fn iter(&self) -> std::slice::Iter<'_, Diagnostic>",
+        "pub fn is_empty(&self) -> bool",
+        "pub fn len(&self) -> usize",
+        "pub fn operation(&self) -> &str",
+        "impl Display: each message followed by its code, `2026-02 has no day 31 (month-end)`"
+      ]
+    },
+    {
+      "id": "typed.Outcome",
+      "name": "Outcome<T>",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/typed/outcome.rs"
+      ],
+      "members": [
+        "Unique(T, Diagnostics)",
+        "Multiple(Vec<T>, Diagnostics)",
+        "None(Diagnostics)",
+        "Unsupported(Diagnostics)",
+        "Invalid(Diagnostics)",
+        "pub fn status(&self) -> Status",
+        "pub fn diagnostics(&self) -> &Diagnostics",
+        "pub fn is_unique(&self) -> bool",
+        "pub fn unique(self) -> Option<T>",
+        "pub fn as_unique(&self) -> Option<&T>",
+        "pub fn unique_or(self, fallback: T) -> T",
+        "pub fn single(self) -> Result<T, OutcomeError>",
+        "pub fn map<U>(self, f: impl FnMut(T) -> U) -> Outcome<U>",
+        "pub fn to_result(&self) -> UtvResult where T: ToJson",
+        "impl Display: the value for Unique, otherwise `none (month-end)`"
+      ]
+    },
+    {
+      "id": "typed.OutcomeError",
+      "name": "OutcomeError",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/outcome.rs"
+      ],
+      "members": [
+        "pub status: Status",
+        "pub diagnostics: Diagnostics"
+      ]
+    },
+    {
+      "id": "typed.Truth",
+      "name": "Truth",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/typed/outcome.rs"
+      ],
+      "members": [
+        "Definitely",
+        "Possibly",
+        "Impossible",
+        "pub fn as_str(self) -> &'static str"
+      ]
+    },
+    {
+      "id": "typed.ToJson",
+      "name": "ToJson",
+      "kind": "interface",
+      "sources": [
+        "implementations/rust/src/typed/outcome.rs"
+      ],
+      "members": [
+        "fn to_json(&self) -> Json"
+      ]
+    },
+    {
+      "id": "typed.Weekday",
+      "name": "Weekday",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/typed/civil.rs"
+      ],
+      "members": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+        "pub fn number(self) -> u32 (Monday = 1)"
+      ]
+    },
+    {
+      "id": "typed.Shape",
+      "name": "Shape",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/typed/civil.rs"
+      ],
+      "members": [
+        "Plain",
+        "Fixed",
+        "Zoned"
+      ]
+    },
+    {
+      "id": "typed.CivilDate",
+      "name": "CivilDate",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/civil.rs"
+      ],
+      "members": [
+        "pub fn of(year: i128, month: u32, day: u32) -> Result<CivilDate, Diagnostics>",
+        "pub fn year(self) -> i128",
+        "pub fn month(self) -> u32",
+        "pub fn day(self) -> u32",
+        "pub fn day_of_week(self) -> Weekday",
+        "pub fn day_of_year(self) -> u32",
+        "pub fn iso_week(self) -> u32",
+        "pub fn iso_week_year(self) -> i128",
+        "pub fn days_in_month(self) -> u32",
+        "pub fn is_leap_year(self) -> bool",
+        "pub fn add_days(self, n: i64) -> CivilDate",
+        "pub fn add_weeks(self, n: i64) -> CivilDate",
+        "pub fn add_months(self, n: i64) -> Outcome<CivilDate>",
+        "pub fn add_months_constrained(self, n: i64) -> CivilDate",
+        "pub fn add_years(self, n: i64) -> Outcome<CivilDate>",
+        "pub fn add_years_constrained(self, n: i64) -> CivilDate",
+        "pub fn add(&self, period: Period) -> Outcome<CivilDate>",
+        "pub fn add_with(&self, period: Period, month_end: MonthEnd) -> Outcome<CivilDate>",
+        "pub fn days_until(self, other: CivilDate) -> i64",
+        "pub fn at(self, time: CivilTime) -> CivilDateTime",
+        "derives Eq, Hash, Ord",
+        "pub fn to_json(&self) -> serde_json::Value",
+        "pub fn from_json(json: &serde_json::Value) -> Outcome<Self>",
+        "pub fn parse(text: &str) -> Outcome<Self>",
+        "impl Display (the text form), Debug, FromStr, ToJson"
+      ]
+    },
+    {
+      "id": "typed.CivilYearMonth",
+      "name": "CivilYearMonth",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/civil.rs"
+      ],
+      "members": [
+        "pub fn of(year: i128, month: u32) -> Result<CivilYearMonth, Diagnostics>",
+        "pub fn year(self) -> i128",
+        "pub fn month(self) -> u32",
+        "pub fn add_months(self, n: i64) -> CivilYearMonth",
+        "pub fn add_years(self, n: i64) -> CivilYearMonth",
+        "derives Eq, Hash, Ord",
+        "pub fn to_json(&self) -> serde_json::Value",
+        "pub fn from_json(json: &serde_json::Value) -> Outcome<Self>",
+        "pub fn parse(text: &str) -> Outcome<Self>",
+        "impl Display (the text form), Debug, FromStr, ToJson"
+      ]
+    },
+    {
+      "id": "typed.CivilTime",
+      "name": "CivilTime",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/civil.rs"
+      ],
+      "members": [
+        "pub fn of(hour: u32, minute: u32) -> Result<CivilTime, Diagnostics>",
+        "pub fn of_hms(hour: u32, minute: u32, second: u32) -> Result<CivilTime, Diagnostics>",
+        "pub fn of_hms_nano(hour: u32, minute: u32, second: u32, nano: u32) -> Result<CivilTime, Diagnostics>",
+        "pub fn hour(self) -> u32",
+        "pub fn minute(self) -> u32",
+        "pub fn second(self) -> Option<u32>",
+        "pub fn nanosecond(self) -> u32",
+        "impl Ord: a missing second as 0, then 09:30 before 09:30:00",
+        "pub fn to_json(&self) -> serde_json::Value",
+        "pub fn from_json(json: &serde_json::Value) -> Outcome<Self>",
+        "pub fn parse(text: &str) -> Outcome<Self>",
+        "impl Display (the text form), Debug, FromStr, ToJson"
+      ]
+    },
+    {
+      "id": "typed.CivilDateTime",
+      "name": "CivilDateTime",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/civil.rs"
+      ],
+      "members": [
+        "pub fn of(year: i128, month: u32, day: u32, hour: u32, minute: u32) -> Result<CivilDateTime, Diagnostics>",
+        "pub fn of_hms(..., second: u32) -> Result<CivilDateTime, Diagnostics>",
+        "pub fn of_hms_nano(..., second: u32, nano: u32) -> Result<CivilDateTime, Diagnostics>",
+        "pub fn date(self) -> CivilDate",
+        "pub fn time(self) -> CivilTime",
+        "pub fn add_days(self, n: i64) -> CivilDateTime (also add_weeks, add_hours, add_minutes, add_seconds)",
+        "pub fn add_months(self, n: i64) -> Outcome<CivilDateTime>",
+        "pub fn add_months_constrained(self, n: i64) -> CivilDateTime",
+        "pub fn add(&self, period: Period) -> Outcome<CivilDateTime>",
+        "pub fn add_with(&self, period: Period, month_end: MonthEnd) -> Outcome<CivilDateTime>",
+        "pub fn in_zone(self, zone_id: &str) -> ZonedIntent",
+        "pub fn at_offset(self, offset_seconds: i32) -> Result<FixedOffsetDateTime, Diagnostics>",
+        "derives Eq, Hash, Ord",
+        "pub fn to_json(&self) -> serde_json::Value",
+        "pub fn from_json(json: &serde_json::Value) -> Outcome<Self>",
+        "pub fn parse(text: &str) -> Outcome<Self>",
+        "impl Display (the text form), Debug, FromStr, ToJson"
+      ]
+    },
+    {
+      "id": "typed.FixedOffsetDateTime",
+      "name": "FixedOffsetDateTime",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/civil.rs"
+      ],
+      "members": [
+        "pub fn date_time(self) -> CivilDateTime",
+        "pub fn offset_seconds(self) -> i32",
+        "pub fn to_instant(self) -> Instant",
+        "impl Ord: by instant, then offset, then wall time",
+        "pub fn to_json(&self) -> serde_json::Value",
+        "pub fn from_json(json: &serde_json::Value) -> Outcome<Self>",
+        "pub fn parse(text: &str) -> Outcome<Self>",
+        "impl Display (the text form), Debug, FromStr, ToJson"
+      ]
+    },
+    {
+      "id": "typed.ZonedIntent",
+      "name": "ZonedIntent",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/civil.rs"
+      ],
+      "members": [
+        "pub fn date_time(&self) -> CivilDateTime",
+        "pub fn zone_id(&self) -> &str",
+        "pub fn asserted_offset_seconds(&self) -> Option<i32>",
+        "pub fn add_days(&self, n: i64) -> ZonedIntent (also add_weeks, add_hours, add_minutes, add_seconds)",
+        "pub fn add_months(&self, n: i64) -> Outcome<ZonedIntent>",
+        "pub fn resolve(&self, ctx: &TemporalContext) -> Outcome<Instant>",
+        "pub fn resolve_with(&self, ctx: &TemporalContext, policy: ResolutionPolicy) -> Outcome<Instant>",
+        "no Ord: use TemporalContext::compare",
+        "pub fn to_json(&self) -> serde_json::Value",
+        "pub fn from_json(json: &serde_json::Value) -> Outcome<Self>",
+        "pub fn parse(text: &str) -> Outcome<Self>",
+        "impl Display (the text form), Debug, FromStr, ToJson"
+      ]
+    },
+    {
+      "id": "typed.Instant",
+      "name": "Instant",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/instant.rs"
+      ],
+      "members": [
+        "pub fn from_unix_seconds(seconds: i64) -> Instant",
+        "pub fn from_unix_seconds_nanos(seconds: i64, nanos: u32) -> Instant",
+        "pub fn from_unix_nanoseconds(nanos: i128) -> Instant",
+        "pub fn from_system_time(reading: SystemTime) -> Instant",
+        "pub fn unix_seconds(self) -> i128",
+        "pub fn sub_second(self) -> PosixSeconds",
+        "pub fn nanoseconds(self) -> u32",
+        "pub fn add(&self, seconds: PosixSeconds) -> Instant",
+        "pub fn add_elapsed(&self, seconds: ElapsedSeconds) -> Outcome<Instant>",
+        "pub fn until(self, other: Instant) -> PosixSeconds",
+        "pub fn at_offset(self, offset_seconds: i32) -> Result<FixedOffsetDateTime, Diagnostics>",
+        "pub fn in_zone(&self, zone_id: &str, ctx: &TemporalContext) -> Outcome<ZonedIntent>",
+        "impl Ord: exact order of the rationals",
+        "pub fn to_json(&self) -> serde_json::Value",
+        "pub fn from_json(json: &serde_json::Value) -> Outcome<Self>",
+        "pub fn parse(text: &str) -> Outcome<Self>",
+        "impl Display (the text form), Debug, FromStr, ToJson"
+      ]
+    },
+    {
+      "id": "typed.Period",
+      "name": "Period",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/amount.rs"
+      ],
+      "members": [
+        "pub years: i64, months, weeks, days, hours, minutes, seconds",
+        "pub const fn of(years: i64, months: i64, weeks: i64, days: i64, hours: i64, minutes: i64, seconds: i64) -> Period",
+        "pub const fn years(n: i64) -> Period (also months, weeks, days, hours, minutes, seconds)",
+        "pub fn components(&self) -> [(&'static str, i64); 7]",
+        "pub fn negate(self) -> Period",
+        "pub fn is_zero(&self) -> bool",
+        "pub fn to_json(&self) -> serde_json::Value",
+        "pub fn from_json(json: &serde_json::Value) -> Outcome<Self>",
+        "pub fn parse(text: &str) -> Outcome<Self>",
+        "impl Display (the text form), Debug, FromStr, ToJson"
+      ]
+    },
+    {
+      "id": "typed.PosixSeconds",
+      "name": "PosixSeconds",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/amount.rs"
+      ],
+      "members": [
+        "pub fn of(seconds: i64) -> PosixSeconds",
+        "pub fn of_ratio(numerator: i128, denominator: i128) -> Result<PosixSeconds, Diagnostics>",
+        "pub fn numerator(self) -> i128",
+        "pub fn denominator(self) -> i128",
+        "pub fn negate(self) -> PosixSeconds",
+        "pub fn to_json(&self) -> serde_json::Value",
+        "pub fn from_json(json: &serde_json::Value) -> Outcome<PosixSeconds>",
+        "impl Display: a display string, `3600.75 s (POSIX)`, `1/3 s (POSIX)`; no text form"
+      ]
+    },
+    {
+      "id": "typed.ElapsedSeconds",
+      "name": "ElapsedSeconds",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/amount.rs"
+      ],
+      "members": [
+        "pub fn of(seconds: i64) -> ElapsedSeconds",
+        "pub fn of_ratio(numerator: i128, denominator: i128) -> Result<ElapsedSeconds, Diagnostics>",
+        "pub fn numerator(self) -> i128",
+        "pub fn denominator(self) -> i128",
+        "pub fn negate(self) -> ElapsedSeconds",
+        "pub fn to_json(&self) -> serde_json::Value",
+        "pub fn from_json(json: &serde_json::Value) -> Outcome<ElapsedSeconds>",
+        "impl Display: a display string, `86400 s (SI)`; no text form"
+      ]
+    },
+    {
+      "id": "typed.Sealed",
+      "name": "Sealed",
+      "kind": "interface",
+      "sources": [
+        "implementations/rust/src/typed/interval.rs"
+      ],
+      "members": [
+        "(marker trait in a private module: only CivilDate and Instant implement it)"
+      ]
+    },
+    {
+      "id": "typed.IntervalPoint",
+      "name": "IntervalPoint",
+      "kind": "interface",
+      "sources": [
+        "implementations/rust/src/typed/interval.rs"
+      ],
+      "members": [
+        "const DOMAIN: &'static str (civil/gregory or physical)"
+      ]
+    },
+    {
+      "id": "typed.Bound",
+      "name": "Bound<T>",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/typed/interval.rs"
+      ],
+      "members": [
+        "Included(T)",
+        "Excluded(T)",
+        "Unbounded",
+        "Unknown"
+      ]
+    },
+    {
+      "id": "typed.Interval",
+      "name": "Interval<T>",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/interval.rs"
+      ],
+      "members": [
+        "pub fn half_open(start: T, end: T) -> Result<Interval<T>, Diagnostics>",
+        "pub fn closed(start: T, end: T) -> Result<Interval<T>, Diagnostics>",
+        "pub fn of(start: Bound<T>, end: Bound<T>) -> Result<Interval<T>, Diagnostics>",
+        "pub fn start(&self) -> &Bound<T>",
+        "pub fn end(&self) -> &Bound<T>",
+        "pub fn contains(&self, point: &T) -> Truth",
+        "pub fn overlaps(&self, other: &Interval<T>) -> Truth",
+        "pub fn to_json(&self) -> serde_json::Value",
+        "pub fn from_json(json: &serde_json::Value) -> Outcome<Self>",
+        "pub fn parse(text: &str) -> Outcome<Self>",
+        "impl Display (the text form), Debug, FromStr, ToJson"
+      ]
+    },
+    {
+      "id": "typed.MonthEnd",
+      "name": "MonthEnd",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/typed/context.rs"
+      ],
+      "members": [
+        "Reject (default)",
+        "Constrain"
+      ]
+    },
+    {
+      "id": "typed.Gap",
+      "name": "Gap",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/typed/context.rs"
+      ],
+      "members": [
+        "Reject (default)",
+        "PreserveUnresolved",
+        "ShiftForward"
+      ]
+    },
+    {
+      "id": "typed.Overlap",
+      "name": "Overlap",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/typed/context.rs"
+      ],
+      "members": [
+        "Reject (default)",
+        "All",
+        "Earliest",
+        "Latest"
+      ]
+    },
+    {
+      "id": "typed.ResolutionPolicy",
+      "name": "ResolutionPolicy",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/context.rs"
+      ],
+      "members": [
+        "pub gap: Gap",
+        "pub overlap: Overlap",
+        "pub const STRICT: ResolutionPolicy",
+        "pub const ALL_CANDIDATES: ResolutionPolicy",
+        "pub const fn new(gap: Gap, overlap: Overlap) -> ResolutionPolicy"
+      ]
+    },
+    {
+      "id": "typed.TemporalContext",
+      "name": "TemporalContext",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/context.rs"
+      ],
+      "members": [
+        "pub fn with(rules: ZoneRules) -> TemporalContext",
+        "pub fn rules(&self) -> &ZoneRules",
+        "pub fn resolve(&self, zoned: &ZonedIntent) -> Outcome<Instant>",
+        "pub fn resolve_with(&self, zoned: &ZonedIntent, policy: ResolutionPolicy) -> Outcome<Instant>",
+        "pub fn in_zone(&self, instant: &Instant, zone_id: &str) -> Outcome<ZonedIntent>",
+        "pub fn compare(&self, a: &ZonedIntent, b: &ZonedIntent) -> Outcome<Ordering>"
+      ]
+    },
+    {
+      "id": "typed.ZoneRules",
+      "name": "ZoneRules",
+      "kind": "type",
+      "sources": [
+        "implementations/rust/src/typed/context.rs"
+      ],
+      "members": [
+        "pub type ZoneRules = Rules"
+      ]
+    },
+    {
+      "id": "typed.Value",
+      "name": "Value",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/typed/value.rs"
+      ],
+      "members": [
+        "Date(CivilDate)",
+        "YearMonth(CivilYearMonth)",
+        "Time(CivilTime)",
+        "DateTime(CivilDateTime)",
+        "FixedOffset(FixedOffsetDateTime)",
+        "Zoned(ZonedIntent)",
+        "Instant(Instant)",
+        "Period(Period)",
+        "PosixSeconds(PosixSeconds)",
+        "ElapsedSeconds(ElapsedSeconds)",
+        "DateInterval(Interval<CivilDate>)",
+        "InstantInterval(Interval<Instant>)",
+        "pub fn from_json(json: &Json) -> Outcome<Value>",
+        "pub fn to_json(&self) -> Json",
+        "pub fn parse(text: &str) -> Outcome<Value> (free function utv::parse)",
+        "impl Display, Debug, FromStr, ToJson"
+      ]
+    },
+    {
+      "id": "utv.Rules",
+      "name": "Rules",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/zones.rs"
+      ],
+      "members": [
+        "pub fn load(path: impl AsRef<Path>) -> Result<Rules, Diagnostics>",
+        "pub fn parse(text: &str) -> Result<Rules, String>"
+      ],
+      "external": true
+    },
+    {
+      "id": "utv.UtvResult",
+      "name": "UtvResult",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/lib.rs"
+      ],
+      "members": [
+        "pub status: Status",
+        "pub diagnostics: Vec<Diagnostic>",
+        "pub candidates: Vec<Json>"
+      ],
+      "external": true
+    },
+    {
+      "id": "utv.Diagnostic",
+      "name": "Diagnostic",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/lib.rs"
+      ],
+      "members": [
+        "pub code: String",
+        "pub severity: Severity",
+        "pub path: String",
+        "pub message: String"
+      ],
+      "external": true
+    },
+    {
+      "id": "utv.Status",
+      "name": "Status",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/lib.rs"
+      ],
+      "members": [
+        "Unique, Multiple, None, Unsupported, Invalid, ..."
+      ],
+      "external": true
+    },
+    {
+      "id": "std.Ordering",
+      "name": "std::cmp::Ordering",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/typed/outcome.rs"
+      ],
+      "members": [
+        "Less",
+        "Equal",
+        "Greater"
+      ],
+      "external": true
+    },
+    {
+      "id": "std.SystemTime",
+      "name": "std::time::SystemTime",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/instant.rs"
+      ],
+      "members": [
+        "(a clock reading)"
+      ],
+      "external": true
+    },
+    {
+      "id": "std.Error",
+      "name": "std::error::Error",
+      "kind": "interface",
+      "sources": [
+        "implementations/rust/src/typed/outcome.rs"
+      ],
+      "members": [
+        "(the standard error trait)"
+      ],
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.Typed",
+      "kind": "implements",
+      "description": "Reads itself from UTV JSON with the JSON layer's readers and writes its canonical JSON."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Has a UTV JSON form."
+    },
+    {
+      "from": "typed.CivilYearMonth",
+      "to": "typed.Typed",
+      "kind": "implements",
+      "description": "Reads itself from UTV JSON with the JSON layer's readers and writes its canonical JSON."
+    },
+    {
+      "from": "typed.CivilYearMonth",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Has a UTV JSON form."
+    },
+    {
+      "from": "typed.CivilTime",
+      "to": "typed.Typed",
+      "kind": "implements",
+      "description": "Reads itself from UTV JSON with the JSON layer's readers and writes its canonical JSON."
+    },
+    {
+      "from": "typed.CivilTime",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Has a UTV JSON form."
+    },
+    {
+      "from": "typed.CivilDateTime",
+      "to": "typed.Typed",
+      "kind": "implements",
+      "description": "Reads itself from UTV JSON with the JSON layer's readers and writes its canonical JSON."
+    },
+    {
+      "from": "typed.CivilDateTime",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Has a UTV JSON form."
+    },
+    {
+      "from": "typed.FixedOffsetDateTime",
+      "to": "typed.Typed",
+      "kind": "implements",
+      "description": "Reads itself from UTV JSON with the JSON layer's readers and writes its canonical JSON."
+    },
+    {
+      "from": "typed.FixedOffsetDateTime",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Has a UTV JSON form."
+    },
+    {
+      "from": "typed.ZonedIntent",
+      "to": "typed.Typed",
+      "kind": "implements",
+      "description": "Reads itself from UTV JSON with the JSON layer's readers and writes its canonical JSON."
+    },
+    {
+      "from": "typed.ZonedIntent",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Has a UTV JSON form."
+    },
+    {
+      "from": "typed.Instant",
+      "to": "typed.Typed",
+      "kind": "implements",
+      "description": "Reads itself from UTV JSON with the JSON layer's readers and writes its canonical JSON."
+    },
+    {
+      "from": "typed.Instant",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Has a UTV JSON form."
+    },
+    {
+      "from": "typed.Period",
+      "to": "typed.Typed",
+      "kind": "implements",
+      "description": "Reads itself from UTV JSON with the JSON layer's readers and writes its canonical JSON."
+    },
+    {
+      "from": "typed.Period",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Has a UTV JSON form."
+    },
+    {
+      "from": "typed.PosixSeconds",
+      "to": "typed.Typed",
+      "kind": "implements",
+      "description": "Reads itself from UTV JSON with the JSON layer's readers and writes its canonical JSON."
+    },
+    {
+      "from": "typed.PosixSeconds",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Has a UTV JSON form."
+    },
+    {
+      "from": "typed.ElapsedSeconds",
+      "to": "typed.Typed",
+      "kind": "implements",
+      "description": "Reads itself from UTV JSON with the JSON layer's readers and writes its canonical JSON."
+    },
+    {
+      "from": "typed.ElapsedSeconds",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Has a UTV JSON form."
+    },
+    {
+      "from": "typed.Interval",
+      "to": "typed.Typed",
+      "kind": "implements",
+      "description": "Reads itself from UTV JSON with the JSON layer's readers and writes its canonical JSON."
+    },
+    {
+      "from": "typed.Interval",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Has a UTV JSON form."
+    },
+    {
+      "from": "typed.Value",
+      "to": "typed.Typed",
+      "kind": "implements",
+      "description": "Reads itself from UTV JSON with the JSON layer's readers and writes its canonical JSON."
+    },
+    {
+      "from": "typed.Value",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Has a UTV JSON form."
+    },
+    {
+      "from": "typed.Truth",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Written as definitely, possibly or impossible."
+    },
+    {
+      "from": "std.Ordering",
+      "to": "typed.ToJson",
+      "kind": "implements",
+      "description": "Written as before, equal or after, as the JSON-level compare answers."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.IntervalPoint",
+      "kind": "implements",
+      "description": "Can be the point of an interval."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.Sealed",
+      "kind": "implements",
+      "description": "Only these two may be interval points."
+    },
+    {
+      "from": "typed.Instant",
+      "to": "typed.IntervalPoint",
+      "kind": "implements",
+      "description": "Can be the point of an interval."
+    },
+    {
+      "from": "typed.Instant",
+      "to": "typed.Sealed",
+      "kind": "implements",
+      "description": "Only these two may be interval points."
+    },
+    {
+      "from": "typed.IntervalPoint",
+      "to": "typed.Sealed",
+      "kind": "inherits",
+      "description": "Sealed, so no other type can implement it."
+    },
+    {
+      "from": "typed.IntervalPoint",
+      "to": "typed.Typed",
+      "kind": "inherits",
+      "description": "Points read and write their JSON."
+    },
+    {
+      "from": "typed.Diagnostics",
+      "to": "std.Error",
+      "kind": "implements",
+      "description": "So a failed constructor works with ?."
+    },
+    {
+      "from": "typed.OutcomeError",
+      "to": "std.Error",
+      "kind": "implements",
+      "description": "So single() works with ?."
+    },
+    {
+      "from": "typed.Diagnostics",
+      "to": "utv.Diagnostic",
+      "kind": "depends-on",
+      "description": "Holds the list of {code, severity, path, message}."
+    },
+    {
+      "from": "typed.Outcome",
+      "to": "typed.Diagnostics",
+      "kind": "depends-on",
+      "description": "Every case carries diagnostics."
+    },
+    {
+      "from": "typed.Outcome",
+      "to": "typed.OutcomeError",
+      "kind": "depends-on",
+      "description": "What single() returns for anything but Unique."
+    },
+    {
+      "from": "typed.Outcome",
+      "to": "utv.UtvResult",
+      "kind": "depends-on",
+      "description": "Made from a JSON-layer result; to_result() turns it back."
+    },
+    {
+      "from": "typed.OutcomeError",
+      "to": "utv.Status",
+      "kind": "depends-on",
+      "description": "The status of the refused outcome."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.Weekday",
+      "kind": "depends-on",
+      "description": "day_of_week."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.Period",
+      "kind": "depends-on",
+      "description": "add and add_with take a period."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.MonthEnd",
+      "kind": "depends-on",
+      "description": "add_with takes a month-end policy."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.Outcome",
+      "kind": "depends-on",
+      "description": "Partial operations answer an Outcome."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.CivilDateTime",
+      "kind": "depends-on",
+      "description": "at(time) makes a date-time."
+    },
+    {
+      "from": "typed.CivilDateTime",
+      "to": "typed.CivilDate",
+      "kind": "depends-on",
+      "description": "Its date."
+    },
+    {
+      "from": "typed.CivilDateTime",
+      "to": "typed.CivilTime",
+      "kind": "depends-on",
+      "description": "Its time."
+    },
+    {
+      "from": "typed.CivilDateTime",
+      "to": "typed.ZonedIntent",
+      "kind": "depends-on",
+      "description": "in_zone."
+    },
+    {
+      "from": "typed.CivilDateTime",
+      "to": "typed.FixedOffsetDateTime",
+      "kind": "depends-on",
+      "description": "at_offset."
+    },
+    {
+      "from": "typed.FixedOffsetDateTime",
+      "to": "typed.CivilDateTime",
+      "kind": "depends-on",
+      "description": "Its wall time."
+    },
+    {
+      "from": "typed.FixedOffsetDateTime",
+      "to": "typed.Instant",
+      "kind": "depends-on",
+      "description": "to_instant, and its order."
+    },
+    {
+      "from": "typed.FixedOffsetDateTime",
+      "to": "utv.Rules",
+      "kind": "depends-on",
+      "description": "to_instant resolves against an empty rule bundle; a fixed offset needs no rules."
+    },
+    {
+      "from": "typed.ZonedIntent",
+      "to": "typed.CivilDateTime",
+      "kind": "depends-on",
+      "description": "Its wall time."
+    },
+    {
+      "from": "typed.ZonedIntent",
+      "to": "typed.TemporalContext",
+      "kind": "depends-on",
+      "description": "resolve and resolve_with go through the context."
+    },
+    {
+      "from": "typed.ZonedIntent",
+      "to": "typed.ResolutionPolicy",
+      "kind": "depends-on",
+      "description": "resolve_with takes a policy."
+    },
+    {
+      "from": "typed.Instant",
+      "to": "typed.PosixSeconds",
+      "kind": "depends-on",
+      "description": "add, until and sub_second."
+    },
+    {
+      "from": "typed.Instant",
+      "to": "typed.ElapsedSeconds",
+      "kind": "depends-on",
+      "description": "add_elapsed."
+    },
+    {
+      "from": "typed.Instant",
+      "to": "typed.FixedOffsetDateTime",
+      "kind": "depends-on",
+      "description": "at_offset."
+    },
+    {
+      "from": "typed.Instant",
+      "to": "typed.ZonedIntent",
+      "kind": "depends-on",
+      "description": "in_zone answers a zoned intent with the asserted offset."
+    },
+    {
+      "from": "typed.Instant",
+      "to": "std.SystemTime",
+      "kind": "depends-on",
+      "description": "from_system_time takes a reading the caller made."
+    },
+    {
+      "from": "typed.Interval",
+      "to": "typed.Bound",
+      "kind": "depends-on",
+      "description": "Its two ends."
+    },
+    {
+      "from": "typed.Interval",
+      "to": "typed.Truth",
+      "kind": "depends-on",
+      "description": "contains and overlaps answer three-valued truth."
+    },
+    {
+      "from": "typed.Interval",
+      "to": "typed.IntervalPoint",
+      "kind": "depends-on",
+      "description": "T: IntervalPoint fixes the domain."
+    },
+    {
+      "from": "typed.ResolutionPolicy",
+      "to": "typed.Gap",
+      "kind": "depends-on",
+      "description": "The gap policy."
+    },
+    {
+      "from": "typed.ResolutionPolicy",
+      "to": "typed.Overlap",
+      "kind": "depends-on",
+      "description": "The overlap policy."
+    },
+    {
+      "from": "typed.TemporalContext",
+      "to": "typed.ZoneRules",
+      "kind": "depends-on",
+      "description": "Holds the rules once."
+    },
+    {
+      "from": "typed.TemporalContext",
+      "to": "typed.ZonedIntent",
+      "kind": "depends-on",
+      "description": "resolve, in_zone and compare."
+    },
+    {
+      "from": "typed.TemporalContext",
+      "to": "typed.Instant",
+      "kind": "depends-on",
+      "description": "The instants it resolves to."
+    },
+    {
+      "from": "typed.TemporalContext",
+      "to": "std.Ordering",
+      "kind": "depends-on",
+      "description": "compare answers Outcome<Ordering>."
+    },
+    {
+      "from": "typed.ZoneRules",
+      "to": "utv.Rules",
+      "kind": "depends-on",
+      "description": "The same type as the JSON layer's Rules."
+    },
+    {
+      "from": "typed.Value",
+      "to": "typed.CivilDate",
+      "kind": "depends-on",
+      "description": "One variant per typed value."
+    },
+    {
+      "from": "typed.Value",
+      "to": "typed.CivilYearMonth",
+      "kind": "depends-on",
+      "description": "One variant per typed value."
+    },
+    {
+      "from": "typed.Value",
+      "to": "typed.CivilTime",
+      "kind": "depends-on",
+      "description": "One variant per typed value."
+    },
+    {
+      "from": "typed.Value",
+      "to": "typed.CivilDateTime",
+      "kind": "depends-on",
+      "description": "One variant per typed value."
+    },
+    {
+      "from": "typed.Value",
+      "to": "typed.FixedOffsetDateTime",
+      "kind": "depends-on",
+      "description": "One variant per typed value."
+    },
+    {
+      "from": "typed.Value",
+      "to": "typed.ZonedIntent",
+      "kind": "depends-on",
+      "description": "One variant per typed value."
+    },
+    {
+      "from": "typed.Value",
+      "to": "typed.Instant",
+      "kind": "depends-on",
+      "description": "One variant per typed value."
+    },
+    {
+      "from": "typed.Value",
+      "to": "typed.Period",
+      "kind": "depends-on",
+      "description": "One variant per typed value."
+    },
+    {
+      "from": "typed.Value",
+      "to": "typed.PosixSeconds",
+      "kind": "depends-on",
+      "description": "One variant per typed value."
+    },
+    {
+      "from": "typed.Value",
+      "to": "typed.ElapsedSeconds",
+      "kind": "depends-on",
+      "description": "One variant per typed value."
+    },
+    {
+      "from": "typed.Value",
+      "to": "typed.Interval",
+      "kind": "depends-on",
+      "description": "One variant per typed value."
+    },
+    {
+      "from": "typed.CivilDate",
+      "to": "typed.Shape",
+      "kind": "depends-on",
+      "description": "read_as checks how the civil JSON is tied to the timeline (also for the other civil types)."
+    }
+  ]
+}

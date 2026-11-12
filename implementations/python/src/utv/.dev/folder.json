@@ -1,0 +1,35 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "utv package",
+  "folder": "implementations/python/src/utv",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "utv package",
+      "summary": "The Python package utv: the typed layer of library 0.3 on top of the JSON layer of 0.1 and 0.2.",
+      "purpose": "Holds every module of the package. The typed layer (values.py, outcome.py, policy.py, context.py, interop.py) gives one immutable type per everyday value and Outcome[T] for partial answers. Underneath it, the JSON layer works on plain UTV JSON dicts and returns Result envelopes: builders (build.py), ISO 8601 and the text form (iso.py, text.py), the everyday operations (ops.py), zone rules and resolution (zones.py), native datetime adapters (native.py) and their shared checks (_core.py). validate.py and gregorian.py are the 0.1 structural and Gregorian checks, and result.py the utv-result/1.0 envelope. __init__.py re-exports all of it.",
+      "boundaries": [
+        "Imports only the standard library. datetime and zoneinfo appear only in native.py and interop.py.",
+        "Reads no file on its own apart from the bundled schema in data/. A zone-rule file is read only when the caller names it (ZoneRules.load).",
+        "Never reads the clock, the host time zone, the locale or the network; tests/test_everyday_api.py (Purity) checks the source for it.",
+        "The contracts it implements belong to docs/ and spec/; this folder's own promise is the Result envelope in contracts.json."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/__init__.py",
+          "symbol": "__all__"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_typed"
+        },
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "operation"
+        }
+      ]
+    }
+  ]
+}

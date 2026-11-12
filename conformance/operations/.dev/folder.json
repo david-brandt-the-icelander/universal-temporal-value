@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Operation fixtures",
+  "folder": "conformance/operations",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Operation fixtures",
+      "summary": "Executable fixtures for the everyday API (everyday.json) and the text form (text-form.json).",
+      "purpose": "The arbiter of what every library's JSON layer returns: each fixture gives an operation or a text, its arguments and the expected status, diagnostic codes and result.",
+      "boundaries": [
+        "The expected values of everyday.json were computed with Python's datetime and zoneinfo, independently of the UTV libraries.",
+        "Zone-dependent fixtures use the rule bundle everyday.json names under rules (conformance/rules/demo-zones.json)."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "conformance/operations/everyday.json",
+          "symbol": "description"
+        },
+        {
+          "path": "conformance/operations/everyday.json",
+          "symbol": "rules"
+        },
+        {
+          "path": "conformance/operations/text-form.json",
+          "symbol": "description"
+        }
+      ]
+    }
+  ]
+}

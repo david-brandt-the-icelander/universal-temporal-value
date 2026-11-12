@@ -1,0 +1,442 @@
+{
+  "$schema": "../../../../../../../../../Meta/Agents/Skills/describe-capability/schema.json",
+  "kind": "capability",
+  "title": "net.icelander.utv capabilities",
+  "folder": "implementations/java/src/main/java/net/icelander/utv",
+  "description": "What the Java library can do for the code that calls it.",
+  "sources": [
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+      "symbol": "TemporalValue"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Outcome.java",
+      "symbol": "Outcome"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+      "symbol": "Typed"
+    }
+  ],
+  "entities": [
+    {
+      "id": "civil-calendar-arithmetic",
+      "name": "Civil calendar arithmetic",
+      "description": "Dates, months and wall-clock date-times in the proleptic Gregorian calendar, with years of any size.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Gregorian.java",
+          "symbol": "Gregorian"
+        }
+      ],
+      "responsibility": "Builds civil values that can exist and does calendar arithmetic on them, answering none rather than inventing a day.",
+      "operations": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.of"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.tryOf"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.addDays"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.addMonths"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.constrained"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.add"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.daysUntil"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilYearMonth.java",
+          "symbol": "CivilYearMonth.addMonths"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.tryOf"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.addHours"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.addMonths"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.fields"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.add"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.compare"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.daysBetween"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv-core is an in-process library, and any code with it on the class path may call it."
+      ]
+    },
+    {
+      "id": "zone-resolution",
+      "name": "Zone resolution",
+      "description": "Wall times in named zones, resolved to instants with rules the caller supplies.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZoneRules.java",
+          "symbol": "ZoneRules"
+        }
+      ],
+      "responsibility": "Turns a wall time in an IANA zone into the instants it names, and back, under explicit rules and explicit gap and overlap policies, and orders zoned values.",
+      "operations": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZoneRules.java",
+          "symbol": "ZoneRules.load"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext.with"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.inZone"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.atOffset"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java",
+          "symbol": "FixedOffsetDateTime.toInstant"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.resolve"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.addDays"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.addMonths"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.inZone"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext.compare"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.resolve"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.toZone"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.toOffset"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv-core is an in-process library, and any code with it on the class path may call it."
+      ]
+    },
+    {
+      "id": "exact-instants",
+      "name": "Exact instants and amounts",
+      "description": "POSIX instants and second counts held as exact rationals, kept apart from calendar periods and SI seconds.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/PosixSeconds.java",
+          "symbol": "PosixSeconds"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Rational.java",
+          "symbol": "Rational"
+        }
+      ],
+      "responsibility": "Measures and moves instants exactly, and refuses arithmetic that would need a leap-second table.",
+      "operations": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.fromUnixSeconds"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.add"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.add"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.until"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.atOffset"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.posixSecondsBetween"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv-core is an in-process library, and any code with it on the class path may call it."
+      ]
+    },
+    {
+      "id": "ranges",
+      "name": "Ranges with explicit ends",
+      "description": "Intervals of dates or instants whose ends are included, excluded, unbounded or unknown.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+          "symbol": "Interval"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+          "symbol": "Intervals"
+        }
+      ],
+      "responsibility": "Answers containment and overlap with three values, so an unknown end gives 'possibly' rather than a guess.",
+      "operations": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+          "symbol": "Interval.tryOf"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+          "symbol": "Interval.contains"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+          "symbol": "Interval.overlaps"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+          "symbol": "Intervals.contains"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+          "symbol": "Intervals.overlaps"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv-core is an in-process library, and any code with it on the class path may call it."
+      ]
+    },
+    {
+      "id": "text-form",
+      "name": "Text form",
+      "description": "The UTV text form (utv-text/1) and ISO 8601 / RFC 3339 / RFC 9557 text, in and out.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+          "symbol": "TextForm"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+          "symbol": "Iso"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.text"
+        }
+      ],
+      "responsibility": "Parses text into values without ever throwing for bad input, and writes values as text only where that is lossless.",
+      "operations": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+          "symbol": "TemporalValue.parse"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+          "symbol": "Iso.parseIso"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+          "symbol": "Iso.formatIso"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+          "symbol": "TextForm.parseText"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+          "symbol": "TextForm.formatText"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv-core is an in-process library, and any code with it on the class path may call it."
+      ]
+    },
+    {
+      "id": "utv-json-validation",
+      "name": "UTV JSON validation",
+      "description": "Structural and Gregorian validation of UTV JSON, and reading it into typed values.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+          "symbol": "Utv"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/GregorianCivil.java",
+          "symbol": "GregorianCivil"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.decode"
+        }
+      ],
+      "responsibility": "Fails closed on duplicate keys, unknown versions, kinds and properties, and refuses JSON a typed value cannot hold without loss.",
+      "operations": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+          "symbol": "Utv.validateStructural"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/GregorianCivil.java",
+          "symbol": "GregorianCivil.validate"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+          "symbol": "TemporalValue.fromJson"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Outcome.java",
+          "symbol": "Outcome.single"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv-core is an in-process library, and any code with it on the class path may call it."
+      ]
+    },
+    {
+      "id": "native-interop",
+      "name": "Native interop",
+      "description": "Explicit adapters between UTV values and java.time.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/NativeResult.java",
+          "symbol": "NativeResult"
+        }
+      ],
+      "responsibility": "Converts to and from java.time only in the reading the caller names, refuses host-zone readings, and reports every loss on the way back.",
+      "operations": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.from"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.toJavaInstant"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.toLocalDate"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java",
+          "symbol": "FixedOffsetDateTime.from"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java",
+          "symbol": "FixedOffsetDateTime.toOffsetDateTime"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.from"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.toZonedDateTime"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.fromDate"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.fromOffsetDateTime"
+        }
+      ],
+      "access": [
+        "Nothing checks: utv-core is an in-process library, and any code with it on the class path may call it."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/java/src/main/java/net/icelander/utv",
+      "path": "implementations/java/src/main/java/net/icelander/utv/.dev/operation.json",
+      "relationship": "The operations through which each capability is reached."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/java/src/main/java/net/icelander/utv",
+      "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+      "relationship": "The features that make them up."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/java/src/main/java/net/icelander/utv",
+      "path": "implementations/java/src/main/java/net/icelander/utv/.dev/use-case.json",
+      "relationship": "The use cases that use them."
+    }
+  ]
+}

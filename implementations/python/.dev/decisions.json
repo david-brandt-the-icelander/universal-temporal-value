@@ -1,0 +1,313 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "utv for Python decisions",
+  "folder": "implementations/python",
+  "entities": [
+    {
+      "id": "none-of",
+      "title": "NoneOf, because None is a keyword",
+      "summary": "The none case of an outcome is called NoneOf.",
+      "status": "accepted",
+      "context": "docs/library-api.md §3 names the five outcome cases Unique, Multiple, None, Unsupported and Invalid, as frozen dataclasses in Python.",
+      "decision": "The none case is the frozen dataclass NoneOf; its wire status is still none.",
+      "rationale": "None is a Python keyword and can't name a class.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/outcome.py",
+          "symbol": "NoneOf"
+        },
+        {
+          "path": "implementations/python/README.md",
+          "symbol": "Outcomes"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "3. `Outcome<T>`"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    },
+    {
+      "id": "naming-deviations",
+      "title": "Period.of_days and TemporalContext(rules)",
+      "summary": "Two names differ from the shared naming table, as docs/library-api.md §6 records.",
+      "status": "accepted",
+      "context": "The shared table names Period.Days(30) and TemporalContext.With(rules).",
+      "decision": "Period's static constructors are of_years, of_months, of_weeks and of_days (with Period.of and Period(...)); a context is made with TemporalContext(rules) or TemporalContext.with_rules(rules).",
+      "rationale": "A days classmethod would clash with the days component field, and with is a keyword.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Period.of_days"
+        },
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.with_rules"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "6. Naming"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    },
+    {
+      "id": "years-are-int",
+      "title": "Years are Python ints",
+      "summary": "A year has no size limit: it is a Python int in typed values and a decimal string in JSON.",
+      "status": "accepted",
+      "context": "docs/library-api.md §1 requires arbitrary-precision years and names int for Python.",
+      "decision": "Typed values hold years as int; calendar arithmetic goes through day numbers computed with integer arithmetic for any year.",
+      "rationale": "Python's int is arbitrary precision, so no separate big-integer type is needed.",
+      "details": "The one bound is Python's int–string conversion limit (implementations/python/.dev/limitations.json, int-string-limit).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate"
+        },
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "days_from_civil"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "1. Types"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        },
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "arbitrary-precision"
+        }
+      ]
+    },
+    {
+      "id": "outcome-error-is-value-error",
+      "title": "Constructor errors are ValueErrors",
+      "summary": "A constructor given a value that can't exist raises OutcomeError, a subclass of ValueError.",
+      "status": "accepted",
+      "context": "docs/library-api.md §1 asks constructors to raise the language's ordinary argument error, and names ValueError for Python; single() needs an error too.",
+      "decision": "One exception, OutcomeError(ValueError), serves both: it carries the wire status and the diagnostics.",
+      "rationale": "It behaves as datetime.date does for 30 February (README), and the reason stays a diagnostic code rather than a message.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/outcome.py",
+          "symbol": "OutcomeError"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_check"
+        },
+        {
+          "path": "implementations/python/README.md",
+          "symbol": "Values"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    },
+    {
+      "id": "typed-over-json-layer",
+      "title": "The typed layer calls the JSON layer",
+      "summary": "Every typed operation builds its value's JSON and calls the JSON-level function underneath.",
+      "status": "accepted",
+      "context": "0.3 adds the typed layer on top of the unchanged 0.2 JSON layer, which the shared fixtures test; docs/library-api.md §2 says libraries should call the 0.2 functions rather than re-implement them.",
+      "decision": "Typed values convert to JSON on each operation and read the answer back (values._typed, outcome_of); constructors run the JSON layer's checks.",
+      "rationale": "So the two layers can't disagree (values.py's module docstring).",
+      "details": "Every typed call pays for building and validating JSON; no measurements are recorded here.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_typed"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_total"
+        },
+        {
+          "path": "implementations/python/src/utv/outcome.py",
+          "symbol": "outcome_of"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    },
+    {
+      "id": "typed-policy-overloads",
+      "title": "Typed overloads for month-end policies; wire strings accepted",
+      "summary": "add_months and add_years have two typed overloads, and every policy parameter also takes its wire string.",
+      "status": "accepted",
+      "context": "docs/library-api.md §2 makes AddMonths(n) partial and AddMonths(n, MonthEnd.Constrain) total, and §4 lets Python accept the literal strings through a typed parameter.",
+      "decision": "typing.overload declares Outcome[T] without a policy and T with Constrain (MonthEnd.CONSTRAIN or \"constrain\"); any other policy in that form raises ValueError. MonthEnd, Gap and Overlap are str enums, and MonthEndLike, GapLike and OverlapLike accept the enum or a Literal string.",
+      "rationale": "A type checker knows which call returns an outcome, and rejecting is what the call without a policy does (README).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.add_months"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_month_step"
+        },
+        {
+          "path": "implementations/python/src/utv/policy.py",
+          "symbol": "MonthEndLike"
+        },
+        {
+          "path": "implementations/python/README.md",
+          "symbol": "Total operations return values, partial ones return outcomes"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    },
+    {
+      "id": "order-without-tie-break",
+      "title": "Order compares values; equality compares representations",
+      "summary": "09:30 and 09:30:00 are unequal, yet each is <= the other.",
+      "status": "accepted",
+      "context": "docs/library-api.md §1: equality is representation equality, comparisons treat a missing second as 0, and ties break by representation only where a language requires order to agree with equality.",
+      "decision": "__eq__ is the dataclass's field equality; __lt__, __le__, __gt__ and __ge__ go through the JSON layer's compare, with no tie-break.",
+      "rationale": "Python doesn't require ordering to agree with equality, so no tie-break is needed.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_Ordered"
+        },
+        {
+          "path": "implementations/python/README.md",
+          "symbol": "Values"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "1. Types"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    },
+    {
+      "id": "naive-datetime-is-floating",
+      "title": "A naive datetime is a floating wall time",
+      "summary": "A datetime without tzinfo is never read as local time.",
+      "status": "accepted",
+      "context": "Python's naive datetime is often used to mean \"local time on this machine\"; docs/everyday-api.md's interop rules forbid reading the host's zone.",
+      "decision": "from_datetime turns a naive datetime only into a floating wall time; asking for an instant, an offset or a zone is unsupported (local-zone). ZoneInfo(\"localtime\"), ZoneInfo from a file and tzinfo classes other than timezone and ZoneInfo are refused, and astimezone() is never called without an argument.",
+      "rationale": "Reading it as an instant or offset would need the host's local zone, which UTV never consults (native.py's module docstring).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "from_datetime"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "_zone_key"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        },
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        }
+      ]
+    },
+    {
+      "id": "caller-supplies-zoneinfo",
+      "title": "Zoned datetimes use the caller's ZoneInfo",
+      "summary": "Converting a zoned value to datetime takes a ZoneInfo from the caller, and its tz data decides gaps and folds.",
+      "status": "accepted",
+      "context": "A ZonedIntent names a zone id; a datetime needs a tzinfo, and only zoneinfo can supply one for an IANA zone.",
+      "decision": "to_datetime requires tz=ZoneInfo with the same key, picks the fold from the asserted offset, and answers none or multiple from that ZoneInfo; from_datetime asserts the offset that ZoneInfo gives. The library never constructs a ZoneInfo.",
+      "rationale": "The library doesn't read the host's tz database (to_datetime's docstring; \"The ZoneInfo the caller passed (its tz data, not ours) decides gaps and folds\").",
+      "details": "Interop results can therefore differ from TemporalContext.resolve when the host's tz data and the rule bundle disagree.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "to_datetime"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "from_datetime"
+        }
+      ]
+    },
+    {
+      "id": "standard-library-only",
+      "title": "Standard library only",
+      "summary": "The package has no dependencies, and validates JSON with its own interpreter of the schema's keywords.",
+      "status": "accepted",
+      "context": "Structural validation follows schema/utv-1.0.schema.json (JSON Schema 2020-12).",
+      "decision": "pyproject.toml declares dependencies = []. validate.py interprets the keywords the schema uses ($ref, type, const, enum, minLength, pattern, minItems, items, properties, required, additionalProperties, anyOf, oneOf, not) instead of using a JSON Schema package.",
+      "details": "The README and the code state the choice but not why it was made. A keyword the schema starts to use and the interpreter doesn't know is ignored by it.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/pyproject.toml",
+          "symbol": "project"
+        },
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "_check"
+        },
+        {
+          "path": "implementations/python/README.md",
+          "symbol": "utv (Python)"
+        }
+      ]
+    }
+  ]
+}

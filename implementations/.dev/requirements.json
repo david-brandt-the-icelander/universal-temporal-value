@@ -1,0 +1,252 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/requirements.schema.json",
+  "kind": "requirements",
+  "title": "Obligations every language library meets",
+  "folder": "implementations",
+  "entities": [
+    {
+      "id": "separate-validity-checks",
+      "title": "Structural validity, semantic validity and resolvability are separate",
+      "summary": "Three separate checks with three separate results.",
+      "statement": "Keep structural validity, semantic validity and resolvability separate. They are three separate checks with three separate results.",
+      "priority": "must",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/README.md",
+        "description": "Non-negotiable obligation 1, from spec/DECISIONS.md and spec/RESULT-CONTRACT.md."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/README.md",
+          "symbol": "Non-negotiable obligations"
+        },
+        {
+          "path": "spec/DECISIONS.md",
+          "symbol": "API design requirements"
+        }
+      ]
+    },
+    {
+      "id": "no-hidden-environment",
+      "title": "No hidden environment",
+      "summary": "A library never reads the system clock, host time zone, locale, installed tz database or the network during evaluation.",
+      "statement": "Never read the system clock, host time zone, locale, installed tzdb or the network during evaluation. \"Now\" is an explicit input, captured as an observation.",
+      "priority": "must",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/README.md",
+        "description": "Non-negotiable obligation 2, from spec/DECISIONS.md and spec/RESULT-CONTRACT.md."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/README.md",
+          "symbol": "Non-negotiable obligations"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§1 Invariants, 5. No hidden environment"
+        }
+      ]
+    },
+    {
+      "id": "explicit-versioned-rules",
+      "title": "Rules are explicit, versioned dependencies",
+      "summary": "Rule data is passed in, versioned and content-addressed, and every nontrivial result says which rules it used.",
+      "statement": "Rules are explicit, versioned, content-addressed dependencies. Every nontrivial result carries a manifest of the exact rule data used.",
+      "priority": "must",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/README.md",
+        "description": "Non-negotiable obligation 3, from spec/DECISIONS.md and spec/RESULT-CONTRACT.md."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/README.md",
+          "symbol": "Non-negotiable obligations"
+        },
+        {
+          "path": "spec/DECISIONS.md",
+          "symbol": "15. All mutable knowledge is versioned"
+        }
+      ]
+    },
+    {
+      "id": "truthful-non-answers",
+      "title": "Truthful non-answers",
+      "summary": "none, multiple, indeterminate, unsupported and resource-limit are successful outcomes, never replaced by a guess or a default.",
+      "statement": "Report the truth, including truthful non-answers. none, multiple, indeterminate, unsupported and resource-limit are successful outcomes. Never replace them with a guess or a default.",
+      "priority": "must",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/README.md",
+        "description": "Non-negotiable obligation 4, from spec/DECISIONS.md and spec/RESULT-CONTRACT.md."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/README.md",
+          "symbol": "Non-negotiable obligations"
+        },
+        {
+          "path": "spec/RESULT-CONTRACT.md",
+          "symbol": "Status invariants"
+        }
+      ]
+    },
+    {
+      "id": "no-silent-conversions",
+      "title": "No silent conversions",
+      "summary": "Nothing converts between civil, physical, clock, logical and calendar domains without being asked, and every conversion reports what it lost.",
+      "statement": "No silent conversions between civil, physical, clock, logical and calendar domains. Every conversion returns a loss report.",
+      "priority": "must",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/README.md",
+        "description": "Non-negotiable obligation 5, from spec/DECISIONS.md and spec/RESULT-CONTRACT.md."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/README.md",
+          "symbol": "Non-negotiable obligations"
+        },
+        {
+          "path": "spec/DECISIONS.md",
+          "symbol": "17. Loss-aware adapters"
+        }
+      ]
+    },
+    {
+      "id": "arbitrary-precision",
+      "title": "Arbitrary precision",
+      "summary": "Integers are decimal strings and fractions exact rationals, never floating point or fixed-width integers.",
+      "statement": "Arbitrary precision. Integers are decimal strings and fractions are exact rationals. Don't round-trip through floating point or fixed-width integers.",
+      "priority": "must",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/README.md",
+        "description": "Non-negotiable obligation 6, from spec/DECISIONS.md and spec/RESULT-CONTRACT.md."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/README.md",
+          "symbol": "Non-negotiable obligations"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§2 Canonical JSON"
+        }
+      ]
+    },
+    {
+      "id": "fail-closed",
+      "title": "Fail closed",
+      "summary": "Unknown kinds, unknown core properties, unknown critical extensions, duplicate JSON keys and unknown specification versions are rejected.",
+      "statement": "Fail closed on unknown kinds, unknown core properties, unknown critical extensions, duplicate JSON keys and unknown specification versions.",
+      "priority": "must",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/README.md",
+        "description": "Non-negotiable obligation 7, from spec/DECISIONS.md and spec/RESULT-CONTRACT.md."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/README.md",
+          "symbol": "Non-negotiable obligations"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Reader rules"
+        }
+      ]
+    },
+    {
+      "id": "bounded-evaluation",
+      "title": "Bounded evaluation",
+      "summary": "Recurrence expansion, constraint solving and series processing take explicit budgets and return resource-limit when they run out.",
+      "statement": "Bounded evaluation. Recurrence expansion, constraint solving and series processing take explicit budgets and return resource-limit when they run out.",
+      "priority": "must",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/README.md",
+        "description": "Non-negotiable obligation 8, from spec/DECISIONS.md and spec/RESULT-CONTRACT.md."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/README.md",
+          "symbol": "Non-negotiable obligations"
+        },
+        {
+          "path": "spec/RESULT-CONTRACT.md",
+          "symbol": "Error and operation behavior"
+        }
+      ]
+    },
+    {
+      "id": "shared-conformance-material",
+      "title": "Read the shared conformance material in place",
+      "summary": "Libraries test against the files in schema/ and conformance/ at the repository root, never against copies.",
+      "statement": "Don't copy the fixtures into a library. Read them from the repository root so every implementation tests against the same files. When a scenario is too vague to test, the fix belongs in conformance/ (and possibly the specification's open issues), not in a library-local reinterpretation.",
+      "priority": "must",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/README.md",
+        "description": "Shared conformance material."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/README.md",
+          "symbol": "Shared conformance material"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        },
+        {
+          "relation": "depends-on",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        },
+        {
+          "relation": "depends-on",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "structural-examples"
+        },
+        {
+          "relation": "depends-on",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        }
+      ]
+    },
+    {
+      "id": "idiomatic-api",
+      "title": "Idiomatic APIs that keep the obligations",
+      "summary": "Each library feels native to its language, but exposes no convenience that silently breaks an obligation.",
+      "statement": "Libraries should feel native to their language: builders, operator overloads where they are safe, and the language's usual error handling. They must not expose a convenience that silently breaks an obligation. A < operator on two UTV values must not exist unless it can return \"unknown\"; prefer an explicit compare() that returns a set of possible relations.",
+      "priority": "must",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/README.md",
+        "description": "Idiomatic APIs."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/README.md",
+          "symbol": "Idiomatic APIs"
+        }
+      ]
+    }
+  ]
+}

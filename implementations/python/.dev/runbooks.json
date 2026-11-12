@@ -1,0 +1,42 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/runbooks.schema.json",
+  "kind": "runbooks",
+  "title": "utv for Python runbooks",
+  "folder": "implementations/python",
+  "entities": [
+    {
+      "id": "setup",
+      "title": "Work on the Python library",
+      "summary": "Run the tests, the worked examples among them, from implementations/python; there is nothing to install.",
+      "purpose": "setup",
+      "when": "Before changing anything in implementations/python.",
+      "steps": [
+        "Use Python 3.10 or later (pyproject.toml: requires-python = \">=3.10\"). The project has no dependencies, so nothing needs installing.",
+        "cd implementations/python",
+        "PYTHONPATH=src python3 -m unittest discover -s tests",
+        "From the repository root, run the repository checks: python3 tools/validate.py and python3 tools/side_by_side.py --check"
+      ],
+      "verify": "unittest reports OK, and both repository checks pass.",
+      "details": "The native-first zone examples and the zone tests of test_native.py read this machine's tz database, which must know the 2026–2027 rules of New York and Paris; test_native.py skips its ZoneInfo tests when America/New_York is missing, the example suites do not. The README says the library and the examples type-check with mypy --strict, but the repository gives no command or configuration for it.",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "symbol": "3. Running the tests"
+        },
+        {
+          "path": "implementations/python/README.md",
+          "symbol": "Tests"
+        },
+        {
+          "path": "implementations/python/pyproject.toml",
+          "symbol": "project"
+        },
+        {
+          "path": "implementations/python/tests/test_native.py",
+          "symbol": "needs_tzdb"
+        }
+      ]
+    }
+  ]
+}

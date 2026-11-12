@@ -1,0 +1,35 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "utv for Python",
+  "folder": "implementations/python",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "utv for Python",
+      "summary": "The Python library of UTV, version 0.3.0: typed values and outcomes on top of the JSON-level everyday API, the text form, and explicit interop with datetime.",
+      "purpose": "Holds the package utv (src/utv/), its tests and worked examples (tests/), the project file that builds it (pyproject.toml), and the README and CHANGELOG a person reads first. It reads and writes utv/1.0, needs Python 3.10 or later and nothing outside the standard library.",
+      "boundaries": [
+        "The contracts it implements are the repository's: docs/library-api.md, docs/everyday-api.md, docs/text-form.md and spec/. Where they disagree with the code, the fix is decided there.",
+        "Its tests read conformance/ and schema/ at the repository root in place; the library itself reads only its copy of the schema in src/utv/data/.",
+        "Zone rules are the caller's input. The library ships none, and never reads the host's tz database, clock or locale.",
+        "Conformance profiles claimed: none yet. Registries shipped: none (README)."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/README.md",
+          "symbol": "utv (Python)"
+        },
+        {
+          "path": "implementations/python/pyproject.toml",
+          "symbol": "project"
+        },
+        {
+          "path": "implementations/python/src/utv/__init__.py",
+          "symbol": "__version__"
+        }
+      ]
+    }
+  ]
+}

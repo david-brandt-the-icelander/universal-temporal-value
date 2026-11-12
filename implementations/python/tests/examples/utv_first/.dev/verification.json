@@ -1,0 +1,1020 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "UTV-first example verification",
+  "folder": "implementations/python/tests/examples/utv_first",
+  "entities": [
+    {
+      "id": "civil-date",
+      "title": "CivilDate examples",
+      "summary": "Making dates, refusing ones that can't exist, weekday and ISO week, adding days and months, counting days and ordering, compared with datetime.date and calendar.",
+      "criteria": [
+        "CivilDate.of creates the date when the fields name a real day.",
+        "CivilDate.of accepts 29 February when the year is a leap year.",
+        "CivilDate.of accepts 29 February when the year is a century divisible by 400.",
+        "CivilDate.of raises a ValueError, with the reason, when the day does not exist in the month.",
+        "CivilDate.of creates the date when the year is beyond 9999.",
+        "CivilDate.of creates the date when the year is before year 1.",
+        "CivilDate.try_of returns invalid when the day is 30 February.",
+        "CivilDate.try_of returns invalid when 29 February falls in a common year.",
+        "CivilDate.try_of returns invalid when 29 February falls in a century not divisible by 400.",
+        "CivilDate.try_of returns invalid when the month is 13.",
+        "CivilDate.parse returns the date when the text is an ISO 8601 calendar date.",
+        "CivilDate.parse returns invalid, with the reason, when the text names a day that does not exist.",
+        "CivilDate.day_of_week returns the weekday of the date, numbered as in ISO 8601.",
+        "CivilDate.iso_week returns the ISO 8601 week number of the date.",
+        "CivilDate.is_leap_year follows the Gregorian leap-year rules for every kind of year.",
+        "CivilDate.add_days returns the date that many days later, carrying into the next month.",
+        "CivilDate.add_months returns none when the day is missing from the target month.",
+        "CivilDate.add_months with MonthEnd.CONSTRAIN returns the last day of the target month when the day is missing from it.",
+        "CivilDate.add returns none when a one-month period lands on a missing day.",
+        "CivilDate.days_until returns the number of days to a later date.",
+        "CivilDate's less-than operator is true when the left date comes first."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestOf",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestTryOf",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestParse",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestDayOfWeek",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestIsoWeek",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestIsLeapYear",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestAddDays",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestAddMonths",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestAdd",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestDaysUntil",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestLt",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "tasks": [
+        "a-date",
+        "feb-30",
+        "weekday-week",
+        "add-days",
+        "month-end",
+        "days-between",
+        "compare-dates"
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "month-end-returns-none"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "arbitrary-precision-years"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/use-case.json",
+          "entityId": "create-a-date"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/use-case.json",
+          "entityId": "add-months"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Wraps the tests of tasks a-date, feb-30, weekday-week, add-days, month-end, days-between, compare-dates in BEGIN/END markers."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestOf"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestTryOf"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestParse"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestDayOfWeek"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestIsoWeek"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestIsLeapYear"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestAddDays"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestAddMonths"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestAdd"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestDaysUntil"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date.py",
+          "symbol": "TestLt"
+        }
+      ]
+    },
+    {
+      "id": "civil-year-month",
+      "title": "CivilYearMonth examples",
+      "summary": "A month without a day, and month arithmetic across a year end, where Python has no type at all.",
+      "criteria": [
+        "CivilYearMonth.of creates a month without inventing a day when given a year and a month.",
+        "CivilYearMonth.add_months returns the later month, carrying into the next year."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_year_month.py",
+          "symbol": "TestOf",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_year_month.py",
+          "symbol": "TestAddMonths",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_year_month.py",
+          "symbol": "TestOf"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_year_month.py",
+          "symbol": "TestAddMonths"
+        }
+      ]
+    },
+    {
+      "id": "civil-time",
+      "title": "CivilTime examples",
+      "summary": "A time of day that remembers whether seconds were given, compared with datetime.time.",
+      "criteria": [
+        "CivilTime.of keeps the time to the minute when no seconds are given.",
+        "CivilTime.of keeps the seconds when they are given."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_time.py",
+          "symbol": "TestOf",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "tasks": [
+        "time-of-day"
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Wraps the tests of tasks time-of-day in BEGIN/END markers."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_time.py",
+          "symbol": "TestOf"
+        }
+      ]
+    },
+    {
+      "id": "civil-date-time",
+      "title": "CivilDateTime examples",
+      "summary": "Wall-clock date-times: making one, the leap second, wall-clock hours across midnight, a zone intention and a fixed offset, compared with naive and aware datetimes.",
+      "criteria": [
+        "CivilDateTime.of creates a wall-clock date-time with no zone when given a date and a time.",
+        "CivilDateTime.try_of returns unsupported when the second is a leap second, 60.",
+        "CivilDateTime.add_hours carries into the next day when the hours pass midnight.",
+        "CivilDateTime.in_zone keeps the wall time and the zone name as an intention.",
+        "CivilDateTime.at_offset pins the wall time to a fixed UTC offset."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date_time.py",
+          "symbol": "TestOf",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date_time.py",
+          "symbol": "TestTryOf",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date_time.py",
+          "symbol": "TestAddHours",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date_time.py",
+          "symbol": "TestInZone",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date_time.py",
+          "symbol": "TestAtOffset",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "tasks": [
+        "datetime-plus-hours"
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "zoned-wall-clock-arithmetic"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Wraps the tests of tasks datetime-plus-hours in BEGIN/END markers."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date_time.py",
+          "symbol": "TestOf"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date_time.py",
+          "symbol": "TestTryOf"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date_time.py",
+          "symbol": "TestAddHours"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date_time.py",
+          "symbol": "TestInZone"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_civil_date_time.py",
+          "symbol": "TestAtOffset"
+        }
+      ]
+    },
+    {
+      "id": "fixed-offset-date-time",
+      "title": "FixedOffsetDateTime examples",
+      "summary": "A wall time at a fixed offset names one instant without zone rules.",
+      "criteria": [
+        "FixedOffsetDateTime.to_instant returns the instant the wall time and offset describe."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_fixed_offset_date_time.py",
+          "symbol": "TestToInstant",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_fixed_offset_date_time.py",
+          "symbol": "TestToInstant"
+        }
+      ]
+    },
+    {
+      "id": "zoned-intent",
+      "title": "ZonedIntent examples",
+      "summary": "Resolving a wall time in a zone, in a gap and in an overlap, with and without policies, and adding a day across a DST change.",
+      "criteria": [
+        "ZonedIntent.resolve returns the one instant when the wall time happens exactly once.",
+        "ZonedIntent.resolve returns none when the wall time falls in a daylight-saving gap.",
+        "ZonedIntent.resolve with Gap.SHIFT_FORWARD moves the wall time forward by the length of the gap.",
+        "ZonedIntent.resolve returns both instants when the wall time happens twice.",
+        "ZonedIntent.resolve with Overlap.EARLIEST returns the first of the two instants.",
+        "ZonedIntent.add_days keeps the wall time when the day crosses a daylight-saving change."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_zoned_intent.py",
+          "symbol": "TestResolve",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_zoned_intent.py",
+          "symbol": "TestAddDays",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "tasks": [
+        "meeting-in-paris",
+        "dst-gap",
+        "dst-overlap",
+        "day-vs-24h"
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "zoned-wall-clock-arithmetic"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/use-case.json",
+          "entityId": "resolve-a-zoned-time"
+        },
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Wraps the tests of tasks meeting-in-paris, dst-gap, dst-overlap, day-vs-24h in BEGIN/END markers."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_zoned_intent.py",
+          "symbol": "TestResolve"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_zoned_intent.py",
+          "symbol": "TestAddDays"
+        },
+        {
+          "path": "implementations/python/tests/examples/fixtures.py",
+          "symbol": "demo_zone_rules"
+        }
+      ]
+    },
+    {
+      "id": "temporal-context",
+      "title": "TemporalContext examples",
+      "summary": "Ordering two zoned wall times that both fall in an overlap.",
+      "criteria": [
+        "TemporalContext.compare returns both orders when both wall times fall in the same overlap."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_temporal_context.py",
+          "symbol": "TestCompare",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "tasks": [
+        "compare-dates"
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/use-case.json",
+          "entityId": "compare-values"
+        },
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Wraps the tests of tasks compare-dates in BEGIN/END markers."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_temporal_context.py",
+          "symbol": "TestCompare"
+        },
+        {
+          "path": "implementations/python/tests/examples/fixtures.py",
+          "symbol": "demo_zone_rules"
+        }
+      ]
+    },
+    {
+      "id": "instant",
+      "title": "Instant examples",
+      "summary": "Instants from clock readings, exact fractions and differences, POSIX versus SI seconds, and an instant seen in a zone.",
+      "criteria": [
+        "Instant.from_unix_nanoseconds takes a clock reading as an input when the program reads the clock.",
+        "Instant.from_unix_seconds returns the Unix epoch when given zero seconds.",
+        "Instant.from_unix_seconds keeps all nine fractional digits when given nanoseconds.",
+        "Instant.from_unix_seconds keeps a fraction of a second when given one.",
+        "Instant.until returns the exact number of seconds, as a fraction, between two instants.",
+        "Instant.until returns 23 hours when the instants are noon on both sides of a spring-forward night.",
+        "Instant.add with POSIX seconds moves the instant by exactly that many seconds.",
+        "Instant.add with SI seconds returns unsupported when no leap-second table is available.",
+        "Instant.in_zone returns the wall time and offset in the zone when the zone has rules for it."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_instant.py",
+          "symbol": "TestFromUnixNanoseconds",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_instant.py",
+          "symbol": "TestFromUnixSeconds",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_instant.py",
+          "symbol": "TestUntil",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_instant.py",
+          "symbol": "TestAdd",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_instant.py",
+          "symbol": "TestInZone",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "tasks": [
+        "now",
+        "timestamps",
+        "day-vs-24h",
+        "meeting-in-paris"
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "exact-timeline"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "no-host-environment"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/use-case.json",
+          "entityId": "resolve-a-zoned-time"
+        },
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Wraps the tests of tasks now, timestamps, day-vs-24h, meeting-in-paris in BEGIN/END markers."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_instant.py",
+          "symbol": "TestFromUnixNanoseconds"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_instant.py",
+          "symbol": "TestFromUnixSeconds"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_instant.py",
+          "symbol": "TestUntil"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_instant.py",
+          "symbol": "TestAdd"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_instant.py",
+          "symbol": "TestInZone"
+        },
+        {
+          "path": "implementations/python/tests/examples/fixtures.py",
+          "symbol": "demo_zone_rules"
+        }
+      ]
+    },
+    {
+      "id": "period",
+      "title": "Period examples",
+      "summary": "A calendar day is not 86,400 seconds, and P1M is a month.",
+      "criteria": [
+        "Period.of_days creates a calendar day, which is not a number of seconds.",
+        "Period.of_months creates a calendar month, distinct from a minute."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_period.py",
+          "symbol": "TestOfDays",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_period.py",
+          "symbol": "TestOfMonths",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "exact-timeline"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_period.py",
+          "symbol": "TestOfDays"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_period.py",
+          "symbol": "TestOfMonths"
+        }
+      ]
+    },
+    {
+      "id": "elapsed-seconds",
+      "title": "ElapsedSeconds examples",
+      "summary": "SI seconds are neither a calendar day nor POSIX seconds.",
+      "criteria": [
+        "ElapsedSeconds.of holds exactly the elapsed seconds it is given.",
+        "ElapsedSeconds.of creates an amount that is neither a calendar day nor POSIX seconds when given 86,400 seconds."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_elapsed_seconds.py",
+          "symbol": "TestOf",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "exact-timeline"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_elapsed_seconds.py",
+          "symbol": "TestOf"
+        }
+      ]
+    },
+    {
+      "id": "interval",
+      "title": "Interval examples",
+      "summary": "Half-open, closed, open-ended and unknown-ended ranges of dates.",
+      "criteria": [
+        "A half-open Interval definitely contains a day between its ends.",
+        "A half-open Interval cannot contain its excluded end.",
+        "A closed Interval definitely contains its last day.",
+        "An Interval with an unbounded end definitely contains any later day.",
+        "An Interval with an unknown end only possibly contains a later day."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_interval.py",
+          "symbol": "TestHalfOpen",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_interval.py",
+          "symbol": "TestClosed",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_interval.py",
+          "symbol": "TestOf",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "tasks": [
+        "ranges"
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "three-valued-intervals"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Wraps the tests of tasks ranges in BEGIN/END markers."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_interval.py",
+          "symbol": "TestHalfOpen"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_interval.py",
+          "symbol": "TestClosed"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_interval.py",
+          "symbol": "TestOf"
+        }
+      ]
+    },
+    {
+      "id": "parse",
+      "title": "utv.parse examples",
+      "summary": "Z gives an Instant and +00:00 a FixedOffsetDateTime.",
+      "criteria": [
+        "utv.parse returns an Instant when the text ends in Z.",
+        "utv.parse returns a FixedOffsetDateTime when the text ends in +00:00."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_parse.py",
+          "symbol": "TestParse",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "tasks": [
+        "parse-offsets"
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/use-case.json",
+          "entityId": "read-and-write-text"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Wraps the tests of tasks parse-offsets in BEGIN/END markers."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_parse.py",
+          "symbol": "TestParse"
+        }
+      ]
+    },
+    {
+      "id": "interop",
+      "title": "from_native and to_native examples",
+      "summary": "A naive clock reading is refused as an instant, a fixed-offset datetime comes in, a round trip returns the original, and year 10000 can't go out.",
+      "criteria": [
+        "from_native returns unsupported when a naive datetime is to be read as an instant.",
+        "from_native with Intent.OFFSET keeps the wall time and the offset of the native value.",
+        "to_native gives back exactly the native value a FixedOffsetDateTime was made from.",
+        "to_native returns unsupported when the date's year is beyond 9999."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_interop.py",
+          "symbol": "TestFromNative",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_interop.py",
+          "symbol": "TestToNative",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "tasks": [
+        "now",
+        "round-trip"
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "native-interop-intent"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "no-host-environment"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/use-case.json",
+          "entityId": "convert-native"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Wraps the tests of tasks now, round-trip in BEGIN/END markers."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_interop.py",
+          "symbol": "TestFromNative"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_interop.py",
+          "symbol": "TestToNative"
+        }
+      ]
+    },
+    {
+      "id": "validate",
+      "title": "validate_structural examples",
+      "summary": "Values with no typed API or standard counterpart, written as UTV JSON and validated; versions, duplicate keys and unknown kinds refused.",
+      "criteria": [
+        "validate_structural accepts a value that is only a year.",
+        "validate_structural accepts a leap-second label, leaving its meaning to a later check.",
+        "validate_structural accepts an interval stored as a start plus an amount.",
+        "validate_structural accepts a union of two separate date ranges.",
+        "validate_structural accepts a weekly recurrence anchored in a named zone.",
+        "validate_structural accepts a year known only to lie within bounds.",
+        "validate_structural returns unsupported when the value is from a newer version.",
+        "validate_structural returns invalid when the version label is malformed.",
+        "validate_structural returns invalid when a key appears twice.",
+        "validate_structural returns invalid when the kind is unknown."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_validate.py",
+          "symbol": "TestValidateStructural",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/use-case.json",
+          "entityId": "validate-utv-json"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_validate.py",
+          "symbol": "TestValidateStructural"
+        }
+      ]
+    },
+    {
+      "id": "gregorian",
+      "title": "validate_gregorian_date examples",
+      "summary": "Gregorian date checks on UTV JSON: real dates, missing days, other calendars and a year alone.",
+      "criteria": [
+        "validate_gregorian_date returns valid when the JSON names a real Gregorian date.",
+        "validate_gregorian_date returns invalid when well-formed JSON names a day that does not exist.",
+        "validate_gregorian_date returns unsupported when the date is in another calendar.",
+        "validate_gregorian_date returns valid when the value is a year with no month or day."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/utv_first/test_gregorian.py",
+          "symbol": "TestValidateGregorianDate",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/use-case.json",
+          "entityId": "validate-utv-json"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "separate-validity-checks"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_gregorian.py",
+          "symbol": "TestValidateGregorianDate"
+        }
+      ]
+    }
+  ]
+}

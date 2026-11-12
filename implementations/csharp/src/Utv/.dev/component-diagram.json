@@ -1,0 +1,109 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "Utv library component diagram",
+  "folder": "implementations/csharp/src/Utv",
+  "description": "The Utv assembly: the JSON layer in this folder, the typed layer on top of it, and the internals both use. The structural schema is embedded from the repository; zone rules come from the caller.",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/Utv.csproj",
+      "symbol": "EmbeddedResource"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+      "symbol": "Typed"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+      "symbol": "UtvValidator.ValidateStructural"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+      "symbol": "ZoneRules.Load"
+    }
+  ],
+  "components": [
+    {
+      "id": "utv",
+      "name": "JSON layer and validation",
+      "responsibility": "UtvValidator and GregorianCivil (0.1), Build, Iso, TextForm, Calendar, Ranges, Zones, ZoneRules and Interop (0.2), all on UTV JSON as JsonElement, answering with UtvResult.",
+      "folder": "implementations/csharp/src/Utv"
+    },
+    {
+      "id": "typed",
+      "name": "Typed layer",
+      "responsibility": "One immutable type per everyday value, Outcome<T>, typed policies and TemporalContext (0.3).",
+      "folder": "implementations/csharp/src/Utv/Typed",
+      "diagram": "implementations/csharp/src/Utv/Typed/.dev/component-diagram.json"
+    },
+    {
+      "id": "internal",
+      "name": "Internals",
+      "responsibility": "Strict JSON reading, the schema interpreter, and the helpers every everyday operation shares.",
+      "folder": "implementations/csharp/src/Utv/Internal",
+      "diagram": "implementations/csharp/src/Utv/Internal/.dev/component-diagram.json"
+    },
+    {
+      "id": "schema",
+      "name": "UTV 1.0 structural schema",
+      "responsibility": "schema/utv-1.0.schema.json, linked into the assembly as an embedded resource.",
+      "folder": "schema"
+    },
+    {
+      "id": "zone-rules",
+      "name": "Zone-rule bundle",
+      "responsibility": "Rule data in the format of conformance/rules/demo-zones.json, chosen and loaded by the caller (ZoneRules.Load or ZoneRules.Parse).",
+      "external": true
+    },
+    {
+      "id": "bcl",
+      "name": ".NET 8 base class library",
+      "responsibility": "System.Text.Json, System.Numerics.BigInteger, System.Text.RegularExpressions, and the native date and time types the interop converts.",
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "utv",
+      "to": "typed",
+      "kind": "contains",
+      "description": "Typed/ is part of the same assembly and namespace."
+    },
+    {
+      "from": "utv",
+      "to": "internal",
+      "kind": "contains",
+      "description": "Internal/ is part of the same assembly."
+    },
+    {
+      "from": "typed",
+      "to": "utv",
+      "kind": "depends-on",
+      "description": "Every typed operation calls a JSON-layer function."
+    },
+    {
+      "from": "utv",
+      "to": "internal",
+      "kind": "depends-on",
+      "description": "Validation runs on StrictJson and SchemaInterpreter; the everyday operations read and write JSON through Values."
+    },
+    {
+      "from": "internal",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "The embedded schema is read on first use."
+    },
+    {
+      "from": "utv",
+      "to": "zone-rules",
+      "kind": "depends-on",
+      "description": "Zones.Resolve and Zones.ToZone use only the ZoneRules the caller passes; ZoneRules.Load reads the path the caller gives."
+    },
+    {
+      "from": "utv",
+      "to": "bcl",
+      "kind": "depends-on",
+      "description": "JsonElement for values, BigInteger for years and ticks, and DateOnly, TimeOnly, DateTime, DateTimeOffset and TimeSpan for interop."
+    }
+  ]
+}

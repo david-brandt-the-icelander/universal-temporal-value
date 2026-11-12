@@ -1,0 +1,44 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Tool backlog",
+  "folder": "tools",
+  "entities": [
+    {
+      "id": "side-by-side-missing-tasks-pass",
+      "title": "Fail the side-by-side check when a library has not marked a task",
+      "summary": "Every library must mark every task, but side_by_side.py renders a missing task as a Missing section instead of failing.",
+      "type": "debt",
+      "compromise": "render collects the missing language:task pairs and appends them to the page; --check only compares the page with what render produces.",
+      "cost": "A library can drop a task marker, the page can be regenerated with a Missing section, and CI passes; the requirement that every library marks every task is not checked by anything.",
+      "acceptanceCriteria": [
+        "python3 tools/side_by_side.py --check fails, naming the language and the task, when any of the five libraries has not marked one of the tasks in SECTIONS."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "tools/side_by_side.py",
+        "description": "The missing list in render, against docs/library-api.md §7: \"Every library marks every task\"."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "render"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "7. Examples (all five languages)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "The requirement it would enforce."
+        }
+      ]
+    }
+  ]
+}

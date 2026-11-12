@@ -1,0 +1,47 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "TypeScript library",
+  "folder": "implementations/typescript",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "TypeScript library (@utv/core)",
+      "summary": "The TypeScript implementation of UTV, version 0.3.0: typed values and outcomes over the JSON-level everyday API, with the text form, validation and native interop.",
+      "purpose": "Holds one npm project: the library source in src/, its tests and example tests in test/, and the package files (package.json, package-lock.json, tsconfig.json), with the README and CHANGELOG a person reads first.",
+      "boundaries": [
+        "The contracts it implements (docs/library-api.md, docs/everyday-api.md, docs/text-form.md and the specification) are owned by docs/ and spec/, not here.",
+        "The shared fixtures, examples and demo zone rules are read in place from conformance/ at the repository root, never copied.",
+        "Build output (dist/) and dependencies (node_modules/) are ignored by .gitignore.",
+        "The CHANGELOG is the record of the library's versions."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/package.json",
+          "symbol": "name"
+        },
+        {
+          "path": "implementations/typescript/README.md",
+          "symbol": "Library version"
+        },
+        {
+          "path": "implementations/typescript/.gitignore",
+          "symbol": "dist/"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "shared-conformance-material"
+        },
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "idiomatic-api"
+        }
+      ]
+    }
+  ]
+}

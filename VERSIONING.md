@@ -55,4 +55,4 @@ The design went through four internal drafts before publication. They were label
 - Writers MUST NOT emit `utv/2`, `utv/3` or `utv/4`. A bare major identifier such as `utv/1` is also malformed: identifiers always carry `MAJOR.MINOR`.
 - Readers MUST treat them as unknown identifiers. The structural schema rejects them.
 
-`docs/design-history.md` summarizes what each draft changed and why.
+The design history in [`.dev/decisions.json`](.dev/decisions.json) records what each draft changed and why.

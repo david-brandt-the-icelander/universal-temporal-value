@@ -1,0 +1,51 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "TypeScript example fixture verification",
+  "folder": "implementations/typescript/test/examples",
+  "entities": [
+    {
+      "id": "demo-zone-rules-fixture",
+      "title": "The shared zone-rule fixture",
+      "summary": "demoZoneRules() loads the pinned demo bundle with its three zones; every UTV zone example uses it.",
+      "subject": [
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        }
+      ],
+      "criteria": [
+        "demoZoneRules() returns a ZoneRules with America/New_York, Europe/Paris and Atlantic/Reykjavik, in the file's order.",
+        "It reads conformance/rules/demo-zones.json from the repository root, not a copy and not the host's tz database."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/fixtures.test.ts",
+          "symbol": "demoZoneRules > contains the three demo zones when loaded",
+          "command": "npm test",
+          "description": "Checks the fixture demoZoneRules() in test/examples/fixtures.ts."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/fixtures.ts",
+          "symbol": "demoZoneRules"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    }
+  ]
+}

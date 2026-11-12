@@ -1,0 +1,218 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/limitations.schema.json",
+  "kind": "limitations",
+  "title": "Rust library limitations",
+  "folder": "implementations/rust",
+  "entities": [
+    {
+      "id": "everyday-subset",
+      "title": "Only the everyday subset is evaluated",
+      "summary": "Operations handle civil dates, year-months, times and date-times, POSIX instants, calendar, POSIX-second and SI-second amounts, and start-end intervals of dates or instants. The other 22 kinds, and other forms, validate structurally but are not evaluated.",
+      "impact": "A recurrence, an uncertain date, a set or any other kind gets unsupported (unsupported-operand) from every operation and from from_json; the README's Not implemented section lists recurrences, registries and the rest.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "Not implemented"
+        },
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "read_civil"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "read_interval"
+        },
+        {
+          "path": "implementations/rust/src/typed/value.rs",
+          "symbol": "no_value"
+        }
+      ]
+    },
+    {
+      "id": "gregorian-only",
+      "title": "Only the proleptic Gregorian calendar",
+      "summary": "Civil values in any other calendar or chronology are not evaluated.",
+      "impact": "Operations and validate_gregorian_civil answer unsupported (unsupported-calendar).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "read_civil"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "check_civil"
+        }
+      ]
+    },
+    {
+      "id": "no-leap-seconds",
+      "title": "No leap-second table",
+      "summary": "Second 60 and SI seconds on the POSIX timeline need a leap-second table, which the library doesn't have.",
+      "impact": "Second 60 is unsupported (leap-second) in JSON, text and constructors; adding ElapsedSeconds to an instant is unsupported (needs-leap-seconds).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "read_civil"
+        },
+        {
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "check_time"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::add_elapsed"
+        }
+      ]
+    },
+    {
+      "id": "posix-instants-only",
+      "title": "Only POSIX instants given by ticks",
+      "summary": "Instants must be on the unix-posix timescale and written with ticks (and an optional subTick).",
+      "impact": "Other timescales (TAI, GPS, TT, ...) are unsupported (unsupported-operand); an instant given by coordinate is unsupported (unsupported-form).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "read_instant"
+        }
+      ]
+    },
+    {
+      "id": "no-result-manifest",
+      "title": "Results carry no manifest, loss report or assumptions",
+      "summary": "A UtvResult has operation, status, diagnostics and candidates only; the README lists result manifests as not implemented.",
+      "impact": "A result doesn't say which rule data produced it, what a conversion lost beyond its diagnostics, or what it assumed; the caller has to keep track of the Rules it passed.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "UtvResult"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "UtvResult::to_json"
+        },
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "Not implemented"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-result-1-0"
+        },
+        {
+          "relation": "relates-to",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "explicit-versioned-rules",
+          "description": "Rules are explicit inputs, but results don't name them."
+        }
+      ]
+    },
+    {
+      "id": "i128-range",
+      "title": "Numbers are bounded by i128",
+      "summary": "Years, day counts and the parts of rationals are i128; the builders take i64 years and the typed amounts i64 components.",
+      "impact": "Beyond the range the JSON layer and the constructors answer unsupported (implementation-limit); a typed total operation whose result leaves the range panics.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "range_err"
+        },
+        {
+          "path": "implementations/rust/src/typed/outcome.rs",
+          "symbol": "total"
+        },
+        {
+          "path": "implementations/rust/src/build.rs",
+          "symbol": "date"
+        },
+        {
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "Period"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "arbitrary-precision"
+        }
+      ]
+    },
+    {
+      "id": "rule-window",
+      "title": "Zone rules are never extrapolated",
+      "summary": "Only zones the bundle lists, and times within its validity window, resolve; resolve also needs a day of margin on each side.",
+      "impact": "Other zones are unsupported (unknown-zone); other times are unsupported (outside-rule-window). The demo bundle covers New York, Paris and Reykjavik in 2026 and 2027 only.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "to_zone"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "Rules::zone"
+        }
+      ],
+      "workaround": "Load a rule bundle that covers the zones and years needed."
+    },
+    {
+      "id": "iso-profile",
+      "title": "Only the ISO 8601 extended profile",
+      "summary": "Text is read in the extended format of docs/everyday-api.md only.",
+      "impact": "Year-only text, week and ordinal dates, basic format and comma fractions are unsupported (unsupported-form); 24:00 is unsupported (end-of-day); critical or other annotations and Z[zone] are unsupported (unsupported-annotation); EDTF qualifiers and decimal period components are unsupported (unsupported-form).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "annotation"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "point"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "period"
+        }
+      ]
+    },
+    {
+      "id": "repository-build-only",
+      "title": "Builds only inside the repository",
+      "summary": "The structural schema is compiled in from ../../../schema/utv-1.0.schema.json relative to src/lib.rs, outside the package's own folder.",
+      "impact": "The crate can't be built from implementations/rust alone, for example as a packaged copy; it needs the repository around it.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "SCHEMA_TEXT"
+        },
+        {
+          "path": "implementations/rust/Cargo.toml",
+          "symbol": "package"
+        }
+      ]
+    }
+  ]
+}

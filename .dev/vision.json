@@ -1,0 +1,49 @@
+{
+  "$schema": "../Meta/Agents/Knowledge/schemas/vision.schema.json",
+  "kind": "vision",
+  "title": "Why UTV exists",
+  "folder": ".",
+  "entities": [
+    {
+      "id": "tell-the-truth-about-time",
+      "title": "Never invent knowledge about time",
+      "summary": "A single, serializable value model whose types encode what is actually known about a moment, a span or a schedule, and that says so when a question has no single answer.",
+      "problem": "Most date/time libraries are built on simplifications that are all false: a day has 86,400 seconds, every local time happens exactly once, an offset identifies a zone, adding and then subtracting a month gets you back, next year's zone rules are known, a timestamp's digits are its accuracy, clocks agree and never go backwards, every date is Gregorian. Standard types such as DateTime, Instant or timestamp enforce one of these quietly, and the bugs are well documented: meetings that move after a DST rule change, jobs that run twice or never on a transition night, drifting month-end arithmetic, logs that sort into an impossible order, historical dates silently converted to another calendar.",
+      "audience": [
+        "Programmers who handle dates and times in their applications, through a UTV library in their language.",
+        "Implementers of temporal engines, who build against the specification and its conformance material."
+      ],
+      "outcome": "UTV aims to be correct as far as possible, not merely convenient. Answers can be plural or absent (none, unique, multiple) and none of them is an error; unknown is not unsupported is not invalid; different kinds of time are different types with no silent conversions; intent such as \"09:00 every Tuesday in Paris\" is preserved; rules are explicit, versioned data and nothing comes from the host's clock, zone, locale or network; precision is not accuracy; and every conversion reports what it lost.",
+      "nonGoals": [
+        "Being an ISO or IETF standard.",
+        "Being an event database, geometry database, astronomical ephemeris, holiday registry or physical synchronization system: UTV binds to independently versioned definitions of those.",
+        "Literal completeness: new calendars, theories and conventions are handled by a typed, versioned extension and registry contract.",
+        "Replacing a standard library's simplicity: its value is in being simple, and the simplifications are the simple part."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "README.md",
+        "description": "Why this exists, and What \"correct\" means here; spec/SPECIFICATION.md §1, Objectives and anti-objectives."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "README.md",
+          "symbol": "Why this exists"
+        },
+        {
+          "path": "README.md",
+          "symbol": "What \"correct\" means here"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§1 Objectives and anti-objectives"
+        },
+        {
+          "path": "docs/rationale.md",
+          "symbol": "1. The problem"
+        }
+      ]
+    }
+  ]
+}

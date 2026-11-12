@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "TypeScript library tests",
+  "folder": "implementations/typescript/test",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "TypeScript library tests",
+      "summary": "The node:test suites of @utv/core: the shared fixtures, validation, the JSON layer, the typed layer and native interop, with the example suites under examples/.",
+      "purpose": "Checks the library without a browser: npm test compiles every *.test.ts into dist/test/ with tsc, then node --test runs them. Each suite reads the shared material from the repository root through a URL four levels above its compiled file.",
+      "boundaries": [
+        "What each suite checks is recorded in verification.json here and in examples/.",
+        "shim.d.ts declares node:test and node:assert/strict so the project needs no @types/node.",
+        "The fixtures themselves belong to conformance/; this folder only runs them."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/package.json",
+          "symbol": "scripts"
+        },
+        {
+          "path": "implementations/typescript/test/shim.d.ts",
+          "symbol": "node:test"
+        },
+        {
+          "path": "implementations/typescript/test/everyday.test.ts",
+          "symbol": "repo"
+        }
+      ]
+    }
+  ]
+}

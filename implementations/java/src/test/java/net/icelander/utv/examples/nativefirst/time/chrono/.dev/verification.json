@@ -1,0 +1,44 @@
+{
+  "$schema": "../../../../../../../../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Native-first examples: java.time.chrono verification",
+  "folder": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/chrono",
+  "entities": [
+    {
+      "id": "hijrahdate",
+      "title": "HijrahDate",
+      "summary": "HijrahDate, compared with UTV's handling of another calendar.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        }
+      ],
+      "criteria": [
+        "HijrahDate.of creates a date that is the same day as a Gregorian LocalDate; UTV keeps another calendar's fields as written, and GregorianCivil.validate answers unsupported."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/chrono/HijrahDateTest.java",
+          "symbol": "HijrahDateTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        }
+      ],
+      "details": "java.time has no Hebrew calendar; Hijrah (Umm al-Qura, from tables bundled with the JDK) stands in for the catalog's Hebrew date.",
+      "evidenceStatus": "source-verified"
+    }
+  ]
+}

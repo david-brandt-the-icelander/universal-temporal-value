@@ -1,0 +1,59 @@
+{
+  "$schema": "../../../../../../../../../Meta/Agents/Knowledge/schemas/glossary.schema.json",
+  "kind": "glossary",
+  "title": "net.icelander.utv glossary",
+  "folder": "implementations/java/src/main/java/net/icelander/utv",
+  "entities": [
+    {
+      "id": "native-result",
+      "title": "NativeResult",
+      "summary": "What a JSON-layer JavaTime adapter returns when converting a UTV value to java.time: a status, the value when unique, whether the conversion was lossy, and diagnostics.",
+      "notToBeConfusedWith": [
+        "Outcome, which the typed to… methods return; they turn a NativeResult into an Outcome with Typed.fromNative.",
+        "UtvResult, the utv-result/1.0 envelope of every other JSON-layer operation."
+      ],
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/NativeResult.java",
+          "symbol": "NativeResult"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.fromNative"
+        }
+      ]
+    },
+    {
+      "id": "as",
+      "title": "JavaTime.As",
+      "summary": "The caller's intent for a java.time value with more than one reading: INSTANT, OFFSET_DATE_TIME or LOCAL_DATE_TIME.",
+      "notToBeConfusedWith": [
+        "The typed layer, where the target type names the intent instead (Instant.from vs FixedOffsetDateTime.from)."
+      ],
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.As"
+        }
+      ]
+    },
+    {
+      "id": "fail",
+      "title": "Fail",
+      "summary": "The package-private exception that carries a non-success outcome (status and diagnostics) out of deep decoding code; every public operation catches it and returns it as a result.",
+      "notToBeConfusedWith": [
+        "OutcomeException, which is public and thrown only by Outcome.single."
+      ],
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Fail.java",
+          "symbol": "Fail"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Fail.java",
+          "symbol": "Fail.run"
+        }
+      ]
+    }
+  ]
+}

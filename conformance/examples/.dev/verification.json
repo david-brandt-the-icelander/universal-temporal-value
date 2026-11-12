@@ -1,0 +1,48 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Structural example verification",
+  "folder": "conformance/examples",
+  "entities": [
+    {
+      "id": "examples-agree-with-schema",
+      "title": "The examples agree with the schema",
+      "summary": "Every valid example passes the structural schema with the wire identifier utv/1.0, and every invalid example fails it.",
+      "criteria": [
+        "Each value in valid.json passes schema/utv-1.0.schema.json.",
+        "Each value in valid.json has schema utv/1.0.",
+        "Each value in invalid-structural.json is rejected by the schema.",
+        "Neither file has a duplicate key."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "tools/validate.py",
+          "symbol": "check_examples",
+          "command": "python3 tools/validate.py"
+        },
+        {
+          "type": "automated",
+          "path": "tools/validate.py",
+          "symbol": "load_json",
+          "command": "python3 tools/validate.py",
+          "description": "Rejects duplicate keys while reading."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "tools/validate.py",
+          "symbol": "check_examples"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "structural-examples"
+        }
+      ]
+    }
+  ]
+}

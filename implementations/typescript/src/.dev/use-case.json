@@ -1,0 +1,1378 @@
+{
+  "$schema": "../../../../Meta/Agents/Skills/describe-use-case/schema.json",
+  "kind": "use-case",
+  "title": "TypeScript library use cases",
+  "folder": "implementations/typescript/src",
+  "description": "What an application developer does with @utv/core, step by step: the goals every UTV library serves, as this library's code implements them. intent-required (library-api §5) has no branch here: DateIntent is a required argument.",
+  "sources": [
+    {
+      "path": "implementations/typescript/src/index.ts",
+      "symbol": "export"
+    }
+  ],
+  "entities": [
+    {
+      "id": "create-a-date",
+      "name": "Create a date, and learn why it can't exist",
+      "description": "A developer makes a calendar date from fields or from text, and gets told why when the date doesn't exist (tasks a-date and feb-30).",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.of"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.tryOf"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.parse"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Hold a proleptic Gregorian date that is known to exist, or know exactly why it doesn't.",
+      "preconditions": [
+        "The application imports CivilDate from @utv/core."
+      ],
+      "postconditions": [
+        "The application holds an immutable CivilDate whose text, JSON, weekday and ISO week are available, or an Outcome (or RangeError) naming the reason the date can't exist.",
+        "Nothing was rolled over: 30 February never becomes 2 March."
+      ],
+      "flow": [
+        {
+          "id": "ask",
+          "actor": "Application developer",
+          "action": "Calls CivilDate.of(year, month, day), CivilDate.tryOf with the same fields, or CivilDate.parse(text).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "CivilDate.of"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "CivilDate.tryOf"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "CivilDate.parse"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "build",
+          "actor": "@utv/core",
+          "action": "Builds the date's UTV JSON (or parses the text with parseText) and reads it back through the checked reader: month 1–12, day within that month of that year, year a bigint.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/builders.ts",
+              "symbol": "date"
+            },
+            {
+              "path": "implementations/typescript/src/internal.ts",
+              "symbol": "readCivil"
+            },
+            {
+              "path": "implementations/typescript/src/text.ts",
+              "symbol": "parseText"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "@utv/core",
+          "action": "Returns the CivilDate (of), or Unique with it (tryOf, parse).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "orThrow"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "attempt"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "use",
+          "actor": "Application developer",
+          "action": "Uses the date: prints it (2026-11-05), reads dayOfWeek and isoWeek, or stores toJSON().",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "CivilDate.dayOfWeek"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "TemporalValue.toJSON"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "TemporalValue.toString"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "build",
+          "condition": "The day doesn't exist in that month (30 February 2026, 29 February 1900).",
+          "outcome": "of throws a RangeError ending in (day-out-of-range); tryOf and parse return invalid (day-out-of-range).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/internal.ts",
+              "symbol": "readCivil"
+            },
+            {
+              "path": "implementations/typescript/src/iso.ts",
+              "symbol": "parseIso"
+            }
+          ]
+        },
+        {
+          "atStep": "build",
+          "condition": "The month is outside 1–12.",
+          "outcome": "of throws a RangeError (month-out-of-range); tryOf returns invalid (month-out-of-range).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/internal.ts",
+              "symbol": "readCivil"
+            }
+          ]
+        },
+        {
+          "atStep": "build",
+          "condition": "The year is a number that is not a safe integer.",
+          "outcome": "of throws a RangeError (field-out-of-range); tryOf returns invalid.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "integer"
+            }
+          ]
+        },
+        {
+          "atStep": "build",
+          "condition": "The text is not a date in the grammar (2026-1-05, lower-case t).",
+          "outcome": "parse returns invalid (syntax).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/iso.ts",
+              "symbol": "parseIso"
+            }
+          ]
+        },
+        {
+          "atStep": "build",
+          "condition": "The text is a valid ISO form this profile doesn't handle (a week date or an ordinal date).",
+          "outcome": "parse returns unsupported (unsupported-form).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/iso.ts",
+              "symbol": "parseIso"
+            }
+          ]
+        },
+        {
+          "atStep": "build",
+          "condition": "The text describes another type (a date-time, an instant).",
+          "outcome": "CivilDate.parse returns invalid (kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "typedParse"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "add-months",
+      "name": "Add months to a date",
+      "description": "A developer adds months (or years, or a period) to a date where the day may be missing from the target month (task month-end).",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.addMonths"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Get the same day some months later, or be told it doesn't exist and choose what to do.",
+      "preconditions": [
+        "The application holds a CivilDate (see create-a-date)."
+      ],
+      "postconditions": [
+        "The application holds the later CivilDate, or an Outcome of none (month-end) it must handle before using a value.",
+        "A clamped date exists only where the developer passed MonthEnd.Constrain."
+      ],
+      "flow": [
+        {
+          "id": "ask",
+          "actor": "Application developer",
+          "action": "Calls date.addMonths(n), date.addYears(n) or date.add(period).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "CivilDate.addMonths"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "CivilDate.addYears"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "CivilDate.add"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "add",
+          "actor": "@utv/core",
+          "action": "Adds 12·years + months through the JSON layer's add; when the day is missing from the target month, the default policy reject answers none; then adds weeks and days.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/ops.ts",
+              "symbol": "add"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "@utv/core",
+          "action": "Returns Outcome<CivilDate>: Unique with the new date.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/outcome.ts",
+              "symbol": "outcomeOf"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "handle",
+          "actor": "Application developer",
+          "action": "Switches on the outcome's status (with assertNever for exhaustiveness), or calls single() or uniqueOr(fallback).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/outcome.ts",
+              "symbol": "assertNever"
+            },
+            {
+              "path": "implementations/typescript/src/outcome.ts",
+              "symbol": "OutcomeBase.single"
+            },
+            {
+              "path": "implementations/typescript/src/outcome.ts",
+              "symbol": "OutcomeBase.uniqueOr"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "add",
+          "condition": "The day is missing from the target month (31 January + 1 month, 29 February + 1 year).",
+          "outcome": "None with diagnostic month-end; String(outcome) is \"none (month-end)\" and single() throws OutcomeError.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/ops.ts",
+              "symbol": "add"
+            },
+            {
+              "path": "implementations/typescript/src/outcome.ts",
+              "symbol": "OutcomeError"
+            }
+          ]
+        },
+        {
+          "atStep": "ask",
+          "condition": "The developer passes MonthEnd.Constrain to addMonths or addYears.",
+          "outcome": "A plain CivilDate, clamped to the month's last day (2026-02-28); no Outcome to handle.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "CivilDate.addMonths"
+            },
+            {
+              "path": "implementations/typescript/src/ops.ts",
+              "symbol": "add"
+            }
+          ]
+        },
+        {
+          "atStep": "ask",
+          "condition": "The developer passes MonthEnd.Reject (or any other value) to the total overload.",
+          "outcome": "A RangeError: the rejecting form is the overload without a policy.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "constrainOnly"
+            }
+          ]
+        },
+        {
+          "atStep": "add",
+          "condition": "The period passed to add has hours, minutes or seconds.",
+          "outcome": "Invalid (kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/ops.ts",
+              "symbol": "add"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "resolve-a-zoned-time",
+      "name": "Resolve a wall time in a zone to an instant",
+      "description": "A developer turns a local date and time in an IANA zone into an instant under explicit zone rules, including the DST gap and overlap (tasks meeting-in-paris, dst-gap, dst-overlap).",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "ZonedIntent.resolve"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "TemporalContext.with"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Know which instant a wall time in a zone names, or learn that it names none or several.",
+      "preconditions": [
+        "The application has a rule bundle in the format of conformance/rules/demo-zones.json, as a file or as text.",
+        "The application imports CivilDateTime, ZoneRules and TemporalContext from @utv/core."
+      ],
+      "postconditions": [
+        "The application holds an Outcome<Instant>: one instant, both instants of an overlap in ascending order, none for a gap, or the reason the rules can't answer.",
+        "Nothing was read from the host's tz database."
+      ],
+      "flow": [
+        {
+          "id": "load",
+          "actor": "Application developer",
+          "action": "Loads the rules with ZoneRules.load(path) (or ZoneRules.parse(text)) and wraps them with TemporalContext.with(rules).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/zones.ts",
+              "symbol": "ZoneRules.load"
+            },
+            {
+              "path": "implementations/typescript/src/context.ts",
+              "symbol": "TemporalContext.with"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "intend",
+          "actor": "Application developer",
+          "action": "Makes the wall time with CivilDateTime.of(…) and binds it to the zone with inZone(zoneId), or parses text such as 2027-06-01T09:00[Europe/Paris].",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "CivilDateTime.of"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "CivilDateTime.inZone"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "ZonedIntent.parse"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "resolve",
+          "actor": "Application developer",
+          "action": "Calls zoned.resolve(ctx, policy?) or ctx.resolve(zoned, policy?).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "ZonedIntent.resolve"
+            },
+            {
+              "path": "implementations/typescript/src/context.ts",
+              "symbol": "TemporalContext.resolve"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "check",
+          "actor": "@utv/core",
+          "action": "Checks the zone is in the rules and the wall time is at least a day inside the rules' window, and picks the policy: the argument, else the value's own, else reject for gap and overlap.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/zones.ts",
+              "symbol": "resolve"
+            },
+            {
+              "path": "implementations/typescript/src/zones.ts",
+              "symbol": "ZoneRules.covers"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "candidates",
+          "actor": "@utv/core",
+          "action": "Finds every instant L − o, for each offset o in force within a day, at which the zone's offset is o; keeps only the asserted offset's candidate if one was written.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/zones.ts",
+              "symbol": "candidatesFor"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "@utv/core",
+          "action": "One candidate: Unique with the instant, and the rules' ruleSet in the result's manifest.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/zones.ts",
+              "symbol": "resolve"
+            },
+            {
+              "path": "implementations/typescript/src/outcome.ts",
+              "symbol": "outcomeOf"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "handle",
+          "actor": "Application developer",
+          "action": "Switches on the outcome's status.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/outcome.ts",
+              "symbol": "assertNever"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "load",
+          "condition": "The bundle is malformed.",
+          "outcome": "ZoneRules.load throws RulesError.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/zones.ts",
+              "symbol": "loadRules"
+            }
+          ]
+        },
+        {
+          "atStep": "intend",
+          "condition": "The zone id doesn't look like an IANA name.",
+          "outcome": "inZone throws a RangeError.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "CivilDateTime.inZone"
+            }
+          ]
+        },
+        {
+          "atStep": "check",
+          "condition": "The zone isn't in the rules (Asia/Tokyo in the demo bundle).",
+          "outcome": "Unsupported (unknown-zone).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/zones.ts",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "check",
+          "condition": "The date is outside the rules' window, or within a day of its edges (2030 in the demo bundle).",
+          "outcome": "Unsupported (outside-rule-window): never extrapolated.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/zones.ts",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "check",
+          "condition": "The policy names a value the library doesn't know.",
+          "outcome": "Unsupported (unsupported-policy).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/zones.ts",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "candidates",
+          "condition": "An asserted offset matches no candidate (+01:00 in New York in July).",
+          "outcome": "Invalid (offset-mismatch), before any policy applies.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/zones.ts",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "No candidate: the wall time falls in a gap (02:30 on 8 March 2026 in New York).",
+          "outcome": "None (gap); with Gap.ShiftForward, Unique with the instant shifted by the gap (03:30 EDT).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/zones.ts",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "Two candidates: the wall time falls in an overlap (01:30 on 1 November 2026 in New York).",
+          "outcome": "Multiple with both instants ascending and diagnostic ambiguous; Overlap.All gives both without the diagnostic; Overlap.Earliest or Latest gives Unique.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/zones.ts",
+              "symbol": "resolve"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "compare-values",
+      "name": "Order two values",
+      "description": "A developer asks which of two values comes first, including two zoned wall times, whose order needs zone rules and may depend on a DST overlap (task compare-dates).",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Ordered.compare"
+        },
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "TemporalContext.compare"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Know whether one value comes before, at the same time as, or after another, or that the order isn't decided.",
+      "preconditions": [
+        "The application holds two values of one ordered type, or two ZonedIntent or Instant values and a TemporalContext."
+      ],
+      "postconditions": [
+        "The application holds -1, 0 or 1 (or true or false), or an Outcome<Ordering> listing each possible order."
+      ],
+      "flow": [
+        {
+          "id": "ask",
+          "actor": "Application developer",
+          "action": "Calls a.compare(b), a.isBefore(b) or a.isAfter(b) on dates, year-months, times, date-times, fixed-offset date-times or instants.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "Ordered.compare"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "Ordered.isBefore"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "order",
+          "actor": "@utv/core",
+          "action": "Compares through the JSON layer: civil fields in order with a missing second as 0, instants numerically, fixed-offset date-times by the instant they name.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/ops.ts",
+              "symbol": "compare"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "@utv/core",
+          "action": "Returns -1, 0 or 1.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "Ordered.compare"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "ask",
+          "condition": "Either value is a ZonedIntent, which has no compare.",
+          "outcome": "The developer calls ctx.compare(a, b); each zoned side is resolved strictly and every pair of candidates compared, giving Unique with one Ordering or Multiple with each possible order.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/context.ts",
+              "symbol": "TemporalContext.compare"
+            }
+          ]
+        },
+        {
+          "atStep": "ask",
+          "condition": "Both zoned wall times fall in one overlap (01:30 and 01:45 on 1 November 2026 in New York).",
+          "outcome": "ctx.compare gives Multiple (before, after) with an ambiguous diagnostic from each side.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/context.ts",
+              "symbol": "TemporalContext.compare"
+            }
+          ]
+        },
+        {
+          "atStep": "ask",
+          "condition": "A zoned side falls in a gap, or its zone or date is outside the rules.",
+          "outcome": "ctx.compare gives that side's outcome: none (gap), unsupported (unknown-zone or outside-rule-window).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/context.ts",
+              "symbol": "TemporalContext.compare"
+            }
+          ]
+        },
+        {
+          "atStep": "order",
+          "condition": "In the JSON layer, either value is in a named zone.",
+          "outcome": "compare gives unsupported (needs-zone-rules): resolve first.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/ops.ts",
+              "symbol": "compare"
+            }
+          ]
+        },
+        {
+          "atStep": "order",
+          "condition": "In the JSON layer, the values are of different kinds or forms (an instant against a +00:00 date-time).",
+          "outcome": "compare gives unsupported (unsupported-operand).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/ops.ts",
+              "symbol": "compare"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "convert-native",
+      "name": "Bring a native date in and take it out again",
+      "description": "A developer takes a clock reading or a Date into UTV and converts an instant back to a Date, with the intent named and any loss reported (tasks now and round-trip).",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.fromUnixMilliseconds"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.toDate"
+        },
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromDate"
+        },
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "toDate"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Use a JavaScript Date or clock reading with UTV without a hidden time zone or a silent loss.",
+      "preconditions": [
+        "The application has a Date or a reading of Date.now(): the library never reads the clock itself."
+      ],
+      "postconditions": [
+        "The application holds an Instant (or another UTV value of the intent it named), and back a Date with any lost precision reported.",
+        "Nothing was interpreted in the host's local zone."
+      ],
+      "flow": [
+        {
+          "id": "read",
+          "actor": "Application developer",
+          "action": "Reads the clock itself (Date.now()) or has a Date.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "Instant.fromUnixMilliseconds"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "bring-in",
+          "actor": "Application developer",
+          "action": "Calls Instant.fromUnixMilliseconds(reading) or Instant.fromDate(date); in the JSON layer, fromDate(date, intent) with \"instant\", { offsetSeconds } or { zone, rules }.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "Instant.fromUnixMilliseconds"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "Instant.fromDate"
+            },
+            {
+              "path": "implementations/typescript/src/native.ts",
+              "symbol": "fromDate"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "convert-in",
+          "actor": "@utv/core",
+          "action": "Converts the millisecond count exactly to rational seconds; with an offset or a zone, converts through toOffset or toZone.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/native.ts",
+              "symbol": "fromDate"
+            },
+            {
+              "path": "implementations/typescript/src/native.ts",
+              "symbol": "fromEpochMilliseconds"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "take-out",
+          "actor": "Application developer",
+          "action": "Calls instant.toDate(), or toDate(json) in the JSON layer.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "Instant.toDate"
+            },
+            {
+              "path": "implementations/typescript/src/native.ts",
+              "symbol": "toDate"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "convert-out",
+          "actor": "@utv/core",
+          "action": "Floors to whole milliseconds and builds the Date, reporting what was lost.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/native.ts",
+              "symbol": "toDate"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "@utv/core",
+          "action": "Returns Unique with the Date (Outcome<Date>, or a NativeResult in the JSON layer).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "Instant.toDate"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "bring-in",
+          "condition": "The JSON layer is asked for the Date's local wall time (intent \"local\", or any intent other than the three named ones).",
+          "outcome": "Unsupported (local-zone): the host's zone is hidden input; name a zone or an offset instead.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/native.ts",
+              "symbol": "fromDate"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-in",
+          "condition": "The Date is an Invalid Date.",
+          "outcome": "Instant.fromDate throws a RangeError (invalid-date); fromDate returns invalid (invalid-date).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/native.ts",
+              "symbol": "fromDate"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-in",
+          "condition": "The millisecond reading is a number that isn't a safe integer.",
+          "outcome": "Instant.fromUnixMilliseconds throws a RangeError (not-an-integer).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/native.ts",
+              "symbol": "fromEpochMilliseconds"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-in",
+          "condition": "The zone named in the intent isn't in the rules, or the instant is outside them.",
+          "outcome": "Unsupported (unknown-zone or outside-rule-window).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/zones.ts",
+              "symbol": "toZone"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-out",
+          "condition": "The instant has digits below a millisecond.",
+          "outcome": "Unique with the floored Date and a precision-loss warning; the JSON layer's loss is information-losing with field subTick.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/native.ts",
+              "symbol": "toDate"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-out",
+          "condition": "The instant is beyond the ±8.64e15 ms a Date can hold.",
+          "outcome": "Unsupported (out-of-native-range).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/native.ts",
+              "symbol": "toDate"
+            }
+          ]
+        },
+        {
+          "atStep": "take-out",
+          "condition": "The JSON layer's toDate gets a zoned date-time, or an unzoned one.",
+          "outcome": "Unsupported (needs-zone-rules: resolve it first; or local-zone: it would need the host's zone).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/native.ts",
+              "symbol": "toDate"
+            }
+          ]
+        },
+        {
+          "atStep": "take-out",
+          "condition": "The JSON layer's toDate gets a fixed-offset date-time.",
+          "outcome": "Unique with the Date and a zone-dropped warning: a Date keeps only the instant.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/native.ts",
+              "symbol": "toDate"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "read-and-write-text",
+      "name": "Read and write values as text",
+      "description": "A developer parses ISO 8601 / UTV text into the value it describes and writes values back as text (task parse-offsets).",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "parseText"
+        },
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "formatText"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Turn text into the right kind of value, and values into text that reads back the same.",
+      "preconditions": [
+        "The application has text in the UTV text form, or a typed value to write."
+      ],
+      "postconditions": [
+        "The application holds the typed value the text describes (an Instant for Z, a FixedOffsetDateTime for +00:00, a ZonedIntent for [Area/Location], a Period, an Interval), or the reason the text can't be read.",
+        "Text written by toString parses back to an equal value wherever the value has a text form."
+      ],
+      "flow": [
+        {
+          "id": "parse",
+          "actor": "Application developer",
+          "action": "Calls parse(text), or T.parse(text) when one type is expected.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "parse"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "CivilDate.parse"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "read",
+          "actor": "@utv/core",
+          "action": "Reads brackets as an interval, a single slash as an EDTF interval, P… as a period, and anything else as an ISO point, checking every field.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/text.ts",
+              "symbol": "parseText"
+            },
+            {
+              "path": "implementations/typescript/src/iso.ts",
+              "symbol": "parseIso"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "type",
+          "actor": "@utv/core",
+          "action": "Decodes the UTV JSON into its typed class.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "decode"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "write",
+          "actor": "Application developer",
+          "action": "Calls String(value) or value.toString().",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "TemporalValue.toString"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "format",
+          "actor": "@utv/core",
+          "action": "Formats the value's JSON in the text form.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/text.ts",
+              "symbol": "formatText"
+            },
+            {
+              "path": "implementations/typescript/src/iso.ts",
+              "symbol": "formatIso"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "read",
+          "condition": "The text is outside the grammar (next Tuesday, a space instead of T) or a field is out of range.",
+          "outcome": "Invalid (syntax, or the field's code such as day-out-of-range or offset-out-of-range).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/iso.ts",
+              "symbol": "parseIso"
+            }
+          ]
+        },
+        {
+          "atStep": "read",
+          "condition": "Valid notation this profile doesn't handle: a week or ordinal date, basic format, a decimal period, an EDTF qualifier such as 1347~.",
+          "outcome": "Unsupported (unsupported-form).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/iso.ts",
+              "symbol": "parseIso"
+            },
+            {
+              "path": "implementations/typescript/src/text.ts",
+              "symbol": "parseText"
+            }
+          ]
+        },
+        {
+          "atStep": "read",
+          "condition": "Second 60, or 24:00.",
+          "outcome": "Unsupported (leap-second, end-of-day).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/iso.ts",
+              "symbol": "checkTime"
+            }
+          ]
+        },
+        {
+          "atStep": "read",
+          "condition": "An annotation other than one [Area/Location], or a zone after Z.",
+          "outcome": "Unsupported (unsupported-annotation).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/iso.ts",
+              "symbol": "parseIso"
+            }
+          ]
+        },
+        {
+          "atStep": "read",
+          "condition": "An interval whose end is before its start, or whose ends are different kinds.",
+          "outcome": "Invalid (reversed-interval, kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/text.ts",
+              "symbol": "intervalOf"
+            }
+          ]
+        },
+        {
+          "atStep": "read",
+          "condition": "An interval with no point at all, such as (.., ..).",
+          "outcome": "Unsupported (unsupported-form).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/text.ts",
+              "symbol": "intervalOf"
+            }
+          ]
+        },
+        {
+          "atStep": "type",
+          "condition": "T.parse got text of another type.",
+          "outcome": "Invalid (kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "typedParse"
+            }
+          ]
+        },
+        {
+          "atStep": "format",
+          "condition": "The value has no text form (a mixed-sign period).",
+          "outcome": "toString prints the value's JSON text; the JSON layer's formatText gives unsupported (no-text-form).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "TemporalValue.toString"
+            },
+            {
+              "path": "implementations/typescript/src/text.ts",
+              "symbol": "formatText"
+            }
+          ]
+        },
+        {
+          "atStep": "write",
+          "condition": "The value is a PosixSeconds or ElapsedSeconds.",
+          "outcome": "A display string such as 3600.75 s (POSIX), which parse does not read.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "PosixSeconds.toString"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "validate-utv-json",
+      "name": "Validate UTV JSON and read it into typed values",
+      "description": "A developer receives UTV JSON, checks it structurally and semantically, and reads the everyday kinds into typed values (FromJson).",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/structural.ts",
+          "symbol": "validateStructural"
+        },
+        {
+          "path": "implementations/typescript/src/civil.ts",
+          "symbol": "validateSemantic"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "fromJson"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Accept only UTV JSON that is well-formed, of a version this library reads, and meaningful, and work with it as typed values.",
+      "preconditions": [
+        "The application has JSON text or a parsed JSON value that claims to be a UTV value."
+      ],
+      "postconditions": [
+        "The application knows whether the JSON is structurally valid, semantically valid, or of a kind or version this library can't judge, as three separate results.",
+        "For an everyday kind, the application holds the typed value."
+      ],
+      "flow": [
+        {
+          "id": "validate",
+          "actor": "Application developer",
+          "action": "Calls validateStructural(text).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/structural.ts",
+              "symbol": "validateStructural"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "structure",
+          "actor": "@utv/core",
+          "action": "Parses strictly, then checks the envelope, the version, the kind and each kind's properties, including nested values.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/json.ts",
+              "symbol": "parseStrict"
+            },
+            {
+              "path": "implementations/typescript/src/structural.ts",
+              "symbol": "checkEnvelope"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "check-meaning",
+          "actor": "Application developer",
+          "action": "Calls validateSemantic(text) for a civil value.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/civil.ts",
+              "symbol": "validateSemantic"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "meaning",
+          "actor": "@utv/core",
+          "action": "Runs the structural check again, then checks a proleptic Gregorian civil value's fields: the month exists and the day exists in that month of that year.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/civil.ts",
+              "symbol": "validateSemantic"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "read",
+          "actor": "Application developer",
+          "action": "Calls fromJson(json) or T.fromJson(json).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "fromJson"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "CivilDate.fromJson"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "decode",
+          "actor": "@utv/core",
+          "action": "Reads the value with the JSON layer's checked readers and returns Unique with its typed class.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "decode"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "typedFromJson"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "structure",
+          "condition": "The text isn't JSON, or repeats a key.",
+          "outcome": "Invalid (malformed-json, duplicate-key).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/json.ts",
+              "symbol": "parseStrict"
+            },
+            {
+              "path": "implementations/typescript/src/structural.ts",
+              "symbol": "validateStructural"
+            }
+          ]
+        },
+        {
+          "atStep": "structure",
+          "condition": "The identifier is another well-formed utv/M.N, such as utv/2.0.",
+          "outcome": "Unsupported (unsupported-version).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/structural.ts",
+              "symbol": "checkEnvelope"
+            }
+          ]
+        },
+        {
+          "atStep": "structure",
+          "condition": "The identifier is malformed (utv/4, utv/1, a number).",
+          "outcome": "Invalid (invalid-schema-identifier).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/structural.ts",
+              "symbol": "checkEnvelope"
+            }
+          ]
+        },
+        {
+          "atStep": "structure",
+          "condition": "An unknown kind, a missing or unknown property.",
+          "outcome": "Invalid (unknown-kind, missing-property, unknown-property).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/structural.ts",
+              "symbol": "checkEnvelope"
+            }
+          ]
+        },
+        {
+          "atStep": "meaning",
+          "condition": "The value is not civil.",
+          "outcome": "Unsupported (unsupported-operand).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/civil.ts",
+              "symbol": "validateSemantic"
+            }
+          ]
+        },
+        {
+          "atStep": "meaning",
+          "condition": "The calendar is not proleptic Gregorian (a Hebrew date).",
+          "outcome": "Unsupported (unsupported-calendar).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/civil.ts",
+              "symbol": "validateSemantic"
+            }
+          ]
+        },
+        {
+          "atStep": "meaning",
+          "condition": "The day or month doesn't exist (29 February 2026).",
+          "outcome": "Invalid (day-out-of-range, month-out-of-range).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/civil.ts",
+              "symbol": "validateSemantic"
+            }
+          ]
+        },
+        {
+          "atStep": "decode",
+          "condition": "T.fromJson got another kind or form.",
+          "outcome": "Invalid (kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "expect"
+            }
+          ]
+        },
+        {
+          "atStep": "decode",
+          "condition": "A valid value no typed class can hold (a zoned date, a recurrence).",
+          "outcome": "Unsupported (unsupported-operand); the JSON layer still handles it.",
+          "sources": [
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "decode"
+            },
+            {
+              "path": "implementations/typescript/src/values.ts",
+              "symbol": "civilValue"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/typescript/src",
+      "path": "implementations/typescript/src/.dev/operation.json",
+      "relationship": "The operations the steps call."
+    },
+    {
+      "kind": "capability",
+      "folder": "implementations/typescript/src",
+      "path": "implementations/typescript/src/.dev/capability.json",
+      "relationship": "The capabilities the use cases use."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/typescript/src",
+      "path": "implementations/typescript/src/.dev/feature.json",
+      "relationship": "The features the use cases exercise."
+    }
+  ]
+}

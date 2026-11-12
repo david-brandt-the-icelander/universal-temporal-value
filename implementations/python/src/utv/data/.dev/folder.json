@@ -1,0 +1,41 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Bundled schema",
+  "folder": "implementations/python/src/utv/data",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Bundled schema",
+      "summary": "A byte-for-byte copy of schema/utv-1.0.schema.json that ships inside the package.",
+      "purpose": "Holds utv-1.0.schema.json, the structural schema validate_structural checks values against. validate.py reads it at run time through importlib.resources, and pyproject.toml ships data/*.json as package data, so an installed package has it without the repository.",
+      "boundaries": [
+        "The original is schema/utv-1.0.schema.json, owned by schema/ (schema/.dev/contracts.json, utv-1-0-schema). This folder never changes on its own: a change there is copied here.",
+        "tests/test_conformance.py (BundledSchema) fails when the two files differ. Nothing else keeps them identical."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "_schema"
+        },
+        {
+          "path": "implementations/python/pyproject.toml",
+          "symbol": "tool.setuptools.package-data"
+        },
+        {
+          "path": "implementations/python/tests/test_conformance.py",
+          "symbol": "BundledSchema.test_bundled_schema_matches_repository"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema",
+          "description": "The schema this file copies."
+        }
+      ]
+    }
+  ]
+}

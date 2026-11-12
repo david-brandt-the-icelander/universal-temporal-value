@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../../../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Example tests",
+  "folder": "implementations/java/src/test/java/net/icelander/utv/examples",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Example tests",
+      "summary": "The two example suites (utvfirst/ and nativefirst/) and the shared fixture they use.",
+      "purpose": "Holds Fixtures, the shared test data every UTV zone example loads (Fixtures.demoZoneRules reads conformance/rules/demo-zones.json in place), and its own test. The examples themselves are in utvfirst/ and nativefirst/, one suite each.",
+      "boundaries": [
+        "The repository has no example programs: every example is a unit test (AGENTS.md section 2).",
+        "nativefirst/ holds only time/ and has no .dev of its own.",
+        "Tests mirror production (AGENTS.md 1.9): each test class is named after the class it exercises, and verification.json names it."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/Fixtures.java",
+          "symbol": "Fixtures.demoZoneRules"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "2. Examples are unit tests"
+        }
+      ]
+    }
+  ]
+}

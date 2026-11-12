@@ -1,0 +1,44 @@
+{
+  "$schema": "../../../../../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Everyday internals decisions",
+  "folder": "implementations/csharp/src/Utv/Internal/Everyday",
+  "entities": [
+    {
+      "id": "semantic-failures-stop-at-the-boundary",
+      "title": "A semantic outcome is thrown inside an operation and returned at its boundary",
+      "summary": "Deep inside an operation, an invalid or unsupported input is thrown as an internal OpFailure; Op.Run (and the typed layer) catch it and return it as a status, so no caller ever sees it as an exception.",
+      "status": "accepted",
+      "context": "Every everyday operation checks its arguments in many places (structure, calendar, date, time fields, zone, rules). Operations never throw for semantic outcomes (docs/everyday-api.md, Results).",
+      "decision": "OpFailure carries a UtvStatus and its diagnostics. Op.Run wraps each JSON-layer operation, and Typed.Catch, Typed.ToOutcome and Interop's Convert do the same for the typed layer and native conversions.",
+      "rationale": "The checks can stop an operation at the first failure without threading a result through every helper, and the public contract still holds: the class comment says it never escapes the library.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+          "symbol": "OpFailure"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+          "symbol": "Op.Run"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.Catch"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop.Convert"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "truthful-non-answers",
+          "description": "Non-answers are results, never exceptions."
+        }
+      ]
+    }
+  ]
+}

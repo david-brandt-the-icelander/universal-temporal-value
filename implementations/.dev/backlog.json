@@ -1,0 +1,36 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Implementations backlog",
+  "folder": "implementations",
+  "entities": [
+    {
+      "id": "readme-says-no-implementation",
+      "title": "implementations/README.md says no implementation exists",
+      "summary": "The README opens with \"No implementation exists yet\" and lists python, typescript and rust in its layout, while five libraries at 0.3 are here.",
+      "type": "defect",
+      "expected": "The README describes the five libraries that exist (csharp, java, python, rust, typescript) and keeps the conventions.",
+      "observed": "\"No implementation exists yet. This file sets out the conventions every library must follow\", and a layout block with python/, typescript/, rust/ and an ellipsis.",
+      "acceptanceCriteria": [
+        "The README no longer says that no implementation exists, and its layout lists the five language folders."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/README.md",
+        "description": "Found while documenting the folder; the root README says libraries in five languages (0.3) implement an everyday subset."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/README.md",
+          "symbol": "Implementations"
+        },
+        {
+          "path": "README.md",
+          "symbol": "Status"
+        }
+      ]
+    }
+  ]
+}

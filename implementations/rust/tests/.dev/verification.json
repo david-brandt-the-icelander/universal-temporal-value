@@ -1,0 +1,689 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Rust library verification",
+  "folder": "implementations/rust/tests",
+  "description": "The test targets in tests/*.rs, and the unit and doc tests in src/, which cargo test runs with them. The two example suites have their own verification files.",
+  "entities": [
+    {
+      "id": "everyday-fixtures",
+      "title": "Every everyday fixture",
+      "summary": "The JSON layer gives every fixture of conformance/operations/everyday.json its status, candidates, operation name and expected diagnostic codes.",
+      "subject": [
+        {
+          "path": "implementations/rust/.dev/contracts.json",
+          "entityId": "json-layer-api"
+        },
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        }
+      ],
+      "criteria": [
+        "The fixture file is read from the repository, not a copy, and its rule bundles are loaded with Rules::from_json",
+        "Each fixture's result names the fixture's operation (parseIso, add, resolve, ...)",
+        "Status and candidates equal the expectation, compared as JSON values",
+        "Every code in expect.diagnostics is present; other codes may be too"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/everyday.rs",
+          "symbol": "every_everyday_fixture_passes",
+          "command": "cargo test",
+          "description": "One test that runs every fixture and lists every failing fixture id."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/everyday.rs",
+          "symbol": "every_everyday_fixture_passes"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        }
+      ]
+    },
+    {
+      "id": "text-form-fixtures",
+      "title": "Every text-form fixture",
+      "summary": "parse_text and format_text agree with every fixture of conformance/operations/text-form.json, in the directions it gives.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        },
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        }
+      ],
+      "criteria": [
+        "both: parse_text(text) is unique with the value, and format_text(value) is unique with the text",
+        "parse and format: status, the value or text when unique, and every listed diagnostic code",
+        "Results are named parseText and formatText"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/text_form.rs",
+          "symbol": "every_text_form_fixture_passes",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/text_form.rs",
+          "symbol": "every_text_form_fixture_passes"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "text-form"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        }
+      ]
+    },
+    {
+      "id": "structural-examples",
+      "title": "Structural examples and the envelope",
+      "summary": "validate_structural accepts every valid example and rejects every invalid one; the envelope and version rules hold; the Gregorian check is separate.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        },
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "separate-semantic-check"
+        },
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "structural-examples"
+        }
+      ],
+      "criteria": [
+        "Every value of conformance/examples/valid.json is valid; no value of invalid-structural.json is",
+        "utv/1.3 and utv/2.0 are unsupported; utv/1.03, utv/4, utv/01.0, an unknown kind, an unknown top-level property and a repeated key are invalid",
+        "30 February 2026 is structurally valid and semantically invalid; 29 February is valid in 2024 and 2000 and invalid in 2026 and 1900",
+        "A Hebrew date and an instant are unsupported by validate_gregorian_civil",
+        "A repeated key is duplicate-key in both validators; text that isn't JSON is syntax in validate_structural"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/conformance.rs",
+          "symbol": "valid_examples_are_valid",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/conformance.rs",
+          "symbol": "invalid_structural_examples_are_rejected",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/conformance.rs",
+          "symbol": "envelope_rules",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/conformance.rs",
+          "symbol": "gregorian_dates",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/validation_codes.rs",
+          "symbol": "validate_structural::reports_duplicate_key_when_an_object_repeats_a_key",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/validation_codes.rs",
+          "symbol": "validate_structural::reports_syntax_when_the_text_is_not_json",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/validation_codes.rs",
+          "symbol": "validate_gregorian_civil::reports_duplicate_key_when_an_object_repeats_a_key",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/conformance.rs",
+          "symbol": "valid_examples_are_valid"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "structural-examples"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "separate-validity-checks"
+        }
+      ]
+    },
+    {
+      "id": "typed-layer",
+      "title": "The typed layer",
+      "summary": "One test per row of docs/library-api.md section 2, round trips through text and JSON, constructor refusals, outcome helpers and the values no typed type holds.",
+      "subject": [
+        {
+          "path": "implementations/rust/.dev/contracts.json",
+          "entityId": "typed-api"
+        },
+        {
+          "path": "implementations/rust/src/typed/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "path": "implementations/rust/src/typed/.dev/feature.json",
+          "entityId": "total-or-outcome"
+        },
+        {
+          "path": "implementations/rust/src/typed/.dev/feature.json",
+          "entityId": "typed-policies"
+        },
+        {
+          "path": "implementations/rust/src/typed/.dev/feature.json",
+          "entityId": "ordering-without-rules"
+        },
+        {
+          "path": "implementations/rust/src/typed/.dev/feature.json",
+          "entityId": "text-display"
+        }
+      ],
+      "criteria": [
+        "Each type's total operations return plain values and its partial ones the right Outcome case and code",
+        "to_string parses back to the same value, and from_json(to_json(v)) is v, for one value of every type",
+        "Constructors refuse invalid values with their codes; a wrong kind is kind-mismatch, a valid value no type holds is unsupported-operand, JSON of the wrong shape is malformed-value",
+        "Outcome helpers never pick an answer from Multiple",
+        "ZonedIntent orders only through TemporalContext::compare",
+        "Instant::nanoseconds is the floor of the exact sub_second"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "civil_date_total_operations",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "civil_date_partial_operations",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "civil_year_month_operations",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "civil_time_compares_with_a_missing_second_as_zero",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "civil_date_time_operations",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "fixed_offset_date_times_compare_by_instant",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "zoned_intent_operations",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "zoned_values_compare_only_through_the_context",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "instant_operations",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "amounts",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "intervals_answer_with_three_valued_truth",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "to_string_round_trips_through_parse",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "from_json_of_to_json_is_the_same_value",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "wrong_kinds_and_bad_text_are_outcomes",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "constructors_reject_invalid_values",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "outcome_helpers_never_pick_an_answer_silently",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "debug_shows_the_type_and_the_text",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "valid_values_no_typed_type_holds_are_unsupported",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "malformed_json_is_malformed_value",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "intervals_need_a_point_and_the_right_order",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "instant_sub_second_is_exact_and_nanoseconds_its_floor",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "civil_date_total_operations"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        }
+      ]
+    },
+    {
+      "id": "json-layer-rules",
+      "title": "JSON-layer rules the fixtures don't reach",
+      "summary": "Result JSON, unknown policies, the dropped offset assertion, mixed zone kinds, empty intervals, offset bounds, huge years and the contract's clarifications.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "month-end"
+        },
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "three-valued-ranges"
+        },
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "exact-arithmetic"
+        },
+        {
+          "path": "implementations/rust/src/.dev/contracts.json",
+          "entityId": "result-envelope"
+        }
+      ],
+      "criteria": [
+        "to_json carries schema utv-result/1.0, the operation and the candidates",
+        "An unknown overlap policy is unsupported; the default overlap policy gives multiple with ambiguous; all gives multiple with no diagnostic",
+        "add keeps the zone and drops an offsetAssertion with offset-assertion-dropped; an asserted offset in a gap is invalid (offset-mismatch) even with shift-forward-by-gap",
+        "compare refuses mixed zone kinds as unsupported and a missing date as invalid",
+        "Provably empty intervals overlap nothing; dates in different zones are unsupported",
+        "Offsets beyond 18 hours are invalid; a year of 10^20 works and one of 40 nines is unsupported"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/operations.rs",
+          "symbol": "result_json_carries_candidates",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/operations.rs",
+          "symbol": "resolve_rejects_unknown_policies_and_uses_the_default",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/operations.rs",
+          "symbol": "add_keeps_the_zone_and_drops_a_stale_offset_assertion",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/operations.rs",
+          "symbol": "compare_refuses_mixed_zone_kinds",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/operations.rs",
+          "symbol": "empty_intervals_overlap_nothing",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/operations.rs",
+          "symbol": "offsets_beyond_18_hours_are_invalid",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/operations.rs",
+          "symbol": "huge_years_work_or_are_unsupported_never_wrong",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/operations.rs",
+          "symbol": "clarifications",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/operations.rs",
+          "symbol": "result_json_carries_candidates"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        }
+      ]
+    },
+    {
+      "id": "no-hidden-environment",
+      "title": "No hidden environment in library code",
+      "summary": "No source file under src/ reads the clock, the host's zone or locale, or environment variables.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "explicit-rules"
+        },
+        {
+          "path": "implementations/rust/src/interop/.dev/feature.json",
+          "entityId": "clock-as-input"
+        }
+      ],
+      "criteria": [
+        "Outside comments and #[cfg(test)] code, no file in src/ contains ::now(, Local::, Local., .elapsed(, std::env, env::var, localtime, \"TZ\" or locale"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/purity.rs",
+          "symbol": "library_code_never_reads_the_clock_zone_locale_or_environment",
+          "command": "cargo test",
+          "description": "A text search of the sources, not a run-time check."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/purity.rs",
+          "symbol": "library_code_never_reads_the_clock_zone_locale_or_environment"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        }
+      ]
+    },
+    {
+      "id": "unit-and-doc-tests",
+      "title": "Unit tests and doc tests in src",
+      "summary": "Exact arithmetic, ISO and text round trips, display strings and the native adapters, tested next to the code; the documentation examples run as doc tests.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "exact-arithmetic"
+        },
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        },
+        {
+          "path": "implementations/rust/src/interop/.dev/feature.json",
+          "entityId": "lossy-back-refused"
+        },
+        {
+          "path": "implementations/rust/src/interop/.dev/feature.json",
+          "entityId": "intent-named-by-target"
+        }
+      ],
+      "criteria": [
+        "Day numbers round-trip, including 10^30; rationals reduce and compare exactly at the i128 limits",
+        "ISO 8601 and text forms round-trip, and their refusals have the expected status and code",
+        "PosixSeconds and ElapsedSeconds display as 3600.75 s (POSIX), 1/3 s (POSIX), 86400 s (SI)",
+        "SystemTime and chrono values round-trip, and lossy or local values are refused",
+        "Every ``` example in the documentation comments compiles and runs"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/num.rs",
+          "symbol": "tests::day_numbers_round_trip",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/num.rs",
+          "symbol": "tests::rationals",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "tests::round_trips",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "tests::outcomes",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "tests::non_terminating_fraction_is_unsupported",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "tests::round_trips",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "tests::outcomes",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "tests::lossy_values_have_no_text_form",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "tests::display_strings",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "tests::system_time_round_trip",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "tests::lossy_back_to_system_time_is_refused",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "tests::naive_round_trips",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "tests::fixed_offset_needs_an_intent",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "tests::utc_round_trip",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "tests::local_is_refused",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "tests::lossy_conversions_are_refused",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "tests::typed_conversions",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "tests::leap_second_is_unsupported",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "doc tests",
+          "command": "cargo test",
+          "description": "cargo test also runs the examples in the documentation comments of lib.rs, build.rs, iso.rs, text.rs, ops.rs and typed/ and interop/chrono.rs."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/num.rs",
+          "symbol": "tests::day_numbers_round_trip"
+        }
+      ]
+    }
+  ]
+}

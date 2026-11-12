@@ -1,0 +1,55 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "Structural schema contracts",
+  "folder": "schema",
+  "entities": [
+    {
+      "id": "utv-1-0-schema",
+      "title": "UTV 1.0 structural schema",
+      "summary": "schema/utv-1.0.schema.json, JSON Schema Draft 2020-12 with $id urn:utv:schema:1.0: the shapes and field names of utv/1.0 values, not their meaning.",
+      "contractType": "schema",
+      "consumers": [
+        "tools/validate.py, which checks the schema itself, the conformance examples and every UTV value in the operation fixtures against it",
+        "The C# library, which embeds the file at build time (implementations/csharp/src/Utv/Utv.csproj), and the Rust crate, which compiles it in (implementations/rust/src/lib.rs, SCHEMA_TEXT)",
+        "The Python library, which ships a byte copy as package data (implementations/python/src/utv/data/)",
+        "The Java and TypeScript libraries, whose kind tables are hand copies of it (KindTable; src/structural.ts KINDS)",
+        "Any outside tool that validates UTV JSON"
+      ],
+      "guarantees": [
+        "One file per MAJOR.MINOR, named utv-MAJOR.MINOR.schema.json, with $id urn:utv:schema:MAJOR.MINOR.",
+        "It validates shapes only: a value can pass it and still be semantically invalid or unresolvable (DECISIONS item 18).",
+        "It rejects the unreleased draft identifiers utv/2, utv/3 and utv/4."
+      ],
+      "compatibility": "Older schema files are kept unchanged when newer ones are added. A patch release may correct a schema file only to make it match the already-published prose, and lists the correction in CHANGELOG.md (VERSIONING.md, Schema files).",
+      "definition": "schema/utv-1.0.schema.json",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "schema/utv-1.0.schema.json",
+          "symbol": "$id"
+        },
+        {
+          "path": "tools/validate.py",
+          "symbol": "SCHEMA_PATH"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Schema files"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Utv.csproj",
+          "symbol": "EmbeddedResource"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "SCHEMA_TEXT"
+        },
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "_schema"
+        }
+      ]
+    }
+  ]
+}

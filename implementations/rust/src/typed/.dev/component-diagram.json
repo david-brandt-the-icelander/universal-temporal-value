@@ -1,0 +1,239 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "Typed layer component diagram",
+  "folder": "implementations/rust/src/typed",
+  "description": "The typed layer of docs/library-api.md (0.3): one immutable Rust type per everyday value, valid by construction, with total operations returning plain values and partial ones an Outcome. Every operation writes the value as UTV JSON, calls the 0.2 JSON layer and reads the answer back, so the typed layer and the shared fixtures can't disagree. The module is private; lib.rs re-exports its types at the crate root.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/typed/mod.rs",
+      "symbol": "module documentation"
+    },
+    {
+      "path": "implementations/rust/src/lib.rs",
+      "symbol": "pub use typed::"
+    }
+  ],
+  "components": [
+    {
+      "id": "typed",
+      "name": "Typed layer",
+      "responsibility": "The everyday values as Rust types, their outcomes, policies and the zone-rule context.",
+      "folder": "implementations/rust/src/typed"
+    },
+    {
+      "id": "plumbing",
+      "name": "Typed trait and helpers (mod.rs)",
+      "responsibility": "The crate-internal Typed trait (read, json), the typed_value! macro (to_json, from_json, parse, Display, Debug, FromStr), kind-mismatch and unsupported-operand refusals, and turning a refusal into a constructor's Err.",
+      "folder": "implementations/rust/src/typed"
+    },
+    {
+      "id": "outcome",
+      "name": "Outcomes (outcome.rs)",
+      "responsibility": "Outcome<T>, Diagnostics, OutcomeError, Truth and ToJson; turns a UtvResult into an Outcome, or into a plain value for a total operation (panicking only beyond the i128 range).",
+      "folder": "implementations/rust/src/typed"
+    },
+    {
+      "id": "civil",
+      "name": "Civil values (civil.rs)",
+      "responsibility": "CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime, ZonedIntent and Weekday.",
+      "folder": "implementations/rust/src/typed"
+    },
+    {
+      "id": "instant",
+      "name": "Instant (instant.rs)",
+      "responsibility": "A point on the POSIX timeline as an exact rational.",
+      "folder": "implementations/rust/src/typed"
+    },
+    {
+      "id": "amount",
+      "name": "Amounts (amount.rs)",
+      "responsibility": "Period (calendar components), PosixSeconds and ElapsedSeconds (exact seconds, with display strings).",
+      "folder": "implementations/rust/src/typed"
+    },
+    {
+      "id": "interval",
+      "name": "Intervals (interval.rs)",
+      "responsibility": "Interval<T> and Bound<T> for T = CivilDate or Instant, sealed by IntervalPoint.",
+      "folder": "implementations/rust/src/typed"
+    },
+    {
+      "id": "context",
+      "name": "Policies and context (context.rs)",
+      "responsibility": "MonthEnd, Gap, Overlap, ResolutionPolicy, and TemporalContext, which holds the zone rules (ZoneRules = Rules).",
+      "folder": "implementations/rust/src/typed"
+    },
+    {
+      "id": "value",
+      "name": "Any value (value.rs)",
+      "responsibility": "enum Value and utv::parse, for text or JSON of a kind not known in advance.",
+      "folder": "implementations/rust/src/typed"
+    },
+    {
+      "id": "json-layer",
+      "name": "JSON layer (src)",
+      "responsibility": "The 0.2 operations, readers, text form and validation every typed operation calls.",
+      "folder": "implementations/rust/src",
+      "diagram": "implementations/rust/src/.dev/component-diagram.json"
+    },
+    {
+      "id": "interop",
+      "name": "Native interop (src/interop)",
+      "responsibility": "from_system_time, which Instant::from_system_time calls.",
+      "folder": "implementations/rust/src/interop",
+      "diagram": "implementations/rust/src/interop/.dev/component-diagram.json"
+    }
+  ],
+  "relationships": [
+    {
+      "from": "typed",
+      "to": "plumbing",
+      "kind": "contains",
+      "description": "mod.rs."
+    },
+    {
+      "from": "typed",
+      "to": "outcome",
+      "kind": "contains",
+      "description": "outcome.rs."
+    },
+    {
+      "from": "typed",
+      "to": "civil",
+      "kind": "contains",
+      "description": "civil.rs."
+    },
+    {
+      "from": "typed",
+      "to": "instant",
+      "kind": "contains",
+      "description": "instant.rs."
+    },
+    {
+      "from": "typed",
+      "to": "amount",
+      "kind": "contains",
+      "description": "amount.rs."
+    },
+    {
+      "from": "typed",
+      "to": "interval",
+      "kind": "contains",
+      "description": "interval.rs."
+    },
+    {
+      "from": "typed",
+      "to": "context",
+      "kind": "contains",
+      "description": "context.rs."
+    },
+    {
+      "from": "typed",
+      "to": "value",
+      "kind": "contains",
+      "description": "value.rs."
+    },
+    {
+      "from": "civil",
+      "to": "json-layer",
+      "kind": "depends-on",
+      "description": "read_civil to read; ops::add, ops::fields and ops::days_between for arithmetic; zones::resolve with an empty bundle for FixedOffsetDateTime::to_instant."
+    },
+    {
+      "from": "civil",
+      "to": "context",
+      "kind": "depends-on",
+      "description": "MonthEnd for arithmetic; ZonedIntent::resolve goes through TemporalContext."
+    },
+    {
+      "from": "civil",
+      "to": "amount",
+      "kind": "depends-on",
+      "description": "Period for add and add_with."
+    },
+    {
+      "from": "civil",
+      "to": "instant",
+      "kind": "depends-on",
+      "description": "FixedOffsetDateTime::to_instant and resolution answer instants."
+    },
+    {
+      "from": "instant",
+      "to": "json-layer",
+      "kind": "depends-on",
+      "description": "read_instant; ops::add, ops::posix_seconds_between and zones::to_offset."
+    },
+    {
+      "from": "instant",
+      "to": "interop",
+      "kind": "depends-on",
+      "description": "from_system_time."
+    },
+    {
+      "from": "instant",
+      "to": "amount",
+      "kind": "depends-on",
+      "description": "PosixSeconds and ElapsedSeconds."
+    },
+    {
+      "from": "instant",
+      "to": "context",
+      "kind": "depends-on",
+      "description": "Instant::in_zone goes through TemporalContext."
+    },
+    {
+      "from": "amount",
+      "to": "json-layer",
+      "kind": "depends-on",
+      "description": "read_amount, and exact rationals."
+    },
+    {
+      "from": "interval",
+      "to": "json-layer",
+      "kind": "depends-on",
+      "description": "build::interval_with to write; ops::contains and ops::overlaps to answer."
+    },
+    {
+      "from": "interval",
+      "to": "civil",
+      "kind": "depends-on",
+      "description": "CivilDate as a point."
+    },
+    {
+      "from": "interval",
+      "to": "instant",
+      "kind": "depends-on",
+      "description": "Instant as a point."
+    },
+    {
+      "from": "context",
+      "to": "json-layer",
+      "kind": "depends-on",
+      "description": "zones::resolve and zones::to_zone with the held Rules."
+    },
+    {
+      "from": "value",
+      "to": "json-layer",
+      "kind": "depends-on",
+      "description": "text::parse_text for utv::parse; validate_value to tell unsupported from invalid."
+    },
+    {
+      "from": "value",
+      "to": "civil",
+      "kind": "depends-on",
+      "description": "Reads whichever value the JSON holds."
+    },
+    {
+      "from": "plumbing",
+      "to": "json-layer",
+      "kind": "depends-on",
+      "description": "text::format_text for Display, text::parse_text for parse."
+    },
+    {
+      "from": "civil",
+      "to": "outcome",
+      "kind": "depends-on",
+      "description": "outcome() for partial operations, total() for total ones; the other value modules do the same."
+    }
+  ]
+}

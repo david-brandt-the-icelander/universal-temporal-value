@@ -1,0 +1,73 @@
+{
+  "$schema": "../../../Meta/Agents/Skills/describe-deployment-diagram/schema.json",
+  "kind": "deployment",
+  "title": "TypeScript library deployment diagram",
+  "folder": "implementations/typescript",
+  "description": "How @utv/core runs: tsc compiles it into an ES module, which runs in-process inside the caller's Node.js application and reads only the zone-rule file the caller names. Nothing in the repository shows the package published to a registry: package.json has no publish configuration, there is no release procedure, and every version in the CHANGELOG is unreleased.",
+  "sources": [
+    {
+      "path": "implementations/typescript/package.json",
+      "symbol": "main"
+    },
+    {
+      "path": "implementations/typescript/package.json",
+      "symbol": "scripts"
+    },
+    {
+      "path": "implementations/typescript/tsconfig.json",
+      "symbol": "outDir"
+    },
+    {
+      "path": "implementations/typescript/src/zones.ts",
+      "symbol": "ZoneRules.load"
+    },
+    {
+      "path": "implementations/typescript/CHANGELOG.md",
+      "symbol": "0.3.0 (unreleased)"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "machine",
+      "name": "Caller's machine",
+      "kind": "host",
+      "description": "Wherever the application runs. The library reads nothing from it but the rule file it is given: not the clock, the time zone, the tz database or the locale."
+    },
+    {
+      "id": "app",
+      "name": "Caller's Node.js application",
+      "kind": "process",
+      "description": "The application that imports @utv/core. The library runs in this process as ordinary function calls; it starts no process, thread or server of its own."
+    },
+    {
+      "id": "rules",
+      "name": "Zone-rule bundle file",
+      "kind": "database",
+      "description": "A JSON file in the format of conformance/rules/demo-zones.json (a ruleSet identity, validFrom, validUntil and per-zone transitions), named by the caller. It is a file, not a database server.",
+      "condition": "Only for zoned operations: ZoneRules.load(path). A caller may instead pass the bundle's text to ZoneRules.parse, and then no file is read."
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "package",
+      "name": "@utv/core 0.3.0 (dist/src/index.js and index.d.ts)",
+      "source": "implementations/typescript/src/index.ts",
+      "deployedTo": "app",
+      "description": "tsc -p . compiles src/ (and test/) into dist/; package.json's main is dist/src/index.js and types dist/src/index.d.ts, an ES module (type: module) with no runtime dependencies."
+    }
+  ],
+  "relationships": [
+    {
+      "from": "machine",
+      "to": "app",
+      "kind": "hosts",
+      "description": "Runs the caller's application, and the library inside it."
+    },
+    {
+      "from": "app",
+      "to": "rules",
+      "kind": "connects-to",
+      "description": "ZoneRules.load reads the file with node:fs readFileSync; the library does no other I/O."
+    }
+  ]
+}

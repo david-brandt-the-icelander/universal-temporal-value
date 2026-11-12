@@ -1,0 +1,432 @@
+{
+  "$schema": "../../../../../../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "UTV-first example verification",
+  "folder": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst",
+  "entities": [
+    {
+      "id": "dates",
+      "title": "Dates (CivilDate)",
+      "summary": "The catalog's date scenarios done with CivilDate and compared with LocalDate, Year and IsoFields.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "month-end-none"
+        }
+      ],
+      "criteria": [
+        "5 November 2026, 29 February in leap years and year 2000, years 275760 and −500 are created; 30 February, 29 February 2026 and 1900, and month 13 are invalid with their codes.",
+        "Parsing 2026-11-05 gives the date; 2026-02-30 is invalid (day-out-of-range).",
+        "Weekday is Thursday and ISO week 45; leap years agree with Year.isLeap (parameterized).",
+        "5 Nov + 30 days; 31 Jan + 1 month is none (month-end), or 28 Feb with MonthEnd.CONSTRAIN; 31 Jan + P1M is none.",
+        "5 Nov → 25 Dec is 50 days; isBefore orders dates; year 1,000,000,000 has no LocalDate (out-of-native-range)."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/CivilDateTest.java",
+          "symbol": "CivilDateTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "month-end-none"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "explicit-native-interop"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "months-times-datetimes",
+      "title": "Months, times and date-times",
+      "summary": "CivilYearMonth, CivilTime, CivilDateTime and FixedOffsetDateTime scenarios, the Z vs +00:00 parse, and the local-zone refusal.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "wall-clock-arithmetic"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "explicit-native-interop"
+        }
+      ],
+      "criteria": [
+        "November 2026 is a month without a day, and addMonths carries into the next year.",
+        "09:30 writes no seconds; 09:30:00 does.",
+        "23:30 + 2 hours carries into the next day; 14:30 with no zone is a floating date-time; 23:59:60 is unsupported (leap-second).",
+        "inZone keeps the wall time and zone; atOffset and FixedOffsetDateTime.from pin a wall time to an offset; toInstant gives the UTC moment; toOffsetDateTime gives back the original.",
+        "TemporalValue.parse gives an Instant for Z and a FixedOffsetDateTime for +00:00.",
+        "JavaTime.fromDate refuses the wall time of a java.util.Date (local-zone)."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/CivilYearMonthTest.java",
+          "symbol": "CivilYearMonthTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/CivilTimeTest.java",
+          "symbol": "CivilTimeTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/CivilDateTimeTest.java",
+          "symbol": "CivilDateTimeTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/FixedOffsetDateTimeTest.java",
+          "symbol": "FixedOffsetDateTimeTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/TemporalValueTest.java",
+          "symbol": "TemporalValueTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/JavaTimeTest.java",
+          "symbol": "JavaTimeTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "wall-clock-arithmetic"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "explicit-native-interop"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "zones",
+      "title": "Zones (ZonedIntent, Instant.inZone, TemporalContext)",
+      "summary": "09:00 in Paris, the New York gap and overlap, ordering in an overlap, and noon plus a day across DST, with the pinned demo rules.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "zoned-order-needs-context"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "explicit-zone-rules"
+        }
+      ],
+      "criteria": [
+        "09:00 in Paris resolves to one instant, which is 03:00 in New York.",
+        "02:30 on 8 March 2026 in New York is none (gap), and 03:30 daylight time with Gap.SHIFT_FORWARD.",
+        "01:30 on 1 November 2026 in New York is multiple (ambiguous), and the earlier instant with Overlap.EARLIEST.",
+        "01:30 vs 01:45 that night compares as multiple; 09:00 Paris and 03:00 New York compare equal.",
+        "Noon + 1 day keeps noon (ZonedIntent.addDays); ZonedIntent.toZonedDateTime gives back the original ZonedDateTime."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/ZonedIntentTest.java",
+          "symbol": "ZonedIntentTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/InstantTest.java",
+          "symbol": "InstantTest.InZone",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/TemporalContextTest.java",
+          "symbol": "TemporalContextTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "details": "The java.time side of these expectations reads the JDK's tz database, so it needs the 2026–2027 rules of New York and Paris.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "zoned-order-needs-context"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "explicit-zone-rules"
+        },
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "timestamps-amounts",
+      "title": "Timestamps and amounts",
+      "summary": "Now as an input, the epoch, nanoseconds, exact fractions, and periods, POSIX seconds and SI seconds kept apart.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "exact-instants-and-seconds"
+        }
+      ],
+      "criteria": [
+        "Instant.from takes a clock reading as an input (a fixed reading, as java.time.Instant.now() would return it); the epoch; all nine fractional digits; a quarter second kept.",
+        "Instant.until returns exactly 14403/4 s, and 23 hours between the noons around a spring-forward day; POSIX seconds move an instant exactly; SI seconds are unsupported (needs-leap-seconds).",
+        "Period.days(1) is not 86,400 seconds; Period.months(1) is P1M, never PT1M.",
+        "PosixSeconds holds a third exactly; ElapsedSeconds.of(5400) holds 90 minutes and is neither a calendar day nor POSIX seconds."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/InstantTest.java",
+          "symbol": "InstantTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/PeriodTest.java",
+          "symbol": "PeriodTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/PosixSecondsTest.java",
+          "symbol": "PosixSecondsTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/ElapsedSecondsTest.java",
+          "symbol": "ElapsedSecondsTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "exact-instants-and-seconds"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "arbitrary-precision"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "ranges",
+      "title": "Ranges (Interval)",
+      "summary": "November half-open and closed, an open-ended range and a range with an unknown end.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "three-valued-ranges"
+        }
+      ],
+      "criteria": [
+        "A half-open November definitely contains 15 Nov and cannot contain 1 Dec.",
+        "A closed November definitely contains 30 Nov.",
+        "An unbounded end definitely contains 1 Jan 3000; an unknown end only possibly contains 1 Jun 2027."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/IntervalTest.java",
+          "symbol": "IntervalTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "three-valued-ranges"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "json-layer",
+      "title": "JSON layer (Utv, GregorianCivil)",
+      "summary": "Values with no typed API yet, written as UTV JSON and validated.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        }
+      ],
+      "criteria": [
+        "A real date is valid; 29 February 2026 is invalid (day-out-of-range); a Hebrew date is unsupported; the year 1347 is valid.",
+        "23:59:60 UTC, a two-hour meeting as start + amount, two separate ranges, every Tuesday at 09:00 in Paris and about 1347 are structurally valid.",
+        "utv/2.0 is unsupported; utv/4, duplicate keys and an unknown kind are invalid."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/GregorianCivilTest.java",
+          "symbol": "GregorianCivilTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/UtvTest.java",
+          "symbol": "UtvTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "side-by-side-markers",
+      "title": "Side-by-side task markers",
+      "summary": "Every task of library-api §7 is marked in this suite, and docs/side-by-side.md is up to date with the marked code.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers"
+        }
+      ],
+      "criteria": [
+        "Every task id (now, a-date, weekday-week, feb-30, add-days, month-end, days-between, compare-dates, time-of-day, datetime-plus-hours, parse-offsets, meeting-in-paris, dst-gap, dst-overlap, timestamps, day-vs-24h, ranges, round-trip) has at least one // BEGIN … // END block here.",
+        "The marked code reads well on its own, because the page shows it verbatim.",
+        "tools/side_by_side.py --check finds the page in step with the markers."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "tools/side_by_side.py",
+          "symbol": "side_by_side.py --check",
+          "command": "python3 tools/side_by_side.py --check",
+          "description": "Run from the repository root; CI runs it on every push."
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/CivilDateTest.java",
+          "symbol": "CivilDateTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/ZonedIntentTest.java",
+          "symbol": "ZonedIntentTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/InstantTest.java",
+          "symbol": "InstantTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "details": "Markers sit in CivilDateTest (a-date, feb-30, weekday-week, add-days, month-end, days-between, compare-dates), CivilTimeTest (time-of-day), CivilDateTimeTest (datetime-plus-hours), TemporalValueTest (parse-offsets), FixedOffsetDateTimeTest (round-trip), InstantTest (now, timestamps, day-vs-24h, meeting-in-paris), JavaTimeTest (now), ZonedIntentTest (meeting-in-paris, dst-gap, dst-overlap, day-vs-24h), TemporalContextTest (compare-dates) and IntervalTest (ranges).",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    }
+  ]
+}

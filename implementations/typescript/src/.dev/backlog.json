@@ -1,0 +1,166 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "TypeScript library source backlog",
+  "folder": "implementations/typescript/src",
+  "entities": [
+    {
+      "id": "malformed-value-code",
+      "title": "Report malformed JSON values as malformed-value",
+      "summary": "Where library-api §5 gives the shared code malformed-value, the TypeScript library reports codes of its own, so a caller matching on the shared code misses them.",
+      "type": "defect",
+      "expected": "JSON that isn't a well-formed value of the expected shape (wrong JSON types, missing or unexpected fields, a non-integer where an integer is required, a malformed rules bundle) is invalid with diagnostic code malformed-value, as docs/library-api.md §5 lists it. The C#, Java and Python libraries emit malformed-value.",
+      "observed": "The readers report type, missing-field, unexpected-field and unknown-component (internal.ts), resolve and toZone report invalid-rules for a malformed bundle (zones.ts), and fromEpochMilliseconds reports not-an-integer (native.ts). No source file emits malformed-value. The shared fixtures don't list malformed-value in expect.diagnostics, so they don't catch it.",
+      "acceptanceCriteria": [
+        "Each of these failures includes the diagnostic code malformed-value (the existing code may stay alongside it).",
+        "A test asserts the code for a missing field, a wrong JSON type and a malformed rules bundle.",
+        "npm test passes."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/typescript/src/internal.ts",
+        "description": "readCivil, readRational and readAmount compared with docs/library-api.md §5, Diagnostic codes."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "readCivil"
+        },
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "readAmount"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "rulesArg"
+        },
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromEpochMilliseconds"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "5. Diagnostic codes"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "affects",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    },
+    {
+      "id": "compare-ambiguous-diagnostics",
+      "title": "Align TemporalContext.compare's diagnostics with the other libraries",
+      "summary": "TemporalContext.compare copies each side's resolve diagnostics, so two wall times in one overlap report ambiguous twice; C# and Java report one compare-level ambiguous warning.",
+      "type": "debt",
+      "compromise": "compare concatenates the diagnostics of both sides' resolve outcomes (info severity, one per ambiguous side), and the UTV-first example asserts [\"ambiguous\", \"ambiguous\"]. The Java library changed to a single compare-level ambiguous warning naming the possible orders, as the C# library does (implementations/java/CHANGELOG.md, Unreleased); the Python library still concatenates like this one.",
+      "cost": "The same comparison gives different diagnostics in different languages, and a Unique ordering can carry an ambiguous diagnostic from a side whose overlap did not change the order. docs/side-by-side.md shows the difference.",
+      "acceptanceCriteria": [
+        "The five libraries report the same diagnostics from compare, as docs/library-api.md §4 is made to say.",
+        "test/examples/utv-first/temporal-context.test.ts asserts the agreed codes, and npm test passes."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/typescript/src/context.ts",
+        "description": "TemporalContext.compare, compared with implementations/csharp/src/Utv/Typed/ZonedValues.cs and the Java change of e0e80ff."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "TemporalContext.compare"
+        },
+        {
+          "path": "implementations/typescript/test/examples/utv-first/temporal-context.test.ts",
+          "symbol": "returns multiple when both wall times fall in an overlap"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "Compare"
+        },
+        {
+          "path": "implementations/java/CHANGELOG.md",
+          "symbol": "Unreleased"
+        }
+      ]
+    },
+    {
+      "id": "kinds-transcribed-from-schema",
+      "title": "Check the structural kind table against the schema",
+      "summary": "structural.ts holds each kind's required and allowed properties as a hand transcription of schema/utv-1.0.schema.json, and nothing compares the two.",
+      "type": "debt",
+      "compromise": "KINDS is \"transcribed from schema/utv-1.0.schema.json\" (its doc comment) rather than read from the schema file or checked against it. Only the shared valid and invalid examples exercise it.",
+      "cost": "A correction to the schema file, or a property the examples don't use, can leave the TypeScript validator accepting or rejecting what the schema does not, and no test would say so.",
+      "acceptanceCriteria": [
+        "A test fails when KINDS and the schema's per-kind required and allowed properties differ, or KINDS is derived from the schema file.",
+        "npm test passes."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/typescript/src/structural.ts",
+        "description": "The doc comment on KINDS."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/structural.ts",
+          "symbol": "KINDS"
+        },
+        {
+          "path": "implementations/typescript/test/conformance.test.ts",
+          "symbol": "valid: "
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema"
+        }
+      ]
+    },
+    {
+      "id": "days-until-beyond-safe-integer",
+      "title": "CivilDate.daysUntil throws beyond 2^53 days",
+      "summary": "daysUntil is a total operation on dates with bigint years, but returns a number, and throws an internal Error when the count does not fit one.",
+      "type": "defect",
+      "expected": "daysUntil(other) is total (docs/library-api.md §2, an integer) for any two dates the library can hold, since years are arbitrary precision (§1).",
+      "observed": "daysUntil calls the JSON layer's daysBetween through total(); for a count beyond Number.MAX_SAFE_INTEGER daysBetween answers unsupported (implementation-limit) and total() throws Error(\"internal error: daysBetween gave unsupported (implementation-limit)\").",
+      "reproduction": [
+        "CivilDate.of(10n ** 30n, 1, 1).daysUntil(CivilDate.of(2026, 1, 1))"
+      ],
+      "acceptanceCriteria": [
+        "daysUntil returns the exact count for any two CivilDates (for example as a bigint), or the API documents and tests the limit.",
+        "npm test passes."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/typescript/src/values.ts",
+        "description": "CivilDate.daysUntil and total(), with ops.ts daysBetween's implementation-limit branch."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.daysUntil"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "total"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "daysBetween"
+        }
+      ]
+    }
+  ]
+}

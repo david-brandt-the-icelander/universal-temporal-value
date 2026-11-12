@@ -1,0 +1,40 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Example tests",
+  "folder": "implementations/csharp/tests/Utv.Examples.Tests",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Example tests",
+      "summary": "The library's examples, written as unit tests: UtvFirst/ shows each task with UTV and compares it with .NET; NativeFirst/ shows what .NET does and compares it with UTV.",
+      "purpose": "Shows how the library is used, in tests that run with dotnet test and so cannot drift from what the library does. They cover the scenario catalog of docs/example-tests.md, follow AGENTS.md section 1, and UTV-first tests marked BEGIN/END feed docs/side-by-side.md. Fixtures.DemoZoneRules gives every UTV zone test the pinned rules of conformance/rules/demo-zones.json, which the project links next to the test assembly.",
+      "boundaries": [
+        "UTV zone operations never read the host's tz database; native-first zone tests (TimeZoneInfo) necessarily do, and need one that knows New York's and Paris's 2026–2027 rules.",
+        "Two native-first tests read the clock on purpose (DateTimeOffset.UtcNow, DateTime.Now), and say in their remarks why the outcome cannot depend on it."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/Utv.Examples.Tests.csproj",
+          "symbol": "demo-zones.json"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/Fixtures.cs",
+          "symbol": "Fixtures.DemoZoneRules"
+        },
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "Examples"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    }
+  ]
+}

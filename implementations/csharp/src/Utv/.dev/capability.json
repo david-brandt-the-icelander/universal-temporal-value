@@ -1,0 +1,406 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-capability/schema.json",
+  "kind": "capability",
+  "title": "Utv library capabilities",
+  "folder": "implementations/csharp/src/Utv",
+  "description": "What the C# library can do for an application, each reached both through the typed API (Typed/) and through the JSON layer in this folder.",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/Calendar.cs",
+      "symbol": "Calendar"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Zones.cs",
+      "symbol": "Zones"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+      "symbol": "Temporal"
+    }
+  ],
+  "entities": [
+    {
+      "id": "civil-calendar-arithmetic",
+      "name": "Civil calendar arithmetic",
+      "description": "Dates, year-months, times and date-times in the proleptic Gregorian calendar: their fields, arithmetic, order and the days between them.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate"
+        }
+      ],
+      "responsibility": "Answers calendar questions about wall-clock values exactly, with arbitrary-precision years, and says none when a month has no such day.",
+      "operations": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.TryOf"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.AddDays"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.AddMonths"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.Add"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.DaysUntil"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.AddHours"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.Fields"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.Add"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.Compare"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.DaysBetween"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Build.cs",
+          "symbol": "Build"
+        }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library; any code that references the package may call it."
+      ]
+    },
+    {
+      "id": "zone-resolution",
+      "name": "Zone resolution",
+      "description": "Wall times in IANA zones turned into instants and back, under rules the caller supplies.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext"
+        }
+      ],
+      "responsibility": "Resolves a zoned intention to zero, one or two instants with an explicit gap and overlap policy, shows instants in a zone or at an offset, and orders zoned values, never beyond the rules' validity window.",
+      "operations": [
+        {
+          "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+          "symbol": "ZoneRules.Load"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext.With"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.InZone"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "ZonedIntent.Resolve"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.InZone"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext.Compare"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.Resolve"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.ToZone"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.ToOffset"
+        }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library. The rules are whatever ZoneRules the caller passes; the host's tz database is never read."
+      ]
+    },
+    {
+      "id": "timestamps-and-amounts",
+      "name": "Exact timestamps and amounts",
+      "description": "POSIX instants with exact sub-second fractions, POSIX and SI second counts, and calendar periods.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+          "symbol": "Period"
+        }
+      ],
+      "responsibility": "Keeps a calendar day, 86,400 POSIX seconds and 86,400 SI seconds apart, and does instant arithmetic exactly.",
+      "operations": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.FromUnixSeconds"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.Add"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.Until"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.AtOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "FixedOffsetDateTime.ToInstant"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+          "symbol": "Period.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+          "symbol": "PosixSeconds.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+          "symbol": "ElapsedSeconds.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.PosixSecondsBetween"
+        }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library."
+      ]
+    },
+    {
+      "id": "ranges",
+      "name": "Ranges",
+      "description": "Intervals of dates or instants with included, excluded, unbounded and unknown ends.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Ranges.cs",
+          "symbol": "Ranges"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+          "symbol": "Interval"
+        }
+      ],
+      "responsibility": "Builds valid intervals and answers containment and overlap as definitely, possibly or impossible.",
+      "operations": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+          "symbol": "Interval.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+          "symbol": "Interval.Contains"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+          "symbol": "Interval.Overlaps"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Ranges.cs",
+          "symbol": "Ranges.Contains"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Ranges.cs",
+          "symbol": "Ranges.Overlaps"
+        }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library."
+      ]
+    },
+    {
+      "id": "text-form",
+      "name": "Text form",
+      "description": "ISO 8601 / RFC 3339 / RFC 9557 text and the UTV text form (utv-text/1), read and written.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/TextForm.cs",
+          "symbol": "TextForm"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Iso.cs",
+          "symbol": "Iso"
+        }
+      ],
+      "responsibility": "Parses text into UTV values with honest refusals, and writes text only where it reads back as the same value.",
+      "operations": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Temporal.Parse"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.Parse"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Iso.cs",
+          "symbol": "Iso.ParseIso"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Iso.cs",
+          "symbol": "Iso.FormatIso"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/TextForm.cs",
+          "symbol": "TextForm.Parse"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/TextForm.cs",
+          "symbol": "TextForm.Format"
+        }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library."
+      ]
+    },
+    {
+      "id": "utv-json-validation",
+      "name": "UTV JSON validation",
+      "description": "Structural validation of UTV JSON against schema/utv-1.0.schema.json, semantic validation of Gregorian dates, and reading UTV JSON into typed values.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+          "symbol": "UtvValidator"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+          "symbol": "GregorianCivil"
+        }
+      ],
+      "responsibility": "Tells well-formed from malformed, a newer version from a broken one, and a real date from an impossible one, with a utv-result/1.0 result and diagnostics.",
+      "operations": [
+        {
+          "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+          "symbol": "UtvValidator.ValidateStructural"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+          "symbol": "GregorianCivil.Validate"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Temporal.FromJson"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/UtvResult.cs",
+          "symbol": "UtvResult.ToJson"
+        }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library."
+      ]
+    },
+    {
+      "id": "native-interop",
+      "name": "Native interop",
+      "description": "Conversions between UTV values and .NET's DateOnly, TimeOnly, DateTime, DateTimeOffset and TimeSpan.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop"
+        }
+      ],
+      "responsibility": "Brings .NET values in only with a named intent and never through the host's zone, and says when a value does not fit back into .NET or loses its zone on the way.",
+      "operations": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.FromDateOnly"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.FromDateTime"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.FromDateTimeOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "FixedOffsetDateTime.ToDateTimeOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.ToDateOnly"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop.FromDateTimeOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop.ToDateTimeOffset"
+        }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/operation.json",
+      "relationship": "The JSON-layer operations through which these are reached."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/csharp/src/Utv/Typed",
+      "path": "implementations/csharp/src/Utv/Typed/.dev/operation.json",
+      "relationship": "The typed operations through which these are reached."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/feature.json",
+      "relationship": "The features they offer."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/csharp/src/Utv/Typed",
+      "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+      "relationship": "The typed layer's features."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/use-case.json",
+      "relationship": "The application developer's goals that use them."
+    }
+  ]
+}

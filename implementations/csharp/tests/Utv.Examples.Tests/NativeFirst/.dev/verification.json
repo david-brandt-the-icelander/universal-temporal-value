@@ -1,0 +1,230 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Native-first example verification",
+  "folder": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst",
+  "entities": [
+    {
+      "id": "date-only",
+      "title": "DateOnly",
+      "summary": "What System.DateOnly does with real and impossible dates, parsing, weekdays, adding and comparing.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "The constructor creates real days and throws for 30 February, month 13, years beyond 9999 and negative years",
+        "MaxValue is 31 December 9999",
+        "Parse reads an ISO date; TryParse returns false with no reason",
+        "DayOfWeek numbers Sunday 0",
+        "AddDays crosses a month end; AddMonths clamps to the last day silently",
+        "DayNumber differences count days; < orders dates"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/DateOnlyTests.cs",
+          "symbol": "DateOnlyTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "month-end-returns-none"
+        }
+      ]
+    },
+    {
+      "id": "date-time-offset",
+      "title": "DateTimeOffset",
+      "summary": "What System.DateTimeOffset does with clock readings, offsets, Unix time, ticks and DST.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "UtcNow survives the trip through UTV",
+        "The constructor pins the wall time to the offset",
+        "Parse cannot tell Z from +00:00",
+        "FromUnixTimeSeconds(0) is the epoch; ToUnixTimeSeconds drops a quarter second",
+        "AddTicks keeps seven fraction digits; subtraction returns a double",
+        "AddDays keeps the offset across a DST change",
+        "EqualsExact is true after a round trip through UTV"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/DateTimeOffsetTests.cs",
+          "symbol": "DateTimeOffsetTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "native-intent-required"
+        }
+      ],
+      "details": "Test_UtcNow_SurvivesTheTripThroughUtv_WhenReadAtAnyTime reads the real clock on purpose; the round trip does not depend on the time read."
+    },
+    {
+      "id": "date-time",
+      "title": "DateTime",
+      "summary": "What System.DateTime does with kinds, leap seconds, the local clock, leap years and hours past midnight.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "The constructor gives Kind Unspecified and throws for second 60",
+        "Now returns Kind Local",
+        "IsLeapYear agrees with UTV for every kind of year",
+        "AddHours carries into the next day"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/DateTimeTests.cs",
+          "symbol": "DateTimeTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "time-only",
+      "title": "TimeOnly",
+      "summary": "What System.TimeOnly writes and how it wraps.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "ToString(\"O\") writes seconds and ticks",
+        "AddHours wraps past midnight and loses the day"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/TimeOnlyTests.cs",
+          "symbol": "TimeOnlyTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "time-span",
+      "title": "TimeSpan",
+      "summary": "What System.TimeSpan counts.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "FromDays(1) equals 86,400 seconds",
+        "FromMinutes(90) counts sixty seconds a minute"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/TimeSpanTests.cs",
+          "symbol": "TimeSpanTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "time-zone-info",
+      "title": "TimeZoneInfo",
+      "summary": "What System.TimeZoneInfo does with a meeting in Paris and New York's DST gap and overlap, using the host's tz database.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "ConvertTimeToUtc returns the instant when the wall time happens once",
+        "ConvertTimeToUtc throws in a gap and picks the later instant in an overlap",
+        "IsInvalidTime is true in a gap; IsAmbiguousTime in an overlap",
+        "ConvertTimeFromUtc returns the local wall time"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/TimeZoneInfoTests.cs",
+          "symbol": "TimeZoneInfoTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        }
+      ],
+      "details": "These tests read the host's tz database, which must know New York's and Paris's 2026–2027 rules; the UTV side uses the pinned demo rules."
+    }
+  ]
+}

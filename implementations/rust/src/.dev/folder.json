@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Library source",
+  "folder": "implementations/rust/src",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Library source",
+      "summary": "The utv crate's code: the JSON layer (validation, builders, ISO 8601, the text form, operations, zone rules) and, in child folders, the typed layer and the native adapters.",
+      "purpose": "lib.rs is the crate root: it holds the result types (UtvResult, Status, Diagnostic), strict JSON parsing, envelope and structural-schema validation and the Gregorian check, declares the public modules build, iso, text, ops, zones and interop and the private model, num and typed, and re-exports both layers at the crate root. model.rs reads UTV JSON into checked records and writes canonical shapes; num.rs is the exact arithmetic everything else uses.",
+      "boundaries": [
+        "Takes UTV JSON as serde_json::Value and answers UtvResult; the typed types live in typed/, the native conversions in interop/.",
+        "Holds no rule data: zone rules come from the caller through Rules::load, Rules::parse or Rules::from_json.",
+        "The structural schema is compiled in from schema/utv-1.0.schema.json at the repository root (include_str!), not copied."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "crate documentation"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "SCHEMA_TEXT"
+        },
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        },
+        {
+          "relation": "depends-on",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema"
+        }
+      ]
+    }
+  ]
+}

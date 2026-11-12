@@ -1,0 +1,42 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Native-first examples",
+  "folder": "implementations/rust/tests/native_first",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Native-first examples",
+      "summary": "What chrono, chrono-tz, std and serde_json do for each everyday task, as unit tests organized by the native type and function, each compared with UTV.",
+      "purpose": "Covers every scenario of docs/example-tests.md that the native side can express at all, from that side: one file per native type (naive_date, date_time, tz, system_time, json, ...) and one inner module per function (naive_date::checked_add_months::clamps_to_the_last_day_when_the_day_is_missing_from_the_target_month). Where the two agree, the expected value is computed with UTV; where they differ it is a literal, and the doc comment says what UTV does instead.",
+      "boundaries": [
+        "One integration-test target, built from main.rs.",
+        "std has no calendar types, so \"native\" is chrono with chrono-tz, plus std::time::SystemTime, std::ops ranges and serde_json.",
+        "The zone tests use the tz database compiled into chrono-tz (release 2025b in chrono-tz 0.10.4), not the host's; UTV uses the pinned demo rules through tests/fixtures.",
+        "The three now tests (local, utc, system_time) read the real clock, and local also this machine's zone, on purpose; their doc comments say why the outcome cannot depend on it."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/native_first/main.rs",
+          "symbol": "module documentation"
+        },
+        {
+          "path": "implementations/rust/tests/native_first/local.rs",
+          "symbol": "now::returns_a_reading_utv_refuses_when_read_at_any_time"
+        },
+        {
+          "path": "implementations/rust/Cargo.lock",
+          "symbol": "chrono-tz 0.10.4"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    }
+  ]
+}

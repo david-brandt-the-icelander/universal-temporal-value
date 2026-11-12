@@ -1,0 +1,81 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Native interop decisions",
+  "folder": "implementations/rust/src/interop",
+  "entities": [
+    {
+      "id": "target-type-names-intent",
+      "title": "The target type names the intent",
+      "summary": "A DateTime<FixedOffset> converts to Instant or to FixedOffsetDateTime through TryFrom, so the type the caller asks for is the intent.",
+      "status": "accepted",
+      "context": "docs/everyday-api.md requires the caller to name the intent: a DateTime<FixedOffset> can be an instant or a wall time at an offset, and nothing may be chosen silently. Other libraries take an intent argument and report intent-required when it is missing.",
+      "options": [
+        {
+          "title": "An intent argument",
+          "consequences": "Kept at the JSON layer: from_fixed_offset(dt, OffsetIntent)."
+        },
+        {
+          "title": "One TryFrom impl per target type",
+          "consequences": "Instant::try_from(dt) and FixedOffsetDateTime::try_from(dt); there is no impl that would have to guess, so a missing intent is a compile error rather than an outcome."
+        }
+      ],
+      "decision": "Both: the JSON layer takes an OffsetIntent, and the typed values convert with one TryFrom impl per meaning.",
+      "rationale": "\"The target type names the intent\" (comment in chrono.rs); Rust's From/TryFrom are the idiomatic conversions, and they make the choice explicit at the call site.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "typed values (comment)"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "OffsetIntent"
+        },
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "Native types"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-silent-conversions"
+        },
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "idiomatic-api"
+        }
+      ]
+    },
+    {
+      "id": "no-local-conversion",
+      "title": "No conversion from DateTime<Local>",
+      "summary": "There is deliberately no From/TryFrom for chrono's DateTime<Local>; the JSON-layer from_local always answers unsupported (local-zone).",
+      "status": "accepted",
+      "context": "A DateTime<Local> only means something together with the host's time zone, which a UTV library must never read.",
+      "decision": "Offer no typed conversion from DateTime<Local>, and a JSON-layer from_local that refuses every value with local-zone and names the explicit alternatives.",
+      "rationale": "\"UTV never interprets anything with the machine's zone\" (from_local's documentation); refusing with a code tells the caller why, where a missing function would not.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_local"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "typed values (comment)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        }
+      ]
+    }
+  ]
+}

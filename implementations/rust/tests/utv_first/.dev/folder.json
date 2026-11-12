@@ -1,0 +1,42 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "UTV-first examples",
+  "folder": "implementations/rust/tests/utv_first",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "UTV-first examples",
+      "summary": "The Rust library's examples, as unit tests organized by UTV type and function, each compared with chrono, chrono-tz or std.",
+      "purpose": "Shows how to do every scenario of docs/example-tests.md with UTV, one file per UTV type or free function and one inner module per function (civil_date::add_months::returns_none_when_the_day_is_missing_from_the_target_month). Where UTV and chrono agree, the expected value is computed with chrono; where they differ it is a literal, and the doc comment's \"Compared with:\" sentence says what chrono does. Tests between // BEGIN <task> and // END <task> are copied onto docs/side-by-side.md by tools/side_by_side.py.",
+      "boundaries": [
+        "One integration-test target, built from main.rs; cargo test --test utv_first runs it alone.",
+        "UTV's zone operations use the pinned demo rules through tests/fixtures; chrono-tz uses the tz database compiled into it, never the host's.",
+        "The same scenarios from chrono's side live in tests/native_first."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/utv_first/main.rs",
+          "symbol": "module documentation"
+        },
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "implementations/rust/tests/utv_first/*.rs"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "implements",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers"
+        }
+      ]
+    }
+  ]
+}

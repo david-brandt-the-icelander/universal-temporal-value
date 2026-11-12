@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../../../../../../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Native-first examples: java.time.chrono",
+  "folder": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/chrono",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Native-first examples: java.time.chrono",
+      "summary": "The native-first examples for java.time.chrono: HijrahDate, compared with UTV's handling of another calendar.",
+      "purpose": "Mirrors the java.time.chrono package: one test class per java.time class, compared with UTV.",
+      "boundaries": [
+        "Tests mirror production (AGENTS.md 1.9): each test class is named after the class it exercises, and verification.json names it."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/chrono/HijrahDateTest.java",
+          "symbol": "HijrahDateTest"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "utv-core (Java)",
+  "folder": "implementations/java",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "utv-core (Java)",
+      "summary": "The Java library of UTV: typed temporal values and outcomes, built on the 0.2 JSON layer, with the shared fixtures and two example suites as its tests.",
+      "purpose": "Holds one Maven project, net.icelander.utv:utv-core 0.3.0 for Java 21 or later: the library in src/main/java/net/icelander/utv, and its JUnit tests in src/test/java/net/icelander/utv, which read the shared conformance material from the repository root in place.",
+      "boundaries": [
+        "The contracts it implements (docs/library-api.md, docs/everyday-api.md, docs/text-form.md, spec/) and the shared fixtures (conformance/) belong to the repository; this folder only reads them.",
+        "It ships no zone rules or other registries: a caller loads rule data and passes it in.",
+        "The library's versions are recorded in CHANGELOG.md, as VERSIONING.md requires."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/pom.xml",
+          "symbol": "artifactId"
+        },
+        {
+          "path": "implementations/java/README.md",
+          "symbol": "utv-core (Java)"
+        },
+        {
+          "path": "implementations/java/src/test/java/net/icelander/utv/ConformanceTest.java",
+          "symbol": "ConformanceTest.ROOT"
+        }
+      ]
+    }
+  ]
+}

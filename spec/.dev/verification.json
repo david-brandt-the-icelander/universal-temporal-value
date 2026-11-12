@@ -1,0 +1,70 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Specification verification",
+  "folder": "spec",
+  "description": "What checks the specification's own documents. Its semantics are not executable yet (OI-12).",
+  "entities": [
+    {
+      "id": "embedded-examples-valid",
+      "title": "Complete JSON examples in the specification pass the schema",
+      "summary": "Every fenced json block in spec/*.md that parses and is a UTV value (schema starting utv/) must pass the structural schema.",
+      "criteria": [
+        "Each complete embedded UTV example passes schema/utv-1.0.schema.json.",
+        "Illustrative fragments that do not parse, and utv-result illustrations, are skipped."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "tools/validate.py",
+          "symbol": "check_spec_examples",
+          "command": "python3 tools/validate.py"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "tools/validate.py",
+          "symbol": "check_spec_examples"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0"
+        }
+      ]
+    },
+    {
+      "id": "falsehoods-matrix-traced",
+      "title": "Every falsehood in the matrix has a scenario",
+      "summary": "The ids in spec/FALSEHOODS-MATRIX.md and conformance/scenarios/falsehoods.json are the same set.",
+      "criteria": [
+        "No matrix row without a scenario, and no falsehood scenario without a row."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "tools/validate.py",
+          "symbol": "check_scenarios",
+          "command": "python3 tools/validate.py"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "tools/validate.py",
+          "symbol": "check_scenarios"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/scenarios/.dev/requirements.json",
+          "entityId": "falsehood-scenarios"
+        }
+      ]
+    }
+  ]
+}

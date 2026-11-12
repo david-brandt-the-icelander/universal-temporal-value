@@ -1,0 +1,325 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-capability/schema.json",
+  "kind": "capability",
+  "title": "Typed layer capabilities",
+  "folder": "implementations/rust/src/typed",
+  "description": "What the typed layer can do for an application developer. Each capability calls the JSON layer's capabilities underneath.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/typed/mod.rs",
+      "symbol": "module documentation"
+    }
+  ],
+  "entities": [
+    {
+      "id": "civil-calendar-arithmetic",
+      "name": "Civil calendar arithmetic",
+      "description": "Dates, months, times and date-times of the proleptic Gregorian calendar, and arithmetic on them that says when a day is missing.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDateTime"
+        },
+        {
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "Period"
+        }
+      ],
+      "responsibility": "Makes civil values that are valid by construction, derives their calendar fields, and adds days, weeks, months, years, periods and wall-clock time to them, answering none (month-end) instead of clamping unless asked to.",
+      "operations": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::of"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilYearMonth::of"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilTime::of"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDateTime::of"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_months"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_months_constrained"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_with"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_days"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDateTime::add_hours"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::days_until"
+        },
+        {
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "Period::of"
+        }
+      ],
+      "access": [
+        "Nothing checks: an in-process library call that any code linking the crate may make."
+      ]
+    },
+    {
+      "id": "zone-resolution",
+      "name": "Zone resolution",
+      "description": "Wall times in named zones, resolved against rule data the caller supplies.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "ZonedIntent"
+        }
+      ],
+      "responsibility": "Holds a zone-rule bundle in a TemporalContext and turns zoned intentions into instants (with gap and overlap policies), instants into zoned wall times, and orders zoned values only through the rules.",
+      "operations": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDateTime::in_zone"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::with"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::resolve"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::resolve_with"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::in_zone"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::compare"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "ZonedIntent::resolve"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::in_zone"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDateTime::at_offset"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "FixedOffsetDateTime::to_instant"
+        }
+      ],
+      "access": [
+        "Nothing checks: an in-process library call that any code linking the crate may make.",
+        "Every zoned operation needs a TemporalContext the caller built from rules they loaded; there is no default."
+      ]
+    },
+    {
+      "id": "timestamps-and-exact-amounts",
+      "name": "Timestamps and exact amounts",
+      "description": "Instants on the POSIX timeline and exact amounts of seconds, kept apart from calendar periods.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant"
+        },
+        {
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "PosixSeconds"
+        },
+        {
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "ElapsedSeconds"
+        }
+      ],
+      "responsibility": "Holds instants as exact rationals, adds and measures POSIX seconds exactly, and refuses SI seconds on the POSIX timeline.",
+      "operations": [
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::from_unix_seconds"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::from_unix_seconds_nanos"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::from_unix_nanoseconds"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::from_system_time"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::add"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::until"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::add_elapsed"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::at_offset"
+        },
+        {
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "PosixSeconds"
+        },
+        {
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "ElapsedSeconds"
+        }
+      ],
+      "access": [
+        "Nothing checks: an in-process library call that any code linking the crate may make."
+      ]
+    },
+    {
+      "id": "ranges",
+      "name": "Ranges with unknown ends",
+      "description": "Intervals of dates or instants whose ends are included, excluded, unbounded or unknown.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval"
+        },
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Bound"
+        }
+      ],
+      "responsibility": "Makes intervals that are in order and have a domain, and answers containment and overlap with three-valued truth.",
+      "operations": [
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval::of"
+        },
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval::half_open"
+        },
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval::closed"
+        },
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval::contains"
+        },
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval::overlaps"
+        }
+      ],
+      "access": [
+        "Nothing checks: an in-process library call that any code linking the crate may make."
+      ]
+    },
+    {
+      "id": "typed-text-and-json",
+      "name": "Typed values from text and JSON",
+      "description": "The way into and out of the typed layer: the text form and UTV JSON.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/value.rs",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "typed_value"
+        }
+      ],
+      "responsibility": "Parses text and reads UTV JSON into the right typed value, refusing other kinds as kind-mismatch and values no type holds as unsupported-operand, and writes each value back as its text form (Display) and canonical JSON.",
+      "operations": [
+        {
+          "path": "implementations/rust/src/typed/value.rs",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/rust/src/typed/value.rs",
+          "symbol": "Value::from_json"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "from_json"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "parse_as"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "text_of"
+        }
+      ],
+      "access": [
+        "Nothing checks: an in-process library call that any code linking the crate may make."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/operation.json",
+      "relationship": "The operations through which they are reached."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/feature.json",
+      "relationship": "The typed-layer behaviour they offer."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/use-case.json",
+      "relationship": "The use cases that use them."
+    },
+    {
+      "kind": "capability",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/capability.json",
+      "relationship": "The JSON-layer capabilities they are built on."
+    },
+    {
+      "kind": "capability",
+      "folder": "implementations/rust/src/interop",
+      "path": "implementations/rust/src/interop/.dev/capability.json",
+      "relationship": "Native interop, through which typed values convert to and from chrono and SystemTime."
+    }
+  ]
+}

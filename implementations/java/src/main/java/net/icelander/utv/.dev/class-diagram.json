@@ -1,0 +1,1629 @@
+{
+  "$schema": "../../../../../../../../../Meta/Agents/Skills/describe-class-diagram/schema.json",
+  "kind": "class",
+  "title": "net.icelander.utv classes",
+  "folder": "implementations/java/src/main/java/net/icelander/utv",
+  "description": "Every type the package declares, nested ones included, with the meaningful public members of each (overloads are folded into one line with [optional] arguments or a / list). Seven external types stand for the JDK and Jackson types the public API exposes most.",
+  "sources": [
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+      "symbol": "TemporalValue"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Outcome.java",
+      "symbol": "Outcome"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Bound.java",
+      "symbol": "Bound"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/IntervalPoint.java",
+      "symbol": "IntervalPoint"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+      "symbol": "Typed"
+    }
+  ],
+  "types": [
+    {
+      "id": "TemporalValue",
+      "name": "TemporalValue",
+      "kind": "interface",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java"
+      ],
+      "members": [
+        "ObjectNode toJson()",
+        "static Outcome<TemporalValue> parse(String text)",
+        "static Outcome<TemporalValue> fromJson(JsonNode json)"
+      ]
+    },
+    {
+      "id": "IntervalPoint",
+      "name": "IntervalPoint",
+      "kind": "interface",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/IntervalPoint.java"
+      ],
+      "members": [
+        "sealed: permits CivilDate, Instant"
+      ]
+    },
+    {
+      "id": "CivilDate",
+      "name": "CivilDate",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/CivilDate.java"
+      ],
+      "members": [
+        "static CivilDate of(long year, int month, int day)",
+        "static CivilDate of(BigInteger year, int month, int day)",
+        "static Outcome<CivilDate> tryOf(long year, int month, int day)",
+        "static Outcome<CivilDate> parse(String text)",
+        "static Outcome<CivilDate> fromJson(JsonNode json)",
+        "static CivilDate from(LocalDate date)",
+        "Outcome<LocalDate> toLocalDate()",
+        "BigInteger year(); int month(); int day()",
+        "Weekday dayOfWeek(); int dayOfYear(); int isoWeek(); BigInteger isoWeekYear(); int daysInMonth(); boolean isLeapYear()",
+        "CivilDate addDays(long days); CivilDate addWeeks(long weeks)",
+        "Outcome<CivilDate> addMonths(long months)",
+        "CivilDate addMonths(long months, MonthEnd policy)",
+        "Outcome<CivilDate> addYears(long years)",
+        "CivilDate addYears(long years, MonthEnd policy)",
+        "Outcome<CivilDate> add(Period period)",
+        "long daysUntil(CivilDate other)",
+        "CivilDateTime at(CivilTime time)",
+        "int compareTo(CivilDate other); boolean isBefore(CivilDate other); boolean isAfter(CivilDate other)"
+      ]
+    },
+    {
+      "id": "CivilYearMonth",
+      "name": "CivilYearMonth",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/CivilYearMonth.java"
+      ],
+      "members": [
+        "static CivilYearMonth of(long year, int month)",
+        "static Outcome<CivilYearMonth> tryOf(long year, int month)",
+        "static Outcome<CivilYearMonth> parse(String text)",
+        "BigInteger year(); int month()",
+        "CivilYearMonth addMonths(long months); CivilYearMonth addYears(long years)",
+        "int compareTo(CivilYearMonth other)"
+      ]
+    },
+    {
+      "id": "CivilTime",
+      "name": "CivilTime",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/CivilTime.java"
+      ],
+      "members": [
+        "static CivilTime of(int hour, int minute[, int second[, int nanosecond]])",
+        "static Outcome<CivilTime> tryOf(int hour, int minute[, int second[, int nanosecond]])",
+        "static Outcome<CivilTime> parse(String text)",
+        "static CivilTime from(LocalTime t)",
+        "Outcome<LocalTime> toLocalTime()",
+        "int hour(); int minute(); int second(); int nanosecond(); boolean hasSecond()",
+        "int compareTo(CivilTime other)"
+      ]
+    },
+    {
+      "id": "CivilDateTime",
+      "name": "CivilDateTime",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java"
+      ],
+      "members": [
+        "static CivilDateTime of(CivilDate date, CivilTime time)",
+        "static CivilDateTime of(long year, int month, int day, int hour, int minute[, int second[, int nanosecond]])",
+        "static Outcome<CivilDateTime> tryOf(long year, int month, int day, int hour, int minute, int second, int nanosecond)",
+        "static Outcome<CivilDateTime> parse(String text)",
+        "static CivilDateTime from(LocalDateTime t)",
+        "Outcome<LocalDateTime> toLocalDateTime()",
+        "CivilDate date(); CivilTime time()",
+        "CivilDateTime addDays/addWeeks/addHours/addMinutes/addSeconds(long n)",
+        "Outcome<CivilDateTime> addMonths(long months)",
+        "CivilDateTime addMonths(long months, MonthEnd policy)",
+        "Outcome<CivilDateTime> add(Period period)",
+        "ZonedIntent inZone(String zoneId)",
+        "FixedOffsetDateTime atOffset(int offsetSeconds)",
+        "int compareTo(CivilDateTime other)"
+      ]
+    },
+    {
+      "id": "FixedOffsetDateTime",
+      "name": "FixedOffsetDateTime",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java"
+      ],
+      "members": [
+        "static FixedOffsetDateTime of(CivilDateTime dateTime, int offsetSeconds)",
+        "static Outcome<FixedOffsetDateTime> parse(String text)",
+        "static FixedOffsetDateTime from(OffsetDateTime t)",
+        "Outcome<OffsetDateTime> toOffsetDateTime()",
+        "CivilDateTime dateTime(); int offsetSeconds()",
+        "Instant toInstant()",
+        "int compareTo(FixedOffsetDateTime other)"
+      ]
+    },
+    {
+      "id": "ZonedIntent",
+      "name": "ZonedIntent",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java"
+      ],
+      "members": [
+        "static ZonedIntent of(CivilDateTime dateTime, String zoneId)",
+        "static Outcome<ZonedIntent> parse(String text)",
+        "static ZonedIntent from(ZonedDateTime t)",
+        "Outcome<ZonedDateTime> toZonedDateTime()",
+        "CivilDateTime dateTime(); String zoneId(); OptionalInt assertedOffsetSeconds()",
+        "Outcome<Instant> resolve(TemporalContext ctx)",
+        "Outcome<Instant> resolve(TemporalContext ctx, ResolutionPolicy policy)",
+        "Outcome<Instant> resolve(TemporalContext ctx, Gap gap)",
+        "Outcome<Instant> resolve(TemporalContext ctx, Overlap overlap)",
+        "ZonedIntent addDays/addWeeks/addHours/addMinutes/addSeconds(long n)",
+        "Outcome<ZonedIntent> addMonths(long months)"
+      ]
+    },
+    {
+      "id": "Instant",
+      "name": "Instant",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Instant.java"
+      ],
+      "members": [
+        "static Instant fromUnixSeconds(long seconds[, long nanoseconds])",
+        "static Instant fromUnixNanoseconds(long nanoseconds)",
+        "static Outcome<Instant> parse(String text)",
+        "static Instant from(java.time.Instant t)",
+        "static Instant from(OffsetDateTime t)",
+        "Outcome<java.time.Instant> toJavaInstant()",
+        "long unixSeconds(); int nanoseconds(); PosixSeconds subSecond()",
+        "Instant add(PosixSeconds amount)",
+        "Outcome<Instant> add(ElapsedSeconds amount)",
+        "PosixSeconds until(Instant other)",
+        "FixedOffsetDateTime atOffset(int offsetSeconds)",
+        "Outcome<ZonedIntent> inZone(String zoneId, TemporalContext ctx)",
+        "int compareTo(Instant other); boolean isBefore(Instant other); boolean isAfter(Instant other)"
+      ]
+    },
+    {
+      "id": "Period",
+      "name": "Period",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Period.java"
+      ],
+      "members": [
+        "static final Period ZERO",
+        "static Period of(long years, long months, long weeks, long days, long hours, long minutes, long seconds)",
+        "static Period years/months/weeks/days/hours/minutes/seconds(long n)",
+        "static Outcome<Period> parse(String text)",
+        "static Period from(java.time.Period p)",
+        "Outcome<java.time.Period> toJavaPeriod()",
+        "long years() … long seconds()",
+        "Period negate()"
+      ]
+    },
+    {
+      "id": "PosixSeconds",
+      "name": "PosixSeconds",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/PosixSeconds.java"
+      ],
+      "members": [
+        "static PosixSeconds of(long seconds)",
+        "static PosixSeconds of(long numerator, long denominator)",
+        "static PosixSeconds of(BigInteger numerator, BigInteger denominator)",
+        "static PosixSeconds from(Duration d)",
+        "Outcome<Duration> toDuration()",
+        "BigInteger numerator(); BigInteger denominator()",
+        "PosixSeconds negate()"
+      ]
+    },
+    {
+      "id": "ElapsedSeconds",
+      "name": "ElapsedSeconds",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/ElapsedSeconds.java"
+      ],
+      "members": [
+        "static ElapsedSeconds of(long seconds)",
+        "static ElapsedSeconds of(BigInteger numerator, BigInteger denominator)",
+        "BigInteger numerator(); BigInteger denominator()",
+        "ElapsedSeconds negate()"
+      ]
+    },
+    {
+      "id": "Interval",
+      "name": "Interval",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Interval.java"
+      ],
+      "members": [
+        "static <T> Interval<T> halfOpen(T start, T end)",
+        "static <T> Interval<T> closed(T start, T end)",
+        "static <T> Interval<T> of(Bound<T> start, Bound<T> end)",
+        "static <T> Outcome<Interval<T>> tryOf(Bound<T> start, Bound<T> end)",
+        "static <T> Outcome<Interval<T>> parse(String text, Class<T> type)",
+        "static <T> Outcome<Interval<T>> fromJson(JsonNode json, Class<T> type)",
+        "Bound<T> start(); Bound<T> end()",
+        "Truth contains(T point)",
+        "Truth overlaps(Interval<T> other)"
+      ]
+    },
+    {
+      "id": "Bound",
+      "name": "Bound",
+      "kind": "interface",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Bound.java"
+      ],
+      "members": [
+        "static <T> Bound<T> included(T value); excluded(T value); unbounded(); unknown()",
+        "T pointOrNull()"
+      ]
+    },
+    {
+      "id": "Bound.Included",
+      "name": "Bound.Included",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Bound.java"
+      ],
+      "members": [
+        "T value"
+      ]
+    },
+    {
+      "id": "Bound.Excluded",
+      "name": "Bound.Excluded",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Bound.java"
+      ],
+      "members": [
+        "T value"
+      ]
+    },
+    {
+      "id": "Bound.Unbounded",
+      "name": "Bound.Unbounded",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Bound.java"
+      ],
+      "members": []
+    },
+    {
+      "id": "Bound.Unknown",
+      "name": "Bound.Unknown",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Bound.java"
+      ],
+      "members": []
+    },
+    {
+      "id": "Outcome",
+      "name": "Outcome",
+      "kind": "interface",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Outcome.java"
+      ],
+      "members": [
+        "List<Diagnostic> diagnostics()",
+        "static <T> Outcome<T> unique(T value)",
+        "Status status()",
+        "Optional<T> tryGetUnique()",
+        "T uniqueOr(T fallback)",
+        "T single()",
+        "String why()",
+        "<R> Outcome<R> map(Function<? super T, ? extends R> f)",
+        "UtvResult toResult()"
+      ]
+    },
+    {
+      "id": "Outcome.Unique",
+      "name": "Outcome.Unique",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Outcome.java"
+      ],
+      "members": [
+        "T value",
+        "List<Diagnostic> diagnostics"
+      ]
+    },
+    {
+      "id": "Outcome.Multiple",
+      "name": "Outcome.Multiple",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Outcome.java"
+      ],
+      "members": [
+        "List<T> values",
+        "List<Diagnostic> diagnostics"
+      ]
+    },
+    {
+      "id": "Outcome.None",
+      "name": "Outcome.None",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Outcome.java"
+      ],
+      "members": [
+        "List<Diagnostic> diagnostics"
+      ]
+    },
+    {
+      "id": "Outcome.Unsupported",
+      "name": "Outcome.Unsupported",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Outcome.java"
+      ],
+      "members": [
+        "List<Diagnostic> diagnostics"
+      ]
+    },
+    {
+      "id": "Outcome.Invalid",
+      "name": "Outcome.Invalid",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Outcome.java"
+      ],
+      "members": [
+        "List<Diagnostic> diagnostics"
+      ]
+    },
+    {
+      "id": "OutcomeException",
+      "name": "OutcomeException",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/OutcomeException.java"
+      ],
+      "members": [
+        "Status status()",
+        "List<Diagnostic> diagnostics()"
+      ]
+    },
+    {
+      "id": "Diagnostic",
+      "name": "Diagnostic",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Diagnostic.java"
+      ],
+      "members": [
+        "String code",
+        "String severity",
+        "String path",
+        "String message"
+      ]
+    },
+    {
+      "id": "Status",
+      "name": "Status",
+      "kind": "enum",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Status.java"
+      ],
+      "members": [
+        "INVALID, UNSUPPORTED, INDETERMINATE, NONE, UNIQUE, MULTIPLE, RANGE, SYMBOLIC, RESOURCE_LIMIT, ERROR, VALID",
+        "String wire()"
+      ]
+    },
+    {
+      "id": "MonthEnd",
+      "name": "MonthEnd",
+      "kind": "enum",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/MonthEnd.java"
+      ],
+      "members": [
+        "REJECT, CONSTRAIN",
+        "String wire()"
+      ]
+    },
+    {
+      "id": "Gap",
+      "name": "Gap",
+      "kind": "enum",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Gap.java"
+      ],
+      "members": [
+        "REJECT, PRESERVE_UNRESOLVED, SHIFT_FORWARD",
+        "String wire()"
+      ]
+    },
+    {
+      "id": "Overlap",
+      "name": "Overlap",
+      "kind": "enum",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Overlap.java"
+      ],
+      "members": [
+        "REJECT, ALL, EARLIEST, LATEST",
+        "String wire()"
+      ]
+    },
+    {
+      "id": "ResolutionPolicy",
+      "name": "ResolutionPolicy",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/ResolutionPolicy.java"
+      ],
+      "members": [
+        "Gap gap",
+        "Overlap overlap",
+        "static final ResolutionPolicy STRICT; ALL_CANDIDATES; REJECT (deprecated)",
+        "ResolutionPolicy withGap(Gap g)",
+        "ResolutionPolicy withOverlap(Overlap o)"
+      ]
+    },
+    {
+      "id": "Truth",
+      "name": "Truth",
+      "kind": "enum",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Truth.java"
+      ],
+      "members": [
+        "DEFINITELY, POSSIBLY, IMPOSSIBLE",
+        "String wire()"
+      ]
+    },
+    {
+      "id": "Ordering",
+      "name": "Ordering",
+      "kind": "enum",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Ordering.java"
+      ],
+      "members": [
+        "BEFORE, EQUAL, AFTER",
+        "String wire()"
+      ]
+    },
+    {
+      "id": "Weekday",
+      "name": "Weekday",
+      "kind": "enum",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Weekday.java"
+      ],
+      "members": [
+        "MONDAY … SUNDAY",
+        "int number()",
+        "static Weekday of(int isoNumber)"
+      ]
+    },
+    {
+      "id": "ZoneRules",
+      "name": "ZoneRules",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/ZoneRules.java"
+      ],
+      "members": [
+        "static ZoneRules load(Path path) throws IOException",
+        "static ZoneRules parse(String json)",
+        "static Outcome<ZoneRules> tryParse(String json)",
+        "static ZoneRules of(RuleBundle bundle)",
+        "RuleBundle bundle()",
+        "Set<String> zoneIds()"
+      ]
+    },
+    {
+      "id": "TemporalContext",
+      "name": "TemporalContext",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java"
+      ],
+      "members": [
+        "static TemporalContext with(ZoneRules rules)",
+        "ZoneRules rules()",
+        "Outcome<Instant> resolve(ZonedIntent zoned[, ResolutionPolicy policy])",
+        "Outcome<ZonedIntent> inZone(Instant instant, String zoneId)",
+        "Outcome<Ordering> compare(TemporalValue a, TemporalValue b)"
+      ]
+    },
+    {
+      "id": "RuleBundle",
+      "name": "RuleBundle",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/RuleBundle.java"
+      ],
+      "members": [
+        "static RuleBundle parse(String json)",
+        "static RuleBundle fromJson(JsonNode n)",
+        "JsonNode ruleSet()",
+        "Set<String> zoneIds()"
+      ]
+    },
+    {
+      "id": "RuleBundle.Transition",
+      "name": "RuleBundle.Transition",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/RuleBundle.java"
+      ],
+      "members": [
+        "BigInteger at",
+        "int offset"
+      ]
+    },
+    {
+      "id": "RuleBundle.ZoneData",
+      "name": "RuleBundle.ZoneData",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/RuleBundle.java"
+      ],
+      "members": [
+        "int initialOffset",
+        "List<Transition> transitions",
+        "int offsetAt(Rational t)"
+      ]
+    },
+    {
+      "id": "UtvResult",
+      "name": "UtvResult",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/UtvResult.java"
+      ],
+      "members": [
+        "String operation",
+        "Status status",
+        "List<Diagnostic> diagnostics",
+        "List<JsonNode> candidates",
+        "static final String SCHEMA = \"utv-result/1.0\"",
+        "Optional<JsonNode> value()",
+        "boolean isUnique()",
+        "ObjectNode toJson()"
+      ]
+    },
+    {
+      "id": "Values",
+      "name": "Values",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Values.java"
+      ],
+      "members": [
+        "static ObjectNode date/yearMonth/time/dateTime(…)",
+        "static ObjectNode inZone(JsonNode dateTime, String zoneId)",
+        "static ObjectNode withOffset(JsonNode dateTime, int offsetSeconds)",
+        "static ObjectNode instant(long epochSeconds[, long nano])",
+        "static ObjectNode period(…); years/months/weeks/days/hours/minutes/seconds(long n)",
+        "static ObjectNode posixSeconds(…)",
+        "static ObjectNode interval(JsonNode start, JsonNode end[, boolean startIncluded, boolean endIncluded])",
+        "static ObjectNode unbounded(); unknown()"
+      ]
+    },
+    {
+      "id": "Operations",
+      "name": "Operations",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Operations.java"
+      ],
+      "members": [
+        "static UtvResult fields(JsonNode value)",
+        "static UtvResult add(JsonNode value, JsonNode amount[, MonthEnd | JsonNode policy])",
+        "static UtvResult compare(JsonNode a, JsonNode b)",
+        "static UtvResult daysBetween(JsonNode a, JsonNode b)",
+        "static UtvResult posixSecondsBetween(JsonNode a, JsonNode b)"
+      ]
+    },
+    {
+      "id": "Operations.MonthEnd",
+      "name": "Operations.MonthEnd",
+      "kind": "enum",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Operations.java"
+      ],
+      "members": [
+        "REJECT, CONSTRAIN (deprecated since 0.3)",
+        "String wire()"
+      ]
+    },
+    {
+      "id": "Intervals",
+      "name": "Intervals",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Intervals.java"
+      ],
+      "members": [
+        "static UtvResult contains(JsonNode interval, JsonNode point)",
+        "static UtvResult overlaps(JsonNode a, JsonNode b)"
+      ]
+    },
+    {
+      "id": "Zones",
+      "name": "Zones",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Zones.java"
+      ],
+      "members": [
+        "static UtvResult resolve(JsonNode dateTime, RuleBundle rules[, ResolutionPolicy | JsonNode policy])",
+        "static UtvResult toZone(JsonNode instant, String zoneId, RuleBundle rules)",
+        "static UtvResult toOffset(JsonNode instant, int offsetSeconds)"
+      ]
+    },
+    {
+      "id": "Iso",
+      "name": "Iso",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Iso.java"
+      ],
+      "members": [
+        "static UtvResult parseIso(String text)",
+        "static UtvResult formatIso(JsonNode value)",
+        "static String formatOrNull(JsonNode value)"
+      ]
+    },
+    {
+      "id": "TextForm",
+      "name": "TextForm",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/TextForm.java"
+      ],
+      "members": [
+        "static UtvResult parseText(String text)",
+        "static UtvResult formatText(JsonNode value)"
+      ]
+    },
+    {
+      "id": "Utv",
+      "name": "Utv",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Utv.java"
+      ],
+      "members": [
+        "static final String SPEC_VERSION = \"utv/1.0\"",
+        "static JsonNode parse(String json) throws IOException",
+        "static UtvResult validateStructural(String json)",
+        "static UtvResult validateStructural(JsonNode node)"
+      ]
+    },
+    {
+      "id": "GregorianCivil",
+      "name": "GregorianCivil",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/GregorianCivil.java"
+      ],
+      "members": [
+        "static boolean isLeapYear(BigInteger year)",
+        "static int daysInMonth(BigInteger year, int month)",
+        "static UtvResult validate(String json)"
+      ]
+    },
+    {
+      "id": "JavaTime",
+      "name": "JavaTime",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/JavaTime.java"
+      ],
+      "members": [
+        "static ObjectNode fromLocalDate/fromLocalTime/fromLocalDateTime/fromInstant/fromPeriod/fromDuration(…)",
+        "static ObjectNode fromOffsetDateTime(OffsetDateTime t, As as)",
+        "static ObjectNode fromZonedDateTime(ZonedDateTime t)",
+        "static UtvResult fromDate(Date d, As as)",
+        "static NativeResult<…> toLocalDate/toLocalTime/toLocalDateTime/toOffsetDateTime/toZonedDateTime/toInstant/toPeriod/toDuration(JsonNode v)"
+      ]
+    },
+    {
+      "id": "JavaTime.As",
+      "name": "JavaTime.As",
+      "kind": "enum",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/JavaTime.java"
+      ],
+      "members": [
+        "INSTANT, OFFSET_DATE_TIME, LOCAL_DATE_TIME"
+      ]
+    },
+    {
+      "id": "NativeResult",
+      "name": "NativeResult",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/NativeResult.java"
+      ],
+      "members": [
+        "Status status",
+        "T value",
+        "boolean lossy",
+        "List<Diagnostic> diagnostics",
+        "Optional<T> get()"
+      ]
+    },
+    {
+      "id": "Typed",
+      "name": "Typed",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Typed.java"
+      ],
+      "members": [
+        "static <T> Outcome<T> outcome(UtvResult r, Function<JsonNode, T> map)",
+        "static <T> T total(UtvResult r, Function<JsonNode, T> map)",
+        "static <T> T argument(Outcome<T> o)",
+        "static <T extends TemporalValue> Outcome<T> decode(JsonNode json, Function<JsonNode, T> build)",
+        "static <T> Outcome<T> parse(String text, Function<JsonNode, Outcome<T>> fromJson)",
+        "static String text(TemporalValue v)",
+        "static Outcome<TemporalValue> anyFromJson(JsonNode j)"
+      ]
+    },
+    {
+      "id": "Civil",
+      "name": "Civil",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Civil.java"
+      ],
+      "members": [
+        "String form",
+        "BigInteger year",
+        "Integer month, day, hour, minute, second, nano",
+        "Zone zone",
+        "Integer offsetAssertion",
+        "static void structural(JsonNode node, String what)",
+        "static Civil decode(JsonNode node, String what)",
+        "static ObjectNode build(…)",
+        "static ObjectNode datetimeAt(Rational local)"
+      ]
+    },
+    {
+      "id": "Civil.Zone",
+      "name": "Civil.Zone",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Civil.java"
+      ],
+      "members": [
+        "String type",
+        "int seconds",
+        "String id"
+      ]
+    },
+    {
+      "id": "Gregorian",
+      "name": "Gregorian",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Gregorian.java"
+      ],
+      "members": [
+        "static BigInteger epochDay(BigInteger year, int month, int day)",
+        "static Ymd fromEpochDay(BigInteger epochDay)",
+        "static int dayOfWeek(BigInteger epochDay)"
+      ]
+    },
+    {
+      "id": "Gregorian.Ymd",
+      "name": "Gregorian.Ymd",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Gregorian.java"
+      ],
+      "members": [
+        "BigInteger year",
+        "int month",
+        "int day"
+      ]
+    },
+    {
+      "id": "Rational",
+      "name": "Rational",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Rational.java"
+      ],
+      "members": [
+        "static Rational of(BigInteger num, BigInteger den)",
+        "Rational add/subtract/negate/multiply(…)",
+        "BigInteger floor()",
+        "Rational fraction()"
+      ]
+    },
+    {
+      "id": "Instants",
+      "name": "Instants",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Instants.java"
+      ],
+      "members": [
+        "static Rational decode(JsonNode node, String what)",
+        "static Rational posixAmount(JsonNode amount, String what)"
+      ]
+    },
+    {
+      "id": "Json",
+      "name": "Json",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Json.java"
+      ],
+      "members": [
+        "static ObjectNode envelope(String kind)",
+        "static ObjectNode instant(Rational t)",
+        "static ObjectNode posixSeconds(Rational r)"
+      ]
+    },
+    {
+      "id": "Fail",
+      "name": "Fail",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Fail.java"
+      ],
+      "members": [
+        "final Status status",
+        "final List<Diagnostic> diagnostics",
+        "static UtvResult run(String op, Supplier<UtvResult> body)"
+      ]
+    },
+    {
+      "id": "KindTable",
+      "name": "KindTable",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/KindTable.java"
+      ],
+      "members": [
+        "static final Map<String, Rule> RULES"
+      ]
+    },
+    {
+      "id": "KindTable.Rule",
+      "name": "KindTable.Rule",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/KindTable.java"
+      ],
+      "members": [
+        "boolean closed",
+        "Set<String> required",
+        "Set<String> allowed"
+      ]
+    },
+    {
+      "id": "KindRules",
+      "name": "KindRules",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/KindRules.java"
+      ],
+      "members": [
+        "static Status check(String kind, JsonNode v, String vp, List<Diagnostic> d)"
+      ]
+    },
+    {
+      "id": "Intervals.Span",
+      "name": "Intervals.Span",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Intervals.java"
+      ],
+      "members": [
+        "boolean dates",
+        "End start",
+        "End end",
+        "boolean flaggedEmpty"
+      ]
+    },
+    {
+      "id": "Intervals.End",
+      "name": "Intervals.End",
+      "kind": "record",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Intervals.java"
+      ],
+      "members": [
+        "State state",
+        "Rational at"
+      ]
+    },
+    {
+      "id": "Intervals.Tri",
+      "name": "Intervals.Tri",
+      "kind": "enum",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Intervals.java"
+      ],
+      "members": [
+        "TRUE, FALSE, UNKNOWN"
+      ]
+    },
+    {
+      "id": "Intervals.State",
+      "name": "Intervals.State",
+      "kind": "enum",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Intervals.java"
+      ],
+      "members": [
+        "INCLUDED, EXCLUDED, UNBOUNDED, UNKNOWN"
+      ]
+    },
+    {
+      "id": "Iso.Parts",
+      "name": "Iso.Parts",
+      "kind": "class",
+      "sources": [
+        "implementations/java/src/main/java/net/icelander/utv/Iso.java"
+      ],
+      "members": [
+        "parsed fields; invalid wins over unsupported"
+      ]
+    },
+    {
+      "id": "ext.Comparable",
+      "name": "java.lang.Comparable",
+      "kind": "interface",
+      "sources": [],
+      "members": [],
+      "external": true
+    },
+    {
+      "id": "ext.RuntimeException",
+      "name": "java.lang.RuntimeException",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    },
+    {
+      "id": "ext.ObjectNode",
+      "name": "com.fasterxml.jackson.databind.node.ObjectNode",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    },
+    {
+      "id": "ext.LocalDate",
+      "name": "java.time.LocalDate",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    },
+    {
+      "id": "ext.ZonedDateTime",
+      "name": "java.time.ZonedDateTime",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    },
+    {
+      "id": "ext.OffsetDateTime",
+      "name": "java.time.OffsetDateTime",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    },
+    {
+      "id": "ext.JavaInstant",
+      "name": "java.time.Instant",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "IntervalPoint",
+      "to": "TemporalValue",
+      "kind": "inherits",
+      "description": "Every interval point is a value."
+    },
+    {
+      "from": "IntervalPoint",
+      "to": "ext.Comparable",
+      "kind": "inherits",
+      "description": "Points are totally ordered."
+    },
+    {
+      "from": "CivilDate",
+      "to": "IntervalPoint",
+      "kind": "implements",
+      "description": "A date interval's point."
+    },
+    {
+      "from": "Instant",
+      "to": "IntervalPoint",
+      "kind": "implements",
+      "description": "An instant interval's point."
+    },
+    {
+      "from": "CivilYearMonth",
+      "to": "TemporalValue",
+      "kind": "implements",
+      "description": "Sealed TemporalValue permits it."
+    },
+    {
+      "from": "CivilTime",
+      "to": "TemporalValue",
+      "kind": "implements",
+      "description": "Sealed TemporalValue permits it."
+    },
+    {
+      "from": "CivilDateTime",
+      "to": "TemporalValue",
+      "kind": "implements",
+      "description": "Sealed TemporalValue permits it."
+    },
+    {
+      "from": "FixedOffsetDateTime",
+      "to": "TemporalValue",
+      "kind": "implements",
+      "description": "Sealed TemporalValue permits it."
+    },
+    {
+      "from": "ZonedIntent",
+      "to": "TemporalValue",
+      "kind": "implements",
+      "description": "Sealed TemporalValue permits it."
+    },
+    {
+      "from": "Period",
+      "to": "TemporalValue",
+      "kind": "implements",
+      "description": "Sealed TemporalValue permits it."
+    },
+    {
+      "from": "PosixSeconds",
+      "to": "TemporalValue",
+      "kind": "implements",
+      "description": "Sealed TemporalValue permits it."
+    },
+    {
+      "from": "ElapsedSeconds",
+      "to": "TemporalValue",
+      "kind": "implements",
+      "description": "Sealed TemporalValue permits it."
+    },
+    {
+      "from": "Interval",
+      "to": "TemporalValue",
+      "kind": "implements",
+      "description": "Sealed TemporalValue permits it."
+    },
+    {
+      "from": "CivilYearMonth",
+      "to": "ext.Comparable",
+      "kind": "implements",
+      "description": "Always ordered."
+    },
+    {
+      "from": "CivilTime",
+      "to": "ext.Comparable",
+      "kind": "implements",
+      "description": "Always ordered."
+    },
+    {
+      "from": "CivilDateTime",
+      "to": "ext.Comparable",
+      "kind": "implements",
+      "description": "Always ordered."
+    },
+    {
+      "from": "FixedOffsetDateTime",
+      "to": "ext.Comparable",
+      "kind": "implements",
+      "description": "Always ordered."
+    },
+    {
+      "from": "Rational",
+      "to": "ext.Comparable",
+      "kind": "implements",
+      "description": "Always ordered."
+    },
+    {
+      "from": "Bound.Included",
+      "to": "Bound",
+      "kind": "implements",
+      "description": "A case of the sealed Bound."
+    },
+    {
+      "from": "Bound.Excluded",
+      "to": "Bound",
+      "kind": "implements",
+      "description": "A case of the sealed Bound."
+    },
+    {
+      "from": "Bound.Unbounded",
+      "to": "Bound",
+      "kind": "implements",
+      "description": "A case of the sealed Bound."
+    },
+    {
+      "from": "Bound.Unknown",
+      "to": "Bound",
+      "kind": "implements",
+      "description": "A case of the sealed Bound."
+    },
+    {
+      "from": "Outcome.Unique",
+      "to": "Outcome",
+      "kind": "implements",
+      "description": "A case of the sealed Outcome."
+    },
+    {
+      "from": "Outcome.Multiple",
+      "to": "Outcome",
+      "kind": "implements",
+      "description": "A case of the sealed Outcome."
+    },
+    {
+      "from": "Outcome.None",
+      "to": "Outcome",
+      "kind": "implements",
+      "description": "A case of the sealed Outcome."
+    },
+    {
+      "from": "Outcome.Unsupported",
+      "to": "Outcome",
+      "kind": "implements",
+      "description": "A case of the sealed Outcome."
+    },
+    {
+      "from": "Outcome.Invalid",
+      "to": "Outcome",
+      "kind": "implements",
+      "description": "A case of the sealed Outcome."
+    },
+    {
+      "from": "OutcomeException",
+      "to": "ext.RuntimeException",
+      "kind": "inherits",
+      "description": "Thrown by Outcome.single."
+    },
+    {
+      "from": "Fail",
+      "to": "ext.RuntimeException",
+      "kind": "inherits",
+      "description": "Internal; caught by Fail.run, Typed.decode and JavaTime.convert."
+    },
+    {
+      "from": "TemporalValue",
+      "to": "ext.ObjectNode",
+      "kind": "depends-on",
+      "description": "toJson returns the UTV JSON."
+    },
+    {
+      "from": "CivilDateTime",
+      "to": "CivilDate",
+      "kind": "depends-on",
+      "description": "Holds the date."
+    },
+    {
+      "from": "CivilDateTime",
+      "to": "CivilTime",
+      "kind": "depends-on",
+      "description": "Holds the time."
+    },
+    {
+      "from": "CivilDate",
+      "to": "Weekday",
+      "kind": "depends-on",
+      "description": "dayOfWeek."
+    },
+    {
+      "from": "CivilDate",
+      "to": "MonthEnd",
+      "kind": "depends-on",
+      "description": "The total addMonths and addYears accept only CONSTRAIN."
+    },
+    {
+      "from": "CivilDate",
+      "to": "Period",
+      "kind": "depends-on",
+      "description": "add(Period)."
+    },
+    {
+      "from": "CivilDate",
+      "to": "ext.LocalDate",
+      "kind": "depends-on",
+      "description": "from and toLocalDate."
+    },
+    {
+      "from": "FixedOffsetDateTime",
+      "to": "CivilDateTime",
+      "kind": "depends-on",
+      "description": "Holds the wall time."
+    },
+    {
+      "from": "FixedOffsetDateTime",
+      "to": "Instant",
+      "kind": "depends-on",
+      "description": "toInstant."
+    },
+    {
+      "from": "FixedOffsetDateTime",
+      "to": "ext.OffsetDateTime",
+      "kind": "depends-on",
+      "description": "from and toOffsetDateTime."
+    },
+    {
+      "from": "ZonedIntent",
+      "to": "CivilDateTime",
+      "kind": "depends-on",
+      "description": "Holds the wall time."
+    },
+    {
+      "from": "ZonedIntent",
+      "to": "TemporalContext",
+      "kind": "depends-on",
+      "description": "resolve takes the context."
+    },
+    {
+      "from": "ZonedIntent",
+      "to": "ResolutionPolicy",
+      "kind": "depends-on",
+      "description": "resolve's policy; Gap and Overlap shorthands."
+    },
+    {
+      "from": "ZonedIntent",
+      "to": "ext.ZonedDateTime",
+      "kind": "depends-on",
+      "description": "from and toZonedDateTime."
+    },
+    {
+      "from": "Instant",
+      "to": "PosixSeconds",
+      "kind": "depends-on",
+      "description": "add, until and subSecond."
+    },
+    {
+      "from": "Instant",
+      "to": "ElapsedSeconds",
+      "kind": "depends-on",
+      "description": "add answers unsupported."
+    },
+    {
+      "from": "Instant",
+      "to": "FixedOffsetDateTime",
+      "kind": "depends-on",
+      "description": "atOffset."
+    },
+    {
+      "from": "Instant",
+      "to": "TemporalContext",
+      "kind": "depends-on",
+      "description": "inZone."
+    },
+    {
+      "from": "Instant",
+      "to": "ext.JavaInstant",
+      "kind": "depends-on",
+      "description": "from and toJavaInstant."
+    },
+    {
+      "from": "Interval",
+      "to": "Bound",
+      "kind": "depends-on",
+      "description": "Its two ends."
+    },
+    {
+      "from": "Interval",
+      "to": "IntervalPoint",
+      "kind": "depends-on",
+      "description": "Its point type."
+    },
+    {
+      "from": "Interval",
+      "to": "Truth",
+      "kind": "depends-on",
+      "description": "contains and overlaps."
+    },
+    {
+      "from": "Outcome",
+      "to": "Diagnostic",
+      "kind": "depends-on",
+      "description": "Every case carries diagnostics."
+    },
+    {
+      "from": "Outcome",
+      "to": "Status",
+      "kind": "depends-on",
+      "description": "status()."
+    },
+    {
+      "from": "Outcome",
+      "to": "OutcomeException",
+      "kind": "depends-on",
+      "description": "single() throws it."
+    },
+    {
+      "from": "Outcome",
+      "to": "UtvResult",
+      "kind": "depends-on",
+      "description": "toResult()."
+    },
+    {
+      "from": "ResolutionPolicy",
+      "to": "Gap",
+      "kind": "depends-on",
+      "description": "Its gap policy."
+    },
+    {
+      "from": "ResolutionPolicy",
+      "to": "Overlap",
+      "kind": "depends-on",
+      "description": "Its overlap policy."
+    },
+    {
+      "from": "TemporalContext",
+      "to": "ZoneRules",
+      "kind": "depends-on",
+      "description": "Holds the rules."
+    },
+    {
+      "from": "TemporalContext",
+      "to": "Ordering",
+      "kind": "depends-on",
+      "description": "compare."
+    },
+    {
+      "from": "TemporalContext",
+      "to": "Zones",
+      "kind": "depends-on",
+      "description": "resolve and inZone call Zones."
+    },
+    {
+      "from": "ZoneRules",
+      "to": "RuleBundle",
+      "kind": "depends-on",
+      "description": "Wraps the parsed bundle."
+    },
+    {
+      "from": "RuleBundle",
+      "to": "RuleBundle.ZoneData",
+      "kind": "depends-on",
+      "description": "One per zone."
+    },
+    {
+      "from": "RuleBundle.ZoneData",
+      "to": "RuleBundle.Transition",
+      "kind": "depends-on",
+      "description": "Sorted transitions."
+    },
+    {
+      "from": "UtvResult",
+      "to": "Status",
+      "kind": "depends-on",
+      "description": "Its status."
+    },
+    {
+      "from": "UtvResult",
+      "to": "Diagnostic",
+      "kind": "depends-on",
+      "description": "Its diagnostics."
+    },
+    {
+      "from": "Operations",
+      "to": "UtvResult",
+      "kind": "depends-on",
+      "description": "Every operation's answer."
+    },
+    {
+      "from": "Operations",
+      "to": "MonthEnd",
+      "kind": "depends-on",
+      "description": "add's month-end policy."
+    },
+    {
+      "from": "Operations",
+      "to": "Operations.MonthEnd",
+      "kind": "depends-on",
+      "description": "Deprecated 0.2 overload of add."
+    },
+    {
+      "from": "Intervals",
+      "to": "Intervals.Span",
+      "kind": "depends-on",
+      "description": "Decoded intervals."
+    },
+    {
+      "from": "Intervals.Span",
+      "to": "Intervals.End",
+      "kind": "depends-on",
+      "description": "Its ends."
+    },
+    {
+      "from": "Intervals.End",
+      "to": "Intervals.State",
+      "kind": "depends-on",
+      "description": "Endpoint state."
+    },
+    {
+      "from": "Intervals",
+      "to": "Intervals.Tri",
+      "kind": "depends-on",
+      "description": "Three-valued logic."
+    },
+    {
+      "from": "Zones",
+      "to": "RuleBundle",
+      "kind": "depends-on",
+      "description": "Explicit rules."
+    },
+    {
+      "from": "Zones",
+      "to": "ResolutionPolicy",
+      "kind": "depends-on",
+      "description": "Gap and overlap policy."
+    },
+    {
+      "from": "Zones",
+      "to": "UtvResult",
+      "kind": "depends-on",
+      "description": "Every operation's answer."
+    },
+    {
+      "from": "Iso",
+      "to": "Iso.Parts",
+      "kind": "depends-on",
+      "description": "Field checks while parsing."
+    },
+    {
+      "from": "TextForm",
+      "to": "Iso",
+      "kind": "depends-on",
+      "description": "Points are ISO text."
+    },
+    {
+      "from": "TextForm",
+      "to": "Operations",
+      "kind": "depends-on",
+      "description": "compare refuses reversed intervals."
+    },
+    {
+      "from": "Utv",
+      "to": "KindTable",
+      "kind": "depends-on",
+      "description": "Required and allowed properties per kind."
+    },
+    {
+      "from": "Utv",
+      "to": "KindRules",
+      "kind": "depends-on",
+      "description": "Interval constructions and series samples."
+    },
+    {
+      "from": "KindTable",
+      "to": "KindTable.Rule",
+      "kind": "depends-on",
+      "description": "One rule per kind."
+    },
+    {
+      "from": "GregorianCivil",
+      "to": "Utv",
+      "kind": "depends-on",
+      "description": "Validates structure first."
+    },
+    {
+      "from": "JavaTime",
+      "to": "JavaTime.As",
+      "kind": "depends-on",
+      "description": "The caller's intent."
+    },
+    {
+      "from": "JavaTime",
+      "to": "NativeResult",
+      "kind": "depends-on",
+      "description": "Answers going to java.time."
+    },
+    {
+      "from": "NativeResult",
+      "to": "Diagnostic",
+      "kind": "depends-on",
+      "description": "What a lossy conversion dropped."
+    },
+    {
+      "from": "Typed",
+      "to": "Outcome",
+      "kind": "depends-on",
+      "description": "Builds outcomes."
+    },
+    {
+      "from": "Typed",
+      "to": "TextForm",
+      "kind": "depends-on",
+      "description": "parse and text."
+    },
+    {
+      "from": "Typed",
+      "to": "Civil",
+      "kind": "depends-on",
+      "description": "Decodes civil JSON."
+    },
+    {
+      "from": "Typed",
+      "to": "Fail",
+      "kind": "depends-on",
+      "description": "Turns a Fail into an Outcome."
+    },
+    {
+      "from": "Civil",
+      "to": "Civil.Zone",
+      "kind": "depends-on",
+      "description": "The decoded zone."
+    },
+    {
+      "from": "Civil",
+      "to": "Utv",
+      "kind": "depends-on",
+      "description": "structural runs validateStructural."
+    },
+    {
+      "from": "Civil",
+      "to": "Gregorian",
+      "kind": "depends-on",
+      "description": "Epoch days."
+    },
+    {
+      "from": "Gregorian",
+      "to": "Gregorian.Ymd",
+      "kind": "depends-on",
+      "description": "A decoded date."
+    },
+    {
+      "from": "Instants",
+      "to": "Rational",
+      "kind": "depends-on",
+      "description": "Exact seconds."
+    },
+    {
+      "from": "Fail",
+      "to": "Status",
+      "kind": "depends-on",
+      "description": "The outcome it carries."
+    },
+    {
+      "from": "Fail",
+      "to": "Diagnostic",
+      "kind": "depends-on",
+      "description": "Its diagnostics."
+    }
+  ]
+}

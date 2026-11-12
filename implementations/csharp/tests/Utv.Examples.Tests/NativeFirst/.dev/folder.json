@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Native-first examples",
+  "folder": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Native-first examples",
+      "summary": "One test class per .NET type (DateOnlyTests, DateTimeOffsetTests, TimeZoneInfoTests, …), in folders that mirror .NET's namespaces: what .NET does for each task, compared with UTV.",
+      "purpose": "Organized by the System namespace, class and method. Where .NET and UTV agree, the expected value is computed with UTV; where they differ, it is a literal and the Compared with: sentence says what UTV does. Globalization/ and Text/Json/ hold the System.Globalization and System.Text.Json classes.",
+      "boundaries": [
+        "TimeZoneInfoTests reads the host's tz database, as its class comment says; DateTimeOffsetTests and DateTimeTests each read the clock once, on purpose, with a remark saying why the outcome cannot depend on it."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/TimeZoneInfoTests.cs",
+          "symbol": "TimeZoneInfoTests"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/DateTimeOffsetTests.cs",
+          "symbol": "DateTimeOffsetTests.Test_UtcNow_SurvivesTheTripThroughUtv_WhenReadAtAnyTime"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "$schema": "../../Meta/Agents/Skills/describe-operation/schema.json",
+  "kind": "operation",
+  "title": "Tool commands",
+  "folder": "tools",
+  "description": "The commands a contributor or CI runs from the repository root.",
+  "sources": [
+    {
+      "path": "tools/validate.py",
+      "symbol": "main"
+    },
+    {
+      "path": "tools/side_by_side.py",
+      "symbol": "main"
+    }
+  ],
+  "entities": [
+    {
+      "id": "validate-structure",
+      "name": "Check the specification material",
+      "description": "Runs the eight structural checks in order and prints ok or FAIL for each.",
+      "sources": [
+        {
+          "path": "tools/validate.py",
+          "symbol": "main"
+        },
+        {
+          "path": "tools/validate.py",
+          "symbol": "load_json"
+        }
+      ],
+      "entrypoint": {
+        "path": "tools/validate.py",
+        "symbol": "main"
+      },
+      "action": "query",
+      "transport": "command line: python3 tools/validate.py, from the repository root",
+      "authorization": "None: a local script.",
+      "result": "Exit code 0 and \"All structural checks passed.\", or exit code 1 with the number of failures; each failure is printed as it is found.",
+      "failures": [
+        "A schema in schema/ is not a valid Draft 2020-12 schema: check_schema raises and the script stops with a traceback.",
+        "A JSON file has a duplicate key: load_json raises ValueError and the script stops.",
+        "A value in valid.json is rejected, or does not carry the wire identifier utv/1.0.",
+        "A value in invalid-structural.json is accepted.",
+        "A complete UTV example embedded in spec/*.md is rejected.",
+        "A scenario is missing a required field or repeats an id; a falsehood id is in the matrix and not in falsehoods.json, or the other way round.",
+        "An everyday fixture names a rule bundle that does not exist, repeats an id, or holds a UTV value the schema rejects.",
+        "A text-form fixture repeats an id or holds a value the schema rejects."
+      ]
+    },
+    {
+      "id": "write-side-by-side",
+      "name": "Regenerate the side-by-side page",
+      "description": "Collects the code between BEGIN and END markers in the five UTV-first suites and writes docs/side-by-side.md.",
+      "sources": [
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "main"
+        },
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "extract"
+        },
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "render"
+        }
+      ],
+      "entrypoint": {
+        "path": "tools/side_by_side.py",
+        "symbol": "main"
+      },
+      "action": "command",
+      "transport": "command line: python3 tools/side_by_side.py",
+      "authorization": "None: a local script.",
+      "result": "docs/side-by-side.md is rewritten, task by task in the order of SECTIONS, with each language's marked code; tasks a language has not marked are listed under a final Missing heading.",
+      "failures": [
+        "A BEGIN marker opens inside another task's block, an END names a task other than the open one, or a BEGIN is never closed: the script exits with the file and the marker."
+      ]
+    },
+    {
+      "id": "check-side-by-side",
+      "name": "Check the side-by-side page is current",
+      "description": "Renders the page in memory and compares it with docs/side-by-side.md.",
+      "sources": [
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "main"
+        }
+      ],
+      "entrypoint": {
+        "path": "tools/side_by_side.py",
+        "symbol": "main"
+      },
+      "action": "query",
+      "transport": "command line: python3 tools/side_by_side.py --check",
+      "authorization": "None: a local script.",
+      "result": "Exit code 0 when the page matches what the tests would produce.",
+      "failures": [
+        "The page differs: exit code 1 and \"docs/side-by-side.md is out of date; run python3 tools/side_by_side.py\".",
+        "The same marker errors as when writing the page."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "tools",
+      "path": "tools/.dev/capability.json",
+      "relationship": "The capabilities these commands expose."
+    },
+    {
+      "kind": "use-case",
+      "folder": "tools",
+      "path": "tools/.dev/use-case.json",
+      "relationship": "The use cases that run them."
+    }
+  ]
+}

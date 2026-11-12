@@ -1,0 +1,77 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/runbooks.schema.json",
+  "kind": "runbooks",
+  "title": "TypeScript library runbooks",
+  "folder": "implementations/typescript",
+  "entities": [
+    {
+      "id": "setup",
+      "title": "Build and test the TypeScript library",
+      "summary": "Install the one devDependency, then compile and run every test with npm test, from the library's folder.",
+      "purpose": "setup",
+      "when": "Before changing anything in implementations/typescript, and before committing a change to it.",
+      "steps": [
+        "cd implementations/typescript",
+        "npm install (installs the only devDependency, typescript 6.0.2, as package-lock.json pins it)",
+        "npm test (tsc -p . compiles src/ and test/ into dist/, then node --test runs dist/test/**/*.test.js: the shared fixtures, the typed layer, the examples and native interop)",
+        "npm run build compiles without running the tests"
+      ],
+      "verify": "npm test passes. The tests read conformance/ from the repository root, so run them inside a full checkout.",
+      "details": "Toolchain: package.json pins typescript 6.0.2 and names no Node.js version (there is no engines field); tsconfig.json targets ES2022 with NodeNext modules. The README shows only `npm test`; the npm install step is what package.json and package-lock.json require for tsc to exist. The example tests that compare with Intl.DateTimeFormat read the host's tz database, which must know the 2026–2027 rules of New York and Paris.",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/typescript/README.md",
+          "symbol": "Tests"
+        },
+        {
+          "path": "implementations/typescript/package.json",
+          "symbol": "scripts"
+        },
+        {
+          "path": "implementations/typescript/package.json",
+          "symbol": "devDependencies"
+        },
+        {
+          "path": "implementations/typescript/tsconfig.json",
+          "symbol": "compilerOptions"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "3. Running the tests"
+        }
+      ]
+    },
+    {
+      "id": "change-an-example",
+      "title": "Change a UTV-first example",
+      "summary": "Regenerate the side-by-side page after changing a test between BEGIN and END task markers.",
+      "purpose": "operate",
+      "when": "A test in test/examples/utv-first/ wrapped in // BEGIN <task-id> … // END <task-id> has changed.",
+      "steps": [
+        "From implementations/typescript, run npm test",
+        "From the repository root, run python3 tools/side_by_side.py",
+        "Commit docs/side-by-side.md with the test"
+      ],
+      "verify": "python3 tools/side_by_side.py --check passes from the repository root.",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "symbol": "2. Examples are unit tests"
+        },
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "MARKER"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers"
+        }
+      ]
+    }
+  ]
+}

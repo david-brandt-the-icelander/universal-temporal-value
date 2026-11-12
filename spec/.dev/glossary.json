@@ -1,0 +1,243 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/glossary.schema.json",
+  "kind": "glossary",
+  "title": "UTV terms",
+  "folder": "spec",
+  "entities": [
+    {
+      "id": "wire-identifier",
+      "title": "Wire identifier",
+      "summary": "The schema value every UTV value carries, utv/<MAJOR>.<MINOR> (utv/1.0); results carry utv-result/<MAJOR>.<MINOR>.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Wire identifiers"
+        }
+      ],
+      "notConfusedWith": "The specification's full version 1.0.0: the patch number never appears on the wire."
+    },
+    {
+      "id": "kind",
+      "title": "Kind",
+      "summary": "One of the 26 core value types named in a value's kind field: civil, instant, amount, interval, recurrence, uncertain and the rest.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§2 Serialization and profiles"
+        }
+      ]
+    },
+    {
+      "id": "civil-value",
+      "title": "Civil value",
+      "summary": "A fielded calendar or time-of-day value under a named calendar, chronology and, optionally, zone; not totally ordered without context.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§4 Civil dates, calendar fields and time of day"
+        }
+      ],
+      "notConfusedWith": "An instant: a civil value need not name a single point on the timeline."
+    },
+    {
+      "id": "instant",
+      "title": "Instant",
+      "summary": "A coordinate in a named timescale (POSIX, TAI, UTC, GPS, TT, …).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§3 Temporal domains and reference systems"
+        }
+      ],
+      "notConfusedWith": "A civil date-time with an offset, which is still a civil value with a fixed-offset zone."
+    },
+    {
+      "id": "zone-intent",
+      "title": "Zone intent (zoneIntent)",
+      "summary": "What controls a civil value's future re-resolution: follow-zone-id, follow-location-law, fixed-offset, fixed-instant, floating-wall or historical-assertion.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§4 Named zone, offset, geographical intent"
+        }
+      ],
+      "notConfusedWith": "The zone itself: the same zone can be followed by identifier or by the law of a location."
+    },
+    {
+      "id": "floating",
+      "title": "Floating",
+      "summary": "A civil value with no zone selected (zone floating, or no zone at all), not attached to the timeline until an explicit operation does so.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§4 Named zone, offset, geographical intent"
+        },
+        {
+          "path": "docs/everyday-api.md",
+          "symbol": "Canonical shapes"
+        }
+      ],
+      "notConfusedWith": "A value in UTC or in the host's zone."
+    },
+    {
+      "id": "resolution-policy",
+      "title": "Resolution policy",
+      "summary": "How resolving a local time treats a DST gap (reject, preserve-unresolved, shift-forward-by-gap, …) and an overlap (reject, all, earliest, latest, offset-match, occurrence-index).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§4 Local-time resolution"
+        }
+      ],
+      "notConfusedWith": "The default: reject is recommended where one exact instant is required, and does not make the civil input invalid."
+    },
+    {
+      "id": "elapsed-amount",
+      "title": "Elapsed amount",
+      "summary": "A signed rational number of SI seconds in a stated physical-time context.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§5 Exact elapsed time, calendar period and non-standard duration"
+        }
+      ],
+      "notConfusedWith": "A calendar amount (P1D, P1M), whose length depends on the calendar, the zone and the day boundary; and POSIX seconds, which are not SI seconds across a leap second."
+    },
+    {
+      "id": "calendar-amount",
+      "title": "Calendar amount",
+      "summary": "Typed calendar components (years, months, weeks, days, time part) applied by an operation with a policy.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§5 Exact elapsed time, calendar period and non-standard duration"
+        }
+      ],
+      "notConfusedWith": "An elapsed amount: one calendar day is not necessarily 86,400 SI seconds."
+    },
+    {
+      "id": "status-none",
+      "title": "none",
+      "summary": "A complete, valid query proven to have an empty result, such as a wall time in a DST gap or 31 January plus one month under the reject policy.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/RESULT-CONTRACT.md",
+          "symbol": "Status invariants"
+        }
+      ],
+      "notConfusedWith": "invalid: none is a truthful answer to a meaningful question, not an error."
+    },
+    {
+      "id": "status-multiple",
+      "title": "multiple",
+      "summary": "More than one proven result, such as a wall time in a DST overlap; all candidates are returned.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/RESULT-CONTRACT.md",
+          "symbol": "Status invariants"
+        }
+      ],
+      "notConfusedWith": "An error, or a reason to pick one silently."
+    },
+    {
+      "id": "status-indeterminate",
+      "title": "indeterminate",
+      "summary": "The semantics are defined but the evidence is insufficient or contested: even a capable engine cannot derive a unique answer.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/RESULT-CONTRACT.md",
+          "symbol": "Status invariants"
+        }
+      ],
+      "notConfusedWith": "unsupported, which means this engine lacks the capability or the rules."
+    },
+    {
+      "id": "status-unsupported",
+      "title": "unsupported",
+      "summary": "No installed registered algorithm or necessary immutable rules; also the answer for a newer wire version or an open issue the implementation hits.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/RESULT-CONTRACT.md",
+          "symbol": "Status invariants"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Reader rules"
+        }
+      ],
+      "notConfusedWith": "invalid (the input contradicts itself) and indeterminate (nobody could know)."
+    },
+    {
+      "id": "manifest",
+      "title": "Manifest",
+      "summary": "The frozen rules, algorithm versions, reference datasets and evaluation context a result depended on.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/RESULT-CONTRACT.md",
+          "symbol": "Mandatory fields"
+        },
+        {
+          "path": "spec/DECISIONS.md",
+          "symbol": "16. Signature/reproducibility require immutable content, not a version name"
+        }
+      ],
+      "notConfusedWith": "A version label: reproducibility needs immutable content, not a name."
+    },
+    {
+      "id": "conformance-profile",
+      "title": "Conformance profile",
+      "summary": "A named subset an implementation may claim: core-civil, global-instant, zoned, recurrence, history, scientific, distributed, business or full.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§2 Serialization and profiles"
+        }
+      ],
+      "notConfusedWith": "The profile families of §27 (OI-09)."
+    },
+    {
+      "id": "fail-closed",
+      "title": "Fail closed",
+      "summary": "Reject unknown kinds, unknown core properties, unknown critical extensions, duplicate JSON keys and unknown specification versions rather than guessing.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Reader rules"
+        },
+        {
+          "path": "implementations/README.md",
+          "symbol": "Non-negotiable obligations"
+        }
+      ]
+    },
+    {
+      "id": "loss-report",
+      "title": "Loss report",
+      "summary": "What a conversion dropped or distorted, classified (lossless, information-losing, assumption-dependent, unrepresentable) with the affected fields.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/RESULT-CONTRACT.md",
+          "symbol": "Conversion loss"
+        }
+      ],
+      "notConfusedWith": "Adapter fidelity levels in STANDARDS-MATRIX.md, a separate vocabulary (OI-07)."
+    }
+  ]
+}

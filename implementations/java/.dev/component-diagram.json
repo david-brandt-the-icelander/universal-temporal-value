@@ -1,0 +1,124 @@
+{
+  "$schema": "../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "utv-core (Java) component diagram",
+  "folder": "implementations/java",
+  "description": "The Java library and its tests. The library depends only on Jackson and the JDK; the tests also use JUnit and read the shared conformance material in place. The library's code never reads schema/ (its kind table is a copy, see the source folder's backlog).",
+  "sources": [
+    {
+      "path": "implementations/java/pom.xml",
+      "symbol": "dependencies"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+      "symbol": "Utv.MAPPER"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+      "symbol": "JavaTime"
+    },
+    {
+      "path": "implementations/java/src/test/java/net/icelander/utv/ConformanceTest.java",
+      "symbol": "ConformanceTest.ROOT"
+    },
+    {
+      "path": "implementations/java/src/test/java/net/icelander/utv/examples/Fixtures.java",
+      "symbol": "Fixtures.demoZoneRules"
+    }
+  ],
+  "components": [
+    {
+      "id": "project",
+      "name": "utv-core (Java)",
+      "responsibility": "One Maven project: the library jar and its tests.",
+      "folder": "implementations/java"
+    },
+    {
+      "id": "library",
+      "name": "Library (net.icelander.utv)",
+      "responsibility": "The typed layer, the 0.2 JSON layer, the text form, structural validation and java.time interop, in one package.",
+      "folder": "implementations/java/src/main/java/net/icelander/utv",
+      "diagram": "implementations/java/src/main/java/net/icelander/utv/.dev/component-diagram.json"
+    },
+    {
+      "id": "tests",
+      "name": "Tests (net.icelander.utv, test scope)",
+      "responsibility": "The shared fixture runners, typed-layer and interop tests, and the UTV-first and native-first example suites.",
+      "folder": "implementations/java/src/test/java/net/icelander/utv"
+    },
+    {
+      "id": "conformance",
+      "name": "Shared conformance material",
+      "responsibility": "Everyday and text-form fixtures, the demo zone rules and the structural examples every library tests against.",
+      "folder": "conformance"
+    },
+    {
+      "id": "jackson",
+      "name": "Jackson databind 2.17.2",
+      "responsibility": "JSON values (JsonNode, ObjectNode) and parsing with strict duplicate-key detection.",
+      "external": true
+    },
+    {
+      "id": "java-time",
+      "name": "java.time (JDK)",
+      "responsibility": "The language's own date and time API, and the JDK's bundled tz database.",
+      "external": true
+    },
+    {
+      "id": "junit",
+      "name": "JUnit Jupiter 5.10.3",
+      "responsibility": "The test framework: @Test, @Nested, @ParameterizedTest and dynamic tests.",
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "project",
+      "to": "library",
+      "kind": "contains",
+      "description": "Compiled into the utv-core jar."
+    },
+    {
+      "from": "project",
+      "to": "tests",
+      "kind": "contains",
+      "description": "Run by mvn test (Surefire); not in the jar."
+    },
+    {
+      "from": "library",
+      "to": "jackson",
+      "kind": "depends-on",
+      "description": "UTV JSON values are Jackson nodes; Utv.parse enables STRICT_DUPLICATE_DETECTION."
+    },
+    {
+      "from": "library",
+      "to": "java-time",
+      "kind": "depends-on",
+      "description": "JavaTime and the typed from/to methods convert to and from java.time; toZonedDateTime checks offsets against the JDK's tz database."
+    },
+    {
+      "from": "tests",
+      "to": "library",
+      "kind": "depends-on",
+      "description": "Exercise the JSON layer, the typed layer and interop."
+    },
+    {
+      "from": "tests",
+      "to": "conformance",
+      "kind": "depends-on",
+      "description": "Read everyday.json, text-form.json, demo-zones.json and the examples from ../../conformance, never a copy."
+    },
+    {
+      "from": "tests",
+      "to": "junit",
+      "kind": "depends-on",
+      "description": "Test scope dependency."
+    },
+    {
+      "from": "tests",
+      "to": "java-time",
+      "kind": "depends-on",
+      "description": "Each example compares UTV with java.time; native-first zone tests read the JDK's tz database."
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "Native interop contracts",
+  "folder": "implementations/rust/src/interop",
+  "entities": [
+    {
+      "id": "native-adapters",
+      "title": "Native adapters (utv::interop)",
+      "summary": "The conversions between UTV values and SystemTime (always) and chrono's types (feature chrono), as public functions and From/TryFrom impls.",
+      "contractType": "library-api",
+      "consumers": [
+        "Application developers' code that holds SystemTime or chrono values",
+        "The example suites in implementations/rust/tests, which compare UTV with chrono through them"
+      ],
+      "guarantees": [
+        "utv::interop::from_system_time and to_system_time, and SystemTime: TryFrom<Instant>, are always available.",
+        "With the feature chrono: from_naive_date, from_naive_time, from_naive_date_time, from_fixed_offset(dt, OffsetIntent), from_utc, from_local and to_naive_date, to_naive_time, to_naive_date_time, to_fixed_offset, to_utc in utv::interop::chrono, plus From/TryFrom between NaiveDate, NaiveTime, NaiveDateTime, DateTime<FixedOffset>, DateTime<Utc> and the typed values.",
+        "JSON-layer results and refusals carry the operation name convert; typed errors are Diagnostics.",
+        "Nothing converts from DateTime<Local>; from_local always answers unsupported (local-zone).",
+        "A conversion back to a native type is exact or refused: out-of-native-range, precision-loss or zone-dropped."
+      ],
+      "compatibility": "Part of the crate's 0.x API (see the crate contract): it may change in a minor version, and the CHANGELOG records each change. The chrono dependency is declared as chrono 0.4.38 or later within 0.4.",
+      "definition": "implementations/rust/src/interop/chrono.rs",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "from_system_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "module documentation"
+        },
+        {
+          "path": "implementations/rust/Cargo.toml",
+          "symbol": "dependencies.chrono"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api",
+          "description": "Its section Native interop (per language)."
+        },
+        {
+          "relation": "part-of",
+          "path": "implementations/rust/.dev/contracts.json",
+          "entityId": "utv-crate"
+        }
+      ]
+    }
+  ]
+}

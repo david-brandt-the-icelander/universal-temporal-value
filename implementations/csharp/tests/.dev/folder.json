@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Tests",
+  "folder": "implementations/csharp/tests",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Tests",
+      "summary": "The two test projects of the C# library: Utv.Tests (fixtures, conformance material, the JSON and typed layers) and Utv.Examples.Tests (the examples, written as unit tests).",
+      "purpose": "Holds every automated check of the library. Both projects are xUnit test projects on net8.0 that reference src/Utv/Utv.csproj, and dotnet test in implementations/csharp runs both through Utv.sln.",
+      "boundaries": [
+        "What each test class checks is recorded in the verification files of the test folders, which link to the views and contracts they verify.",
+        "Tests read the shared material in schema/ and conformance/ in place; nothing is copied into this folder.",
+        "No CI workflow runs these tests; .github/workflows/validate.yml runs only the repository's Python checks."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/Utv.sln",
+          "symbol": "tests"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Tests/Utv.Tests.csproj",
+          "symbol": "IsTestProject"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/Utv.Examples.Tests.csproj",
+          "symbol": "IsTestProject"
+        },
+        {
+          "path": ".github/workflows/validate.yml",
+          "symbol": "structural"
+        }
+      ]
+    }
+  ]
+}

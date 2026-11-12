@@ -1,0 +1,515 @@
+{
+  "$schema": "../../../../Meta/Agents/Skills/describe-use-case/schema.json",
+  "kind": "use-case",
+  "title": "JSON layer use cases",
+  "folder": "implementations/rust/src",
+  "description": "What an application developer does with text and UTV JSON, step by step, and the branches the code has. The last steps of each run in the typed layer (src/typed).",
+  "sources": [
+    {
+      "path": "implementations/rust/src/lib.rs",
+      "symbol": "crate documentation"
+    }
+  ],
+  "entities": [
+    {
+      "id": "read-and-write-text",
+      "name": "Read and write the text form",
+      "description": "A developer reads a value from text (ISO 8601 / RFC 9557 points, ISO 8601 periods, bracket or EDTF intervals) and writes values back as text (task parse-offsets). The typed entrypoints, utv::parse and Display, call parse_text and format_text.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "parse_text"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "format_text"
+        },
+        {
+          "path": "implementations/rust/src/typed/value.rs",
+          "symbol": "parse"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Turn text into the value it describes and back, without losing or inventing anything.",
+      "preconditions": [
+        "The developer has text, or a value to print."
+      ],
+      "postconditions": [
+        "The developer holds the value the text describes (a typed Value, or UTV JSON), or an outcome whose code says why the text was refused.",
+        "Printed text parses back to the same value."
+      ],
+      "flow": [
+        {
+          "id": "parse",
+          "actor": "Application developer",
+          "action": "Calls utv::parse(text) (or T::parse, or text.parse::<T>()), or utv::parse_text(text) at the JSON layer.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/value.rs",
+              "symbol": "parse"
+            },
+            {
+              "path": "implementations/rust/src/text.rs",
+              "symbol": "parse_text"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "route",
+          "actor": "Text form",
+          "action": "Chooses the grammar from the first characters: [ or ( an interval, P or -P a period, a / outside brackets an EDTF interval, otherwise a point.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/text.rs",
+              "symbol": "parse"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "read-point",
+          "actor": "Text form",
+          "action": "Reads each point with the ISO 8601 / RFC 9557 grammar: Z or -00:00 an instant, ±hh:mm a fixed offset (+00:00 is an offset of 0), [Area/Location] a zoned intention.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/text.rs",
+              "symbol": "point"
+            },
+            {
+              "path": "implementations/rust/src/iso.rs",
+              "symbol": "parse"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "check-interval",
+          "actor": "Text form",
+          "action": "For an interval, checks that both points are of one kind, form and zone type and in order.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/text.rs",
+              "symbol": "interval"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "type",
+          "actor": "Typed layer",
+          "action": "Reads the UTV JSON into the matching typed value.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/value.rs",
+              "symbol": "Value::read"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "print",
+          "actor": "Application developer",
+          "action": "Prints a value: Display (value.to_string()), or utv::format_text(&json).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/mod.rs",
+              "symbol": "text_of"
+            },
+            {
+              "path": "implementations/rust/src/text.rs",
+              "symbol": "format_text"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "format",
+          "actor": "Text form",
+          "action": "Writes the text form where it is lossless.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/text.rs",
+              "symbol": "format"
+            },
+            {
+              "path": "implementations/rust/src/iso.rs",
+              "symbol": "format"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "read-point",
+          "condition": "The text is outside the grammar.",
+          "outcome": "Invalid with syntax.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/iso.rs",
+              "symbol": "parse"
+            }
+          ]
+        },
+        {
+          "atStep": "read-point",
+          "condition": "A field is out of range: month 13, 30 February, hour 24 with minutes, an offset beyond ±18:00.",
+          "outcome": "Invalid with month-out-of-range, day-out-of-range, field-out-of-range or offset-out-of-range.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/iso.rs",
+              "symbol": "check_date"
+            },
+            {
+              "path": "implementations/rust/src/iso.rs",
+              "symbol": "check_time"
+            },
+            {
+              "path": "implementations/rust/src/iso.rs",
+              "symbol": "offset_seconds"
+            }
+          ]
+        },
+        {
+          "atStep": "read-point",
+          "condition": "Valid notation this profile doesn't handle: second 60, 24:00, week or ordinal dates, basic format, critical or other annotations, Z[zone], EDTF qualifiers.",
+          "outcome": "Unsupported with leap-second, end-of-day, unsupported-form or unsupported-annotation.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/iso.rs",
+              "symbol": "check_time"
+            },
+            {
+              "path": "implementations/rust/src/iso.rs",
+              "symbol": "annotation"
+            },
+            {
+              "path": "implementations/rust/src/text.rs",
+              "symbol": "point"
+            }
+          ]
+        },
+        {
+          "atStep": "route",
+          "condition": "A period with decimal components, or an interval without any point such as (.., ..).",
+          "outcome": "Unsupported with unsupported-form.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/text.rs",
+              "symbol": "period"
+            },
+            {
+              "path": "implementations/rust/src/text.rs",
+              "symbol": "interval"
+            }
+          ]
+        },
+        {
+          "atStep": "check-interval",
+          "condition": "The points differ in kind or form, or the end comes before the start.",
+          "outcome": "Invalid with kind-mismatch or reversed-interval.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/text.rs",
+              "symbol": "interval"
+            }
+          ]
+        },
+        {
+          "atStep": "type",
+          "condition": "T::parse is given text of another type.",
+          "outcome": "Invalid with kind-mismatch.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/mod.rs",
+              "symbol": "kind_mismatch"
+            }
+          ]
+        },
+        {
+          "atStep": "format",
+          "condition": "The value has no lossless text form: exact seconds, mixed-sign periods, start-amount intervals, extra properties.",
+          "outcome": "format_text answers unsupported (no-text-form); Display prints the JSON instead, and PosixSeconds and ElapsedSeconds print a display string such as 3600.75 s (POSIX).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/text.rs",
+              "symbol": "format"
+            },
+            {
+              "path": "implementations/rust/src/typed/mod.rs",
+              "symbol": "text_of"
+            },
+            {
+              "path": "implementations/rust/src/typed/amount.rs",
+              "symbol": "display_seconds"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "validate-utv-json",
+      "name": "Validate UTV JSON and read it into typed values",
+      "description": "A developer receives UTV JSON from elsewhere, checks that it is well-formed utv/1.0 and, for civil values, a real Gregorian date, and reads it into a typed value where there is one.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_structural"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_gregorian_civil"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "from_json"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Know whether a piece of UTV JSON can be trusted and used, and use it as a Rust value.",
+      "preconditions": [
+        "The developer has JSON text, or a parsed serde_json::Value, that claims to be UTV."
+      ],
+      "postconditions": [
+        "The developer knows whether the JSON is structurally valid, semantically valid, and held by a typed type, each as a separate answer with its code."
+      ],
+      "flow": [
+        {
+          "id": "validate",
+          "actor": "Application developer",
+          "action": "Calls utv::validate_structural(text), or validate_gregorian_civil(text) for the Gregorian check too.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "validate_structural"
+            },
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "validate_gregorian_civil"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "parse",
+          "actor": "JSON layer",
+          "action": "Parses the text strictly, refusing a repeated key.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "parse_for_validation"
+            },
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "StrictVisitor"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "envelope",
+          "actor": "JSON layer",
+          "action": "Checks the envelope: schema utv/1.0, a core kind, a value, no unknown top-level property.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "check_envelope"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "schema",
+          "actor": "JSON layer",
+          "action": "Checks the value against the kind's definition in the embedded structural schema.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "validate_shape"
+            },
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "SchemaCx"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "calendar",
+          "actor": "JSON layer",
+          "action": "For validate_gregorian_civil: checks the month and the day in that month of a proleptic Gregorian civil value.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "check_civil"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "read",
+          "actor": "Application developer",
+          "action": "Reads the value into a type: CivilDate::from_json(&json), Value::from_json(&json), ...",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/mod.rs",
+              "symbol": "from_json"
+            },
+            {
+              "path": "implementations/rust/src/typed/value.rs",
+              "symbol": "Value::from_json"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "answer",
+          "actor": "Typed layer",
+          "action": "Returns Outcome::Unique with the typed value, operation convert.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/mod.rs",
+              "symbol": "from_json"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "parse",
+          "condition": "An object repeats a key, or the text is not JSON.",
+          "outcome": "Invalid with duplicate-key, or with syntax.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "parse_for_validation"
+            }
+          ]
+        },
+        {
+          "atStep": "envelope",
+          "condition": "A well-formed version other than utv/1.0, such as utv/2.0.",
+          "outcome": "Unsupported with envelope.unsupported-version.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "check_envelope"
+            },
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "other_wellformed_version"
+            }
+          ]
+        },
+        {
+          "atStep": "envelope",
+          "condition": "A malformed version label (utv/4), an unknown kind, an unknown top-level property, or no value.",
+          "outcome": "Invalid with malformed-value and the envelope.* code.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "check_envelope"
+            },
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "validate_value"
+            }
+          ]
+        },
+        {
+          "atStep": "schema",
+          "condition": "The value breaks its kind's structural schema.",
+          "outcome": "Invalid with malformed-value and a structural.schema diagnostic per violation.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "validate_shape"
+            }
+          ]
+        },
+        {
+          "atStep": "calendar",
+          "condition": "Not a civil value, or another calendar.",
+          "outcome": "Unsupported with unsupported-operand or unsupported-calendar.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "check_civil"
+            }
+          ]
+        },
+        {
+          "atStep": "calendar",
+          "condition": "A month outside 1 to 12, or a day the month doesn't have.",
+          "outcome": "Invalid with month-out-of-range or day-out-of-range.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/lib.rs",
+              "symbol": "check_civil"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "The JSON is another kind or form than the type.",
+          "outcome": "Outcome::Invalid with kind-mismatch.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/mod.rs",
+              "symbol": "kind_mismatch"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "A valid value no typed type holds: a zoned date, a resolutionPolicy, a recurrence, an interval of date-times.",
+          "outcome": "Outcome::Unsupported with unsupported-operand; the JSON layer still handles it.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/mod.rs",
+              "symbol": "no_typed_type"
+            },
+            {
+              "path": "implementations/rust/src/typed/value.rs",
+              "symbol": "no_value"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/operation.json",
+      "relationship": "The operations the steps call."
+    },
+    {
+      "kind": "capability",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/capability.json",
+      "relationship": "The capabilities these use cases use."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/feature.json",
+      "relationship": "Fail-closed JSON, the separate semantic check and the lossless text form."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/operation.json",
+      "relationship": "The typed parse and from_json steps."
+    }
+  ]
+}

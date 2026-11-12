@@ -1,0 +1,1569 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-use-case/schema.json",
+  "kind": "use-case",
+  "title": "utv package use cases",
+  "folder": "implementations/python/src/utv",
+  "description": "What an application developer does with the Python library, step by step, with the branches the code has.",
+  "sources": [
+    {
+      "path": "implementations/python/src/utv/__init__.py",
+      "symbol": "__all__"
+    },
+    {
+      "path": "implementations/python/src/utv/values.py",
+      "symbol": "CivilDate"
+    },
+    {
+      "path": "implementations/python/src/utv/context.py",
+      "symbol": "TemporalContext"
+    }
+  ],
+  "entities": [
+    {
+      "id": "create-a-date",
+      "name": "Create a date",
+      "description": "A developer makes a date from its fields or from text, and learns why it can't exist when it can't (tasks a-date and feb-30).",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.try_of"
+        },
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "civil"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Hold a calendar date, such as 5 November 2026, or a reason why the fields or text name no date.",
+      "preconditions": [
+        "utv is importable: installed from implementations/python, or on the path with PYTHONPATH=src."
+      ],
+      "postconditions": [
+        "The developer holds an immutable CivilDate whose year is any Python int, or an outcome or OutcomeError whose diagnostic code says why there is no such date.",
+        "Nothing was read from the machine: no clock, zone or locale."
+      ],
+      "flow": [
+        {
+          "id": "ask",
+          "actor": "Application developer",
+          "action": "Calls CivilDate.of(2026, 11, 5) (or CivilDate(2026, 11, 5)); try_of with the same fields to get an outcome instead of an exception; or CivilDate.parse(\"2026-11-05\") / utv.parse(text) for text.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "CivilDate.of"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "CivilDate.try_of"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_Value.parse"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "read-text",
+          "actor": "utv",
+          "action": "For text, reads the ISO date grammar: YYYY-MM-DD, or a sign and four or more year digits.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/text.py",
+              "symbol": "parse_text"
+            },
+            {
+              "path": "implementations/python/src/utv/iso.py",
+              "symbol": "parse_iso"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "check",
+          "actor": "utv",
+          "action": "Builds the date's UTV JSON and checks it: proleptic Gregorian calendar, month 1–12, day within that month of that year.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "CivilDate.__post_init__"
+            },
+            {
+              "path": "implementations/python/src/utv/_core.py",
+              "symbol": "civil"
+            },
+            {
+              "path": "implementations/python/src/utv/gregorian.py",
+              "symbol": "days_in_month"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "utv",
+          "action": "Returns the CivilDate; try_of and parse return Unique(CivilDate). str(date) is 2026-11-05.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_try"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "from_json"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "ask",
+          "condition": "A field isn't an int, such as the year \"2026\".",
+          "outcome": "TypeError.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/build.py",
+              "symbol": "_int"
+            }
+          ]
+        },
+        {
+          "atStep": "read-text",
+          "condition": "The text isn't in the grammar, such as \"next Tuesday\".",
+          "outcome": "Invalid (syntax); parse never raises.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/iso.py",
+              "symbol": "parse_iso"
+            }
+          ]
+        },
+        {
+          "atStep": "read-text",
+          "condition": "The text is a week date, an ordinal date or basic format (2026-W45-4, 2026-309, 20261105).",
+          "outcome": "Unsupported (unsupported-form).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/iso.py",
+              "symbol": "_UNSUPPORTED_FORMS"
+            }
+          ]
+        },
+        {
+          "atStep": "read-text",
+          "condition": "The text is a value of another type, such as 2026-11 for CivilDate.parse.",
+          "outcome": "Invalid (kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_narrow"
+            }
+          ]
+        },
+        {
+          "atStep": "check",
+          "condition": "The day doesn't exist in that month: 30 February, or 29 February in a common year or a century not divisible by 400.",
+          "outcome": "of raises OutcomeError, a ValueError, carrying invalid and day-out-of-range; try_of and parse return Invalid (day-out-of-range).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/_core.py",
+              "symbol": "civil"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_check"
+            }
+          ]
+        },
+        {
+          "atStep": "check",
+          "condition": "The month is outside 1–12.",
+          "outcome": "OutcomeError or Invalid, with month-out-of-range.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/_core.py",
+              "symbol": "civil"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "add-months",
+      "name": "Add months to a date",
+      "description": "A developer adds months (or years) to a date whose day may be missing from the target month (task month-end).",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.add_months"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_month_step"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Get the date n months later, or learn that it doesn't exist and choose what to do.",
+      "preconditions": [
+        "utv is importable: installed from implementations/python, or on the path with PYTHONPATH=src.",
+        "The developer holds a CivilDate, CivilDateTime or ZonedIntent."
+      ],
+      "postconditions": [
+        "The developer holds the later value, or NoneOf (month-end) and no date was invented.",
+        "A clamped date appears only when the developer passed MonthEnd.CONSTRAIN."
+      ],
+      "flow": [
+        {
+          "id": "ask",
+          "actor": "Application developer",
+          "action": "Calls date.add_months(1) (or add_years(n), or add(Period(months=1))).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "CivilDate.add_months"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "CivilDate.add_years"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "CivilDate.add"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "months",
+          "actor": "utv",
+          "action": "Adds 12 × years + months to the year and month, through the JSON layer's add.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_month_step"
+            },
+            {
+              "path": "implementations/python/src/utv/ops.py",
+              "symbol": "add"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "month-end",
+          "actor": "utv",
+          "action": "Checks that the day exists in the target month.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/ops.py",
+              "symbol": "add"
+            },
+            {
+              "path": "implementations/python/src/utv/gregorian.py",
+              "symbol": "days_in_month"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "rest",
+          "actor": "utv",
+          "action": "Adds any weeks and days, then hours, minutes and seconds as wall-clock time, and reads the result back as a typed value.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/ops.py",
+              "symbol": "add"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_typed"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "utv",
+          "action": "Returns Unique(date), such as 31 January + 2 months = Unique(2026-03-31).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/outcome.py",
+              "symbol": "outcome_of"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "ask",
+          "condition": "The developer passes MonthEnd.CONSTRAIN (or \"constrain\") to add_months or add_years.",
+          "outcome": "The day is clamped to the month's last day and the date itself is returned, not an outcome: 31 January + 1 month = 2026-02-28.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_month_step"
+            }
+          ]
+        },
+        {
+          "atStep": "ask",
+          "condition": "The developer passes MonthEnd.REJECT or any other policy to the policy form.",
+          "outcome": "ValueError: rejecting is what the call without a policy does.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_month_step"
+            }
+          ]
+        },
+        {
+          "atStep": "ask",
+          "condition": "add(period) on a CivilDate with hours, minutes or seconds.",
+          "outcome": "Invalid (kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/ops.py",
+              "symbol": "add"
+            }
+          ]
+        },
+        {
+          "atStep": "month-end",
+          "condition": "The day is missing from the target month (31 January + 1 month), and no policy, or REJECT with add(period), was given.",
+          "outcome": "NoneOf (month-end); its message names the month and the missing day.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/ops.py",
+              "symbol": "add"
+            }
+          ]
+        },
+        {
+          "atStep": "rest",
+          "condition": "The value is a ZonedIntent with an asserted offset.",
+          "outcome": "The result drops the asserted offset, which described the old wall time (offset-assertion-dropped in the JSON layer).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/ops.py",
+              "symbol": "add"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "resolve-a-zoned-time",
+      "name": "Resolve a wall time in a zone",
+      "description": "A developer turns a wall time in an IANA zone into an instant under explicit zone rules, including in a DST gap or overlap, and sees an instant in another zone (tasks meeting-in-paris, dst-gap, dst-overlap).",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "ZonedIntent.resolve"
+        },
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.resolve"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "resolve"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Know which instant a wall time such as 09:00 in Paris names, or that it names none or two, and decide by policy.",
+      "preconditions": [
+        "utv is importable: installed from implementations/python, or on the path with PYTHONPATH=src.",
+        "The developer has a rule bundle in the format of conformance/rules/demo-zones.json. The package ships none; the repository's demo bundle covers America/New_York, Europe/Paris and Atlantic/Reykjavik for 2026 and 2027."
+      ],
+      "postconditions": [
+        "The developer holds Unique(Instant), Multiple of both instants, or an outcome saying why there is none; to_result() names the rule set used.",
+        "Nothing was read from the host's tz database."
+      ],
+      "flow": [
+        {
+          "id": "load",
+          "actor": "Application developer",
+          "action": "Loads the rules with ZoneRules.load(path) or ZoneRules.parse(text).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "ZoneRules.load"
+            },
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "parse_rules"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "context",
+          "actor": "Application developer",
+          "action": "Makes a TemporalContext(rules); there is no default one.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/context.py",
+              "symbol": "TemporalContext"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "intend",
+          "actor": "Application developer",
+          "action": "Makes the intention: CivilDateTime.of(2027, 6, 1, 9, 0).in_zone(\"Europe/Paris\").",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "CivilDateTime.in_zone"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "ZonedIntent.__post_init__"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "resolve",
+          "actor": "Application developer",
+          "action": "Calls zoned.resolve(ctx), or resolve(ctx, ResolutionPolicy(gap=…, overlap=…)).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "ZonedIntent.resolve"
+            },
+            {
+              "path": "implementations/python/src/utv/context.py",
+              "symbol": "TemporalContext.resolve"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "candidates",
+          "actor": "utv",
+          "action": "Looks the zone up, checks the wall time is at least a day inside the rules' window, and keeps every t = wall time − offset at which the zone's offset is that offset.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "resolve"
+            },
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "Zone.offsets_near"
+            },
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "Zone.offset_at"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "assertion",
+          "actor": "utv",
+          "action": "If the value asserts an offset, keeps only the candidate with that offset.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "resolve"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "policy",
+          "actor": "utv",
+          "action": "With one candidate, answers Unique(Instant); otherwise applies the gap or overlap policy.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "resolve"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "view",
+          "actor": "Application developer",
+          "action": "Optionally sees the instant in another zone: instant.in_zone(\"America/New_York\", ctx) gives 2027-06-01T03:00:00-04:00[America/New_York].",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "Instant.in_zone"
+            },
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "to_zone"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "load",
+          "condition": "The bundle is malformed, or its transitions are out of order or beyond ±18:00.",
+          "outcome": "ValueError.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "parse_rules"
+            }
+          ]
+        },
+        {
+          "atStep": "context",
+          "condition": "Something other than ZoneRules, such as a path, is passed.",
+          "outcome": "TypeError.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/context.py",
+              "symbol": "TemporalContext.__post_init__"
+            }
+          ]
+        },
+        {
+          "atStep": "intend",
+          "condition": "The zone id isn't shaped like Area/Location.",
+          "outcome": "OutcomeError (invalid, syntax).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "ZonedIntent.__post_init__"
+            }
+          ]
+        },
+        {
+          "atStep": "candidates",
+          "condition": "The zone isn't in the rules.",
+          "outcome": "Unsupported (unknown-zone).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "candidates",
+          "condition": "The wall time is within a day of either end of the rules' validity window.",
+          "outcome": "Unsupported (outside-rule-window): the rules are never extrapolated.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "assertion",
+          "condition": "No candidate has the asserted offset, a wall time in a gap included.",
+          "outcome": "Invalid (offset-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "policy",
+          "condition": "No candidate: the wall time falls in a gap (02:30 on 8 March 2026 in New York), with Gap.REJECT (the default) or PRESERVE_UNRESOLVED.",
+          "outcome": "NoneOf (gap).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "policy",
+          "condition": "A gap with Gap.SHIFT_FORWARD.",
+          "outcome": "Unique: the wall time minus the offset before the gap, so 02:30 gives the instant labelled 03:30 EDT.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "Zone.gap_offset_before"
+            }
+          ]
+        },
+        {
+          "atStep": "policy",
+          "condition": "Two candidates: the wall time falls in an overlap (01:30 on 1 November 2026 in New York), with Overlap.REJECT (the default).",
+          "outcome": "Multiple of both instants, ascending, with ambiguous; with Overlap.ALL, the same without a diagnostic.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "policy",
+          "condition": "An overlap with Overlap.EARLIEST or LATEST.",
+          "outcome": "Unique: the first or the second instant.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "view",
+          "condition": "The zone isn't in the rules, or the instant is outside their window.",
+          "outcome": "Unsupported (unknown-zone, outside-rule-window).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/zones.py",
+              "symbol": "to_zone"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "compare-values",
+      "name": "Order two values",
+      "description": "A developer asks which of two values comes first: with operators for values of one type, and through a TemporalContext for zoned values, where the answer may be both (task compare-dates).",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_Ordered"
+        },
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.compare"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "compare"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Know whether one value is before, equal to or after another, or that it depends on which side of a DST overlap is meant.",
+      "preconditions": [
+        "utv is importable: installed from implementations/python, or on the path with PYTHONPATH=src.",
+        "For zoned values, a TemporalContext with rules covering both (as in resolve-a-zoned-time)."
+      ],
+      "postconditions": [
+        "The developer holds a bool for values of one type, or an Outcome[Ordering] listing every possible order for zoned values."
+      ],
+      "flow": [
+        {
+          "id": "operators",
+          "actor": "Application developer",
+          "action": "Compares two values of one type with <, <=, > or >=: CivilDate(2026, 11, 5) < CivilDate(2026, 12, 25).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_Ordered.__lt__"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "relate",
+          "actor": "utv",
+          "action": "Compares their JSON with the JSON layer's compare: civil fields in order, with a missing second as 0; instants numerically; fixed-offset date-times by the instant they name.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_Ordered._relation"
+            },
+            {
+              "path": "implementations/python/src/utv/ops.py",
+              "symbol": "compare"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "context",
+          "actor": "Application developer",
+          "action": "When either value is zoned, calls ctx.compare(a, b) instead; a and b may be ZonedIntent, Instant or FixedOffsetDateTime.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/context.py",
+              "symbol": "TemporalContext.compare"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "resolve-both",
+          "actor": "utv",
+          "action": "Resolves each zoned value strictly, keeping both instants of an overlap.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/context.py",
+              "symbol": "TemporalContext._instants"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "orders",
+          "actor": "utv",
+          "action": "Compares every candidate of a with every candidate of b; one possible order is Unique(Ordering).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/context.py",
+              "symbol": "TemporalContext.compare"
+            },
+            {
+              "path": "implementations/python/src/utv/context.py",
+              "symbol": "_relation"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "operators",
+          "condition": "The values are ZonedIntents.",
+          "outcome": "TypeError: ZonedIntent has no comparison operators, because its order depends on zone rules.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "ZonedIntent"
+            }
+          ]
+        },
+        {
+          "atStep": "operators",
+          "condition": "The values are of different types.",
+          "outcome": "TypeError (both sides return NotImplemented).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_Ordered._relation"
+            }
+          ]
+        },
+        {
+          "atStep": "relate",
+          "condition": "Two representations of the same time, such as CivilTime.of(9, 30) and CivilTime.of(9, 30, 0).",
+          "outcome": "<= and >= both hold and < doesn't, though the two are not equal: equality is equality of representation.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_Ordered"
+            }
+          ]
+        },
+        {
+          "atStep": "resolve-both",
+          "condition": "A wall time falls in a gap, or its zone or date is outside the rules, or its asserted offset contradicts them.",
+          "outcome": "NoneOf (gap), Unsupported (unknown-zone, outside-rule-window) or Invalid (offset-mismatch), passed on from resolve.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/context.py",
+              "symbol": "TemporalContext.compare"
+            },
+            {
+              "path": "implementations/python/src/utv/outcome.py",
+              "symbol": "failure"
+            }
+          ]
+        },
+        {
+          "atStep": "orders",
+          "condition": "The order depends on which side of an overlap is meant: 01:30 and 01:45 on 1 November 2026 in New York.",
+          "outcome": "Multiple of the possible orders (BEFORE, EQUAL, AFTER as they occur), carrying the ambiguous diagnostic of each side that fell in the overlap.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/context.py",
+              "symbol": "TemporalContext.compare"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "convert-native",
+      "name": "Convert to and from datetime",
+      "description": "A developer brings a datetime value, such as a clock reading, into UTV with a meaning they name, and takes a UTV value back out to datetime (tasks now and round-trip).",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/interop.py",
+          "symbol": "from_native"
+        },
+        {
+          "path": "implementations/python/src/utv/interop.py",
+          "symbol": "to_native"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "from_datetime"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "to_datetime"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Use UTV alongside Python's datetime without any conversion guessing a meaning or losing something silently.",
+      "preconditions": [
+        "utv is importable: installed from implementations/python, or on the path with PYTHONPATH=src.",
+        "For zoned values, a zoneinfo.ZoneInfo the developer made; its tz data is the host's, not UTV's."
+      ],
+      "postconditions": [
+        "A round trip from datetime through UTV returns a value equal to the original.",
+        "Every refused or lossy conversion says so with a diagnostic code."
+      ],
+      "flow": [
+        {
+          "id": "read",
+          "actor": "Application developer",
+          "action": "Reads the clock themselves, since the library never does: datetime.now(timezone.utc), or time.time_ns() for Instant.from_unix_nanoseconds.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "Instant.from_unix_nanoseconds"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "bring-in",
+          "actor": "Application developer",
+          "action": "Calls utv.from_native(value, intent), for example from_native(reading, Intent.INSTANT).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/interop.py",
+              "symbol": "from_native"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "meaning",
+          "actor": "utv",
+          "action": "Decides the meaning from the value and the intent: a naive datetime is a floating wall time; a fixed timezone is an INSTANT or an OFFSET; a ZoneInfo is ZONED by default, with the offset of its fold asserted; a timedelta is POSIX_SECONDS or a PERIOD.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "from_datetime"
+            },
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "from_timedelta"
+            },
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "_zone_key"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "typed",
+          "actor": "utv",
+          "action": "Builds the UTV JSON and returns it as a typed value, such as Unique(Instant(2026-11-05T13:30:00Z)).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/interop.py",
+              "symbol": "from_native"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_typed"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "take-out",
+          "actor": "Application developer",
+          "action": "Calls utv.to_native(value, tz=…, allow_loss=…).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/interop.py",
+              "symbol": "to_native"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "back",
+          "actor": "utv",
+          "action": "Converts to date, time, datetime or timedelta, checking range and precision; for a zoned value uses the tz passed, picking the fold from the asserted offset.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "to_datetime"
+            },
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "to_date"
+            },
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "_native"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "bring-in",
+          "condition": "Anything but a date, time, datetime or timedelta.",
+          "outcome": "TypeError.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/interop.py",
+              "symbol": "from_native"
+            }
+          ]
+        },
+        {
+          "atStep": "meaning",
+          "condition": "A naive datetime asked for an INSTANT, OFFSET or ZONED, such as datetime.now() as an instant.",
+          "outcome": "Unsupported (local-zone): its meaning depends on the host's zone, which UTV never consults.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "from_datetime"
+            }
+          ]
+        },
+        {
+          "atStep": "meaning",
+          "condition": "A datetime with a fixed timezone and no intent, a timedelta with no intent, or an unknown intent.",
+          "outcome": "Invalid (intent-required).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "from_datetime"
+            },
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "_intent"
+            }
+          ]
+        },
+        {
+          "atStep": "meaning",
+          "condition": "ZoneInfo(\"localtime\"), a ZoneInfo from a file, or a tzinfo class that is neither timezone nor ZoneInfo.",
+          "outcome": "Unsupported (local-zone).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "_zone_key"
+            },
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "from_datetime"
+            }
+          ]
+        },
+        {
+          "atStep": "meaning",
+          "condition": "A ZoneInfo wall time in a gap asked for an INSTANT or OFFSET.",
+          "outcome": "NoneOf (gap): Python would silently shift it.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "from_datetime"
+            }
+          ]
+        },
+        {
+          "atStep": "back",
+          "condition": "A year outside 1–9999, or nanoseconds that aren't whole microseconds without allow_loss.",
+          "outcome": "Unsupported (out-of-native-range).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "_native"
+            },
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "_microseconds"
+            }
+          ]
+        },
+        {
+          "atStep": "back",
+          "condition": "allow_loss=True and something had to be dropped.",
+          "outcome": "Unique, with a precision-loss or zone-dropped warning and the lost fields in the result's loss.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "_done"
+            }
+          ]
+        },
+        {
+          "atStep": "back",
+          "condition": "A ZonedIntent without tz.",
+          "outcome": "Unsupported (needs-zone-rules); with allow_loss and an asserted offset, a datetime with that fixed offset and zone-dropped.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "to_datetime"
+            }
+          ]
+        },
+        {
+          "atStep": "back",
+          "condition": "A zoned wall time with no asserted offset that the tz says happens twice, or never.",
+          "outcome": "Multiple of the fold-0 and fold-1 datetimes, or NoneOf (gap).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/native.py",
+              "symbol": "to_datetime"
+            }
+          ]
+        },
+        {
+          "atStep": "take-out",
+          "condition": "A Period, ElapsedSeconds, CivilYearMonth or Interval.",
+          "outcome": "Unsupported (unsupported-operand): no datetime equivalent.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/interop.py",
+              "symbol": "to_native"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "read-and-write-text",
+      "name": "Write and read the text form",
+      "description": "A developer prints values as text and reads text back into typed values, including text from outside (task parse-offsets).",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_Value.__str__"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "parse_text"
+        },
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "format_text"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Show values in logs, documents and tests as text, and turn text into the value it describes without ever crashing on bad input.",
+      "preconditions": [
+        "utv is importable: installed from implementations/python, or on the path with PYTHONPATH=src."
+      ],
+      "postconditions": [
+        "str(v) is the text form wherever one exists, and utv.parse(str(v)) gives Unique(v) back.",
+        "Bad text produced an outcome with a diagnostic code, never an exception."
+      ],
+      "flow": [
+        {
+          "id": "write",
+          "actor": "Application developer",
+          "action": "Calls str(value): 2026-11-05, 2027-06-01T09:00[Europe/Paris], P1M, [2026-11-01, ?).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_Value.__str__"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_text"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "format",
+          "actor": "utv",
+          "action": "Formats the value's JSON: points as ISO 8601 / RFC 9557, periods as ISO durations, intervals in brackets with explicit endpoint state.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/text.py",
+              "symbol": "format_text"
+            },
+            {
+              "path": "implementations/python/src/utv/iso.py",
+              "symbol": "format_iso"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "read",
+          "actor": "Application developer",
+          "action": "Calls utv.parse(text), or T.parse(text) for one type.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "parse"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_Value.parse"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "parse",
+          "actor": "utv",
+          "action": "Reads brackets, durations, EDTF slash intervals and ISO points: a trailing Z gives an instant, +00:00 a fixed offset of zero.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/text.py",
+              "symbol": "parse_text"
+            },
+            {
+              "path": "implementations/python/src/utv/iso.py",
+              "symbol": "parse_iso"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "type",
+          "actor": "utv",
+          "action": "Returns the typed value the JSON describes, as Unique(value).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "from_json"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "format",
+          "condition": "The value has no text form: a period with mixed signs, an instant at a third of a second.",
+          "outcome": "str prints the value's compact JSON instead.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_text"
+            }
+          ]
+        },
+        {
+          "atStep": "format",
+          "condition": "The value is a PosixSeconds or ElapsedSeconds.",
+          "outcome": "str prints a display string, such as 3600.75 s (POSIX), which can't be parsed.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/text.py",
+              "symbol": "seconds_display"
+            }
+          ]
+        },
+        {
+          "atStep": "parse",
+          "condition": "Text outside the grammar.",
+          "outcome": "Invalid (syntax).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/text.py",
+              "symbol": "parse_text"
+            },
+            {
+              "path": "implementations/python/src/utv/iso.py",
+              "symbol": "parse_iso"
+            }
+          ]
+        },
+        {
+          "atStep": "parse",
+          "condition": "Week or ordinal dates, basic format, decimal period components, EDTF qualifiers such as 1347~, or an interval with no point.",
+          "outcome": "Unsupported (unsupported-form).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/text.py",
+              "symbol": "parse_text"
+            },
+            {
+              "path": "implementations/python/src/utv/text.py",
+              "symbol": "_endpoints"
+            }
+          ]
+        },
+        {
+          "atStep": "parse",
+          "condition": "Second 60 or 24:00.",
+          "outcome": "Unsupported (leap-second, end-of-day).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/_core.py",
+              "symbol": "civil"
+            }
+          ]
+        },
+        {
+          "atStep": "parse",
+          "condition": "Any annotation but one [Area/Location], or a [zone] after Z or -00:00.",
+          "outcome": "Unsupported (unsupported-annotation).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/iso.py",
+              "symbol": "_zone_annotation"
+            },
+            {
+              "path": "implementations/python/src/utv/iso.py",
+              "symbol": "_parse_datetime"
+            }
+          ]
+        },
+        {
+          "atStep": "parse",
+          "condition": "An interval whose end is before its start, or whose ends differ in kind or form.",
+          "outcome": "Invalid (reversed-interval, kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/text.py",
+              "symbol": "_endpoints"
+            }
+          ]
+        },
+        {
+          "atStep": "parse",
+          "condition": "A field or offset out of range, such as 2026-02-30 or +19:00.",
+          "outcome": "Invalid (day-out-of-range, month-out-of-range, field-out-of-range, offset-out-of-range).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/_core.py",
+              "symbol": "civil"
+            },
+            {
+              "path": "implementations/python/src/utv/iso.py",
+              "symbol": "_offset_seconds"
+            }
+          ]
+        },
+        {
+          "atStep": "type",
+          "condition": "T.parse given text of another type.",
+          "outcome": "Invalid (kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_narrow"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "validate-utv-json",
+      "name": "Validate UTV JSON and read it",
+      "description": "A developer checks UTV JSON received from elsewhere and reads it into typed values.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "validate_structural"
+        },
+        {
+          "path": "implementations/python/src/utv/gregorian.py",
+          "symbol": "validate_gregorian_date"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "from_json"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Accept only UTV JSON this library understands completely, and work with it as typed values.",
+      "preconditions": [
+        "utv is importable: installed from implementations/python, or on the path with PYTHONPATH=src.",
+        "The developer has UTV JSON text or a parsed dict."
+      ],
+      "postconditions": [
+        "The JSON is known to be structurally valid utv/1.0, and, if checked, to name a real Gregorian date; or the developer holds the reason it is not.",
+        "The developer holds the typed value, or knows the JSON needs the JSON layer."
+      ],
+      "flow": [
+        {
+          "id": "validate",
+          "actor": "Application developer",
+          "action": "Calls validate_structural(text).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/validate.py",
+              "symbol": "validate_structural"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "structure",
+          "actor": "utv",
+          "action": "Parses the text rejecting duplicate keys and NaN, requires schema utv/1.0, and checks the value against the bundled schema.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/validate.py",
+              "symbol": "parse"
+            },
+            {
+              "path": "implementations/python/src/utv/validate.py",
+              "symbol": "validate_value"
+            },
+            {
+              "path": "implementations/python/src/utv/validate.py",
+              "symbol": "_check"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "dates",
+          "actor": "Application developer",
+          "action": "Optionally calls validate_gregorian_date(text) to check that a civil value's fields name a real date.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/gregorian.py",
+              "symbol": "validate_gregorian_date"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "read",
+          "actor": "Application developer",
+          "action": "Calls utv.from_json(json) or T.from_json(json) with the dict or the text.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "from_json"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_Value.from_json"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "typed",
+          "actor": "utv",
+          "action": "Checks the value again, builds the typed value and makes sure it writes back exactly the same JSON.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_from_json"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_canonical"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_normalized"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "utv",
+          "action": "Returns Unique(value); validate_structural returned status valid.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "from_json"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "structure",
+          "condition": "A key appears twice in an object.",
+          "outcome": "invalid (duplicate-key).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/validate.py",
+              "symbol": "validate_structural"
+            }
+          ]
+        },
+        {
+          "atStep": "structure",
+          "condition": "The text isn't JSON, or holds NaN or Infinity.",
+          "outcome": "invalid (malformed-json).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/validate.py",
+              "symbol": "validate_structural"
+            }
+          ]
+        },
+        {
+          "atStep": "structure",
+          "condition": "A newer or other well-formed version, such as utv/1.1 or utv/2.0.",
+          "outcome": "unsupported (unsupported-version).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/validate.py",
+              "symbol": "validate_value"
+            }
+          ]
+        },
+        {
+          "atStep": "structure",
+          "condition": "A malformed version label, such as utv/4.",
+          "outcome": "invalid (unknown-schema).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/validate.py",
+              "symbol": "validate_value"
+            }
+          ]
+        },
+        {
+          "atStep": "structure",
+          "condition": "An unknown kind or an unknown property.",
+          "outcome": "invalid (unknown-kind, unknown-property).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/validate.py",
+              "symbol": "_check_utv"
+            },
+            {
+              "path": "implementations/python/src/utv/validate.py",
+              "symbol": "_check"
+            }
+          ]
+        },
+        {
+          "atStep": "dates",
+          "condition": "The day doesn't exist; another calendar; another kind.",
+          "outcome": "invalid (day-out-of-range or month-out-of-range); unsupported (unsupported-calendar); unsupported (unsupported-kind).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/gregorian.py",
+              "symbol": "validate_gregorian_date"
+            }
+          ]
+        },
+        {
+          "atStep": "read",
+          "condition": "JSON text with a repeated key is given to from_json.",
+          "outcome": "json.loads keeps the last value and the repetition is not reported (backlog: from-json-text-duplicate-keys).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "from_json"
+            }
+          ]
+        },
+        {
+          "atStep": "typed",
+          "condition": "JSON of the wrong shape.",
+          "outcome": "Invalid (malformed-value), followed by the 0.1 structural codes.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/_core.py",
+              "symbol": "structural"
+            }
+          ]
+        },
+        {
+          "atStep": "typed",
+          "condition": "T.from_json given another kind or form.",
+          "outcome": "Invalid (kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_narrow"
+            }
+          ]
+        },
+        {
+          "atStep": "typed",
+          "condition": "A valid value no typed value holds exactly: a zoned date, a resolutionPolicy, provenance, a recurrence.",
+          "outcome": "Unsupported (unsupported-operand); the JSON layer's functions still take it.",
+          "sources": [
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "from_json"
+            },
+            {
+              "path": "implementations/python/src/utv/values.py",
+              "symbol": "_from_json"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/python/src/utv",
+      "path": "implementations/python/src/utv/.dev/operation.json",
+      "relationship": "The operations the steps call."
+    },
+    {
+      "kind": "capability",
+      "folder": "implementations/python/src/utv",
+      "path": "implementations/python/src/utv/.dev/capability.json",
+      "relationship": "The capabilities the use cases use."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/python/src/utv",
+      "path": "implementations/python/src/utv/.dev/feature.json",
+      "relationship": "The features the use cases exercise."
+    },
+    {
+      "kind": "deployment",
+      "folder": "implementations/python",
+      "path": "implementations/python/.dev/deployment-diagram.json",
+      "relationship": "How the package reaches the developer's program, and the rule data it is given."
+    }
+  ]
+}

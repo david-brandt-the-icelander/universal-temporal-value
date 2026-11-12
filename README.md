@@ -123,15 +123,19 @@ spec/                   Normative specification (the source of truth)
   RESULT-CONTRACT.md      Semantic operation results: statuses, manifests, loss reports
   STANDARDS-MATRIX.md     Coverage of published standards
   FALSEHOODS-MATRIX.md    Falsehood → safeguard → scenario traceability
-  OPEN-ISSUES.md          Known gaps to resolve in later versions
+  OPEN-ISSUES.md          How open issues are handled, and where each is recorded
 schema/                 Structural JSON Schemas, one file per spec version
 conformance/            Language-neutral test material shared by all implementations
   examples/               Structurally valid and invalid values
   scenarios/              Semantic scenarios every engine must eventually satisfy
 implementations/        Language libraries (one directory per language)
 tools/                  Repository tooling (structural validation, the side-by-side page)
-docs/                   Rationale, design history, library API contracts, example tests, side by side
-AGENTS.md               How tests and examples are written, for people and coding agents
+docs/                   Rationale, library API contracts, example tests, side by side
+AGENTS.md               How tests, examples and .dev files are written, for people and coding agents
+Actors/                 Who uses the repository and its libraries, one file per actor
+Meta/                   Agent skills and knowledge catalogue, copied from human-assisted-software-development
+.dev/ (in each folder)  That folder's architecture diagrams, behavior views and knowledge files (AGENTS.md section 4);
+                          the root's holds the vision and the design history
 ```
 
 Start with `spec/SPECIFICATION.md`, then `spec/DECISIONS.md` and `spec/RESULT-CONTRACT.md`. The JSON Schema checks shapes only. A value can pass it and still be semantically invalid or unresolvable.
@@ -142,7 +146,7 @@ UTV 1.0 is a **complete design specification**. Libraries in five languages (0.3
 
 - The structural schema and examples are validated. Run `python3 tools/validate.py`; CI runs it on every push.
 - The 94 semantic scenarios in `conformance/scenarios/` are **requirements**, not executable tests yet.
-- `spec/OPEN-ISSUES.md` lists the known places where the prose and schema still need to be reconciled or formalized.
+- The known places where the prose and schema still need to be reconciled or formalized are recorded under their OI IDs; `spec/OPEN-ISSUES.md` says where.
 
 No finite specification can anticipate every future calendar, physical theory or legal convention. UTV handles this with a typed, versioned extension and registry contract, not with a claim of literal completeness.
 

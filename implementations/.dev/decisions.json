@@ -1,0 +1,127 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Decisions shared by every library",
+  "folder": "implementations",
+  "entities": [
+    {
+      "id": "unknown-extensions",
+      "title": "What does a library do with extensions before there is a registry?",
+      "summary": "Obligation 7 says to fail closed on unknown critical extensions, but criticality comes from a registered extension definition, no library has an extension registry, and every library accepts extensions as an uninterpreted object.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "Spec §2: extension names are reverse-DNS or URI-qualified and MUST have a registered type definition, semantic operations and criticality behaviour; unknown critical extensions fail closed; unknown elective extensions MAY be retained as opaque but MUST NOT affect interpretation. Schema 1.0 types extensions as an open object, and the registry contract has no schema yet (OI-11). The C# and Java structural validators allow extensions as a top-level member without looking inside it; the Python validator applies the schema; the TypeScript validator checks only that it is an object. A library therefore cannot tell a critical extension from an elective one, and today keeps every extension as opaque data.",
+      "options": [
+        {
+          "title": "Treat every extension as unknown and critical until a registry exists",
+          "consequences": "Any value carrying an extension is unsupported; safe, and rejects values that only carry elective metadata."
+        },
+        {
+          "title": "Keep extensions opaque, as today, and say so in each README",
+          "consequences": "Values round-trip, but a critical extension that should change the meaning is silently ignored, against obligation 7."
+        },
+        {
+          "title": "Define a criticality marker in the wire format first",
+          "consequences": "A minor specification change (utv/1.1) with a schema change; libraries can then fail closed on critical extensions alone."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed",
+          "description": "Which part of the fail-closed obligation the libraries can meet."
+        }
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/typescript/.dev/limitations.json",
+        "description": "Found while documenting the TypeScript library (limitation extensions-not-interpreted), then checked in C# (UtvValidator), Java (Utv) and Python (the bundled schema)."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§2 Serialization and profiles"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+          "symbol": "UtvValidator"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+          "symbol": "TOP"
+        },
+        {
+          "path": "implementations/python/src/utv/data/utv-1.0.schema.json",
+          "symbol": "extensions"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "schema/.dev/backlog.json",
+          "entityId": "OI-11"
+        }
+      ]
+    },
+    {
+      "id": "compare-ambiguous-diagnostics",
+      "title": "Which diagnostics does ctx.compare report when an overlap decides the order?",
+      "summary": "Comparing two zoned values that resolve to multiple orders gives one compare-level ambiguous diagnostic in C# and Java, and both sides' resolve diagnostics (ambiguous twice) in Python and TypeScript; docs/library-api.md does not say which is right.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "library-api §2 and §4 say ZonedIntent has no comparison operators and ctx.Compare returns Outcome<Ordering>, with ambiguous among the shared codes of §5, but not how many diagnostics compare reports or with which severity. Java was changed to report one ambiguous diagnostic (commit e0e80ff, Java: report one ambiguous diagnostic from TemporalContext.compare). Python's and TypeScript's TemporalContext.compare concatenate the diagnostics of resolving each side, so an ambiguous comparison reports ambiguous twice, and even a unique answer can carry the sides' diagnostics.",
+      "options": [
+        {
+          "title": "One compare-level diagnostic, as C# and Java do",
+          "consequences": "Python and TypeScript change, and library-api §4 states it."
+        },
+        {
+          "title": "Each side's resolve diagnostics, as Python and TypeScript do",
+          "consequences": "C# and Java change back, and library-api §4 states it; the caller can see which side was ambiguous."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "implementations/python/src/utv/.dev/backlog.json",
+          "entityId": "compare-diagnostics"
+        },
+        {
+          "path": "implementations/typescript/src/.dev/backlog.json",
+          "entityId": "compare-ambiguous-diagnostics"
+        }
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/python/src/utv/context.py",
+        "description": "Found while documenting the Python and TypeScript libraries, against Java's commit e0e80ff."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.compare"
+        },
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "compare"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "compare"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "4. Policies, context, rules"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "affects",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    }
+  ]
+}

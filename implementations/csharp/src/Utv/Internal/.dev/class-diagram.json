@@ -1,0 +1,268 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Skills/describe-class-diagram/schema.json",
+  "kind": "class",
+  "title": "Internals classes",
+  "folder": "implementations/csharp/src/Utv/Internal",
+  "description": "The strict JSON node tree, its reader, and the schema interpreter that checks UTV values against the embedded schema. All types are internal.",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/Internal/StrictJson.cs",
+      "symbol": "JNode"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Internal/StrictJson.cs",
+      "symbol": "StrictJson"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Internal/SchemaInterpreter.cs",
+      "symbol": "SchemaInterpreter"
+    }
+  ],
+  "types": [
+    {
+      "id": "internal.JNode",
+      "name": "JNode",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/StrictJson.cs"
+      ],
+      "members": [
+        "abstract string TypeName",
+        "string ToJsonText()",
+        "static bool JsonEquals(JNode a, JNode b)"
+      ]
+    },
+    {
+      "id": "internal.JNull",
+      "name": "JNull",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/StrictJson.cs"
+      ],
+      "members": [
+        "static readonly JNull Instance"
+      ]
+    },
+    {
+      "id": "internal.JBool",
+      "name": "JBool",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/StrictJson.cs"
+      ],
+      "members": [
+        "static readonly JBool True",
+        "static readonly JBool False",
+        "bool Value"
+      ]
+    },
+    {
+      "id": "internal.JString",
+      "name": "JString",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/StrictJson.cs"
+      ],
+      "members": [
+        "JString(string value)",
+        "string Value",
+        "int CodePointCount"
+      ]
+    },
+    {
+      "id": "internal.JNumber",
+      "name": "JNumber",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/StrictJson.cs"
+      ],
+      "members": [
+        "JNumber(string raw)",
+        "string Raw",
+        "BigInteger Mantissa",
+        "BigInteger Exponent",
+        "bool IsInteger",
+        "bool TryGetInt32(out int value)"
+      ]
+    },
+    {
+      "id": "internal.JArray",
+      "name": "JArray",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/StrictJson.cs"
+      ],
+      "members": [
+        "JArray(IReadOnlyList<JNode> items)",
+        "IReadOnlyList<JNode> Items"
+      ]
+    },
+    {
+      "id": "internal.JObject",
+      "name": "JObject",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/StrictJson.cs"
+      ],
+      "members": [
+        "IReadOnlyList<KeyValuePair<string, JNode>> Members",
+        "int Count",
+        "bool Contains(string name)",
+        "bool TryGet(string name, out JNode? value)",
+        "JNode? Get(string name)"
+      ]
+    },
+    {
+      "id": "internal.StrictJsonException",
+      "name": "StrictJsonException",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/StrictJson.cs"
+      ],
+      "members": [
+        "StrictJsonException(string code, string path, string message)",
+        "string Code",
+        "string Path"
+      ]
+    },
+    {
+      "id": "internal.StrictJson",
+      "name": "StrictJson",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/StrictJson.cs"
+      ],
+      "members": [
+        "const int MaxDepth",
+        "static JNode Parse(string text)",
+        "static string PointerToken(string name)"
+      ]
+    },
+    {
+      "id": "internal.SchemaInterpreter",
+      "name": "SchemaInterpreter",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/SchemaInterpreter.cs"
+      ],
+      "members": [
+        "const string ResourceName",
+        "static IReadOnlySet<string> AssertionKeywords",
+        "static IReadOnlySet<string> AnnotationKeywords",
+        "static SchemaInterpreter Instance",
+        "JObject Root",
+        "static string ReadEmbeddedText()",
+        "void CheckUtvValue(JNode instance, string path, List<Diagnostic> diagnostics)",
+        "JNode Resolve(string reference)",
+        "bool IsValid(JNode instance, JNode schema)",
+        "void Check(JNode instance, JNode schema, string path, List<Diagnostic> diagnostics)",
+        "static Regex CompilePattern(string pattern)"
+      ]
+    },
+    {
+      "id": "utv.Diagnostic",
+      "name": "Diagnostic",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Diagnostic.cs"
+      ],
+      "members": []
+    },
+    {
+      "id": "bcl.JsonDocument",
+      "name": "System.Text.Json.JsonDocument",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    },
+    {
+      "id": "bcl.Exception",
+      "name": "System.Exception",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "internal.JNull",
+      "to": "internal.JNode",
+      "kind": "inherits",
+      "description": "JSON null."
+    },
+    {
+      "from": "internal.JBool",
+      "to": "internal.JNode",
+      "kind": "inherits",
+      "description": "JSON true and false."
+    },
+    {
+      "from": "internal.JString",
+      "to": "internal.JNode",
+      "kind": "inherits",
+      "description": "A string with no unpaired surrogates."
+    },
+    {
+      "from": "internal.JNumber",
+      "to": "internal.JNode",
+      "kind": "inherits",
+      "description": "A number kept as its text and an exact mantissa and exponent."
+    },
+    {
+      "from": "internal.JArray",
+      "to": "internal.JNode",
+      "kind": "inherits",
+      "description": "An array."
+    },
+    {
+      "from": "internal.JObject",
+      "to": "internal.JNode",
+      "kind": "inherits",
+      "description": "An object whose keys are unique."
+    },
+    {
+      "from": "internal.StrictJsonException",
+      "to": "bcl.Exception",
+      "kind": "inherits",
+      "description": "Carries the diagnostic code (malformed-json or duplicate-key) and JSON Pointer."
+    },
+    {
+      "from": "internal.StrictJson",
+      "to": "bcl.JsonDocument",
+      "kind": "depends-on",
+      "description": "Tokenizes with no comments, no trailing commas and MaxDepth 128, then converts to JNode."
+    },
+    {
+      "from": "internal.StrictJson",
+      "to": "internal.JNode",
+      "kind": "depends-on",
+      "description": "Parse returns the root node."
+    },
+    {
+      "from": "internal.StrictJson",
+      "to": "internal.StrictJsonException",
+      "kind": "depends-on",
+      "description": "Thrown for malformed JSON and duplicate keys."
+    },
+    {
+      "from": "internal.SchemaInterpreter",
+      "to": "internal.StrictJson",
+      "kind": "depends-on",
+      "description": "Parses the embedded schema text."
+    },
+    {
+      "from": "internal.SchemaInterpreter",
+      "to": "internal.JNode",
+      "kind": "depends-on",
+      "description": "Checks instances and holds the schema as JNode trees."
+    },
+    {
+      "from": "internal.SchemaInterpreter",
+      "to": "utv.Diagnostic",
+      "kind": "depends-on",
+      "description": "Adds wrong-type, missing-property, unknown-property, schema-violation and other diagnostics."
+    }
+  ]
+}

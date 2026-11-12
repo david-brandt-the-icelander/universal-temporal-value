@@ -1,0 +1,153 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Utv library decisions",
+  "folder": "implementations/csharp/src/Utv",
+  "entities": [
+    {
+      "id": "culture-rules-are-errors",
+      "title": "Culture-sensitive calls are build errors",
+      "summary": "The analyzer rules for implicit culture and string comparison (CA1304, CA1305, CA1307, CA1309, CA1310, CA1311) are errors in the library's .editorconfig, and the project treats warnings as errors.",
+      "status": "accepted",
+      "context": "UTV forbids hidden environment: output must not depend on the host's locale.",
+      "decision": "Every number and string is formatted and compared with CultureInfo.InvariantCulture or an ordinal comparison; the compiler refuses code that does not say so. A test also scans the source for clock, host-zone and culture reads, and another runs operations under an odd culture.",
+      "rationale": "The .editorconfig comment: culture and comparison must always be explicit; the library never depends on the host locale.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/.editorconfig",
+          "symbol": "CA1304"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Utv.csproj",
+          "symbol": "TreatWarningsAsErrors"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Tests/EverydayApiTests.cs",
+          "symbol": "EverydayApiTests.LibraryNeverReadsClockZoneOrCulture"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Tests/CultureIndependenceTests.cs",
+          "symbol": "CultureIndependenceTests.OutputDoesNotDependOnTheCurrentCulture"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        }
+      ]
+    },
+    {
+      "id": "schema-linked-not-copied",
+      "title": "The structural schema is linked, not copied",
+      "summary": "Utv.csproj embeds schema/utv-1.0.schema.json from the repository root as resource Utv.utv-1.0.schema.json.",
+      "status": "accepted",
+      "context": "The library validates against the repository's structural schema, and libraries must read the shared material in place.",
+      "decision": "An EmbeddedResource item links the repository file into the assembly at build time. SchemaTests checks that the embedded text equals the repository file.",
+      "rationale": "The project file's comment: the structural schema is linked from the repository root, never copied. One file, so the library cannot drift from the schema.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Utv.csproj",
+          "symbol": "EmbeddedResource"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Tests/SchemaTests.cs",
+          "symbol": "SchemaTests.EmbeddedSchemaIsTheRepositoryFile"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "shared-conformance-material"
+        },
+        {
+          "relation": "depends-on",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema"
+        }
+      ]
+    },
+    {
+      "id": "iso-choices-where-the-contract-is-silent",
+      "title": "parseIso and formatIso where the contract is silent",
+      "summary": "Valid ISO 8601 forms the everyday contract does not mention are unsupported, not invalid; and a value whose offset has no ±hh:mm form is not formatted.",
+      "status": "accepted",
+      "context": "docs/everyday-api.md lists what parseIso handles and what is unsupported, but not every valid ISO 8601 form.",
+      "decision": "A decimal comma, a year on its own, a time with T or an offset, and basic-format offsets give unsupported (unsupported-form); more than nine fraction digits gives unsupported (implementation-limit). An offsetAssertion that is not a whole number of minutes cannot be formatted, so formatIso gives unsupported. Every invalid check comes before every unsupported one, so T25:00 stays invalid.",
+      "rationale": "They are valid ISO 8601, which the library does not handle: unsupported is the truthful answer, and invalid is kept for text that is wrong.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Iso.cs",
+          "symbol": "Iso.Unrecognized"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Iso.cs",
+          "symbol": "Iso.ParseDateTime"
+        },
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "Choices where the contract is silent"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        }
+      ]
+    },
+    {
+      "id": "ascii-digits-and-end-anchors",
+      "title": "[0-9] and \\z in every pattern",
+      "summary": "The library's regular expressions use [0-9] rather than \\d and \\z rather than $.",
+      "status": "accepted",
+      "context": "In .NET, \\d matches any Unicode digit and $ also matches before a final newline.",
+      "decision": "Iso's patterns and UtvValidator's version pattern use [0-9] and \\A…\\z; the schema interpreter rewrites $ in schema patterns to \\z.",
+      "rationale": "The code comments: so that only ASCII digits are read, and utv/1.0 followed by a newline is not a well-formed identifier.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Iso.cs",
+          "symbol": "Iso.Year"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+          "symbol": "UtvValidator.WellFormedVersion"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/SchemaInterpreter.cs",
+          "symbol": "SchemaInterpreter.CompilePattern"
+        }
+      ]
+    },
+    {
+      "id": "empty-manifest",
+      "title": "Results report an empty manifest",
+      "summary": "UtvResult.ToJson always writes an empty manifest, no assumptions and a lossless loss report.",
+      "status": "accepted",
+      "context": "utv-result/1.0 results carry a manifest of the rules used, assumptions and a loss report.",
+      "decision": "The C# results do not track them. The class's remarks say why this is acceptable for now: the everyday operations are exact, and the rules a resolve or toZone used are the ZoneRules the caller passed in.",
+      "rationale": "As stated in UtvResult's remarks. The cost is recorded as debt in this folder's backlog (manifest-in-results).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/UtvResult.cs",
+          "symbol": "UtvResult.ToJson"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "implementations/csharp/src/Utv/.dev/backlog.json",
+          "entityId": "manifest-in-results"
+        }
+      ]
+    }
+  ]
+}

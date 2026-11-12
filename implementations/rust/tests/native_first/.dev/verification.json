@@ -1,0 +1,494 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Native-first examples verification",
+  "folder": "implementations/rust/tests/native_first",
+  "description": "Checks are named by file and by the inner module of the native function under test. All run with cargo test from implementations/rust.",
+  "entities": [
+    {
+      "id": "dates",
+      "title": "Dates, native first",
+      "summary": "NaiveDate and Weekday for the date scenarios, with UTV's CivilDate as the other side.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/typed/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "month-end"
+        }
+      ],
+      "criteria": [
+        "NaiveDate::from_ymd_opt makes 5 November 2026 and -500-03-01, and returns None, with no reason, for 30 February, month 13 and year 275760, which is beyond its range",
+        "NaiveDate::MAX is the last day of 262142; NaiveDate's FromStr reads 2026-11-05 and refuses 2026-02-30 as out of range",
+        "weekday is Thursday and iso_week 45 for 5 November 2026; leap_year agrees with UTV for every kind of year",
+        "Weekday::num_days_from_monday numbers Sunday 6, number_from_monday numbers it 7 like UTV's Weekday",
+        "checked_add_days crosses a month end; checked_add_months clamps 31 January + 1 month to 28 February silently; with_month returns None for a missing day",
+        "signed_duration_since counts days; < orders dates",
+        "and_hms_opt makes a wall-clock date-time and refuses second 60; and_hms_milli_opt writes a leap second as 59 plus 1000 ms"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date.rs",
+          "symbol": "from_ymd_opt",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date.rs",
+          "symbol": "max",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date.rs",
+          "symbol": "from_str",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date.rs",
+          "symbol": "weekday",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date.rs",
+          "symbol": "iso_week",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date.rs",
+          "symbol": "leap_year",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date.rs",
+          "symbol": "checked_add_days",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date.rs",
+          "symbol": "checked_add_months",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date.rs",
+          "symbol": "with_month",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date.rs",
+          "symbol": "signed_duration_since",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date.rs",
+          "symbol": "lt",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date.rs",
+          "symbol": "and_hms_opt",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date.rs",
+          "symbol": "and_hms_milli_opt",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/weekday.rs",
+          "symbol": "num_days_from_monday",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/weekday.rs",
+          "symbol": "number_from_monday",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/native_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "times-and-offsets",
+      "title": "Times, date-times and offsets, native first",
+      "summary": "NaiveTime, NaiveDateTime, FixedOffset and DateTime parsing and equality, with UTV's civil types as the other side.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/typed/.dev/feature.json",
+          "entityId": "text-display"
+        },
+        {
+          "path": "implementations/rust/src/interop/.dev/feature.json",
+          "entityId": "intent-named-by-target"
+        }
+      ],
+      "criteria": [
+        "NaiveTime's to_string writes seconds that were never given",
+        "NaiveTime::overflowing_add_signed wraps past midnight and hands back the lost day; NaiveDateTime::checked_add_signed carries into the next day",
+        "FixedOffset::with_ymd_and_hms pins the wall time to the offset",
+        "DateTime::parse_from_rfc3339 cannot tell ...Z from ...+00:00",
+        "DateTime's == is true after a round trip through UTV, and also when only the offsets differ"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_time.rs",
+          "symbol": "to_string",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_time.rs",
+          "symbol": "overflowing_add_signed",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/naive_date_time.rs",
+          "symbol": "checked_add_signed",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/fixed_offset.rs",
+          "symbol": "with_ymd_and_hms",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/date_time.rs",
+          "symbol": "parse_from_rfc3339",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/date_time.rs",
+          "symbol": "eq",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/native_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "zones",
+      "title": "Zones, native first",
+      "summary": "chrono-tz's Tz and DateTime arithmetic in a zone, with ZonedIntent and the pinned demo rules as the other side.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        }
+      ],
+      "criteria": [
+        "Tz::from_local_datetime finds the one instant of 09:00 in Paris, LocalResult::None in the New York gap and both instants in the New York overlap",
+        "DateTime::with_timezone gives the wall time in New York",
+        "checked_add_days keeps noon across a DST change; adding TimeDelta::days(1) moves the wall time to 13:00"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/tz.rs",
+          "symbol": "from_local_datetime",
+          "command": "cargo test",
+          "description": "Uses the tz database compiled into chrono-tz, not the host's."
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/date_time.rs",
+          "symbol": "with_timezone",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/date_time.rs",
+          "symbol": "checked_add_days",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/date_time.rs",
+          "symbol": "add",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/native_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules",
+          "description": "UTV's side, through tests/fixtures."
+        }
+      ]
+    },
+    {
+      "id": "timestamps-and-amounts",
+      "title": "Timestamps, clock readings and amounts, native first",
+      "summary": "DateTime<Utc>, TimeDelta, SystemTime and Utc::now, with Instant and UTV's three kinds of amount as the other side.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "exact-arithmetic"
+        },
+        {
+          "path": "implementations/rust/src/interop/.dev/feature.json",
+          "entityId": "clock-as-input"
+        }
+      ],
+      "criteria": [
+        "DateTime::from_timestamp gives the epoch for 0 and keeps nine fractional digits; timestamp drops a quarter second",
+        "Subtracting two DateTimes is exact to the nanosecond; dividing a TimeDelta by three rounds to whole nanoseconds",
+        "TimeDelta::days(1) equals 86,400 seconds; TimeDelta::minutes counts 60 seconds to the minute",
+        "A reading of SystemTime::now and of Utc::now survives the trip through UTV unchanged"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/date_time.rs",
+          "symbol": "from_timestamp",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/date_time.rs",
+          "symbol": "timestamp",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/date_time.rs",
+          "symbol": "sub",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/time_delta.rs",
+          "symbol": "days",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/time_delta.rs",
+          "symbol": "minutes",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/time_delta.rs",
+          "symbol": "div",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/system_time.rs",
+          "symbol": "now",
+          "command": "cargo test",
+          "description": "Reads the real clock on purpose; the round trip does not depend on the time read."
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/utc.rs",
+          "symbol": "now",
+          "command": "cargo test",
+          "description": "Reads the real clock on purpose; the round trip does not depend on the time read."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/native_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "local-zone",
+      "title": "The host's zone, native first",
+      "summary": "Local::now gives a reading tied to this machine's zone, which UTV refuses.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/interop/.dev/feature.json",
+          "entityId": "no-local-zone"
+        }
+      ],
+      "criteria": [
+        "interop::chrono::from_local answers unsupported (local-zone) for the reading Local::now returns"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/local.rs",
+          "symbol": "now",
+          "command": "cargo test",
+          "description": "Reads the real clock and this machine's zone on purpose; UTV's answer depends on neither."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/native_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        }
+      ]
+    },
+    {
+      "id": "ranges",
+      "title": "Ranges, native first",
+      "summary": "std::ops ranges of NaiveDate, with Interval as the other side; std has no range with an unknown end.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "three-valued-ranges"
+        }
+      ],
+      "criteria": [
+        "Range (a..b) contains a day between the ends; RangeInclusive (a..=b) contains the included end; RangeFrom (a..) contains any later day"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/range.rs",
+          "symbol": "contains",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/range_inclusive.rs",
+          "symbol": "contains",
+          "command": "cargo test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/range_from.rs",
+          "symbol": "contains",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/native_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "json",
+      "title": "Duplicate keys, native first",
+      "summary": "serde_json keeps the last of two values for one key, which UTV's validate_structural refuses.",
+      "subject": [
+        {
+          "path": "implementations/rust/src/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        }
+      ],
+      "criteria": [
+        "serde_json::from_str accepts a repeated key and keeps the last value; validate_structural answers invalid (duplicate-key)"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/native_first/json.rs",
+          "symbol": "from_str",
+          "command": "cargo test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/native_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed"
+        }
+      ]
+    }
+  ]
+}

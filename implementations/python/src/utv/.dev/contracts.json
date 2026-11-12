@@ -1,0 +1,75 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "utv package contracts",
+  "folder": "implementations/python/src/utv",
+  "entities": [
+    {
+      "id": "result-envelope",
+      "title": "Result envelope of the JSON layer",
+      "summary": "Every JSON-layer function returns a Result, the utv-result/1.0 envelope, and never raises for a semantic outcome.",
+      "contractType": "library-api",
+      "consumers": [
+        "Application developers who use the JSON layer (utv.parse_iso, utv.add, utv.resolve, …)",
+        "The typed layer, through outcome_of and Outcome.to_result",
+        "tests/test_everyday_fixtures.py and tests/test_text_form.py, which compare results with the shared fixtures"
+      ],
+      "guarantees": [
+        "Result.to_dict() writes schema utv-result/1.0, operation, status, manifest, assumptions, loss and diagnostics, and candidates only when there are any.",
+        "operation carries the everyday name (parseIso, add, resolve, parseText, …), validate for the 0.1 checks and convert for utv.native.",
+        "unique has exactly one candidate (Result.value), multiple has all of them in ascending order, and every other status has none.",
+        "A semantic outcome is a status, never an exception. Wrong Python types raise TypeError; ZoneRules.parse and load_rules raise ValueError for a malformed bundle, while a malformed bundle passed to resolve or to_zone is invalid (malformed-value).",
+        "resolve and to_zone list the rule set they used in manifest.dependencies; resolve reports its loss as information-losing (zone, zoneIntent).",
+        "Diagnostics are {code, severity, path, message}. Codes follow docs/library-api.md §5, except that validate_structural and validate_gregorian_date still report their 0.1 codes (duplicate-key, unknown-kind, unknown-property, unsupported-kind, …).",
+        "The utv.native adapters put datetime objects in candidates instead of JSON, so to_dict() of their results is not JSON.",
+        "Outcome.to_result() returns the Result an outcome came from. outcome_of maps statuses that have no typed case (symbolic, resource-limit and the rest) to Unsupported."
+      ],
+      "compatibility": "Part of the package's 0.x API (implementations/python/.dev/contracts.json, utv-package). 0.3.0 renamed the JSON layer's diagnostic codes to the shared table and kept its functions and statuses (CHANGELOG.md).",
+      "definition": "implementations/python/src/utv/result.py",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/result.py",
+          "symbol": "Result.to_dict"
+        },
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "operation"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "_done"
+        },
+        {
+          "path": "implementations/python/src/utv/outcome.py",
+          "symbol": "outcome_of"
+        },
+        {
+          "path": "implementations/python/src/utv/outcome.py",
+          "symbol": "failure"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-result-1-0"
+        },
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        },
+        {
+          "relation": "part-of",
+          "path": "implementations/python/.dev/contracts.json",
+          "entityId": "utv-package"
+        }
+      ]
+    }
+  ]
+}

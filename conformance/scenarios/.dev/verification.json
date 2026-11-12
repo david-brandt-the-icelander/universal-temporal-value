@@ -1,0 +1,47 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Semantic scenario verification",
+  "folder": "conformance/scenarios",
+  "description": "The scenarios' semantics are not verified by anything yet (OI-12).",
+  "entities": [
+    {
+      "id": "scenarios-well-formed",
+      "title": "The scenario files are well-formed and match the matrix",
+      "summary": "Scenario ids are unique across both files, each has its required fields, and the falsehood ids match spec/FALSEHOODS-MATRIX.md.",
+      "criteria": [
+        "Each falsehood scenario has id, scenario, designSafeguard, specSections and status.",
+        "Each standards scenario has id, category, scenario, expectedDesignOutcome, sourceStandard and status.",
+        "No id repeats across the two files.",
+        "Every matrix row has a falsehood scenario, and every falsehood scenario has a matrix row."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "tools/validate.py",
+          "symbol": "check_scenarios",
+          "command": "python3 tools/validate.py"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "tools/validate.py",
+          "symbol": "check_scenarios"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/scenarios/.dev/requirements.json",
+          "entityId": "falsehood-scenarios"
+        },
+        {
+          "relation": "verifies",
+          "path": "conformance/scenarios/.dev/requirements.json",
+          "entityId": "standards-convergence-scenarios"
+        }
+      ]
+    }
+  ]
+}

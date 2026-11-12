@@ -1,0 +1,87 @@
+{
+  "$schema": "../../../Meta/Agents/Skills/describe-deployment-diagram/schema.json",
+  "kind": "deployment",
+  "title": "utv-core (Java) deployment diagram",
+  "folder": "implementations/java",
+  "description": "How the library runs: pom.xml builds a jar (net.icelander.utv:utv-core:0.3.0) that runs in-process in the caller's application on a Java 21 JVM, with Jackson beside it. Nothing in the folder publishes the jar to a repository; VERSIONING.md names only the git tag java/vX.Y.Z. The library opens no connection and reads no clock, host zone or locale: zone rules are data the caller loads and passes in.",
+  "sources": [
+    {
+      "path": "implementations/java/pom.xml",
+      "symbol": "packaging"
+    },
+    {
+      "path": "implementations/java/pom.xml",
+      "symbol": "maven.compiler.release"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/ZoneRules.java",
+      "symbol": "ZoneRules.load"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+      "symbol": "JavaTime.toZonedDateTime"
+    },
+    {
+      "path": "VERSIONING.md",
+      "symbol": "Implementation versions"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "jvm",
+      "name": "JVM (Java 21 or later)",
+      "kind": "host",
+      "description": "Whatever JVM runs the caller's application; pom.xml compiles for release 21."
+    },
+    {
+      "id": "app",
+      "name": "Caller's application",
+      "kind": "process",
+      "description": "The application developer's program, which calls utv-core in-process; the library starts no threads or processes of its own."
+    },
+    {
+      "id": "jdk-tzdb",
+      "name": "JDK tz database",
+      "kind": "database",
+      "description": "The tz database bundled with the JDK, read through ZoneId.of.",
+      "condition": "Only ZonedIntent.toZonedDateTime and JavaTime.toZonedDateTime use it; every other zone operation uses the caller's rules."
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "jar",
+      "name": "utv-core-0.3.0.jar",
+      "source": "implementations/java/pom.xml",
+      "deployedTo": "app",
+      "description": "The library jar (packaging jar), built by mvn package from src/main/java; on the caller's class path."
+    },
+    {
+      "id": "jackson",
+      "name": "jackson-databind 2.17.2",
+      "source": "implementations/java/pom.xml",
+      "deployedTo": "app",
+      "description": "The library's one runtime dependency."
+    },
+    {
+      "id": "rules",
+      "name": "Zone-rule bundle (JSON)",
+      "source": "conformance/rules/demo-zones.json",
+      "deployedTo": "app",
+      "description": "Rule data in the format of the demo bundle, read by the caller with ZoneRules.load or ZoneRules.parse. The library ships none; the demo bundle is what the tests use."
+    }
+  ],
+  "relationships": [
+    {
+      "from": "jvm",
+      "to": "app",
+      "kind": "hosts",
+      "description": "Runs the application with utv-core and Jackson on its class path."
+    },
+    {
+      "from": "app",
+      "to": "jdk-tzdb",
+      "kind": "connects-to",
+      "description": "In-process lookup (ZoneId.of, ZonedDateTime.ofStrict) when converting a zoned value to ZonedDateTime."
+    }
+  ]
+}

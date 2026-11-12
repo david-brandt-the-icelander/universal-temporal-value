@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Tests",
+  "folder": "implementations/python/tests",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Tests",
+      "summary": "The library's unittest suites: the shared fixtures, the typed layer, the native adapters, the library's purity, and the example suites in examples/.",
+      "purpose": "Checks the library without installing it: PYTHONPATH=src python3 -m unittest discover -s tests from implementations/python. The suites find the repository root from their own path and read conformance/ and schema/ there in place, never copies.",
+      "boundaries": [
+        "What each suite checks is recorded in verification.json here and in the example folders' own files.",
+        "The ZoneInfo tests in test_native.py are skipped when this machine's tz database has no America/New_York."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/test_everyday_fixtures.py",
+          "symbol": "ROOT"
+        },
+        {
+          "path": "implementations/python/tests/test_native.py",
+          "symbol": "needs_tzdb"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "3. Running the tests"
+        }
+      ]
+    }
+  ]
+}

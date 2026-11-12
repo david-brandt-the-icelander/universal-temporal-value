@@ -1,0 +1,70 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/runbooks.schema.json",
+  "kind": "runbooks",
+  "title": "Rust library runbooks",
+  "folder": "implementations/rust",
+  "entities": [
+    {
+      "id": "setup",
+      "title": "Build and test the crate",
+      "summary": "Run every test of the Rust library, including both example suites, from a checkout of the repository.",
+      "purpose": "setup",
+      "when": "Before and after changing anything in implementations/rust.",
+      "steps": [
+        "Install a stable Rust toolchain with Cargo. Cargo.toml asks only for edition 2021 and declares no rust-version (see the backlog item declare-rust-version).",
+        "Work in a checkout of the whole repository: the crate compiles in ../../schema/utv-1.0.schema.json, and the tests read ../../conformance/ relative to CARGO_MANIFEST_DIR.",
+        "cd implementations/rust",
+        "cargo test: the unit and doc tests in src/, every tests/*.rs target and both example suites. No flags are needed; the crate is its own dev-dependency with the feature chrono on.",
+        "cargo test --test utv_first runs only the UTV-first examples (cargo test --test native_first the native-first ones).",
+        "cargo test --all-features and cargo clippy --all-features --all-targets, as the README's Tests section gives them."
+      ],
+      "verify": "cargo test reports no failed tests.",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "symbol": "3. Running the tests"
+        },
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "Tests"
+        },
+        {
+          "path": "implementations/rust/Cargo.toml",
+          "symbol": "dev-dependencies"
+        }
+      ]
+    },
+    {
+      "id": "change-an-example",
+      "title": "Change or add an example",
+      "summary": "What else changes when a UTV-first or native-first example changes.",
+      "purpose": "operate",
+      "when": "A test in tests/utv_first or tests/native_first is added or changed.",
+      "steps": [
+        "Follow AGENTS.md section 1 (GIVEN … THEN sections, a \"Verifies that …\" doc comment with a second sentence starting \"Compared with:\").",
+        "Keep the other side out of WHEN: chrono's answer is computed in EXPECTATIONS (UTV first), UTV's in EXPECTATIONS (native first).",
+        "UTV zone operations use fixtures::demo_zone_rules(), never the host's tz database.",
+        "A new scenario gets a test in both suites where chrono or std can do the task, and goes into docs/example-tests.md and the other four languages.",
+        "If the test is between // BEGIN <task> and // END <task> markers, run python3 tools/side_by_side.py from the repository root to regenerate docs/side-by-side.md.",
+        "Run cargo test here, and python3 tools/side_by_side.py --check from the repository root."
+      ],
+      "verify": "cargo test passes and tools/side_by_side.py --check reports the page up to date.",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "symbol": "2. Examples are unit tests"
+        },
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "LANGUAGES"
+        },
+        {
+          "path": "implementations/rust/tests/fixtures/mod.rs",
+          "symbol": "demo_zone_rules"
+        }
+      ]
+    }
+  ]
+}

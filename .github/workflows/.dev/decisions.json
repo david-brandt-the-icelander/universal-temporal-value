@@ -1,0 +1,60 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "CI decisions",
+  "folder": ".github/workflows",
+  "entities": [
+    {
+      "id": "ci-scope",
+      "title": "Should CI run the libraries' tests and the HASD validators?",
+      "summary": "CI checks the language-neutral material only; the five libraries' tests and the .dev validators run only where a contributor runs them.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "The libraries carry the obligations of implementations/README.md and must pass all everyday and text-form fixtures (docs/library-api.md §8), but validate.yml runs only tools/validate.py and tools/side_by_side.py --check. AGENTS.md asks every contributor to run each library's tests and, from now on, the two HASD validators before finishing; nothing checks that they did. Running five toolchains (.NET, Maven, Python, Node, Cargo) in CI costs build minutes and maintenance.",
+      "options": [
+        {
+          "title": "Keep CI as it is",
+          "consequences": "Fast and cheap; a change that breaks a library or a .dev file is caught only by the next contributor who runs that check."
+        },
+        {
+          "title": "Add the HASD validators only",
+          "consequences": "Two more Python steps with the jsonschema already installed; .dev files stay well-formed. Library behaviour stays unchecked."
+        },
+        {
+          "title": "Add one job per library, plus the validators",
+          "consequences": "Every push proves every library against the shared fixtures; CI needs the five toolchains and takes longer."
+        }
+      ],
+      "blocks": [
+        {
+          "path": ".github/workflows/.dev/pipeline.json",
+          "entityId": "validate-specification",
+          "description": "Its notChecked entries for the library tests and the HASD validators stay until this is decided."
+        }
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": ".github/workflows/validate.yml",
+        "description": "Found while documenting the pipeline: the workflow's steps against AGENTS.md section 3."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": ".github/workflows/validate.yml",
+          "symbol": "jobs.structural.steps"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "3. Running the tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "blocks",
+          "path": ".github/workflows/.dev/pipeline.json",
+          "entityId": "validate-specification"
+        }
+      ]
+    }
+  ]
+}

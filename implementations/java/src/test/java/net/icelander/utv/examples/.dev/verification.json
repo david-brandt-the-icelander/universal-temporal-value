@@ -1,0 +1,56 @@
+{
+  "$schema": "../../../../../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Example fixture verification",
+  "folder": "implementations/java/src/test/java/net/icelander/utv/examples",
+  "entities": [
+    {
+      "id": "demo-zone-rules-fixture",
+      "title": "The demo zone rules fixture",
+      "summary": "Fixtures.demoZoneRules loads the pinned demo rules from the repository, with its three zones.",
+      "subject": [
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        }
+      ],
+      "criteria": [
+        "Fixtures.demoZoneRules reads conformance/rules/demo-zones.json from the repository root, never a copy.",
+        "The rules hold America/New_York, Atlantic/Reykjavik and Europe/Paris."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/FixturesTest.java",
+          "symbol": "FixturesTest.DemoZoneRules",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/Fixtures.java",
+          "symbol": "Fixtures.demoZoneRules",
+          "description": "The shared fixture itself: every UTV zone example and TemporalContextTest load the rules through it."
+        }
+      ],
+      "details": "AGENTS.md 1.6: fixtures get tests of their own.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "shared-conformance-material"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    }
+  ]
+}

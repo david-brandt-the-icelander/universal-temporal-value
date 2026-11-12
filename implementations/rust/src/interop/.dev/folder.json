@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Native interop",
+  "folder": "implementations/rust/src/interop",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Native interop",
+      "summary": "Explicit adapters between UTV values and Rust's own time types: std's SystemTime always, chrono's types behind the cargo feature chrono.",
+      "purpose": "Brings a native value into UTV and back out under the rules of docs/everyday-api.md, Native interop: the caller names the intent, nothing tied to the host's zone is accepted, and a conversion back to native that would lose something is refused. mod.rs holds the SystemTime adapters and the module utv::interop; chrono.rs (utv::interop::chrono) holds the JSON-layer functions for chrono and the From/TryFrom impls between chrono's types and the typed values.",
+      "boundaries": [
+        "Never reads the clock: a reading is always an argument.",
+        "Converts; it does no arithmetic. The values it makes are checked by the JSON layer's readers (src/model.rs) and the typed layer.",
+        "chrono.rs compiles only with the cargo feature chrono (#[cfg(feature = \"chrono\")] in mod.rs)."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "module documentation"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "module documentation"
+        },
+        {
+          "path": "implementations/rust/Cargo.toml",
+          "symbol": "features.chrono"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-silent-conversions"
+        },
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        }
+      ]
+    }
+  ]
+}

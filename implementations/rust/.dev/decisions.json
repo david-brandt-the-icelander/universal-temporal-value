@@ -1,0 +1,76 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Rust library decisions",
+  "folder": "implementations/rust",
+  "entities": [
+    {
+      "id": "chrono-as-native-api",
+      "title": "chrono stands in for a standard date/time API",
+      "summary": "Rust's std has no calendar types, so the native side of interop and of the examples is chrono, with chrono-tz for zones, plus SystemTime, std::ops ranges and serde_json.",
+      "status": "accepted",
+      "context": "AGENTS.md and docs/everyday-api.md ask every library to bridge to, and compare itself with, the language's standard date/time API. std has only std::time::SystemTime, a clock reading with no calendar.",
+      "decision": "SystemTime is bridged always; the de-facto standard chrono crate is the native calendar API, and chrono-tz the native zone API in the examples.",
+      "rationale": "\"std has no calendar types, only SystemTime ... Calendar types come from the de-facto standard chrono crate\" (src/interop/mod.rs). A consequence the example suites record: chrono-tz compiles its own copy of the tz database (2025b in chrono-tz 0.10.4), so the native-first zone tests read neither the host's tz database nor the demo rules.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "module documentation"
+        },
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "Examples"
+        },
+        {
+          "path": "implementations/rust/tests/native_first/main.rs",
+          "symbol": "module documentation"
+        }
+      ]
+    },
+    {
+      "id": "chrono-behind-feature",
+      "title": "The chrono adapters are an optional feature",
+      "summary": "utv::interop::chrono compiles only with the cargo feature chrono, which is off by default.",
+      "status": "accepted",
+      "context": "The library needs chrono only to convert to and from chrono's types.",
+      "decision": "chrono is an optional dependency behind the feature chrono; SystemTime conversions are always available.",
+      "rationale": "\"Off by default: the library's own dependencies stay serde_json, serde and regex\" (Cargo.toml).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/Cargo.toml",
+          "symbol": "features.chrono"
+        },
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "chrono"
+        }
+      ]
+    },
+    {
+      "id": "self-dev-dependency",
+      "title": "The crate is its own dev-dependency",
+      "summary": "Cargo.toml lists utv = { path = \".\", features = [\"chrono\"] } as a dev-dependency, so plain cargo test builds the chrono adapters the examples need.",
+      "status": "accepted",
+      "context": "The example suites compare UTV with chrono and need the chrono adapters, which are off by default. Examples must run with the library's normal test command (AGENTS.md section 2).",
+      "decision": "Depend on the crate itself with the feature chrono for tests.",
+      "rationale": "\"They need the chrono adapters, so the tests depend on this crate with that feature on: plain cargo test builds and runs them\" (Cargo.toml); --all-features builds the same thing today (README, Tests).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/Cargo.toml",
+          "symbol": "dev-dependencies"
+        },
+        {
+          "path": "implementations/rust/CHANGELOG.md",
+          "symbol": "Unreleased"
+        },
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "Tests"
+        }
+      ]
+    }
+  ]
+}

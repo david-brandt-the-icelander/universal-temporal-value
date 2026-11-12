@@ -1,0 +1,51 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Semantic scenario backlog",
+  "folder": "conformance/scenarios",
+  "entities": [
+    {
+      "id": "OI-12",
+      "title": "Executable semantic fixtures",
+      "summary": "Each of the 94 scenarios needs concrete input values, the evaluation context and manifest, and an expected result envelope.",
+      "type": "feature",
+      "details": "The scenarios are requirements, not executable tests (conformance/README.md). A library may not reach 1.0.0 until it passes every semantic scenario for the profiles it claims (VERSIONING.md), so this gates every library's 1.0. Resolving it additively is a minor version (1.1); renaming or removing fields is a major version; clarifying prose without changing any serialized form or result is a patch (VERSIONING.md).",
+      "acceptanceCriteria": [
+        "Every scenario in falsehoods.json and standards-convergence.json has inputs, a context and manifest, and an expected utv-result/1.0 envelope that a library's test runner can execute."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section C, Missing machine-readable artifacts of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "status": "open",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "conformance/README.md",
+          "symbol": "Structural vs. semantic"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Implementation versions"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "schema/.dev/backlog.json",
+          "entityId": "OI-10"
+        },
+        {
+          "relation": "depends-on",
+          "path": "spec/.dev/decisions.json",
+          "entityId": "OI-08"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,284 @@
+{
+  "$schema": "../../Meta/Agents/Skills/describe-use-case/schema.json",
+  "kind": "use-case",
+  "title": "Tool use cases",
+  "folder": "tools",
+  "description": "What a contributor does with the repository's tooling.",
+  "sources": [
+    {
+      "path": "tools/validate.py",
+      "symbol": "main"
+    },
+    {
+      "path": "tools/side_by_side.py",
+      "symbol": "main"
+    },
+    {
+      "path": "AGENTS.md",
+      "symbol": "2. Examples are unit tests"
+    }
+  ],
+  "entities": [
+    {
+      "id": "check-the-specification-material",
+      "name": "Check the specification material after a change",
+      "description": "A contributor who changed the schema, the conformance material or a JSON example in the specification checks that everything still agrees.",
+      "sources": [
+        {
+          "path": "tools/validate.py",
+          "symbol": "main"
+        }
+      ],
+      "actor": "Contributor",
+      "actorDocument": "Actors/contributor.md",
+      "goal": "Know that the structural material is consistent before the change is pushed.",
+      "preconditions": [
+        "jsonschema 4.18 or later is installed (pip install -r tools/requirements.txt).",
+        "The script finds the repository from its own location (ROOT), so it works from any directory."
+      ],
+      "postconditions": [
+        "Every check printed ok and the script exited 0, or every failure was printed and it exited 1. Nothing is written."
+      ],
+      "flow": [
+        {
+          "id": "run",
+          "actor": "Contributor",
+          "participantKind": "actor",
+          "actorDocument": "Actors/contributor.md",
+          "action": "Runs python3 tools/validate.py.",
+          "sources": [
+            {
+              "path": "tools/validate.py",
+              "symbol": "main"
+            }
+          ]
+        },
+        {
+          "id": "schemas",
+          "actor": "validate.py",
+          "participantKind": "system",
+          "action": "Checks every schema/*.schema.json against Draft 2020-12 and builds a validator for utv-1.0.",
+          "sources": [
+            {
+              "path": "tools/validate.py",
+              "symbol": "check_schemas"
+            }
+          ]
+        },
+        {
+          "id": "examples",
+          "actor": "validate.py",
+          "participantKind": "system",
+          "action": "Validates the valid and the structurally invalid conformance examples, and every complete UTV example embedded in spec/*.md.",
+          "sources": [
+            {
+              "path": "tools/validate.py",
+              "symbol": "check_examples"
+            },
+            {
+              "path": "tools/validate.py",
+              "symbol": "check_spec_examples"
+            }
+          ]
+        },
+        {
+          "id": "scenarios",
+          "actor": "validate.py",
+          "participantKind": "system",
+          "action": "Checks the scenario files' fields and ids, and that spec/FALSEHOODS-MATRIX.md and falsehoods.json list the same ids.",
+          "sources": [
+            {
+              "path": "tools/validate.py",
+              "symbol": "check_scenarios"
+            }
+          ]
+        },
+        {
+          "id": "fixtures",
+          "actor": "validate.py",
+          "participantKind": "system",
+          "action": "Checks every UTV value in the everyday and text-form fixtures against the schema, that fixture ids are unique, and that named rule bundles exist.",
+          "sources": [
+            {
+              "path": "tools/validate.py",
+              "symbol": "check_everyday_fixtures"
+            },
+            {
+              "path": "tools/validate.py",
+              "symbol": "check_text_form_fixtures"
+            }
+          ]
+        },
+        {
+          "id": "report",
+          "actor": "validate.py",
+          "participantKind": "system",
+          "action": "Prints \"All structural checks passed.\" and exits 0.",
+          "sources": [
+            {
+              "path": "tools/validate.py",
+              "symbol": "main"
+            }
+          ]
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "schemas",
+          "condition": "A schema file is not a valid Draft 2020-12 schema, or any JSON file read has a duplicate key.",
+          "outcome": "The script stops with a traceback; no later check runs.",
+          "sources": [
+            {
+              "path": "tools/validate.py",
+              "symbol": "load_json"
+            }
+          ]
+        },
+        {
+          "atStep": "examples",
+          "condition": "A check finds a value accepted or rejected wrongly, or a valid example without utv/1.0.",
+          "outcome": "A FAIL line is printed, the remaining checks still run, and the script exits 1 with the number of failures.",
+          "sources": [
+            {
+              "path": "tools/validate.py",
+              "symbol": "fail"
+            }
+          ]
+        },
+        {
+          "atStep": "scenarios",
+          "condition": "The falsehoods matrix and falsehoods.json disagree.",
+          "outcome": "One FAIL line per id missing on either side; exit 1.",
+          "sources": [
+            {
+              "path": "tools/validate.py",
+              "symbol": "check_scenarios"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "update-the-side-by-side-page",
+      "name": "Update the side-by-side page after changing an example",
+      "description": "A contributor who changed a UTV-first example test between task markers regenerates docs/side-by-side.md, which CI otherwise rejects.",
+      "sources": [
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "main"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "2. Examples are unit tests"
+        }
+      ],
+      "actor": "Contributor",
+      "actorDocument": "Actors/contributor.md",
+      "goal": "Keep docs/side-by-side.md showing the code the example tests actually run.",
+      "preconditions": [
+        "The changed tests are in one of the five UTV-first suites named in LANGUAGES."
+      ],
+      "postconditions": [
+        "docs/side-by-side.md matches the marked code, and python3 tools/side_by_side.py --check exits 0."
+      ],
+      "flow": [
+        {
+          "id": "run",
+          "actor": "Contributor",
+          "participantKind": "actor",
+          "actorDocument": "Actors/contributor.md",
+          "action": "Runs python3 tools/side_by_side.py.",
+          "sources": [
+            {
+              "path": "tools/side_by_side.py",
+              "symbol": "main"
+            }
+          ]
+        },
+        {
+          "id": "extract",
+          "actor": "side_by_side.py",
+          "participantKind": "system",
+          "action": "Reads each language's UTV-first files in order and collects the dedented code between BEGIN and END markers, per task id.",
+          "sources": [
+            {
+              "path": "tools/side_by_side.py",
+              "symbol": "extract"
+            },
+            {
+              "path": "tools/side_by_side.py",
+              "symbol": "MARKER"
+            }
+          ]
+        },
+        {
+          "id": "render",
+          "actor": "side_by_side.py",
+          "participantKind": "system",
+          "action": "Lays the tasks out in the order of SECTIONS, one fenced block per language, and writes docs/side-by-side.md.",
+          "sources": [
+            {
+              "path": "tools/side_by_side.py",
+              "symbol": "render"
+            },
+            {
+              "path": "tools/side_by_side.py",
+              "symbol": "SECTIONS"
+            }
+          ]
+        },
+        {
+          "id": "commit",
+          "actor": "Contributor",
+          "participantKind": "actor",
+          "actorDocument": "Actors/contributor.md",
+          "action": "Commits the regenerated page with the test change (AGENTS.md: CI fails if the page is out of date).",
+          "sources": [
+            {
+              "path": "AGENTS.md",
+              "symbol": "2. Examples are unit tests"
+            }
+          ]
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "extract",
+          "condition": "A marker is nested, mismatched or never closed.",
+          "outcome": "The script exits naming the file and the marker; the page is not written.",
+          "sources": [
+            {
+              "path": "tools/side_by_side.py",
+              "symbol": "extract"
+            }
+          ]
+        },
+        {
+          "atStep": "render",
+          "condition": "A language has not marked one of the tasks.",
+          "outcome": "The page is still written, with the missing language and task listed under a final Missing heading.",
+          "sources": [
+            {
+              "path": "tools/side_by_side.py",
+              "symbol": "render"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "tools",
+      "path": "tools/.dev/operation.json",
+      "relationship": "The commands the steps run."
+    },
+    {
+      "kind": "capability",
+      "folder": "tools",
+      "path": "tools/.dev/capability.json",
+      "relationship": "The capabilities they use."
+    }
+  ]
+}

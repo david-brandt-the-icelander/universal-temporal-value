@@ -1,0 +1,70 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/requirements.schema.json",
+  "kind": "requirements",
+  "title": "Semantic scenario requirements",
+  "folder": "conformance/scenarios",
+  "entities": [
+    {
+      "id": "falsehood-scenarios",
+      "title": "Every falsehood has a conformance scenario",
+      "summary": "Each of the 62 falsehoods in spec/FALSEHOODS-MATRIX.md has a scenario stating the safeguard and the specification sections that prevent it.",
+      "statement": "A complete implementation MUST add executable tests for every falsehood ID; until then each scenario records the design safeguard, the specification sections and its status.",
+      "priority": "must",
+      "acceptanceCriteria": [
+        "falsehoods.json and the matrix list the same ids (tools/validate.py)."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/FALSEHOODS-MATRIX.md",
+        "description": "Every row specifies a semantics decision and a planned test case."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/FALSEHOODS-MATRIX.md",
+          "symbol": "ID"
+        },
+        {
+          "path": "conformance/scenarios/falsehoods.json",
+          "symbol": "id"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": ".dev/decisions.json",
+          "entityId": "falsehoods-traceability-matrix"
+        }
+      ]
+    },
+    {
+      "id": "standards-convergence-scenarios",
+      "title": "Standards constructs have conformance scenarios",
+      "summary": "32 scenarios, STD-001 to STD-032, state the expected design outcome for constructs of the published standards UTV converges on.",
+      "statement": "Each scenario names its category, source standard and expected design outcome, so an implementation claiming the matching profile can test it.",
+      "priority": "must",
+      "acceptanceCriteria": [
+        "Every scenario has id, category, scenario, expectedDesignOutcome, sourceStandard and status (tools/validate.py)."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/STANDARDS-MATRIX.md",
+        "description": "The standards review of draft v4."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "conformance/scenarios/standards-convergence.json",
+          "symbol": "sourceStandard"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": ".dev/decisions.json",
+          "entityId": "v4-standards-convergence"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,172 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/limitations.schema.json",
+  "kind": "limitations",
+  "title": "Utv library limitations",
+  "folder": "implementations/csharp/src/Utv",
+  "entities": [
+    {
+      "id": "no-leap-seconds",
+      "title": "No leap-second table",
+      "summary": "The library ships no leap-second table, so it cannot place second 60 or add SI seconds to a POSIX instant.",
+      "impact": "Second 60 is unsupported (leap-second) when parsing, constructing or resolving; Instant.Add(ElapsedSeconds) and adding an elapsed amount are always unsupported (needs-leap-seconds).",
+      "workaround": "Use POSIX seconds (PosixSeconds, clock-ticks amounts), which are exact on a POSIX instant.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+          "symbol": "Values.RequireTime"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.AddToInstant"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Iso.cs",
+          "symbol": "Iso.CheckTimeSupported"
+        }
+      ]
+    },
+    {
+      "id": "posix-instants-only",
+      "title": "POSIX instants given as ticks only",
+      "summary": "Instants are read only in the utv.timescale unix-posix version 1 timescale, and only as ticks with an optional subTick.",
+      "impact": "Instants in other timescales (TAI, UTC with leap seconds, GPS, …) or given as a coordinate are unsupported (unsupported-operand) in every everyday operation.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+          "symbol": "Values.ReadPosixInstant"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+          "symbol": "Values.RequirePosix"
+        }
+      ]
+    },
+    {
+      "id": "gregorian-only",
+      "title": "Proleptic Gregorian only",
+      "summary": "Civil operations and semantic validation work only on calendar gregory with chronology proleptic.",
+      "impact": "Any other calendar or chronology is unsupported (unsupported-calendar), from GregorianCivil.Validate and from every everyday operation.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+          "symbol": "Values.RequireGregorian"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+          "symbol": "GregorianCivil.Validate"
+        }
+      ]
+    },
+    {
+      "id": "unimplemented-resolution-policies",
+      "title": "Five resolution policies are not implemented",
+      "summary": "Of the schema's resolution policies, gap shift-backward-by-gap, next-valid-boundary and previous-valid-boundary, and overlap offset-match and occurrence-index, are not implemented.",
+      "impact": "Resolving with any of them is unsupported (unsupported-policy).",
+      "workaround": "An offsetAssertion on the value selects a side of an overlap.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.ResolveCore"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Policies.cs",
+          "symbol": "GapPolicy"
+        }
+      ]
+    },
+    {
+      "id": "everyday-intervals-only",
+      "title": "Start-end intervals of dates or instants only",
+      "summary": "Contains and Overlaps work on intervals whose domain is civil/gregory (dates) or physical (POSIX instants), built start-end.",
+      "impact": "Other domains, start-amount and amount-end intervals, and date-time points are unsupported (unsupported-operand).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Ranges.cs",
+          "symbol": "Ranges.ReadInterval"
+        }
+      ]
+    },
+    {
+      "id": "iso-profile",
+      "title": "ISO 8601 extended format only",
+      "summary": "parseIso and parseText read the extended format of ISO 8601 and RFC 3339 / RFC 9557, with at most nine fraction digits.",
+      "impact": "Week dates, ordinal dates, basic format, a year alone, a decimal comma, times with T or an offset, 24:00 and EDTF qualifiers are unsupported; more than nine fraction digits is unsupported (implementation-limit).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Iso.cs",
+          "symbol": "Iso.Unrecognized"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/TextForm.cs",
+          "symbol": "TextForm.ParseNode"
+        }
+      ]
+    },
+    {
+      "id": "native-range",
+      "title": ".NET's own range",
+      "summary": "Conversions back to .NET are limited by what the .NET types hold.",
+      "impact": "Years outside 1..9999, nanoseconds that are not a multiple of 100, offsets that are not whole minutes or beyond ±14:00, and amounts beyond TimeSpan give unsupported (out-of-native-range). A DateTime cannot hold a zone or offset; a calendar period has no TimeSpan.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop.RequireNativeYear"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop.RequireTicksOfNano"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop.Offset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop.ToTimeSpan"
+        }
+      ]
+    },
+    {
+      "id": "builders-take-long",
+      "title": "JSON-layer builders take 64-bit numbers",
+      "summary": "Build.Date, Build.YearMonth, Build.DateTime, Build.Instant and Build.Period take long arguments.",
+      "impact": "A year or component beyond a long cannot be built with Build; the operations still accept such values as JSON, and CivilDate.Of takes a BigInteger year.",
+      "workaround": "Write the JSON directly, or use the typed constructors.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Build.cs",
+          "symbol": "Build.Date"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Build.cs",
+          "symbol": "Build.Period"
+        }
+      ]
+    },
+    {
+      "id": "oneof-diagnostics",
+      "title": "A failed oneOf reports only itself",
+      "summary": "When a value fails a oneOf in the schema (for example an interval bound holding a bad nested value), only a schema-violation at the oneOf's location is reported.",
+      "impact": "The diagnostic does not say which part of the nested value is wrong.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Internal/SchemaInterpreter.cs",
+          "symbol": "SchemaInterpreter.Check"
+        },
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "What is not implemented"
+        }
+      ]
+    }
+  ]
+}

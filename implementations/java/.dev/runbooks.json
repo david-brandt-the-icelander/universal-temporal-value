@@ -1,0 +1,37 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/runbooks.schema.json",
+  "kind": "runbooks",
+  "title": "utv-core (Java) runbooks",
+  "folder": "implementations/java",
+  "entities": [
+    {
+      "id": "setup",
+      "title": "Build and test the Java library",
+      "summary": "Run every test (shared fixtures, typed API and both example suites) with Maven, from implementations/java.",
+      "purpose": "setup",
+      "when": "Before changing anything in implementations/java, and before finishing a change.",
+      "steps": [
+        "Install a JDK, Java 21 or later (pom.xml sets maven.compiler.release to 21), and Maven.",
+        "cd implementations/java (the tests read ../../conformance relative to this directory).",
+        "mvn -q test"
+      ],
+      "verify": "mvn -q test exits with status 0. The native-first zone tests need a JDK whose tz database knows the 2026 and 2027 rules of New York and Paris.",
+      "details": "AGENTS.md section 3 gives `mvn -q test`; the README gives `mvn test`. After changing a UTV-first test between `// BEGIN` and `// END` markers, run `python3 tools/side_by_side.py` from the repository root, and `python3 tools/side_by_side.py --check` before finishing (AGENTS.md section 2).",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "symbol": "3. Running the tests"
+        },
+        {
+          "path": "implementations/java/README.md",
+          "symbol": "Testing"
+        },
+        {
+          "path": "implementations/java/pom.xml",
+          "symbol": "maven.compiler.release"
+        }
+      ]
+    }
+  ]
+}

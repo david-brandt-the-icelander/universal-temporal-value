@@ -1,0 +1,627 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-class-diagram/schema.json",
+  "kind": "class",
+  "title": "JSON layer classes",
+  "folder": "implementations/csharp/src/Utv",
+  "description": "The types declared in the library's source root (namespace Utv): 0.1 validation and results, the 0.2 everyday operations on UTV JSON held as JsonElement, the text form, zone rules, policies and .NET interop. The typed layer and the internals have their own diagrams.",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+      "symbol": "UtvValidator"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/UtvResult.cs",
+      "symbol": "UtvResult"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Calendar.cs",
+      "symbol": "Calendar"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Zones.cs",
+      "symbol": "Zones"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Interop.cs",
+      "symbol": "Interop"
+    }
+  ],
+  "types": [
+    {
+      "id": "utv.UtvValidator",
+      "name": "UtvValidator",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/UtvValidator.cs"
+      ],
+      "members": [
+        "const string SpecVersion",
+        "static IReadOnlyList<string> CoreKinds",
+        "static bool IsCoreKind(string kind)",
+        "static bool IsWellFormedVersion(string identifier)",
+        "static UtvResult ValidateStructural(string json)"
+      ]
+    },
+    {
+      "id": "utv.GregorianCivil",
+      "name": "GregorianCivil",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/GregorianCivil.cs"
+      ],
+      "members": [
+        "static bool IsLeapYear(BigInteger year)",
+        "static int DaysInMonth(BigInteger? year, int month)",
+        "static UtvResult Validate(string json)"
+      ]
+    },
+    {
+      "id": "utv.UtvResult",
+      "name": "UtvResult",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/UtvResult.cs"
+      ],
+      "members": [
+        "const string ResultSchema",
+        "UtvResult(string operation, UtvStatus status, IEnumerable<Diagnostic>? diagnostics = null, IEnumerable<JsonElement>? candidates = null)",
+        "string Schema",
+        "string Operation",
+        "UtvStatus Status",
+        "IReadOnlyList<Diagnostic> Diagnostics",
+        "IReadOnlyList<JsonElement> Candidates",
+        "bool IsUnique",
+        "JsonElement Value",
+        "bool TryGetValue(out JsonElement value)",
+        "string GetString()",
+        "long GetInt64()",
+        "string ToJson()"
+      ]
+    },
+    {
+      "id": "utv.UtvStatus",
+      "name": "UtvStatus",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/UtvStatus.cs"
+      ],
+      "members": [
+        "Invalid",
+        "Unsupported",
+        "Indeterminate",
+        "None",
+        "Unique",
+        "Multiple",
+        "Range",
+        "Symbolic",
+        "ResourceLimit",
+        "Error",
+        "Valid"
+      ]
+    },
+    {
+      "id": "utv.UtvStatusExtensions",
+      "name": "UtvStatusExtensions",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/UtvStatus.cs"
+      ],
+      "members": [
+        "static string ToWireString(this UtvStatus status)",
+        "static bool TryParseWireString(string? text, out UtvStatus status)"
+      ]
+    },
+    {
+      "id": "utv.Diagnostic",
+      "name": "Diagnostic",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Diagnostic.cs"
+      ],
+      "members": [
+        "Diagnostic(string Code, DiagnosticSeverity Severity, string Path, string Message)",
+        "override string ToString()"
+      ]
+    },
+    {
+      "id": "utv.DiagnosticSeverity",
+      "name": "DiagnosticSeverity",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Diagnostic.cs"
+      ],
+      "members": [
+        "Info",
+        "Warning",
+        "Error"
+      ]
+    },
+    {
+      "id": "utv.DiagnosticSeverityExtensions",
+      "name": "DiagnosticSeverityExtensions",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Diagnostic.cs"
+      ],
+      "members": [
+        "static string ToWireString(this DiagnosticSeverity severity)"
+      ]
+    },
+    {
+      "id": "utv.Build",
+      "name": "Build",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Build.cs"
+      ],
+      "members": [
+        "static JsonElement Date(long year, int month, int day)",
+        "static JsonElement YearMonth(long year, int month)",
+        "static JsonElement Time(int hour, int minute[, int second[, int nano]])",
+        "static JsonElement DateTime(long year, int month, int day, int hour, int minute[, int second[, int nano]])",
+        "static JsonElement InZone(JsonElement dateTime, string zoneId)",
+        "static JsonElement WithOffset(JsonElement dateTime, int offsetSeconds)",
+        "static JsonElement Instant(long epochSeconds, long nano = 0)",
+        "static JsonElement Period(long years = 0, long months = 0, long weeks = 0, long days = 0, long hours = 0, long minutes = 0, long seconds = 0)",
+        "static JsonElement PosixSeconds(long seconds)",
+        "static JsonElement PosixSeconds(BigInteger numerator, BigInteger denominator)",
+        "static JsonElement Interval(JsonElement start, JsonElement end, bool startIncluded = true, bool endIncluded = false)",
+        "static JsonElement Interval(IntervalBound start, IntervalBound end)"
+      ]
+    },
+    {
+      "id": "utv.IntervalBound",
+      "name": "IntervalBound",
+      "kind": "struct",
+      "sources": [
+        "implementations/csharp/src/Utv/Build.cs"
+      ],
+      "members": [
+        "string State",
+        "JsonElement? Point",
+        "static IntervalBound Included(JsonElement point)",
+        "static IntervalBound Excluded(JsonElement point)",
+        "static IntervalBound Unbounded",
+        "static IntervalBound Unknown"
+      ]
+    },
+    {
+      "id": "utv.Iso",
+      "name": "Iso",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Iso.cs"
+      ],
+      "members": [
+        "static UtvResult ParseIso(string text)",
+        "static UtvResult FormatIso(JsonElement value)"
+      ]
+    },
+    {
+      "id": "utv.TextForm",
+      "name": "TextForm",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/TextForm.cs"
+      ],
+      "members": [
+        "static UtvResult Parse(string text)",
+        "static UtvResult Format(JsonElement value)"
+      ]
+    },
+    {
+      "id": "utv.Calendar",
+      "name": "Calendar",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Calendar.cs"
+      ],
+      "members": [
+        "static UtvResult Fields(JsonElement value)",
+        "static UtvResult Add(JsonElement value, JsonElement amount, MonthEndPolicy monthEnd = MonthEndPolicy.Reject)",
+        "static UtvResult Compare(JsonElement a, JsonElement b)",
+        "static UtvResult DaysBetween(JsonElement a, JsonElement b)",
+        "static UtvResult PosixSecondsBetween(JsonElement a, JsonElement b)"
+      ]
+    },
+    {
+      "id": "utv.ZoneAgreement",
+      "name": "ZoneAgreement",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Calendar.cs"
+      ],
+      "members": [
+        "void Add(CivilRead c, string argument)"
+      ]
+    },
+    {
+      "id": "utv.Ranges",
+      "name": "Ranges",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Ranges.cs"
+      ],
+      "members": [
+        "static UtvResult Contains(JsonElement interval, JsonElement point)",
+        "static UtvResult Overlaps(JsonElement a, JsonElement b)"
+      ]
+    },
+    {
+      "id": "utv.Zones",
+      "name": "Zones",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Zones.cs"
+      ],
+      "members": [
+        "static UtvResult Resolve(JsonElement dateTime, ZoneRules rules, ResolutionPolicy? policy = null)",
+        "static UtvResult ToZone(JsonElement instant, string zoneId, ZoneRules rules)",
+        "static UtvResult ToOffset(JsonElement instant, int offsetSeconds)"
+      ]
+    },
+    {
+      "id": "utv.ZoneRules",
+      "name": "ZoneRules",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/ZoneRules.cs"
+      ],
+      "members": [
+        "string RuleSetSystem",
+        "string RuleSetId",
+        "string RuleSetVersion",
+        "BigInteger ValidFrom",
+        "BigInteger ValidUntil",
+        "IReadOnlyList<string> ZoneIds",
+        "static ZoneRules Load(string path)",
+        "static ZoneRules Parse(string json)",
+        "static ZoneRules Parse(JsonElement json)",
+        "bool Contains(string zoneId)"
+      ]
+    },
+    {
+      "id": "utv.ZoneTimeline",
+      "name": "ZoneTimeline",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/ZoneRules.cs"
+      ],
+      "members": [
+        "int InitialOffset",
+        "IReadOnlyList<(BigInteger At, int Offset)> Transitions",
+        "int OffsetAt(BigInteger t)",
+        "int OffsetBefore(BigInteger t)"
+      ]
+    },
+    {
+      "id": "utv.MonthEndPolicy",
+      "name": "MonthEndPolicy",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Policies.cs"
+      ],
+      "members": [
+        "Reject",
+        "Constrain"
+      ]
+    },
+    {
+      "id": "utv.GapPolicy",
+      "name": "GapPolicy",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Policies.cs"
+      ],
+      "members": [
+        "Reject",
+        "PreserveUnresolved",
+        "ShiftForwardByGap",
+        "ShiftBackwardByGap",
+        "NextValidBoundary",
+        "PreviousValidBoundary"
+      ]
+    },
+    {
+      "id": "utv.OverlapPolicy",
+      "name": "OverlapPolicy",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Policies.cs"
+      ],
+      "members": [
+        "Reject",
+        "All",
+        "Earliest",
+        "Latest",
+        "OffsetMatch",
+        "OccurrenceIndex"
+      ]
+    },
+    {
+      "id": "utv.ResolutionPolicy",
+      "name": "ResolutionPolicy",
+      "kind": "record",
+      "sources": [
+        "implementations/csharp/src/Utv/Policies.cs"
+      ],
+      "members": [
+        "ResolutionPolicy(GapPolicy Gap = GapPolicy.Reject, OverlapPolicy Overlap = OverlapPolicy.Reject)",
+        "ResolutionPolicy(Gap gap, Overlap overlap)",
+        "static ResolutionPolicy Default",
+        "static ResolutionPolicy Strict",
+        "static ResolutionPolicy AllCandidates",
+        "static bool TryParse(JsonElement json, out ResolutionPolicy policy)"
+      ]
+    },
+    {
+      "id": "utv.PolicyWire",
+      "name": "PolicyWire",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Policies.cs"
+      ],
+      "members": [
+        "static string ToWireString(this MonthEndPolicy policy)",
+        "static string ToWireString(this GapPolicy policy)",
+        "static string ToWireString(this OverlapPolicy policy)",
+        "static bool TryParseMonthEnd(string? text, out MonthEndPolicy policy)",
+        "static bool TryParseGap(string? text, out GapPolicy policy)",
+        "static bool TryParseOverlap(string? text, out OverlapPolicy policy)"
+      ]
+    },
+    {
+      "id": "utv.DateTimeOffsetIntent",
+      "name": "DateTimeOffsetIntent",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Interop.cs"
+      ],
+      "members": [
+        "Instant",
+        "OffsetDateTime"
+      ]
+    },
+    {
+      "id": "utv.NativeResult`1",
+      "name": "NativeResult<T>",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Interop.cs"
+      ],
+      "members": [
+        "UtvStatus Status",
+        "bool IsUnique",
+        "bool IsLossy",
+        "IReadOnlyList<Diagnostic> Diagnostics",
+        "T Value",
+        "bool TryGetValue(out T value)"
+      ]
+    },
+    {
+      "id": "utv.Interop",
+      "name": "Interop",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Interop.cs"
+      ],
+      "members": [
+        "static JsonElement FromDateOnly(DateOnly date)",
+        "static JsonElement FromTimeOnly(TimeOnly time)",
+        "static UtvResult FromDateTime(DateTime value)",
+        "static JsonElement FromDateTimeOffset(DateTimeOffset value, DateTimeOffsetIntent intent)",
+        "static JsonElement PosixSecondsFromTimeSpan(TimeSpan value)",
+        "static NativeResult<DateOnly> ToDateOnly(JsonElement value)",
+        "static NativeResult<TimeOnly> ToTimeOnly(JsonElement value)",
+        "static NativeResult<DateTime> ToDateTime(JsonElement value)",
+        "static NativeResult<DateTimeOffset> ToDateTimeOffset(JsonElement value)",
+        "static NativeResult<TimeSpan> ToTimeSpan(JsonElement amount)"
+      ]
+    },
+    {
+      "id": "everyday.Values",
+      "name": "Values",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/Everyday/Values.cs"
+      ],
+      "members": []
+    },
+    {
+      "id": "internal.SchemaInterpreter",
+      "name": "SchemaInterpreter",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/SchemaInterpreter.cs"
+      ],
+      "members": []
+    },
+    {
+      "id": "typed.Gap",
+      "name": "Gap",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Typed/Enums.cs"
+      ],
+      "members": []
+    },
+    {
+      "id": "bcl.JsonElement",
+      "name": "System.Text.Json.JsonElement",
+      "kind": "struct",
+      "sources": [],
+      "members": [],
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "utv.UtvValidator",
+      "to": "internal.SchemaInterpreter",
+      "kind": "depends-on",
+      "description": "Checks every value against the embedded schema, after the version and envelope checks."
+    },
+    {
+      "from": "utv.UtvValidator",
+      "to": "utv.UtvResult",
+      "kind": "depends-on",
+      "description": "Answers with a validate result."
+    },
+    {
+      "from": "utv.GregorianCivil",
+      "to": "utv.UtvValidator",
+      "kind": "depends-on",
+      "description": "Runs structural validation first and returns its result unless it is valid."
+    },
+    {
+      "from": "utv.UtvResult",
+      "to": "utv.UtvStatus",
+      "kind": "depends-on",
+      "description": "Status; the constructor enforces that none has no candidates and unique exactly one."
+    },
+    {
+      "from": "utv.UtvResult",
+      "to": "utv.Diagnostic",
+      "kind": "depends-on",
+      "description": "Diagnostics in report order."
+    },
+    {
+      "from": "utv.UtvResult",
+      "to": "bcl.JsonElement",
+      "kind": "depends-on",
+      "description": "Candidates are cloned JsonElements."
+    },
+    {
+      "from": "utv.Diagnostic",
+      "to": "utv.DiagnosticSeverity",
+      "kind": "depends-on",
+      "description": "Severity."
+    },
+    {
+      "from": "utv.UtvStatusExtensions",
+      "to": "utv.UtvStatus",
+      "kind": "depends-on",
+      "description": "Wire strings such as resource-limit."
+    },
+    {
+      "from": "utv.DiagnosticSeverityExtensions",
+      "to": "utv.DiagnosticSeverity",
+      "kind": "depends-on",
+      "description": "Wire strings error, warning, info."
+    },
+    {
+      "from": "utv.Build",
+      "to": "utv.IntervalBound",
+      "kind": "depends-on",
+      "description": "Interval endpoints."
+    },
+    {
+      "from": "utv.Build",
+      "to": "everyday.Values",
+      "kind": "depends-on",
+      "description": "Writes the canonical shapes."
+    },
+    {
+      "from": "utv.TextForm",
+      "to": "utv.Iso",
+      "kind": "depends-on",
+      "description": "Points are ISO 8601 / RFC 9557 text; periods and intervals are TextForm's own."
+    },
+    {
+      "from": "utv.Calendar",
+      "to": "utv.MonthEndPolicy",
+      "kind": "depends-on",
+      "description": "Add takes the month-end policy, Reject by default."
+    },
+    {
+      "from": "utv.Calendar",
+      "to": "utv.ZoneAgreement",
+      "kind": "depends-on",
+      "description": "DaysBetween refuses dates in different zones."
+    },
+    {
+      "from": "utv.Calendar",
+      "to": "utv.GregorianCivil",
+      "kind": "depends-on",
+      "description": "DaysInMonth and IsLeapYear."
+    },
+    {
+      "from": "utv.Ranges",
+      "to": "utv.ZoneAgreement",
+      "kind": "depends-on",
+      "description": "Contains and Overlaps refuse dates in different zones."
+    },
+    {
+      "from": "utv.Ranges",
+      "to": "utv.Calendar",
+      "kind": "depends-on",
+      "description": "Dates are read as day numbers."
+    },
+    {
+      "from": "utv.Zones",
+      "to": "utv.ZoneRules",
+      "kind": "depends-on",
+      "description": "The caller's rules; nothing else is consulted."
+    },
+    {
+      "from": "utv.Zones",
+      "to": "utv.ResolutionPolicy",
+      "kind": "depends-on",
+      "description": "The argument, else the value's own resolutionPolicy, else Default (reject both)."
+    },
+    {
+      "from": "utv.Zones",
+      "to": "utv.Calendar",
+      "kind": "depends-on",
+      "description": "Reads the civil value and its wall seconds."
+    },
+    {
+      "from": "utv.ZoneRules",
+      "to": "utv.ZoneTimeline",
+      "kind": "depends-on",
+      "description": "One timeline of offsets per zone."
+    },
+    {
+      "from": "utv.ResolutionPolicy",
+      "to": "utv.GapPolicy",
+      "kind": "depends-on",
+      "description": "Gap."
+    },
+    {
+      "from": "utv.ResolutionPolicy",
+      "to": "utv.OverlapPolicy",
+      "kind": "depends-on",
+      "description": "Overlap."
+    },
+    {
+      "from": "utv.ResolutionPolicy",
+      "to": "typed.Gap",
+      "kind": "depends-on",
+      "description": "A constructor takes the typed Gap and Overlap names."
+    },
+    {
+      "from": "utv.ResolutionPolicy",
+      "to": "utv.PolicyWire",
+      "kind": "depends-on",
+      "description": "TryParse reads the wire strings."
+    },
+    {
+      "from": "utv.Interop",
+      "to": "utv.DateTimeOffsetIntent",
+      "kind": "depends-on",
+      "description": "The caller names what a DateTimeOffset means."
+    },
+    {
+      "from": "utv.Interop",
+      "to": "utv.NativeResult`1",
+      "kind": "depends-on",
+      "description": "Every conversion back to .NET says whether it worked and what it lost."
+    },
+    {
+      "from": "utv.Interop",
+      "to": "utv.Build",
+      "kind": "depends-on",
+      "description": "Conversions into UTV use the builders."
+    }
+  ]
+}

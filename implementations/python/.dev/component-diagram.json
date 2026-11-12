@@ -1,0 +1,124 @@
+{
+  "$schema": "../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "utv for Python component diagram",
+  "folder": "implementations/python",
+  "description": "The Python library: the utv package and the tests that check it against the repository's shared conformance material and Python's own date/time API.",
+  "sources": [
+    {
+      "path": "implementations/python/pyproject.toml",
+      "symbol": "tool.setuptools.packages.find"
+    },
+    {
+      "path": "implementations/python/tests/test_everyday_fixtures.py",
+      "symbol": "FIXTURES"
+    },
+    {
+      "path": "implementations/python/tests/test_conformance.py",
+      "symbol": "BundledSchema"
+    },
+    {
+      "path": "implementations/python/tests/examples/fixtures.py",
+      "symbol": "demo_zone_rules"
+    },
+    {
+      "path": "implementations/python/src/utv/native.py",
+      "symbol": "from_datetime"
+    }
+  ],
+  "components": [
+    {
+      "id": "library",
+      "name": "utv for Python",
+      "folder": "implementations/python",
+      "responsibility": "The library: one setuptools project with no dependencies."
+    },
+    {
+      "id": "package",
+      "name": "utv package",
+      "folder": "implementations/python/src/utv",
+      "diagram": "implementations/python/src/utv/.dev/component-diagram.json",
+      "responsibility": "The typed layer, the JSON layer, validation, native adapters and the bundled schema."
+    },
+    {
+      "id": "tests",
+      "name": "Tests",
+      "folder": "implementations/python/tests",
+      "responsibility": "unittest suites for the shared fixtures, the typed layer, the adapters and purity, and the UTV-first and native-first example suites."
+    },
+    {
+      "id": "conformance",
+      "name": "Shared conformance material",
+      "folder": "conformance",
+      "responsibility": "The everyday and text-form fixtures, the structural examples and the demo zone rules, read in place by the tests."
+    },
+    {
+      "id": "schema",
+      "name": "Structural schema",
+      "folder": "schema",
+      "responsibility": "schema/utv-1.0.schema.json, which the package's bundled copy must equal."
+    },
+    {
+      "id": "datetime",
+      "name": "datetime, zoneinfo, calendar and json",
+      "external": true,
+      "responsibility": "Python's standard date/time API, which the adapters convert to and from and the examples compare with. zoneinfo reads this machine's tz database."
+    },
+    {
+      "id": "unittest",
+      "name": "unittest",
+      "external": true,
+      "responsibility": "The standard library's test framework; every test is a unittest.TestCase."
+    }
+  ],
+  "relationships": [
+    {
+      "from": "library",
+      "to": "package",
+      "kind": "contains",
+      "description": "src/utv, built by setuptools from src/."
+    },
+    {
+      "from": "library",
+      "to": "tests",
+      "kind": "contains",
+      "description": "Run with PYTHONPATH=src python3 -m unittest discover -s tests."
+    },
+    {
+      "from": "tests",
+      "to": "package",
+      "kind": "depends-on",
+      "description": "Import utv from src/, uninstalled."
+    },
+    {
+      "from": "tests",
+      "to": "conformance",
+      "kind": "depends-on",
+      "description": "Read operations/everyday.json, operations/text-form.json, examples/*.json and rules/demo-zones.json from the repository root."
+    },
+    {
+      "from": "tests",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "Compare utv-1.0.schema.json byte for byte with the bundled copy."
+    },
+    {
+      "from": "tests",
+      "to": "datetime",
+      "kind": "depends-on",
+      "description": "The examples compare UTV with datetime, zoneinfo, calendar and json."
+    },
+    {
+      "from": "tests",
+      "to": "unittest",
+      "kind": "depends-on",
+      "description": "Test cases and discovery."
+    },
+    {
+      "from": "package",
+      "to": "datetime",
+      "kind": "depends-on",
+      "description": "utv.native converts date, time, datetime and timedelta, using only ZoneInfo objects the caller made."
+    }
+  ]
+}

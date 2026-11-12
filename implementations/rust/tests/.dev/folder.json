@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Rust library tests",
+  "folder": "implementations/rust/tests",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Rust library tests",
+      "summary": "Cargo's integration tests: the shared fixture runners, the typed-layer and JSON-layer tests, the purity check, and the two example suites in their own folders.",
+      "purpose": "Checks the crate through its public API only. Each tests/*.rs file is one test target (everyday, text_form, conformance, validation_codes, typed, operations, purity); utv_first/ and native_first/ are two more, built from their main.rs, and fixtures/ is a module both of them include. The shared material in conformance/ and the demo rules are read from the repository, relative to CARGO_MANIFEST_DIR, never copied.",
+      "boundaries": [
+        "Tests the crate as a dependency (use utv::...); the unit tests that need the crate's internals live next to the code in src/.",
+        "What each target checks is recorded in this folder's verification.json, and for the example suites in their own folders' verification.json.",
+        "Test results are readings and are not recorded here."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/everyday.rs",
+          "symbol": "every_everyday_fixture_passes"
+        },
+        {
+          "path": "implementations/rust/tests/text_form.rs",
+          "symbol": "every_text_form_fixture_passes"
+        },
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "Tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        },
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "shared-conformance-material"
+        }
+      ]
+    }
+  ]
+}

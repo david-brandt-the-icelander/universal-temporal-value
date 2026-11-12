@@ -1,0 +1,34 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Tools",
+  "folder": "tools",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Repository tooling",
+      "summary": "Two Python scripts: the structural checks of the specification material, and the generator of the side-by-side page.",
+      "purpose": "Keeps the language-neutral material consistent and the generated documentation current. validate.py checks the schema, the conformance examples and fixtures, the JSON examples embedded in spec/*.md, and that the falsehoods matrix and its scenarios agree. side_by_side.py builds docs/side-by-side.md from the five libraries' UTV-first example tests.",
+      "boundaries": [
+        "Structure only: validate.py performs no semantic validation, resolution or any other part of a UTV engine.",
+        "It runs none of the language libraries' tests; each library runs its own (AGENTS.md section 3).",
+        "requirements.txt names the one dependency, jsonschema; side_by_side.py needs only the standard library."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "tools/validate.py",
+          "symbol": "main"
+        },
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "render"
+        },
+        {
+          "path": "tools/requirements.txt",
+          "symbol": "jsonschema"
+        }
+      ]
+    }
+  ]
+}

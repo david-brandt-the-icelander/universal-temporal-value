@@ -1,0 +1,189 @@
+{
+  "$schema": "../../../../Meta/Agents/Skills/describe-capability/schema.json",
+  "kind": "capability",
+  "title": "JSON layer capabilities",
+  "folder": "implementations/rust/src",
+  "description": "What the JSON layer can do for a caller that works with UTV JSON directly, and for the typed layer built on it.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/lib.rs",
+      "symbol": "crate documentation"
+    }
+  ],
+  "entities": [
+    {
+      "id": "utv-json-validation",
+      "name": "UTV JSON validation",
+      "description": "Says whether JSON text is a well-formed utv/1.0 value, and separately whether a civil value names a real Gregorian date.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_structural"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_gregorian_civil"
+        }
+      ],
+      "responsibility": "Parses JSON strictly, checks the envelope and the structural schema compiled in from schema/, and, as a separate question, the month and day of proleptic Gregorian civil values.",
+      "operations": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_structural"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_value"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "check_envelope"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_gregorian_civil"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "parse_strict"
+        }
+      ],
+      "access": [
+        "Nothing checks: an in-process library call that any code linking the crate may make."
+      ]
+    },
+    {
+      "id": "text-form",
+      "name": "Text form",
+      "description": "Reads and writes UTV values as text: ISO 8601 / RFC 3339 / RFC 9557 points, ISO 8601 periods and bracket intervals.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "parse_iso"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "parse_text"
+        }
+      ],
+      "responsibility": "Parses text into UTV JSON and formats UTV JSON as text, only where the round trip is lossless, refusing the rest with a code.",
+      "operations": [
+        {
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "parse_iso"
+        },
+        {
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "format_iso"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "parse_text"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "format_text"
+        }
+      ],
+      "access": [
+        "Nothing checks: an in-process library call that any code linking the crate may make."
+      ]
+    },
+    {
+      "id": "everyday-operations",
+      "name": "Everyday operations on UTV JSON",
+      "description": "The 0.2 everyday API: calendar fields, arithmetic, comparison, differences, ranges and zone conversions on UTV JSON values.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "resolve"
+        }
+      ],
+      "responsibility": "Answers every everyday operation of docs/everyday-api.md with a utv-result/1.0 result whose status may be none, multiple, symbolic, unsupported or invalid, never a guess.",
+      "operations": [
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "fields"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "compare"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "days_between"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "posix_seconds_between"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "contains"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "overlaps"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "to_zone"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "to_offset"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "Rules::load"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "Rules::parse"
+        }
+      ],
+      "access": [
+        "Nothing checks: an in-process library call that any code linking the crate may make.",
+        "Zone operations use only the Rules the caller passes."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/operation.json",
+      "relationship": "The operations through which they are reached."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/feature.json",
+      "relationship": "The features they offer."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/use-case.json",
+      "relationship": "The use cases that use them."
+    },
+    {
+      "kind": "capability",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/capability.json",
+      "relationship": "The typed capabilities built on them."
+    }
+  ]
+}

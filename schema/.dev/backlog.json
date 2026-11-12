@@ -1,0 +1,69 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Structural schema backlog",
+  "folder": "schema",
+  "entities": [
+    {
+      "id": "OI-10",
+      "title": "A JSON Schema for the utv-result/1.0 envelope",
+      "summary": "Results have a normative contract in RESULT-CONTRACT.md but no schema.",
+      "type": "feature",
+      "details": "The result envelope is specified in prose only, so neither a library's results nor the fixtures' expected results can be checked structurally as a whole. Resolving it additively is a minor version (1.1); renaming or removing fields is a major version; clarifying prose without changing any serialized form or result is a patch (VERSIONING.md).",
+      "acceptanceCriteria": [
+        "schema/ has a schema for utv-result/1.0, and tools/validate.py checks it is valid Draft 2020-12."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section C, Missing machine-readable artifacts of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "status": "open",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "spec/RESULT-CONTRACT.md",
+          "symbol": "Result envelope"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-result-1-0"
+        }
+      ]
+    },
+    {
+      "id": "OI-11",
+      "title": "A JSON Schema for registry entries and rule manifests",
+      "summary": "The registry contract of spec §16 has no machine-readable form.",
+      "type": "feature",
+      "details": "Registry entries and rule manifests are described in §16 and RESULT-CONTRACT's manifest semantics only. Resolving it additively is a minor version (1.1); renaming or removing fields is a major version; clarifying prose without changing any serialized form or result is a patch (VERSIONING.md).",
+      "acceptanceCriteria": [
+        "schema/ has a schema for registry entries and rule manifests."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section C, Missing machine-readable artifacts of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "status": "open",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§16 Registry contract"
+        }
+      ]
+    }
+  ]
+}

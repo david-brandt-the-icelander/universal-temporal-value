@@ -1,0 +1,104 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Specification backlog",
+  "folder": "spec",
+  "entities": [
+    {
+      "id": "OI-13",
+      "title": "Field-by-field adapter mappings",
+      "summary": "Mappings for RFC 5545 (with erratum 4271), RFC 7529, RFC 8984, RFC 9557 and ISO 8601-1/-2, with the ISO 8601-2 grammar checked against the licensed text.",
+      "type": "feature",
+      "details": "STANDARDS-MATRIX states the coverage class of each standard; the mappings themselves are not written. ISO 8601-2 grammar must be checked against the licensed normative text. Resolving it additively is a minor version (1.1); renaming or removing fields is a major version; clarifying prose without changing any serialized form or result is a patch (VERSIONING.md).",
+      "acceptanceCriteria": [
+        "Each named standard has a field-by-field mapping to UTV with its fidelity level."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section C, Missing machine-readable artifacts of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "status": "open",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "spec/.dev/decisions.json",
+          "entityId": "OI-07"
+        }
+      ]
+    },
+    {
+      "id": "OI-17",
+      "title": "Name the operations common questions need",
+      "summary": "difference, contains, fields, day-bounds, truncate, set-op, as-of, append-assertion, is-stale, format, canonicalize/digest and capabilities are needed but not named in RESULT-CONTRACT.",
+      "type": "feature",
+      "details": "docs/operations.md, Gaps in the specification, explains each. The everyday API's operation field already extends RESULT-CONTRACT's list (docs/everyday-api.md, Clarifications, item 5). Adding an operation is a minor change (1.1). Resolving it additively is a minor version (1.1); renaming or removing fields is a major version; clarifying prose without changing any serialized form or result is a patch (VERSIONING.md).",
+      "acceptanceCriteria": [
+        "RESULT-CONTRACT's operation list names each of them, with its result shape."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section C, Missing machine-readable artifacts of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "status": "open",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "Gaps in the specification"
+        },
+        {
+          "path": "docs/everyday-api.md",
+          "symbol": "Clarifications"
+        }
+      ]
+    },
+    {
+      "id": "OI-18",
+      "title": "A shorter JSON authoring form",
+      "summary": "Let hand-written JSON omit defaults (the Gregorian proleptic calendar, nested schema) and normalize it to canonical form on read.",
+      "type": "feature",
+      "details": "Suggested by docs/aesthetics-review.md (R5). It changes what readers must accept, so it needs specification 1.1: a new schema file and reader rules. It was deliberately not done in the libraries ahead of the specification (docs/text-form.md, Considered and deferred). The display-oriented text form needs no specification change and is done. Resolving it additively is a minor version (1.1); renaming or removing fields is a major version; clarifying prose without changing any serialized form or result is a patch (VERSIONING.md).",
+      "acceptanceCriteria": [
+        "Specification 1.1 defines the authoring form and the normalization, with a schema file for it."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section C, Missing machine-readable artifacts of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "status": "open",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "docs/text-form.md",
+          "symbol": "Considered and deferred: a shorter JSON authoring form"
+        },
+        {
+          "path": "docs/aesthetics-review.md",
+          "symbol": "R5"
+        }
+      ]
+    }
+  ]
+}

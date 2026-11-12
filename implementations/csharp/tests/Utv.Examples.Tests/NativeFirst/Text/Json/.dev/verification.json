@@ -1,0 +1,44 @@
+{
+  "$schema": "../../../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "System.Text.Json example verification",
+  "folder": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/Text/Json",
+  "entities": [
+    {
+      "id": "json-document",
+      "title": "JsonDocument",
+      "summary": "What System.Text.Json.JsonDocument does with duplicate keys.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "Parse keeps the last value when a key appears twice"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/Text/Json/JsonDocumentTests.cs",
+          "symbol": "JsonDocumentTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Internal/.dev/decisions.json",
+          "entityId": "own-duplicate-key-detection"
+        }
+      ]
+    }
+  ]
+}

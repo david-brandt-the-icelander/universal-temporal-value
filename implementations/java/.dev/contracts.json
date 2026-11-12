@@ -1,0 +1,146 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "utv-core (Java) contracts",
+  "folder": "implementations/java",
+  "entities": [
+    {
+      "id": "typed-api",
+      "title": "utv-core typed API (net.icelander.utv)",
+      "summary": "The Maven artifact net.icelander.utv:utv-core 0.3.0 for Java 21+: one package, net.icelander.utv, with immutable typed values, Outcome<T> for partial operations, typed policies and TemporalContext.",
+      "contractType": "library-api",
+      "consumers": [
+        "Application developers who put utv-core on their class path",
+        "The example suites under src/test/java/net/icelander/utv/examples, which show it"
+      ],
+      "guarantees": [
+        "Values are immutable with representation equality; of throws IllegalArgumentException for a value that cannot exist, tryOf and parse return an Outcome and never throw for bad input.",
+        "Only partial operations return Outcome (Unique, Multiple, None, Unsupported, Invalid); every case carries the shared diagnostic codes of library-api §5.",
+        "Comparable only where an order always exists (CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime by instant, Instant); ZonedIntent is ordered only by TemporalContext.compare.",
+        "toString() is the text form utv-text/1; toJson()/fromJson give exactly one UTV JSON value.",
+        "Nothing reads the system clock, host time zone, locale or network; zone rules come only from ZoneRules the caller loaded, except that toZonedDateTime checks an asserted offset against the JDK's tz database.",
+        "Names follow library-api §6, except TemporalValue.parse for the contract's Utv.parse (README)."
+      ],
+      "compatibility": "SemVer 0.x (VERSIONING.md): the library is pre-1.0, so a minor version may change the API; each change is listed in CHANGELOG.md. 0.3.0 kept the 0.2 JSON layer and deprecated, rather than removed, its renamed members.",
+      "definition": "implementations/java/src/main/java/net/icelander/utv",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/pom.xml",
+          "symbol": "version"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+          "symbol": "TemporalValue"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Outcome.java",
+          "symbol": "Outcome"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext"
+        },
+        {
+          "path": "implementations/java/README.md",
+          "symbol": "The typed API (0.3)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        },
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "text-form",
+          "description": "toString() and parse(text)."
+        },
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0",
+          "description": "toJson() and fromJson read and write utv/1.0 values."
+        },
+        {
+          "relation": "depends-on",
+          "path": "implementations/java/.dev/contracts.json",
+          "entityId": "json-layer",
+          "description": "Every typed operation calls the JSON layer underneath."
+        }
+      ]
+    },
+    {
+      "id": "json-layer",
+      "title": "utv-core JSON layer (0.2)",
+      "summary": "The everyday API on UTV JSON values held as Jackson JsonNode: Values, Iso, TextForm, Operations, Intervals, Zones, RuleBundle, JavaTime, Utv and GregorianCivil, each operation returning a UtvResult (utv-result/1.0).",
+      "contractType": "library-api",
+      "consumers": [
+        "Application developers who work with UTV JSON directly",
+        "The typed layer of this library",
+        "EverydayFixturesTest and TextFormFixturesTest, which run the shared fixtures through it"
+      ],
+      "guarantees": [
+        "Builders produce the canonical shapes of everyday-api and do not validate.",
+        "Operations never throw for semantic outcomes: invalid, unsupported, none, multiple and symbolic are statuses of the UtvResult.",
+        "Utv.parse rejects duplicate JSON keys; Utv.validateStructural fails closed on unknown versions, kinds and properties.",
+        "The 0.1 validation API keeps its structural utv.* codes; operations report them beside malformed-value."
+      ],
+      "compatibility": "Kept unchanged in behaviour from 0.2 on (library-api §7). 0.3 renamed ResolutionPolicy.Gap.SHIFT_FORWARD_BY_GAP to Gap.SHIFT_FORWARD and deprecated ResolutionPolicy.REJECT and Operations.MonthEnd, keeping them working.",
+      "definition": "implementations/java/src/main/java/net/icelander/utv",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/UtvResult.java",
+          "symbol": "UtvResult"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Values.java",
+          "symbol": "Values"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.MonthEnd"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ResolutionPolicy.java",
+          "symbol": "ResolutionPolicy.REJECT"
+        },
+        {
+          "path": "implementations/java/README.md",
+          "symbol": "The JSON layer (0.2, unchanged)"
+        },
+        {
+          "path": "implementations/java/CHANGELOG.md",
+          "symbol": "0.3.0"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        },
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "text-form",
+          "description": "TextForm.parseText and formatText."
+        },
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-result-1-0",
+          "description": "UtvResult, a subset: schema, operation, status, diagnostics, candidates."
+        },
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0"
+        }
+      ]
+    }
+  ]
+}

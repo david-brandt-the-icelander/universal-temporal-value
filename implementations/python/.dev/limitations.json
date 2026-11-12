@@ -1,0 +1,216 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/limitations.schema.json",
+  "kind": "limitations",
+  "title": "utv for Python limitations",
+  "folder": "implementations/python",
+  "entities": [
+    {
+      "id": "everyday-operations-only",
+      "title": "Only the everyday operations",
+      "summary": "expand, equivalent and the other operations of docs/operations.md, recurrences and canonical round-tripping are not implemented; the conformance profiles claimed are none yet, and no registries are shipped.",
+      "impact": "Recurrences, series, uncertain values and the other kinds can be validated structurally but not evaluated; operations on them return unsupported (unsupported-operand).",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/python/README.md",
+          "symbol": "What is not implemented"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_from_json"
+        }
+      ]
+    },
+    {
+      "id": "gregorian-only",
+      "title": "Proleptic Gregorian only",
+      "summary": "Civil values in any other calendar are unsupported (unsupported-calendar).",
+      "impact": "A Julian or Hebrew date can be held as JSON but not checked, compared or converted.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "civil"
+        },
+        {
+          "path": "implementations/python/src/utv/gregorian.py",
+          "symbol": "validate_gregorian_date"
+        }
+      ]
+    },
+    {
+      "id": "no-leap-seconds",
+      "title": "No leap-second table",
+      "summary": "Second 60 is unsupported (leap-second), and SI seconds can't be added to a POSIX instant (needs-leap-seconds).",
+      "impact": "23:59:60 and elapsed-time arithmetic on instants need a library or a later version that has the table.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "civil"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        }
+      ]
+    },
+    {
+      "id": "no-end-of-day",
+      "title": "No 24:00",
+      "summary": "24:00 is unsupported (end-of-day): it needs an end-of-day policy.",
+      "impact": "End-of-day times must be written as the next day's 00:00.",
+      "workaround": "Use 00:00 of the following day.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "civil"
+        }
+      ]
+    },
+    {
+      "id": "iso-subset",
+      "title": "ISO 8601 extended format only",
+      "summary": "Week dates, ordinal dates and basic format are unsupported (unsupported-form); annotations other than one [Area/Location], and a [zone] after Z or -00:00, are unsupported (unsupported-annotation).",
+      "impact": "Text in those forms must be converted before it is parsed.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/iso.py",
+          "symbol": "_UNSUPPORTED_FORMS"
+        },
+        {
+          "path": "implementations/python/src/utv/iso.py",
+          "symbol": "_zone_annotation"
+        }
+      ]
+    },
+    {
+      "id": "no-edtf-qualifiers",
+      "title": "No EDTF qualifiers or decimal periods",
+      "summary": "1347~, 1347?, 134X and decimal period components such as P1.5M are unsupported (unsupported-form).",
+      "impact": "Approximate and partly unknown dates have to be written as uncertain values in JSON.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "parse_text"
+        },
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "_parse_period"
+        }
+      ]
+    },
+    {
+      "id": "posix-timescale-only",
+      "title": "POSIX instants only",
+      "summary": "Instants are implemented only on the unix-posix timescale with ticks; others are unsupported (unsupported-operand).",
+      "impact": "TAI, GPS, TT and other timescales can be validated but not computed with.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "instant_seconds"
+        }
+      ]
+    },
+    {
+      "id": "typed-layer-subset",
+      "title": "Typed values cover the everyday shapes",
+      "summary": "The typed layer holds dates, months, times, date-times (floating, fixed-offset, zoned), POSIX instants, the three amounts and date or instant intervals. Anything else, or a value with extra properties such as resolutionPolicy or provenance, is unsupported (unsupported-operand) in from_json.",
+      "impact": "Such values stay usable through the JSON layer's functions only.",
+      "workaround": "Use the JSON layer (utv.resolve, utv.add, …) on the dict.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_from_json"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "from_json"
+        }
+      ]
+    },
+    {
+      "id": "no-time-of-day-arithmetic",
+      "title": "No arithmetic on a time of day",
+      "summary": "CivilTime has no add methods, and the JSON layer's add on a time is unsupported (unsupported-operand).",
+      "impact": "Adding to a time of day needs a date: wrapping past midnight would lose the day.",
+      "workaround": "Attach a date with date.at(time) and add to the CivilDateTime.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilTime"
+        }
+      ]
+    },
+    {
+      "id": "interval-domains",
+      "title": "Date and instant intervals only",
+      "summary": "contains and overlaps handle civil-date intervals with date points and instant intervals with instant points, built from a start and an end.",
+      "impact": "Date-time, start-plus-amount and other intervals are unsupported (unsupported-operand); dates in different zones are unsupported (different-zones).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "_interval"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "_point"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "_same_zone"
+        }
+      ]
+    },
+    {
+      "id": "native-range",
+      "title": "datetime's range and precision",
+      "summary": "Converting to datetime holds only years 1–9999 and whole microseconds; UTC offsets with fractions of a second can't be converted from datetime.",
+      "impact": "Such conversions are unsupported (out-of-native-range, unsupported-operand) unless allow_loss=True, which reports what it dropped.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "_native"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "_microseconds"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "_whole_seconds"
+        }
+      ]
+    },
+    {
+      "id": "int-string-limit",
+      "title": "Python's int–string conversion limit",
+      "summary": "An integer string longer than Python's int–string conversion limit (4300 digits by default) can't be read.",
+      "impact": "Such a year gives resource-limit (implementation-limit) in the JSON layer and Unsupported in the typed layer.",
+      "details": "The status differs from the shared code table (src/utv/.dev/backlog.json, implementation-limit-status).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "integer_string"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,564 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "UTV-first example verification",
+  "folder": "implementations/typescript/test/examples/utv-first",
+  "entities": [
+    {
+      "id": "dates",
+      "title": "Dates",
+      "summary": "The CivilDate scenarios of the catalog: real and impossible dates, leap years, years Date can't hold, parsing, weekday and ISO week, adding days and months, days between and order.",
+      "subject": [
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "month-end-none"
+        }
+      ],
+      "criteria": [
+        "CivilDate.of creates 5 November 2026, leap days in 2024 and 2000, +275760-09-13 and -0500-03-01, and throws for 30 February.",
+        "CivilDate.tryOf returns invalid with day-out-of-range for 30 February, 29 February 2026 and 1900, and month-out-of-range for month 13.",
+        "CivilDate.parse reads 2026-11-05 and returns invalid (day-out-of-range) for 2026-02-30.",
+        "dayOfWeek is Thursday and isoWeek 45 for 5 November 2026; isLeapYear agrees with Date for every kind of year.",
+        "addDays crosses a month end; addMonths returns none (month-end) for 31 January + 1, and 28 February with Constrain; add(P1M) returns none (month-end).",
+        "daysUntil from 5 November to 25 December is 50; isBefore is true when this date comes first."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-date.test.ts",
+          "symbol": "CivilDate > of",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-date.test.ts",
+          "symbol": "CivilDate > tryOf",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-date.test.ts",
+          "symbol": "CivilDate > parse",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-date.test.ts",
+          "symbol": "CivilDate > dayOfWeek and isoWeek",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-date.test.ts",
+          "symbol": "CivilDate > isLeapYear",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-date.test.ts",
+          "symbol": "CivilDate > addDays",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-date.test.ts",
+          "symbol": "CivilDate > addMonths > returns none when the day is missing from the target month",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-date.test.ts",
+          "symbol": "CivilDate > addMonths > returns the last day of the month when Constrain is requested",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-date.test.ts",
+          "symbol": "CivilDate > add",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-date.test.ts",
+          "symbol": "CivilDate > daysUntil",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-date.test.ts",
+          "symbol": "CivilDate > isBefore",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/utv-first/civil-date.test.ts",
+          "symbol": "CivilDate"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "month-end-none"
+        }
+      ]
+    },
+    {
+      "id": "months-times-date-times",
+      "title": "Months, times and date-times",
+      "summary": "CivilYearMonth, CivilTime, CivilDateTime and FixedOffsetDateTime, the text form's Z versus +00:00, and refusing a Date's local wall time.",
+      "subject": [
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "wall-clock-arithmetic"
+        },
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        }
+      ],
+      "criteria": [
+        "CivilYearMonth.of makes a month without a day; addMonths carries into the next year.",
+        "CivilTime.of writes no seconds when none are given, and writes them when they are.",
+        "CivilDateTime.of makes a wall-clock date-time; tryOf returns unsupported (leap-second) for 23:59:60; addHours carries into the next day; inZone keeps the wall time and zone; atOffset pins the wall time to the offset.",
+        "FixedOffsetDateTime.parse keeps the wall time and offset; toInstant returns the UTC moment.",
+        "parse returns an Instant for text ending in Z and a FixedOffsetDateTime for +00:00.",
+        "fromDate refuses the intent local with unsupported (local-zone)."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-year-month.test.ts",
+          "symbol": "CivilYearMonth",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-time.test.ts",
+          "symbol": "CivilTime > of",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/civil-date-time.test.ts",
+          "symbol": "CivilDateTime",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/fixed-offset-date-time.test.ts",
+          "symbol": "FixedOffsetDateTime",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/parse.test.ts",
+          "symbol": "parse",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/from-date.test.ts",
+          "symbol": "fromDate > returns unsupported when the intent is local",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/utv-first/civil-date-time.test.ts",
+          "symbol": "CivilDateTime"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "wall-clock-arithmetic"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "native-interop-with-intent"
+        }
+      ]
+    },
+    {
+      "id": "zones",
+      "title": "Zones",
+      "summary": "ZonedIntent, Instant.inZone and TemporalContext under the pinned demo rules: the meeting in Paris, the DST gap and overlap, zoned order and a day across DST.",
+      "subject": [
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "zoned-ordering-needs-context"
+        }
+      ],
+      "criteria": [
+        "ZonedIntent.resolve returns the instant for 09:00 in Paris on 1 June 2027; Instant.inZone gives the wall time in New York.",
+        "02:30 on 8 March 2026 in New York resolves to none with diagnostic gap, and with Gap.ShiftForward to 03:30 EDT.",
+        "01:30 on 1 November 2026 in New York resolves to both instants with diagnostic ambiguous, one of them the one JavaScript picks; Overlap.Earliest returns the first.",
+        "TemporalContext.compare returns multiple for 01:30 and 01:45 that night, with ambiguous once per side.",
+        "ZonedIntent.addDays keeps noon across the spring-forward night."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/zoned-intent.test.ts",
+          "symbol": "ZonedIntent > resolve > returns the instant when the wall time happens once",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/zoned-intent.test.ts",
+          "symbol": "ZonedIntent > resolve > returns none when the wall time falls in a gap",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/zoned-intent.test.ts",
+          "symbol": "ZonedIntent > resolve > shifts forward by the gap when ShiftForward is requested",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/zoned-intent.test.ts",
+          "symbol": "ZonedIntent > resolve > returns both instants when the wall time falls in an overlap",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/zoned-intent.test.ts",
+          "symbol": "ZonedIntent > resolve > returns the earlier instant when Earliest is requested",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/zoned-intent.test.ts",
+          "symbol": "ZonedIntent > addDays",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/instant.test.ts",
+          "symbol": "Instant > inZone",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/temporal-context.test.ts",
+          "symbol": "TemporalContext > compare",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/utv-first/zoned-intent.test.ts",
+          "symbol": "ZonedIntent"
+        },
+        {
+          "path": "implementations/typescript/test/examples/fixtures.ts",
+          "symbol": "demoZoneRules"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "zoned-ordering-needs-context"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "explicit-zone-rules"
+        }
+      ]
+    },
+    {
+      "id": "timestamps-and-amounts",
+      "title": "Timestamps and amounts",
+      "summary": "Instant from a clock reading, the epoch, nanoseconds and a quarter second; exact differences; POSIX versus SI seconds; Date round trips; Period and ElapsedSeconds.",
+      "subject": [
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "exact-arithmetic"
+        },
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "native-interop-with-intent"
+        }
+      ],
+      "criteria": [
+        "Instant.fromUnixMilliseconds takes a clock reading as an input; fromUnixSeconds keeps the epoch, all nine nanosecond digits and a quarter second.",
+        "Instant.until returns an exact fraction, and 23 hours across the spring-forward day.",
+        "Instant.add moves by exactly the POSIX seconds given, and returns unsupported (needs-leap-seconds) for SI seconds.",
+        "Instant.toDate returns the original Date, warns precision-loss for nanoseconds, and is unsupported beyond the range of Date.",
+        "Period.days(1) is not 86,400 seconds; Period.months(1) writes P1M.",
+        "ElapsedSeconds.of holds ninety minutes, and 86,400 SI seconds is not a calendar day."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/instant.test.ts",
+          "symbol": "Instant > fromUnixMilliseconds",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/instant.test.ts",
+          "symbol": "Instant > fromUnixSeconds",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/instant.test.ts",
+          "symbol": "Instant > until",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/instant.test.ts",
+          "symbol": "Instant > add",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/instant.test.ts",
+          "symbol": "Instant > toDate",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/period.test.ts",
+          "symbol": "Period",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/elapsed-seconds.test.ts",
+          "symbol": "ElapsedSeconds",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/utv-first/instant.test.ts",
+          "symbol": "Instant"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "exact-arithmetic"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "native-interop-with-intent"
+        }
+      ]
+    },
+    {
+      "id": "ranges",
+      "title": "Ranges",
+      "summary": "Interval.halfOpen, closed and of with unbounded and unknown ends.",
+      "subject": [
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "three-valued-ranges"
+        }
+      ],
+      "criteria": [
+        "November half-open definitely contains 15 November and cannot contain 1 December.",
+        "November closed definitely contains 30 November.",
+        "An unbounded end definitely contains a later day; an unknown end possibly contains 1 June 2027."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/interval.test.ts",
+          "symbol": "Interval > halfOpen",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/interval.test.ts",
+          "symbol": "Interval > closed",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/interval.test.ts",
+          "symbol": "Interval > of",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/utv-first/interval.test.ts",
+          "symbol": "Interval"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "three-valued-ranges"
+        }
+      ]
+    },
+    {
+      "id": "json-layer",
+      "title": "UTV JSON",
+      "summary": "Values with no typed API or standard counterpart, validated as UTV JSON.",
+      "subject": [
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        },
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "separate-validity-checks"
+        }
+      ],
+      "criteria": [
+        "validateSemantic: a real date is valid, 29 February 2026 is invalid (day-out-of-range), a Hebrew date is unsupported, a year alone is valid.",
+        "validateStructural: a year alone, a leap second, a start-plus-amount interval, a union of ranges, a weekly recurrence and an uncertain year are valid.",
+        "validateStructural: utv/2.0 is unsupported; utv/4, a repeated key (duplicate-key) and an unknown kind are invalid."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/validate-semantic.test.ts",
+          "symbol": "validateSemantic",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/utv-first/validate-structural.test.ts",
+          "symbol": "validateStructural",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/utv-first/validate-structural.test.ts",
+          "symbol": "validateStructural"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "separate-validity-checks"
+        }
+      ]
+    },
+    {
+      "id": "task-markers",
+      "title": "Side-by-side task markers",
+      "summary": "The UTV-first suite marks all 18 side-by-side tasks with BEGIN and END comments.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers"
+        }
+      ],
+      "criteria": [
+        "now (instant, from-date), a-date, weekday-week, feb-30, add-days, month-end, days-between and compare-dates (civil-date, temporal-context), time-of-day, datetime-plus-hours, parse-offsets, meeting-in-paris (instant, zoned-intent), dst-gap, dst-overlap, timestamps, day-vs-24h (instant, zoned-intent), ranges and round-trip are each wrapped in // BEGIN <task-id> … // END <task-id>.",
+        "The code between the markers reads well on its own, because docs/side-by-side.md shows it verbatim."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "tools/side_by_side.py",
+          "symbol": "MARKER",
+          "command": "python3 tools/side_by_side.py --check",
+          "description": "Run from the repository root; fails if docs/side-by-side.md is out of date with the markers."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/utv-first/civil-date.test.ts",
+          "symbol": "BEGIN a-date"
+        },
+        {
+          "path": "implementations/typescript/test/examples/utv-first/zoned-intent.test.ts",
+          "symbol": "BEGIN dst-gap"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers"
+        }
+      ]
+    }
+  ]
+}

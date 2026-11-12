@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Rust library tests backlog",
+  "folder": "implementations/rust/tests",
+  "entities": [
+    {
+      "id": "older-tests-to-agents-shape",
+      "title": "Bring the older test targets into the AGENTS.md shape",
+      "type": "debt",
+      "status": "proposed",
+      "summary": "Six test targets predate the test directives and don't follow them; AGENTS.md says such tests are brought in line when they are next changed.",
+      "details": "tests/conformance.rs, everyday.rs, operations.rs, purity.rs, text_form.rs and typed.rs have no `/// Verifies that ...` doc comments and no GIVEN / WHEN / EXPECTATIONS / THEN sections, use shared helpers (`date`, `codes`, `ctx`, `rules`, `differs`, `run`), and several tests check many branches at once (`operations::clarifications`, `typed::constructors_reject_invalid_values`, `conformance::envelope_rules`). tests/validation_codes.rs and the example suites already follow the directives. The fixture runners (everyday, text_form) are loops over shared files by design and may need a recorded exception (AGENTS.md 1.10) rather than a rewrite.",
+      "compromise": "The tests were left in their pre-directive form; AGENTS.md states the rule that they are brought in line only when next changed.",
+      "cost": "A failing test names a group of behaviours rather than one branch, and a reader has to read helpers and loops to see what is checked; the shape differs from the newer tests beside them.",
+      "origin": {
+        "kind": "document",
+        "reference": "AGENTS.md",
+        "description": "Section 1: \"Tests that predate these directives are brought in line when they are next changed.\""
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/operations.rs",
+          "symbol": "clarifications"
+        },
+        {
+          "path": "implementations/rust/tests/typed.rs",
+          "symbol": "constructors_reject_invalid_values"
+        },
+        {
+          "path": "implementations/rust/tests/conformance.rs",
+          "symbol": "envelope_rules"
+        },
+        {
+          "path": "implementations/rust/tests/purity.rs",
+          "symbol": "library_code_never_reads_the_clock_zone_locale_or_environment"
+        },
+        {
+          "path": "implementations/rust/tests/validation_codes.rs",
+          "symbol": "validate_structural::reports_duplicate_key_when_an_object_repeats_a_key"
+        }
+      ]
+    }
+  ]
+}

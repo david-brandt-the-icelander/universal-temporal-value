@@ -1,0 +1,41 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Typed layer",
+  "folder": "implementations/rust/src/typed",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Typed layer",
+      "summary": "The 0.3 typed API: CivilDate, CivilTime, ZonedIntent, Instant, Period, Interval and the rest, with Outcome<T> for answers time can refuse.",
+      "purpose": "Gives each everyday UTV value an immutable Rust type that is valid by construction, with total operations returning plain values and partial ones an Outcome, typed policies, and a TemporalContext that holds the zone rules. Its types are re-exported at the crate root; the module itself is private.",
+      "boundaries": [
+        "Computes nothing itself: every operation calls the JSON layer (src/ops.rs, src/zones.rs, src/text.rs) and reads its answer back.",
+        "Holds no rule data and has no default context: the caller loads the rules and passes a TemporalContext.",
+        "Values the typed layer has no type for (zoned dates, recurrences, intervals of date-times, values with extra properties) stay in the JSON layer; from_json answers unsupported (unsupported-operand) for them."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "module documentation"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "mod typed"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    }
+  ]
+}

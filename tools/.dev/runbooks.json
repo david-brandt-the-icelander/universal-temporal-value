@@ -1,0 +1,36 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/runbooks.schema.json",
+  "kind": "runbooks",
+  "title": "Tool runbooks",
+  "folder": "tools",
+  "entities": [
+    {
+      "id": "run-repository-checks",
+      "title": "Run the repository checks",
+      "summary": "Install the one dependency and run the two checks CI runs.",
+      "purpose": "setup",
+      "when": "Before pushing any change to spec/, schema/, conformance/, docs/side-by-side.md or a UTV-first example test.",
+      "steps": [
+        "pip install -r tools/requirements.txt",
+        "python3 tools/validate.py",
+        "python3 tools/side_by_side.py --check; if it reports the page out of date, run python3 tools/side_by_side.py and commit docs/side-by-side.md."
+      ],
+      "verify": "validate.py ends with \"All structural checks passed.\" and side_by_side.py --check prints \"docs/side-by-side.md is up to date\".",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "tools/requirements.txt",
+          "symbol": "jsonschema"
+        },
+        {
+          "path": ".github/workflows/validate.yml",
+          "symbol": "jobs.structural.steps"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "3. Running the tests"
+        }
+      ]
+    }
+  ]
+}

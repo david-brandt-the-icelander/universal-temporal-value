@@ -1,0 +1,127 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "Native interop component diagram",
+  "folder": "implementations/rust/src/interop",
+  "description": "Two adapters, one per native API: SystemTime, which std always has, and chrono, which the crate offers only with the cargo feature chrono. Both build UTV JSON with the JSON layer's writers and read it back with its readers; the typed values convert through From and TryFrom on top.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/interop/mod.rs",
+      "symbol": "from_system_time"
+    },
+    {
+      "path": "implementations/rust/src/interop/mod.rs",
+      "symbol": "chrono"
+    },
+    {
+      "path": "implementations/rust/src/interop/chrono.rs",
+      "symbol": "OffsetIntent"
+    },
+    {
+      "path": "implementations/rust/Cargo.toml",
+      "symbol": "features.chrono"
+    }
+  ],
+  "components": [
+    {
+      "id": "interop",
+      "name": "Native interop (utv::interop)",
+      "responsibility": "Converts between UTV values and Rust's native time types, naming every refusal after the operation convert.",
+      "folder": "implementations/rust/src/interop"
+    },
+    {
+      "id": "system-time",
+      "name": "SystemTime adapter (mod.rs)",
+      "responsibility": "from_system_time and to_system_time, TryFrom<Instant> for SystemTime, and the convert, convert_back and lossy helpers both adapters use.",
+      "folder": "implementations/rust/src/interop"
+    },
+    {
+      "id": "chrono-adapter",
+      "name": "chrono adapter (chrono.rs, feature chrono)",
+      "responsibility": "from_naive_date, from_naive_time, from_naive_date_time, from_fixed_offset with an OffsetIntent, from_utc, from_local (always refused) and the to_* functions back; From/TryFrom between chrono's types and CivilDate, CivilTime, CivilDateTime, FixedOffsetDateTime and Instant.",
+      "folder": "implementations/rust/src/interop"
+    },
+    {
+      "id": "json-layer",
+      "name": "JSON-layer readers and writers (src/model.rs, src/num.rs)",
+      "responsibility": "read_civil, read_instant, Civil::to_json, instant_json and exact rationals.",
+      "folder": "implementations/rust/src",
+      "diagram": "implementations/rust/src/.dev/component-diagram.json"
+    },
+    {
+      "id": "typed",
+      "name": "Typed layer",
+      "responsibility": "The typed values the From/TryFrom impls produce, and Diagnostics for their errors.",
+      "folder": "implementations/rust/src/typed",
+      "diagram": "implementations/rust/src/typed/.dev/component-diagram.json"
+    },
+    {
+      "id": "std-time",
+      "name": "std::time::SystemTime",
+      "responsibility": "Rust's only standard time type: a clock reading with no calendar.",
+      "external": true
+    },
+    {
+      "id": "chrono",
+      "name": "chrono crate (0.4, optional)",
+      "responsibility": "The de-facto standard calendar types: NaiveDate, NaiveTime, NaiveDateTime, DateTime<FixedOffset>, DateTime<Utc>, DateTime<Local>.",
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "interop",
+      "to": "system-time",
+      "kind": "contains",
+      "description": "Always compiled."
+    },
+    {
+      "from": "interop",
+      "to": "chrono-adapter",
+      "kind": "contains",
+      "description": "Compiled with #[cfg(feature = \"chrono\")]."
+    },
+    {
+      "from": "system-time",
+      "to": "std-time",
+      "kind": "depends-on",
+      "description": "Reads and builds SystemTime values relative to UNIX_EPOCH; never calls SystemTime::now."
+    },
+    {
+      "from": "system-time",
+      "to": "json-layer",
+      "kind": "depends-on",
+      "description": "Writes instants with instant_json and reads them with read_instant; exact seconds as Q."
+    },
+    {
+      "from": "system-time",
+      "to": "typed",
+      "kind": "depends-on",
+      "description": "TryFrom<Instant> for SystemTime returns typed::Diagnostics."
+    },
+    {
+      "from": "chrono-adapter",
+      "to": "chrono",
+      "kind": "depends-on",
+      "description": "Reads and builds chrono's types."
+    },
+    {
+      "from": "chrono-adapter",
+      "to": "json-layer",
+      "kind": "depends-on",
+      "description": "Builds civil values and instants as Civil and Q, and reads them back with read_civil and read_instant."
+    },
+    {
+      "from": "chrono-adapter",
+      "to": "system-time",
+      "kind": "depends-on",
+      "description": "Uses convert, convert_back and lossy, so every result is named convert."
+    },
+    {
+      "from": "chrono-adapter",
+      "to": "typed",
+      "kind": "depends-on",
+      "description": "Implements From/TryFrom for the typed values through the Typed trait's read and typed::rejected."
+    }
+  ]
+}

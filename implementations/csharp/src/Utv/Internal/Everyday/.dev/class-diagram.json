@@ -1,0 +1,267 @@
+{
+  "$schema": "../../../../../../../Meta/Agents/Skills/describe-class-diagram/schema.json",
+  "kind": "class",
+  "title": "Everyday internals classes",
+  "folder": "implementations/csharp/src/Utv/Internal/Everyday",
+  "description": "The internal helpers of the everyday operations: day arithmetic, exact rationals, the JSON reader and writer, and the failure that carries a semantic outcome to the operation boundary. All types are internal.",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/Internal/Everyday/CivilMath.cs",
+      "symbol": "CivilMath"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Internal/Everyday/Rational.cs",
+      "symbol": "Rational"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+      "symbol": "Values"
+    }
+  ],
+  "types": [
+    {
+      "id": "everyday.CivilMath",
+      "name": "CivilMath",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/Everyday/CivilMath.cs"
+      ],
+      "members": [
+        "const int SecondsPerDay",
+        "static BigInteger DaysFromCivil(BigInteger year, int month, int day)",
+        "static (BigInteger Year, int Month, int Day) CivilFromDays(BigInteger days)",
+        "static int DayOfWeek(BigInteger days)",
+        "static int DayOfYear(BigInteger year, int month, int day)",
+        "static (BigInteger WeekYear, int Week) IsoWeek(BigInteger year, int month, int day)",
+        "static bool IsValidDate(BigInteger year, int month, int day)"
+      ]
+    },
+    {
+      "id": "everyday.Rational",
+      "name": "Rational",
+      "kind": "struct",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/Everyday/Rational.cs"
+      ],
+      "members": [
+        "Rational(BigInteger numerator, BigInteger denominator)",
+        "BigInteger Numerator",
+        "BigInteger Denominator",
+        "bool IsInteger",
+        "static Rational FromInteger(BigInteger value)",
+        "static Rational FromSecondsAndNano(BigInteger seconds, long nano)",
+        "BigInteger Floor()",
+        "Rational FractionalPart()",
+        "bool TryGetNanoOfSecond(out int nano)",
+        "operators + - < > <= >= == !=",
+        "int CompareTo(Rational other)"
+      ]
+    },
+    {
+      "id": "everyday.MathUtil",
+      "name": "MathUtil",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/Everyday/Rational.cs"
+      ],
+      "members": [
+        "static BigInteger FloorDiv(BigInteger a, BigInteger b)",
+        "static BigInteger FloorMod(BigInteger a, BigInteger b)",
+        "static long FloorDiv(long a, long b)",
+        "static long FloorMod(long a, long b)"
+      ]
+    },
+    {
+      "id": "everyday.OpFailure",
+      "name": "OpFailure",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/Everyday/Values.cs"
+      ],
+      "members": [
+        "OpFailure(UtvStatus status, IReadOnlyList<Diagnostic> diagnostics)",
+        "UtvStatus Status",
+        "IReadOnlyList<Diagnostic> Diagnostics",
+        "static OpFailure Invalid(string code, string path, string message)",
+        "static OpFailure Unsupported(string code, string path, string message)"
+      ]
+    },
+    {
+      "id": "everyday.ZoneKind",
+      "name": "ZoneKind",
+      "kind": "enum",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/Everyday/Values.cs"
+      ],
+      "members": [
+        "Floating",
+        "Iana",
+        "FixedOffset",
+        "Other"
+      ]
+    },
+    {
+      "id": "everyday.CivilRead",
+      "name": "CivilRead",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/Everyday/Values.cs"
+      ],
+      "members": [
+        "JsonElement Envelope",
+        "string Form",
+        "bool Gregorian",
+        "BigInteger? Year",
+        "int? Month, Day, Hour, Minute, Second, Nano",
+        "ZoneKind Zone",
+        "string? ZoneType, ZoneId",
+        "int ZoneSeconds",
+        "int? OffsetAssertion",
+        "JsonElement? ResolutionPolicy"
+      ]
+    },
+    {
+      "id": "everyday.Values",
+      "name": "Values",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/Everyday/Values.cs"
+      ],
+      "members": [
+        "const int MaxOffsetSeconds",
+        "static void RequireStructural(JsonElement value, string argument)",
+        "static IReadOnlyList<Diagnostic> WithMalformed(UtvResult structural)",
+        "static CivilRead ReadCivil(JsonElement envelope)",
+        "static void RequireGregorian(CivilRead c, string path)",
+        "static (BigInteger Year, int Month, int Day) RequireDate(CivilRead c)",
+        "static (BigInteger Year, int Month) RequireYearMonth(CivilRead c)",
+        "static (int Hour, int Minute, int Second, int Nano) RequireTime(CivilRead c)",
+        "static Rational ReadPosixInstant(JsonElement envelope, string argument)",
+        "static Rational ReadRational(JsonElement r)",
+        "static JsonObject Civil(string form, JsonObject fields)",
+        "static JsonObject Instant(Rational t)",
+        "static JsonObject PosixSeconds(Rational seconds)",
+        "static JsonObject WallFields(Rational t, int offsetSeconds, string path)",
+        "static JsonElement ToElement(JsonNode node)",
+        "static bool JsonEquals(JsonElement a, JsonElement b)"
+      ]
+    },
+    {
+      "id": "everyday.Op",
+      "name": "Op",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/Internal/Everyday/Values.cs"
+      ],
+      "members": [
+        "static UtvResult Run(string operation, Func<UtvResult> body)",
+        "static UtvResult Unique(string operation, JsonNode candidate, IEnumerable<Diagnostic>? diagnostics)",
+        "static UtvResult Unique(string operation, string candidate)",
+        "static UtvResult Status(string operation, UtvStatus status, string code, string path, string message)"
+      ]
+    },
+    {
+      "id": "utv.UtvResult",
+      "name": "UtvResult",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/UtvResult.cs"
+      ],
+      "members": []
+    },
+    {
+      "id": "utv.UtvValidator",
+      "name": "UtvValidator",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/UtvValidator.cs"
+      ],
+      "members": []
+    },
+    {
+      "id": "utv.GregorianCivil",
+      "name": "GregorianCivil",
+      "kind": "class",
+      "sources": [
+        "implementations/csharp/src/Utv/GregorianCivil.cs"
+      ],
+      "members": []
+    },
+    {
+      "id": "bcl.Exception",
+      "name": "System.Exception",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "everyday.OpFailure",
+      "to": "bcl.Exception",
+      "kind": "inherits",
+      "description": "Thrown inside an operation, caught at its boundary."
+    },
+    {
+      "from": "everyday.Op",
+      "to": "everyday.OpFailure",
+      "kind": "depends-on",
+      "description": "Run catches it and returns its status and diagnostics as a result."
+    },
+    {
+      "from": "everyday.Op",
+      "to": "utv.UtvResult",
+      "kind": "depends-on",
+      "description": "Every operation answers with a UtvResult."
+    },
+    {
+      "from": "everyday.Values",
+      "to": "utv.UtvValidator",
+      "kind": "depends-on",
+      "description": "RequireStructural runs ValidateStructural on every argument first."
+    },
+    {
+      "from": "everyday.Values",
+      "to": "everyday.CivilRead",
+      "kind": "depends-on",
+      "description": "ReadCivil reads a civil envelope into one."
+    },
+    {
+      "from": "everyday.Values",
+      "to": "everyday.Rational",
+      "kind": "depends-on",
+      "description": "Instants and second amounts are exact rationals."
+    },
+    {
+      "from": "everyday.Values",
+      "to": "utv.GregorianCivil",
+      "kind": "depends-on",
+      "description": "RequireDate checks the day against DaysInMonth."
+    },
+    {
+      "from": "everyday.Values",
+      "to": "everyday.OpFailure",
+      "kind": "depends-on",
+      "description": "Throws malformed-value, day-out-of-range, field-out-of-range, leap-second and the like."
+    },
+    {
+      "from": "everyday.CivilRead",
+      "to": "everyday.ZoneKind",
+      "kind": "depends-on",
+      "description": "The kind of zone the value carries."
+    },
+    {
+      "from": "everyday.CivilMath",
+      "to": "everyday.MathUtil",
+      "kind": "depends-on",
+      "description": "Floor division keeps negative years and days right."
+    },
+    {
+      "from": "everyday.Rational",
+      "to": "everyday.MathUtil",
+      "kind": "depends-on",
+      "description": "Floor and FractionalPart."
+    }
+  ]
+}

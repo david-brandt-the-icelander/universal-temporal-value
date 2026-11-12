@@ -13,7 +13,7 @@ Language-neutral fixtures shared by every implementation in `implementations/`.
 
 The examples test **structure** only. A value in `valid.json` is well-formed. It may still be semantically invalid or unresolvable under particular rules, and that is deliberate: for example, `new-york-gap-intention` is a valid value that resolves to no instant.
 
-The scenarios describe **semantic** behaviour: the expected outcome of validation, resolution, comparison or transformation. They aren't executable yet. Turning each one into concrete inputs, an evaluation context and an expected `utv-result/1.0` envelope is tracked as OI-12 in `spec/OPEN-ISSUES.md`. Scenario `status` values describe the fixture itself:
+The scenarios describe **semantic** behaviour: the expected outcome of validation, resolution, comparison or transformation. They aren't executable yet. Turning each one into concrete inputs, an evaluation context and an expected `utv-result/1.0` envelope is tracked as OI-12 in [`scenarios/.dev/backlog.json`](scenarios/.dev/backlog.json). Scenario `status` values describe the fixture itself:
 
 - `design-test-required` / `design-requirement-not-implemented`: specified, with no executable fixture yet.
 

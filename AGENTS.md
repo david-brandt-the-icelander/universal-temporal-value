@@ -113,3 +113,47 @@ When you add or change an example:
 | Rust | `cargo test` |
 
 Repository checks: `python3 tools/validate.py` and `python3 tools/side_by_side.py --check`.
+
+## 4. Architecture diagrams and knowledge files
+
+Each maintained folder documents itself in a `.dev/` directory next to its code, as JSON following the skills in
+`Meta/Agents/Skills/` and the knowledge catalogue in `Meta/Agents/Knowledge/` (human-assisted software development,
+HASD). Read a folder's `.dev` files before changing it. `populate-dev` decides what a folder needs; the diagrams are:
+
+- `describe-component-diagram`: the folder is a cohesive capability, adapter, boundary or subsystem: the
+  repository root, `implementations/`, each library's root, and the source folders that hold a layer of a library
+  (its source root, typed layer, internal JSON layer or native interop).
+- `describe-class-diagram`: a library source folder that itself declares more than one class, record, struct,
+  enum, interface or type alias. Test folders get none: their classes mirror production (section 1.9), and their
+  `verification.json` names each test class instead.
+- `describe-state-diagram`: the folder implements a state machine, one `<Identifier>.state-diagram.json` per
+  machine, named after its type. An `Outcome` union, an enum or a policy type is not a state machine.
+- `describe-deployment-diagram`: the folder holds something independently deployable or packaged (each library's
+  root, with its project or package file).
+
+What a folder does, offers and exposes goes in its use cases, user journeys, capabilities, features and operations
+(`describe-use-case`, `describe-user-journey`, `describe-capability`, `describe-feature`, `describe-operation`). The
+libraries' use cases share entity IDs across the five languages (`create-a-date`, `add-months`,
+`resolve-a-zoned-time`, `compare-values`, `convert-native`, `read-and-write-text`, `validate-utv-json`). What a
+folder intends, promises and needs (requirements, backlog items, decisions, blockers, contracts, verification,
+runbooks, limitations, references and the rest) goes in knowledge files, written with `describe-knowledge`. Wanted
+work is a `backlog` item in the folder that will own it, and a question only the owner can answer is a `decisions`
+record with `status: open`. The specification's open issues are such records under their `OI-nn` IDs, and
+`spec/OPEN-ISSUES.md` says where each one is. The root's `.dev/decisions.json` is the design history.
+
+A folder that holds nothing but one subfolder (`.github/`, C#'s `src/` and `NativeFirst/Text/`, the package
+path above Java's `net/icelander/utv` and Java's `examples/nativefirst/`, Python's `src/`) is a path segment and
+gets no `.dev`. Neither does `Meta/`, which is a copy.
+
+Every actor a use case, journey or diagram names has a file in `Actors/` at the repository root, written with
+`describe-actor` and linked from whatever names it; delete an actor nothing links to. Update the `.dev` files and
+actors in the same commit as the code they describe, and delete one that stops applying. Before finishing, run both
+validators from the repository root, with the `jsonschema` package installed (`pip install -r tools/requirements.txt`):
+
+```bash
+python3 Meta/Agents/Skills/validate_diagrams.py
+python3 Meta/Agents/Knowledge/validate_knowledge.py
+```
+
+The skills and the catalogue come from <https://github.com/david-brandt-the-icelander/human-assisted-software-development>
+(`Agents/Skills` and `Agents/Knowledge`). Change them there and copy them here, so there is one version.

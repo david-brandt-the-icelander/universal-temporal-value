@@ -1,0 +1,79 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Documentation backlog",
+  "folder": "docs",
+  "entities": [
+    {
+      "id": "edtf-qualifiers",
+      "title": "Define how EDTF qualifiers map to the uncertain kind",
+      "summary": "EDTF qualifiers (1347~, 1347?, 134X) need a mapping to UTV's uncertain kind before the text form can accept them; until then parsing them gives unsupported (unsupported-form).",
+      "type": "feature",
+      "details": "Approximate isn't the same as bounded, so the mapping needs its own definition. The review that proposed the text form (R5) listed 1347~ among the forms it should read; text-form.md deferred it.",
+      "acceptanceCriteria": [
+        "docs/text-form.md defines the mapping of each EDTF qualifier to an uncertain value, and conformance/operations/text-form.json has fixtures for it.",
+        "Every library's parseText accepts the qualifiers and formatText writes them."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "docs/aesthetics-review.md",
+        "description": "Status note: \"Deferred: EDTF qualifiers (1347~) need a mapping to the uncertain kind\"; also docs/text-form.md, Not (yet) in the text form."
+      },
+      "status": "open",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "docs/text-form.md",
+          "symbol": "Not (yet) in the text form"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "5. Diagnostic codes"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "affects",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "text-form"
+        }
+      ]
+    },
+    {
+      "id": "fixture-counts",
+      "title": "Fixture counts in library-api.md §8 are out of date",
+      "summary": "§8 asks every library to pass all 130 everyday fixtures and the 44 text-form entries; the files hold 131 and 46.",
+      "type": "defect",
+      "expected": "The counts in docs/library-api.md §8 match conformance/operations/everyday.json and conformance/operations/text-form.json, or the text names the files without counts.",
+      "observed": "\"all 130 everyday fixtures\" and \"(44 entries)\", while everyday.json has 131 fixtures and text-form.json 46 (tools/validate.py prints both counts).",
+      "reproduction": [
+        "python3 tools/validate.py",
+        "Compare the counts it prints under Everyday API fixtures and Text-form fixtures with docs/library-api.md §8."
+      ],
+      "acceptanceCriteria": [
+        "§8 no longer states a count that differs from the files."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "tools/validate.py",
+        "description": "Found while documenting the conformance material: check_everyday_fixtures and check_text_form_fixtures print 131 and 46."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "docs/library-api.md",
+          "symbol": "8. Tests each library must have"
+        },
+        {
+          "path": "conformance/operations/everyday.json",
+          "symbol": "fixtures"
+        },
+        {
+          "path": "conformance/operations/text-form.json",
+          "symbol": "fixtures"
+        }
+      ]
+    }
+  ]
+}

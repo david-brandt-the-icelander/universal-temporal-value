@@ -1,0 +1,330 @@
+{
+  "$schema": "../../../../Meta/Agents/Skills/describe-feature/schema.json",
+  "kind": "feature",
+  "title": "JSON layer features",
+  "folder": "implementations/rust/src",
+  "description": "The behaviour the JSON layer carries out; the typed layer offers the same behaviour through its types and calls this code to do it.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/lib.rs",
+      "symbol": "crate documentation"
+    }
+  ],
+  "entities": [
+    {
+      "id": "fail-closed-json",
+      "name": "Fail-closed JSON",
+      "description": "Anything unknown or ambiguous in UTV JSON is rejected before it is interpreted.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "StrictVisitor"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "check_envelope"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "SchemaCx"
+        }
+      ],
+      "behavior": "JSON is parsed with a visitor that refuses a repeated key (duplicate-key). The envelope must have schema exactly utv/1.0 (another well-formed utv/M.N is unsupported, anything else invalid), one of the 26 core kinds and a value, and no top-level property but schema, kind, value, provenance and extensions. The value is then checked against the kind's definition in the embedded schema. Every reader in model.rs runs this check first, so no operation interprets malformed JSON.",
+      "outcome": "A value is never half-read, and no newer or unknown version is guessed at.",
+      "constraints": [
+        "The schema checker implements $ref (local), type, const, enum, pattern, minLength, minimum, maximum, minItems, items, required, properties, additionalProperties, allOf, anyOf, oneOf and not; other keywords are ignored.",
+        "A schema pattern the regex crate can't compile is skipped, not failed.",
+        "A JSON number that is not an i64 in an integer field of a civil value is malformed-value."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "parse_for_validation"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "check_envelope"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_value"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "pattern_matches"
+        },
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "structural"
+        }
+      ]
+    },
+    {
+      "id": "separate-semantic-check",
+      "name": "Structural and semantic validity are separate",
+      "description": "validate_structural doesn't judge calendars; validate_gregorian_civil does, after it.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_gregorian_civil"
+        }
+      ],
+      "behavior": "validate_structural accepts 30 February 2026 as a well-formed value. validate_gregorian_civil runs the structural check first, then answers invalid (month-out-of-range, day-out-of-range) or unsupported for other kinds (unsupported-operand) and calendars (unsupported-calendar). Resolvability is a third question, answered by resolve.",
+      "outcome": "A caller can store or forward a value it can't evaluate without it being called invalid.",
+      "constraints": [
+        "Only the proleptic Gregorian calendar is checked; a value with a month but no year, or no month, passes."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_gregorian_civil"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "check_civil"
+        }
+      ]
+    },
+    {
+      "id": "exact-arithmetic",
+      "name": "Exact arithmetic, or an honest refusal",
+      "description": "Years, day counts and seconds are exact i128 integers and reduced i128 rationals; nothing goes through floating point.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/num.rs",
+          "symbol": "Q"
+        },
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "range_err"
+        }
+      ],
+      "behavior": "Years are read from decimal strings into i128; fractions of a second are reduced rationals (subTick, posixSeconds); day numbers use a checked proleptic Gregorian algorithm. Every step is checked, and an overflow answers unsupported with implementation-limit instead of wrapping or rounding. Instants compare exactly through a 256-bit cross product.",
+      "outcome": "Year +275760, a quarter second or 1/3 s is held and computed exactly; a value beyond the range is refused, never wrong.",
+      "constraints": [
+        "The range is i128; the UTV wire format allows any size.",
+        "Civil fields hold whole nanoseconds; an instant with a finer fraction can't become a civil date-time (implementation-limit).",
+        "The builders take years as i64."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/num.rs",
+          "symbol": "Q::cmp_exact"
+        },
+        {
+          "path": "implementations/rust/src/num.rs",
+          "symbol": "days_from_civil"
+        },
+        {
+          "path": "implementations/rust/src/num.rs",
+          "symbol": "civil_from_days"
+        },
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "read_instant"
+        },
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "range_err"
+        }
+      ]
+    },
+    {
+      "id": "month-end",
+      "name": "Month end returns none",
+      "description": "Month arithmetic answers none when the day is missing from the target month, unless the caller asks to clamp.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "add"
+        }
+      ],
+      "behavior": "add adds years and months together (12 × years + months). If the day doesn't exist in the resulting month, policy monthEnd reject (the default) answers none with month-end and a message such as 2026-02 has no day 31; constrain clamps to the last day. Then weeks and days, then hours, minutes and seconds as wall-clock time carrying into days. A zone is kept; an offsetAssertion is dropped with the info code offset-assertion-dropped.",
+      "outcome": "31 January + 1 month is never silently 28 February.",
+      "constraints": [
+        "Dates take years, months, weeks and days; year-months years and months; times nothing (unsupported); a time component on a date is kind-mismatch.",
+        "Only reject and constrain are implemented; other monthEnd values are unsupported-policy."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "replace_fields"
+        }
+      ]
+    },
+    {
+      "id": "dst-gap-and-overlap",
+      "name": "DST gaps and overlaps under explicit policies",
+      "description": "Resolving a wall time in a zone finds zero, one or two instants and lets the policy decide, never the library.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "resolve"
+        }
+      ],
+      "behavior": "resolve reads the wall time as if UTC (L), and for each offset in force within a day of L keeps t = L − o when the offset at t is o. An asserted offset filters the candidates first; none left is invalid (offset-mismatch). One candidate is unique. A gap is none (gap) under reject or preserve-unresolved, or the instant shifted forward by the gap under shift-forward-by-gap (02:30 gives 03:30), with an info note gap. An overlap is multiple, ascending, under reject (with the warning ambiguous) or all, or one instant under earliest or latest. An unzoned date-time is symbolic (no-zone); a fixed offset is unique with no rules.",
+      "outcome": "A meeting at 02:30 on 8 March 2026 in New York is reported as not happening, and 01:30 on 1 November as happening twice, until the caller says what they want.",
+      "constraints": [
+        "Rules are never extrapolated: L − 1 day must be at or after validFrom and L + 1 day before validUntil, or the answer is unsupported (outside-rule-window).",
+        "A zone the bundle doesn't list is unsupported (unknown-zone).",
+        "The policy argument wins over the value's own resolutionPolicy, which wins over reject/reject."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "offset_before_gap"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "ZoneRules::offset_at"
+        }
+      ]
+    },
+    {
+      "id": "three-valued-ranges",
+      "name": "Ranges answer definitely, possibly or impossible",
+      "description": "contains and overlaps use three-valued logic, so an unknown end leaves the answer open.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "contains"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "overlaps"
+        }
+      ],
+      "behavior": "Each endpoint condition is true, false or unknown: included is ≤, excluded <, unbounded always true, unknown unknown. They combine with three-valued AND: impossible if any is false, definitely if all are true, possibly otherwise. For overlaps, date intervals are normalized to half-open first, and an interval that is provably empty (or flagged empty) overlaps nothing.",
+      "outcome": "\"Until further notice\" is possibly in range, not in range by accident and not out of it.",
+      "constraints": [
+        "Only start-end intervals in the domains civil/gregory (dates) and physical (instants).",
+        "All dates involved must be unzoned or in the same zone (different-zones)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "before"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "all"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "Interval::half_open"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "Interval::provably_empty"
+        }
+      ]
+    },
+    {
+      "id": "lossless-text-form",
+      "name": "A text form only where it is lossless",
+      "description": "parse_text(format_text(v)) is v for every value the text form can write; everything else is refused with a code.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "format_text"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "parse_text"
+        }
+      ],
+      "behavior": "Points are ISO 8601 / RFC 9557 (Z is an instant, +00:00 a fixed offset of 0); periods are ISO 8601 durations (P1M is a month, PT1M a minute, -P1M all negative, P0D empty); intervals use brackets with .. for unbounded and ? for unknown. EDTF slash intervals are read as closed. format_text refuses with no-text-form what it can't write losslessly.",
+      "outcome": "Text in logs and documentation reads back to the same value, and a lossy shortcut never appears.",
+      "constraints": [
+        "Mixed-sign periods, exact second counts, start-amount intervals, intervals without a point and values with extra properties have no text form.",
+        "EDTF qualifiers and decimal period components are unsupported-form."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "format"
+        },
+        {
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "format"
+        }
+      ]
+    },
+    {
+      "id": "explicit-rules",
+      "name": "Explicit rules and no hidden environment",
+      "description": "Zone rules are data the caller passes in, and nothing reads the clock, the host's zone, locale or environment.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "Rules::load"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "module documentation"
+        }
+      ],
+      "behavior": "Rules::load reads only the file the caller names, Rules::parse and Rules::from_json take text or JSON, and resolve, to_zone and the typed TemporalContext use only those rules. The bundle's ruleSet reference is kept as given (Rules.rule_set).",
+      "outcome": "The same call gives the same answer on every machine, and changing the rules is a visible change in the caller's code.",
+      "constraints": [
+        "Results don't carry a manifest of the rules used; the caller knows them from the Rules it passed."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "Rules::load"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "Rules::from_json"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "Rules::within"
+        }
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/capability.json",
+      "relationship": "The capabilities these features make up."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/operation.json",
+      "relationship": "The operations that carry them out."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/use-case.json",
+      "relationship": "The typed use cases (add-months, resolve-a-zoned-time) that exercise month end and DST resolution."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/feature.json",
+      "relationship": "What the typed layer adds on top."
+    }
+  ]
+}

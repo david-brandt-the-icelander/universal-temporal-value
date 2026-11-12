@@ -1,0 +1,118 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Typed layer decisions",
+  "folder": "implementations/csharp/src/Utv/Typed",
+  "entities": [
+    {
+      "id": "typed-calls-the-json-layer",
+      "title": "Every typed operation calls the JSON layer",
+      "summary": "The typed layer has no date, zone or text logic of its own: each operation writes UTV JSON, calls the 0.2 function and converts its result.",
+      "status": "accepted",
+      "context": "Library 0.3 adds a typed layer on top of the 0.2 JSON layer, whose behaviour the shared everyday and text-form fixtures pin down.",
+      "decision": "CivilDate.AddMonths calls Calendar.Add, ZonedIntent.Resolve calls Zones.Resolve, Interval<T>.Contains calls Ranges.Contains, ToString calls TextForm.Format, and so on. Typed.Total turns a result into a plain value; Typed.ToOutcome into an Outcome<T>.",
+      "rationale": "docs/library-api.md §2: every operation must agree with the JSON-level everyday API, and so with the fixtures, and implementations should call the 0.2 functions underneath rather than re-implement them.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.Total"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.ToOutcome"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.AddMonths"
+        },
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "The typed API (0.3)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    },
+    {
+      "id": "csharp-names",
+      "title": "Temporal.Parse and period.Components",
+      "summary": "Where the shared naming collides with C#, the C# library uses Temporal.Parse for the contract's Utv.Parse, and reads period components as period.Components.Days.",
+      "status": "accepted",
+      "context": "docs/library-api.md §6 names the general parser Utv.Parse and gives Period both static builders (Period.Days(30)) and component properties.",
+      "decision": "Temporal.Parse(text) and Temporal.FromJson(json) return Outcome<ITemporalValue>; Period exposes its components as a PeriodComponents record struct in Components.",
+      "rationale": "Utv is the namespace in C#, so Utv.Parse cannot be a method; a static Period.Days(30) and an instance Days cannot share a name. library-api §6 records both deviations.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Temporal"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+          "symbol": "Period.Components"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "6. Naming"
+        }
+      ]
+    },
+    {
+      "id": "outcome-nested-records",
+      "title": "Outcome<T> as an abstract record with nested cases",
+      "summary": "The five outcome cases are sealed records nested in Outcome<T>, so a pattern reads Outcome<CivilDate>.None(var why) anywhere.",
+      "status": "accepted",
+      "context": "docs/library-api.md §3 asks each language for its own exhaustive sum type. C# has no closed unions.",
+      "decision": "abstract record Outcome<T> with a private protected constructor, and nested sealed records Unique, Multiple, None, Unsupported and Invalid, each with a Deconstruct. Callers shorten names with a using alias per result type (using DateOutcome = Utv.Outcome<Utv.CivilDate>) or using static.",
+      "rationale": "The README: the case names are nested, so they work anywhere. The cost, also stated in the README, is that C# does not know the five cases are all there are, so a switch expression needs a final _ => arm.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome"
+        },
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "Outcomes"
+        }
+      ]
+    },
+    {
+      "id": "years-are-biginteger",
+      "title": "Years are BigInteger",
+      "summary": "CivilDate and CivilYearMonth hold the year as System.Numerics.BigInteger, and Of takes one.",
+      "status": "accepted",
+      "context": "UTV years are decimal strings of any length; docs/library-api.md §1 asks for arbitrary-precision years (BigInteger in C# and Java).",
+      "decision": "Year is a BigInteger in the typed values, in GregorianCivil and in the internal day arithmetic (CivilMath), with astronomical numbering (year 0 exists).",
+      "rationale": "Arbitrary precision: no year is out of range for the library, only for .NET's own types, which then say so (out-of-native-range).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.Year"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+          "symbol": "GregorianCivil.IsLeapYear"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/CivilMath.cs",
+          "symbol": "CivilMath.DaysFromCivil"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "arbitrary-precision"
+        }
+      ]
+    }
+  ]
+}

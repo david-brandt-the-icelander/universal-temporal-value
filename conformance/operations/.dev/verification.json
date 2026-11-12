@@ -1,0 +1,72 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Operation fixture verification",
+  "folder": "conformance/operations",
+  "description": "Whether the libraries produce these outcomes is verified in each library's own .dev/verification.json.",
+  "entities": [
+    {
+      "id": "everyday-fixtures-well-formed",
+      "title": "The everyday fixtures are well-formed",
+      "summary": "Every UTV value in the everyday fixtures' arguments and expectations passes the schema, ids are unique, and named rule bundles exist.",
+      "criteria": [
+        "Every UTV value under args and expect passes schema/utv-1.0.schema.json.",
+        "Fixture ids are unique.",
+        "Every rule bundle named under rules is a file."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "tools/validate.py",
+          "symbol": "check_everyday_fixtures",
+          "command": "python3 tools/validate.py"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "tools/validate.py",
+          "symbol": "check_everyday_fixtures"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        }
+      ]
+    },
+    {
+      "id": "text-form-fixtures-well-formed",
+      "title": "The text-form fixtures are well-formed",
+      "summary": "Every value in the text-form fixtures passes the schema and ids are unique.",
+      "criteria": [
+        "Each fixture's value, and expect.value where present, passes schema/utv-1.0.schema.json.",
+        "Fixture ids are unique."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "tools/validate.py",
+          "symbol": "check_text_form_fixtures",
+          "command": "python3 tools/validate.py"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "tools/validate.py",
+          "symbol": "check_text_form_fixtures"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        }
+      ]
+    }
+  ]
+}

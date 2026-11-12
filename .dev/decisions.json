@@ -1,0 +1,237 @@
+{
+  "$schema": "../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Design history: why UTV has its present shape",
+  "folder": ".",
+  "description": "UTV went through four internal drafts, developed through a series of design reviews, before being published as specification 1.0. The drafts were never released; their identifiers (utv/2, utv/3, utv/4) are not valid UTV 1.0 values (VERSIONING.md, Pre-release design history). These records say why the design has its present shape, so later revisions don't undo decisions without knowing the reasons for them. They were moved here from docs/design-history.md.",
+  "entities": [
+    {
+      "id": "v2-validate-resolve-compare",
+      "title": "Draft v2: validate, resolve and compare are separate operations",
+      "summary": "A temporal value can be valid without identifying a unique instant.",
+      "status": "accepted",
+      "context": "Draft v1 started from one JSON-compatible type that could carry any date/time value. A review found it repeated many of the falsehoods it was meant to avoid: it assumed every value pointed to a unique instant, mixed up durations and calendar periods, had no account of leap seconds, treated precision as accuracy, and couldn't represent unknown or unbounded interval endpoints, or ambiguous and nonexistent local times.",
+      "options": [
+        {
+          "title": "One temporal type (draft v1)",
+          "consequences": "Simple, and repeats the falsehoods the model exists to avoid."
+        },
+        {
+          "title": "Separate validation, resolution and comparison",
+          "consequences": "A value can be valid and still resolve to zero, one or many instants."
+        }
+      ],
+      "decision": "Three operations were separated. Validate: is the representation structurally and semantically meaningful? Resolve: which instants, intervals or possibilities does it represent under specified rules? Compare or transform: what can safely be concluded or calculated from those possibilities? v2 also added explicit resolution policies for DST gaps and overlaps (including preserve-unresolved), floating versus pinned time-zone rules, unknown versus unbounded endpoints, explicit interval and comparison domains, elapsed versus calendar amounts, explicit timescales, independent measurement-quality metadata, physical, monotonic and logical clocks, uncertainty models, RFC 5545 recurrences, a calendar registry, and preservation of local-time intent for future appointments.",
+      "rationale": "A value that is valid but has no unique instant (02:30 in a DST gap, 01:30 in an overlap, sometime in 1347) is real data, and forcing it to one instant is the falsehood.",
+      "decidedBy": "Design review of draft v1",
+      "origin": {
+        "kind": "document",
+        "reference": "docs/design-history.md",
+        "description": "Sections Draft v1 and Draft v2, moved here."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/DECISIONS.md",
+          "symbol": "API design requirements"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§4 Local-time resolution"
+        }
+      ]
+    },
+    {
+      "id": "falsehoods-traceability-matrix",
+      "title": "Trace every falsehood to a safeguard and a test",
+      "summary": "The review of v2 recommended a matrix from falsehood to representation, semantic rule and test.",
+      "status": "accepted",
+      "context": "v2 covered most fundamental falsehoods at the design level; the reviewers wanted a way to see which rule prevents which falsehood, and how it would be tested.",
+      "decision": "Keep a traceability matrix: falsehood → representation → semantic rule → test. It became spec/FALSEHOODS-MATRIX.md, with one scenario per row in conformance/scenarios/falsehoods.json.",
+      "rationale": "A claim to avoid a falsehood is only as good as the rule and the test that back it.",
+      "decidedBy": "Design review of draft v2",
+      "origin": {
+        "kind": "document",
+        "reference": "docs/design-history.md",
+        "description": "Section Draft v2, Review of v2, moved here."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/FALSEHOODS-MATRIX.md",
+          "symbol": "ID"
+        },
+        {
+          "path": "tools/validate.py",
+          "symbol": "check_scenarios"
+        }
+      ]
+    },
+    {
+      "id": "v3-close-the-gaps",
+      "title": "Draft v3: a complete design, with implementation allowed to lag (18 kinds)",
+      "summary": "v3 closed the five conceptual gaps the review of v2 found, aiming explicitly at a complete design whose implementation may come later.",
+      "status": "accepted",
+      "context": "The review of v2 found five conceptual gaps: time-zone identity versus geographical location (boundaries change; tzdb defines no geography); retroactive correction of recorded facts (bitemporal history); physically discontinuous clocks (suspend and resume, virtualization, resets and counter wrap); the mathematical semantics of uncertainty propagation, including correlated errors; and human conventions beyond calendars (business hours, jurisdictional holidays, cutoffs).",
+      "decision": "The goal was set as a complete design, with implementation allowed to lag. v3 added: geographical and legal time separated from zone identity (location-intent, zoneIntent follow-location-law); append-only assertions with separate event time and record time (assertion, event-history); clock generations, drift, resets, suspension and calibration; correlated errors, statistical distributions, hard bounds versus confidence intervals; stable recurrence occurrence identity and rule revisions; historical calendar reforms, alternative eras, variable day boundaries and non-Earth calendars; explicit epochs, reference frames and timescales; partial ordering and uncertainty-aware comparison (sets of possible Allen relations); versioned business and legal rules; canonicalization, provenance and information-loss reporting.",
+      "rationale": "Each gap was a place where a value could only be stored by lying about it. A follow-up check confirmed that v3 covers the conventional vocabulary: date, time, date-time, offset and zoned date-time, instant, duration, period, interval and range (open, closed, half-open, unbounded), disjoint sets, recurrence, partial and approximate dates, relative expressions and business calendars. Whether range should be a language-level alias for interval was left as an API question (OI-14). Dependent field constraints on rule-bound objects were left to formalize (OI-06).",
+      "decidedBy": "Design review of draft v2",
+      "origin": {
+        "kind": "document",
+        "reference": "docs/design-history.md",
+        "description": "Section Draft v3, moved here."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§11 Assertions, corrections and bitemporal history"
+        },
+        {
+          "path": "spec/DECISIONS.md",
+          "symbol": "20. No one can promise literal temporal conceptual exhaustiveness"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "spec/.dev/decisions.json",
+          "entityId": "OI-14",
+          "description": "The range question it left open."
+        },
+        {
+          "relation": "relates-to",
+          "path": "spec/.dev/decisions.json",
+          "entityId": "OI-06",
+          "description": "The qualification it carried forward."
+        }
+      ]
+    },
+    {
+      "id": "rfc5545-erratum-policy",
+      "title": "Standards-compatible recurrence behaviour is a separate policy",
+      "summary": "RFC 5545's verified erratum 4271 treats nonexistent local times in a recurrence differently from invalid calendar dates, so recurrence compatibility became its own policy, apart from UTV's stricter default.",
+      "status": "accepted",
+      "context": "During v3, a standards check found that RFC 5545's verified erratum 4271 treats nonexistent local times in a recurrence differently from invalid calendar dates.",
+      "decision": "Standards-compatible recurrence behaviour is a separate policy from UTV's stricter default.",
+      "rationale": "UTV keeps its own truthful default, and a caller who needs iCalendar's behaviour asks for it by name.",
+      "decidedBy": "Design work on draft v3",
+      "origin": {
+        "kind": "document",
+        "reference": "docs/design-history.md",
+        "description": "Section Draft v3, the standards correction, moved here."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/DECISIONS.md",
+          "symbol": "12. Recurrence fidelity is edition-specific"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§23 Recurrence conformance (RFC 5545, 7529, 8984, ISO 8601)"
+        }
+      ]
+    },
+    {
+      "id": "v4-standards-convergence",
+      "title": "Draft v4: converge on the published standards (26 kinds)",
+      "summary": "A comparison against published standards found concepts v3 could only approximate; v4 added a native representation for each.",
+      "status": "accepted",
+      "context": "ISO 19108 and OWL-Time have ordinal and nominal reference systems (geological eras, dynasties, archaeological phases). HL7 FHIR Timing has event-anchored schedules (\"30 min before a meal\") and frequency obligations (\"3× daily\"). ISO 8601-2 has first-class selections (\"third Wednesday\", \"last eligible day\"), which are not recurrences. ISO 8601-1 defines intervals by start + duration or duration + end. RFC 7529 and RFC 8984 have SKIP ordering and override identity. OGC TimeseriesML, SensorThings and ISO 19156 have series, samples, and phenomenon versus result time. OWL-Time has temporal topology graphs and partial orders.",
+      "decision": "v4 added ordinal-position; event-relative and pattern; selection; interval.construction; edition-specific recurrence conformance (§23); series, sample and sequence; and temporal-graph. The stated goals: every temporal concept in ISO 8601-1/-2, ISO 19108 and OWL-Time has a native representation, and every construct in the relevant RFCs has either a lossless mapping or a documented reason why one is impossible. Time series went into core, although the design discussion first suggested a companion model (OI-15).",
+      "rationale": "Concepts approximated with another kind lose meaning on the way in and out of those standards.",
+      "decidedBy": "Standards comparison of draft v3",
+      "origin": {
+        "kind": "document",
+        "reference": "docs/design-history.md",
+        "description": "Section Draft v4, moved here."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§18 Ontology, typed domains, and decidability"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "spec/.dev/decisions.json",
+          "entityId": "OI-15",
+          "description": "Time series in core, still open."
+        }
+      ]
+    },
+    {
+      "id": "publish-v4-as-1-0",
+      "title": "Publish draft v4 as specification 1.0",
+      "summary": "v4 was published as 1.0 with identifier renumbering, a restructuring into Part I and Part II, and fixes that reconcile the examples and the schema.",
+      "status": "accepted",
+      "context": "The drafts used utv/2, utv/3 and utv/4 internally, and were never released.",
+      "decision": "Publish the final draft as specification 1.0, wire identifier utv/1.0, with the changes listed in CHANGELOG.md. Writers must not emit utv/2, utv/3 or utv/4, and readers treat them as unknown identifiers.",
+      "rationale": "A first published version starts at 1.0, and the unreleased drafts' identifiers must not be mistaken for later versions.",
+      "decidedOn": "2026-11-05",
+      "origin": {
+        "kind": "document",
+        "reference": "docs/design-history.md",
+        "description": "Section Publication as 1.0, moved here."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "CHANGELOG.md",
+          "symbol": "[1.0.0] — 2026-11-05"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Pre-release design history"
+        },
+        {
+          "path": "conformance/examples/invalid-structural.json",
+          "symbol": "unreleased-draft-schema-identifier"
+        }
+      ]
+    },
+    {
+      "id": "keep-the-architecture",
+      "title": "Keep the architecture; formalize rather than add kinds",
+      "summary": "The final review's recommendation: keep the architecture, audit clause by clause, formalize the adapter and registry contracts, and add no kinds without evidence of a missing concept.",
+      "status": "accepted",
+      "context": "After v4, the remaining work found was formalization (spec/OPEN-ISSUES.md), not missing concepts.",
+      "decision": "Keep the architecture. Do a clause-by-clause completeness audit and formalize the adapter and registry contracts. Don't add more kinds without evidence of a missing concept.",
+      "rationale": "None of the open issues changes the architecture; they are formalization work.",
+      "decidedBy": "Final design review",
+      "origin": {
+        "kind": "document",
+        "reference": "docs/design-history.md",
+        "description": "Section Publication as 1.0, the recommendation carried forward, moved here."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "UTV 1.0 — Open issues"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "spec/.dev/backlog.json",
+          "entityId": "OI-13",
+          "description": "The adapter mappings it asks to formalize."
+        },
+        {
+          "relation": "relates-to",
+          "path": "schema/.dev/backlog.json",
+          "entityId": "OI-11",
+          "description": "The registry contract it asks to formalize."
+        }
+      ]
+    }
+  ]
+}

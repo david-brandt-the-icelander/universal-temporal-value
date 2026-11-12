@@ -1,0 +1,319 @@
+{
+  "$schema": "../../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "Library source component diagram",
+  "folder": "implementations/rust/src",
+  "description": "The crate's modules. The JSON layer (0.1, 0.2) works on serde_json values and answers UtvResult; the typed layer (typed/) and the native adapters (interop/) sit on top of it. Everything that reads a value goes through model.rs, which validates structurally first, and everything that counts goes through num.rs's checked i128 arithmetic.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/lib.rs",
+      "symbol": "crate documentation"
+    },
+    {
+      "path": "implementations/rust/src/lib.rs",
+      "symbol": "pub mod build"
+    },
+    {
+      "path": "implementations/rust/src/model.rs",
+      "symbol": "read_civil"
+    },
+    {
+      "path": "implementations/rust/src/num.rs",
+      "symbol": "Q"
+    }
+  ],
+  "components": [
+    {
+      "id": "crate",
+      "name": "utv crate source",
+      "responsibility": "The library: both layers, re-exported at the crate root.",
+      "folder": "implementations/rust/src"
+    },
+    {
+      "id": "validation",
+      "name": "Crate root and validation (lib.rs)",
+      "responsibility": "UtvResult, Status, Severity, Diagnostic; strict JSON parsing that rejects duplicate keys; check_envelope, the structural-schema checker, validate_structural, validate_value and validate_gregorian_civil.",
+      "folder": "implementations/rust/src"
+    },
+    {
+      "id": "model",
+      "name": "Readers and canonical shapes (model.rs, internal)",
+      "responsibility": "read_civil, read_instant, read_amount and read_rational into checked records (Civil, Amount, Q); canonical JSON for civil values, instants and amounts; the done/fail plumbing that names results.",
+      "folder": "implementations/rust/src"
+    },
+    {
+      "id": "num",
+      "name": "Exact arithmetic (num.rs, internal)",
+      "responsibility": "Reduced i128 rationals (Q) and proleptic Gregorian day numbers, every step checked.",
+      "folder": "implementations/rust/src"
+    },
+    {
+      "id": "build",
+      "name": "Builders (build.rs)",
+      "responsibility": "date, year_month, time, date_time, in_zone, with_offset, instant, period, posix_seconds, elapsed_seconds, interval and interval_with: canonical shapes, built without judging them.",
+      "folder": "implementations/rust/src"
+    },
+    {
+      "id": "iso",
+      "name": "ISO 8601 (iso.rs)",
+      "responsibility": "parse_iso and format_iso for ISO 8601 extended format and RFC 3339 / RFC 9557.",
+      "folder": "implementations/rust/src"
+    },
+    {
+      "id": "text",
+      "name": "Text form (text.rs)",
+      "responsibility": "parse_text and format_text: points as iso.rs, ISO 8601 periods, bracket intervals, EDTF slash intervals on input.",
+      "folder": "implementations/rust/src"
+    },
+    {
+      "id": "ops",
+      "name": "Operations (ops.rs)",
+      "responsibility": "fields, add, compare, days_between, posix_seconds_between, contains and overlaps.",
+      "folder": "implementations/rust/src"
+    },
+    {
+      "id": "zones",
+      "name": "Zone rules (zones.rs)",
+      "responsibility": "Rules (load, parse, from_json, zone_ids), resolve, to_zone and to_offset.",
+      "folder": "implementations/rust/src"
+    },
+    {
+      "id": "typed",
+      "name": "Typed layer (typed/)",
+      "responsibility": "The 0.3 typed values, Outcome and TemporalContext.",
+      "folder": "implementations/rust/src/typed",
+      "diagram": "implementations/rust/src/typed/.dev/component-diagram.json"
+    },
+    {
+      "id": "interop",
+      "name": "Native interop (interop/)",
+      "responsibility": "SystemTime and chrono adapters.",
+      "folder": "implementations/rust/src/interop",
+      "diagram": "implementations/rust/src/interop/.dev/component-diagram.json"
+    },
+    {
+      "id": "schema",
+      "name": "Structural schema (schema/utv-1.0.schema.json)",
+      "responsibility": "The JSON Schema of utv/1.0, read at compile time.",
+      "folder": "schema"
+    },
+    {
+      "id": "serde-json",
+      "name": "serde_json and serde crates",
+      "responsibility": "JSON values (with preserve_order) and the deserializer the strict parser drives.",
+      "external": true
+    },
+    {
+      "id": "regex",
+      "name": "regex crate",
+      "responsibility": "The ISO 8601, text-form and schema-pattern regular expressions.",
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "crate",
+      "to": "validation",
+      "kind": "contains",
+      "description": "lib.rs."
+    },
+    {
+      "from": "crate",
+      "to": "model",
+      "kind": "contains",
+      "description": "mod model (private)."
+    },
+    {
+      "from": "crate",
+      "to": "num",
+      "kind": "contains",
+      "description": "mod num (private)."
+    },
+    {
+      "from": "crate",
+      "to": "build",
+      "kind": "contains",
+      "description": "pub mod build."
+    },
+    {
+      "from": "crate",
+      "to": "iso",
+      "kind": "contains",
+      "description": "pub mod iso."
+    },
+    {
+      "from": "crate",
+      "to": "text",
+      "kind": "contains",
+      "description": "pub mod text."
+    },
+    {
+      "from": "crate",
+      "to": "ops",
+      "kind": "contains",
+      "description": "pub mod ops."
+    },
+    {
+      "from": "crate",
+      "to": "zones",
+      "kind": "contains",
+      "description": "pub mod zones."
+    },
+    {
+      "from": "crate",
+      "to": "typed",
+      "kind": "contains",
+      "description": "mod typed (private; its types are re-exported)."
+    },
+    {
+      "from": "crate",
+      "to": "interop",
+      "kind": "contains",
+      "description": "pub mod interop."
+    },
+    {
+      "from": "validation",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "include_str!(\"../../../schema/utv-1.0.schema.json\"), parsed once on first use."
+    },
+    {
+      "from": "validation",
+      "to": "serde-json",
+      "kind": "depends-on",
+      "description": "The strict visitor parses JSON and refuses a repeated key."
+    },
+    {
+      "from": "validation",
+      "to": "regex",
+      "kind": "depends-on",
+      "description": "Schema patterns, compiled once each and cached."
+    },
+    {
+      "from": "validation",
+      "to": "model",
+      "kind": "depends-on",
+      "description": "Month names in day-out-of-range messages."
+    },
+    {
+      "from": "validation",
+      "to": "iso",
+      "kind": "depends-on",
+      "description": "UtvResult's Display prints candidates as ISO 8601 text."
+    },
+    {
+      "from": "model",
+      "to": "validation",
+      "kind": "depends-on",
+      "description": "Every reader runs validate_value first."
+    },
+    {
+      "from": "model",
+      "to": "num",
+      "kind": "depends-on",
+      "description": "Day numbers and exact seconds."
+    },
+    {
+      "from": "build",
+      "to": "model",
+      "kind": "depends-on",
+      "description": "Writes through Civil::to_json, instant_json and posix_seconds_json."
+    },
+    {
+      "from": "build",
+      "to": "typed",
+      "kind": "depends-on",
+      "description": "build::Period is the typed Period; elapsed_seconds uses ElapsedSeconds."
+    },
+    {
+      "from": "iso",
+      "to": "model",
+      "kind": "depends-on",
+      "description": "read_civil and read_instant to format; Civil to parse into."
+    },
+    {
+      "from": "iso",
+      "to": "regex",
+      "kind": "depends-on",
+      "description": "The grammar."
+    },
+    {
+      "from": "text",
+      "to": "iso",
+      "kind": "depends-on",
+      "description": "Points are parsed and formatted by parse_iso and format_iso."
+    },
+    {
+      "from": "text",
+      "to": "build",
+      "kind": "depends-on",
+      "description": "interval_with writes parsed intervals."
+    },
+    {
+      "from": "text",
+      "to": "ops",
+      "kind": "depends-on",
+      "description": "compare finds a reversed interval."
+    },
+    {
+      "from": "text",
+      "to": "regex",
+      "kind": "depends-on",
+      "description": "Periods and EDTF qualifiers."
+    },
+    {
+      "from": "ops",
+      "to": "model",
+      "kind": "depends-on",
+      "description": "Reads operands and writes results."
+    },
+    {
+      "from": "ops",
+      "to": "num",
+      "kind": "depends-on",
+      "description": "Day numbers, leap years and exact seconds."
+    },
+    {
+      "from": "zones",
+      "to": "model",
+      "kind": "depends-on",
+      "description": "Reads civil date-times and instants; writes the answers."
+    },
+    {
+      "from": "zones",
+      "to": "ops",
+      "kind": "depends-on",
+      "description": "note() for info diagnostics."
+    },
+    {
+      "from": "zones",
+      "to": "typed",
+      "kind": "depends-on",
+      "description": "Rules::load returns typed Diagnostics."
+    },
+    {
+      "from": "typed",
+      "to": "ops",
+      "kind": "depends-on",
+      "description": "Every typed operation calls the JSON layer."
+    },
+    {
+      "from": "typed",
+      "to": "zones",
+      "kind": "depends-on",
+      "description": "Resolution and to_zone through TemporalContext."
+    },
+    {
+      "from": "typed",
+      "to": "text",
+      "kind": "depends-on",
+      "description": "Display and parse."
+    },
+    {
+      "from": "interop",
+      "to": "model",
+      "kind": "depends-on",
+      "description": "Reads and writes the values it converts."
+    }
+  ]
+}

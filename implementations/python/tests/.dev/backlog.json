@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Test backlog",
+  "folder": "implementations/python/tests",
+  "entities": [
+    {
+      "id": "tests-predate-agents-md",
+      "title": "Bring the library tests in line with AGENTS.md",
+      "summary": "The seven test_*.py modules in tests/ predate the repository's test directives; only the example suites follow them.",
+      "type": "debt",
+      "compromise": "AGENTS.md section 1 lets tests that predate the directives stay as they are until they are next changed. These tests have no labelled GIVEN / WHEN / THEN sections, no \"Verifies that …\" docstrings, no role-prefixed names, assert several branches per test, and use shared helpers (check, status, codes, run).",
+      "cost": "A reader has to work out what each test proves and which branch it takes, and a failure names a test like test_dates or test_total rather than a branch.",
+      "acceptanceCriteria": [
+        "Each test in tests/test_*.py follows AGENTS.md section 1: one branch per test, named for it, with sections, a docstring and role-prefixed names.",
+        "The fixture-driven tests keep running every fixture (parameterizing the same behaviour over data is allowed)."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "AGENTS.md",
+        "description": "Section 1: \"Tests that predate these directives are brought in line when they are next changed.\""
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/test_typed.py",
+          "symbol": "CivilDateRow"
+        },
+        {
+          "path": "implementations/python/tests/test_gregorian.py",
+          "symbol": "Gregorian.status"
+        },
+        {
+          "path": "implementations/python/tests/test_conformance.py",
+          "symbol": "Envelope.check"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "1. Tests are written for the maintainer"
+        }
+      ]
+    }
+  ]
+}

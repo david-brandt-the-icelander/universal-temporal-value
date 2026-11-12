@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../../../../../../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Native-first examples: java.time.zone verification",
+  "folder": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/zone",
+  "entities": [
+    {
+      "id": "zonerules",
+      "title": "ZoneRules",
+      "summary": "java.time.zone.ZoneRules, compared with ZonedIntent.resolve.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        }
+      ],
+      "criteria": [
+        "getValidOffsets returns no offsets in the New York gap, as resolve reports none (gap).",
+        "getValidOffsets returns both offsets in the New York overlap, as resolve reports multiple (ambiguous)."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/zone/ZoneRulesTest.java",
+          "symbol": "ZoneRulesTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        }
+      ],
+      "details": "ZoneRules comes from the JDK's tz database, which must know New York's 2026 rules.",
+      "evidenceStatus": "source-verified"
+    }
+  ]
+}

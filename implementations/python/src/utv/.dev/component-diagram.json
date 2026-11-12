@@ -1,0 +1,175 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "utv package component diagram",
+  "folder": "implementations/python/src/utv",
+  "description": "The modules of the utv package grouped by layer: the typed layer calls the JSON layer underneath for every operation, so the two can't disagree.",
+  "sources": [
+    {
+      "path": "implementations/python/src/utv/__init__.py",
+      "symbol": "__all__"
+    },
+    {
+      "path": "implementations/python/src/utv/values.py",
+      "symbol": "_typed"
+    },
+    {
+      "path": "implementations/python/src/utv/outcome.py",
+      "symbol": "outcome_of"
+    },
+    {
+      "path": "implementations/python/src/utv/_core.py",
+      "symbol": "structural"
+    },
+    {
+      "path": "implementations/python/src/utv/validate.py",
+      "symbol": "_schema"
+    },
+    {
+      "path": "implementations/python/src/utv/native.py",
+      "symbol": "from_datetime"
+    }
+  ],
+  "components": [
+    {
+      "id": "package",
+      "name": "utv package",
+      "folder": "implementations/python/src/utv",
+      "responsibility": "Everything a caller imports: __init__.py re-exports both layers and lists them in __all__."
+    },
+    {
+      "id": "typed",
+      "name": "Typed layer (values.py, outcome.py, policy.py, context.py, interop.py)",
+      "folder": "implementations/python/src/utv",
+      "responsibility": "Immutable typed values, Outcome[T] and its helpers, typed policies, the TemporalContext that holds zone rules, and typed native interop."
+    },
+    {
+      "id": "json",
+      "name": "JSON layer (build.py, iso.py, text.py, ops.py, zones.py, _core.py)",
+      "folder": "implementations/python/src/utv",
+      "responsibility": "The everyday API on plain UTV JSON dicts: builders, parse_iso / format_iso, parse_text / format_text, fields, add, compare, days_between, posix_seconds_between, contains, overlaps, and zone rules with resolve, to_zone and to_offset."
+    },
+    {
+      "id": "native",
+      "name": "Native adapters (native.py)",
+      "folder": "implementations/python/src/utv",
+      "responsibility": "JSON-level conversions between UTV values and datetime's date, time, datetime and timedelta, with a caller-named Intent."
+    },
+    {
+      "id": "validation",
+      "name": "Validation (validate.py, gregorian.py)",
+      "folder": "implementations/python/src/utv",
+      "responsibility": "Structural validation of UTV JSON text against the bundled schema, and the proleptic Gregorian check of a civil value's date fields."
+    },
+    {
+      "id": "result",
+      "name": "Result envelope (result.py)",
+      "folder": "implementations/python/src/utv",
+      "responsibility": "Result, Diagnostic and Status: the utv-result/1.0 envelope every JSON-layer function returns."
+    },
+    {
+      "id": "data",
+      "name": "Bundled schema",
+      "folder": "implementations/python/src/utv/data",
+      "responsibility": "The copy of schema/utv-1.0.schema.json the validator reads."
+    },
+    {
+      "id": "datetime",
+      "name": "datetime and zoneinfo",
+      "external": true,
+      "responsibility": "Python's standard date/time API. A ZoneInfo reads the host's tz database; utv uses only ZoneInfo objects the caller made."
+    }
+  ],
+  "relationships": [
+    {
+      "from": "package",
+      "to": "typed",
+      "kind": "contains",
+      "description": "The 0.3 API the README shows."
+    },
+    {
+      "from": "package",
+      "to": "json",
+      "kind": "contains",
+      "description": "The 0.2 everyday API and the text form."
+    },
+    {
+      "from": "package",
+      "to": "native",
+      "kind": "contains",
+      "description": "utv.native."
+    },
+    {
+      "from": "package",
+      "to": "validation",
+      "kind": "contains",
+      "description": "The 0.1 checks."
+    },
+    {
+      "from": "package",
+      "to": "result",
+      "kind": "contains",
+      "description": "utv.result."
+    },
+    {
+      "from": "package",
+      "to": "data",
+      "kind": "contains",
+      "description": "Package data (pyproject.toml, tool.setuptools.package-data)."
+    },
+    {
+      "from": "typed",
+      "to": "json",
+      "kind": "depends-on",
+      "description": "Every typed operation builds the value's JSON and calls the JSON-level function: ops.add, ops.compare, zones.resolve, text.format_text and the rest."
+    },
+    {
+      "from": "typed",
+      "to": "native",
+      "kind": "depends-on",
+      "description": "interop.from_native and to_native call the utv.native adapters."
+    },
+    {
+      "from": "typed",
+      "to": "result",
+      "kind": "depends-on",
+      "description": "outcome_of turns a Result into an Outcome; to_result goes back."
+    },
+    {
+      "from": "json",
+      "to": "validation",
+      "kind": "depends-on",
+      "description": "Every operation checks its inputs with validate_value first; _core and ops use gregorian.days_in_month and is_leap_year."
+    },
+    {
+      "from": "json",
+      "to": "result",
+      "kind": "depends-on",
+      "description": "Returns Results; _core.operation turns a raised _core.Outcome into one."
+    },
+    {
+      "from": "native",
+      "to": "json",
+      "kind": "depends-on",
+      "description": "Builds values with build.py and checks them with _core.civil and _core.instant_seconds."
+    },
+    {
+      "from": "native",
+      "to": "datetime",
+      "kind": "depends-on",
+      "description": "Converts date, time, datetime and timedelta; reads offsets and folds from a caller's ZoneInfo, and never constructs one."
+    },
+    {
+      "from": "validation",
+      "to": "data",
+      "kind": "depends-on",
+      "description": "Reads data/utv-1.0.schema.json through importlib.resources."
+    },
+    {
+      "from": "validation",
+      "to": "result",
+      "kind": "depends-on",
+      "description": "Returns Results with status valid, invalid or unsupported."
+    }
+  ]
+}

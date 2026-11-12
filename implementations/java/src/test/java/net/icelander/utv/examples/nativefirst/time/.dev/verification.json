@@ -1,0 +1,224 @@
+{
+  "$schema": "../../../../../../../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Native-first java.time verification",
+  "folder": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time",
+  "entities": [
+    {
+      "id": "local-date",
+      "title": "LocalDate and Year",
+      "summary": "java.time's dates, compared with CivilDate.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "month-end-none"
+        }
+      ],
+      "criteria": [
+        "LocalDate.of creates real days and the years 275760 and −500, and throws for 30 February and month 13; LocalDate.MAX is the last day of year 999,999,999.",
+        "LocalDate.parse reads 2026-11-05 and throws for 2026-02-30; a pattern formatter clamps it to the month's last day.",
+        "getDayOfWeek is Thursday and numbers Sunday 7; plusDays matches; plusMonths and plus(Period) clamp 31 January to 28 February silently.",
+        "until counts 50 days; isBefore matches; Year.isLeap agrees with CivilDate.isLeapYear (parameterized)."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/LocalDateTest.java",
+          "symbol": "LocalDateTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/YearTest.java",
+          "symbol": "YearTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "month-end-none"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "times-and-months",
+      "title": "LocalTime, LocalDateTime and YearMonth",
+      "summary": "java.time's times, date-times and months, compared with CivilTime, CivilDateTime and CivilYearMonth.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "wall-clock-arithmetic"
+        }
+      ],
+      "criteria": [
+        "LocalTime.toString drops seconds given as zero; plusHours wraps and loses the day.",
+        "LocalDateTime.of has no zone and throws for second 60; plusHours carries; now takes the clock's zone.",
+        "YearMonth.of and plusMonths match CivilYearMonth."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/LocalTimeTest.java",
+          "symbol": "LocalTimeTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/LocalDateTimeTest.java",
+          "symbol": "LocalDateTimeTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/YearMonthTest.java",
+          "symbol": "YearMonthTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "details": "LocalDateTimeTest.Now uses a fixed Clock, so its result does not depend on the host.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "wall-clock-arithmetic"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "offsets-and-zones",
+      "title": "OffsetDateTime and ZonedDateTime",
+      "summary": "java.time's offset and zoned values, compared with FixedOffsetDateTime, ZonedIntent and TemporalContext.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "zoned-order-needs-context"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        }
+      ],
+      "criteria": [
+        "OffsetDateTime.of pins a wall time to an offset; parse cannot tell Z from +00:00; plusDays keeps the offset across DST; a round trip through UTV is equal.",
+        "ZonedDateTime.of names the instant once, moves a gap forward silently and picks the earlier instant of an overlap silently; withLaterOffsetAtOverlap matches Overlap.LATEST.",
+        "withZoneSameInstant matches Instant.inZone; plusDays keeps noon; plus(Duration of a day) gives 13:00; isBefore answers in an overlap where UTV says multiple.",
+        "ZonedDateTime.now with no clock is in the host's default zone."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/OffsetDateTimeTest.java",
+          "symbol": "OffsetDateTimeTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/ZonedDateTimeTest.java",
+          "symbol": "ZonedDateTimeTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "details": "ZonedDateTimeTest reads the JDK's tz database (it needs the 2026–2027 rules of New York and Paris), and ZonedDateTimeTest.Now reads the clock and the host's zone on purpose, comparing the zone with ZoneId.systemDefault().",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "zoned-order-needs-context"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "instants-and-amounts",
+      "title": "Instant, Duration and Period",
+      "summary": "java.time's instants and amounts, compared with Instant, PosixSeconds, ElapsedSeconds and Period.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "exact-instants-and-seconds"
+        }
+      ],
+      "criteria": [
+        "Instant.now survives the trip through UTV; ofEpochSecond gives the epoch and keeps nine digits; getEpochSecond drops the fraction; atZone matches Instant.inZone.",
+        "Duration.ofDays(1) equals 86,400 seconds; ofMinutes counts 60 a minute; between is exact; dividedBy(3) truncates to whole nanoseconds.",
+        "Period.ofDays is a calendar day; Period.ofMonths writes P1M."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/InstantTest.java",
+          "symbol": "InstantTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/DurationTest.java",
+          "symbol": "DurationTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/PeriodTest.java",
+          "symbol": "PeriodTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "details": "InstantTest.Now reads the clock on purpose; its assertion holds for any reading. InstantTest.AtZone reads the JDK's tz database.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "exact-instants-and-seconds"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    }
+  ]
+}

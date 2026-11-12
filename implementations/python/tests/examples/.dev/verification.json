@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Example fixture verification",
+  "folder": "implementations/python/tests/examples",
+  "entities": [
+    {
+      "id": "demo-zone-rules-fixture",
+      "title": "The shared demo zone rules",
+      "summary": "fixtures.demo_zone_rules loads the three demo zones from the repository's pinned rule bundle.",
+      "criteria": [
+        "fixtures.demo_zone_rules loads the three demo zones when called."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/test_fixtures.py",
+          "symbol": "TestDemoZoneRules",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "details": "fixtures.demo_zone_rules is the check source every zone example shares; it reads conformance/rules/demo-zones.json in place, never the host's tz database.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "explicit-zone-rules"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "shared-conformance-material"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/fixtures.py",
+          "symbol": "demo_zone_rules"
+        },
+        {
+          "path": "implementations/python/tests/examples/test_fixtures.py",
+          "symbol": "TestDemoZoneRules"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,666 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "UTV-first example verification",
+  "folder": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst",
+  "entities": [
+    {
+      "id": "civil-date",
+      "title": "CivilDate examples",
+      "summary": "Creating, validating, parsing, adding to and comparing dates, compared with DateOnly, DateTime and ISOWeek.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "month-end-returns-none"
+        }
+      ],
+      "criteria": [
+        "Of creates real days, including leap days, year 275760 and year -500, and throws for 30 February",
+        "TryOf and Parse return invalid with day-out-of-range or month-out-of-range",
+        "DayOfWeek is Thursday and IsoWeek 45 for 5 November 2026",
+        "IsLeapYear agrees with .NET for every kind of year",
+        "AddDays crosses a month end; AddMonths returns none (month-end), or 28 February with MonthEnd.Constrain; Add(P1M) returns none",
+        "DaysUntil returns 50; < orders dates",
+        "ToDateOnly returns unsupported (out-of-native-range) for year 10000"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/CivilDateTests.cs",
+          "symbol": "CivilDateTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Marks tasks a-date, feb-30, weekday-week, add-days, month-end, days-between, compare-dates."
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "month-end-returns-none"
+        }
+      ],
+      "tasks": [
+        "a-date",
+        "feb-30",
+        "weekday-week",
+        "add-days",
+        "month-end",
+        "days-between",
+        "compare-dates"
+      ]
+    },
+    {
+      "id": "civil-date-time",
+      "title": "CivilDateTime examples",
+      "summary": "Wall-clock date-times, leap seconds, Kind Local, zones and offsets, compared with DateTime and DateTimeOffset.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "native-intent-required"
+        }
+      ],
+      "criteria": [
+        "Of creates a wall-clock date-time",
+        "TryOf returns unsupported (leap-second) for 23:59:60",
+        "AddHours carries into the next day",
+        "FromDateTime returns unsupported (local-zone) for Kind Local",
+        "InZone keeps the wall time and the zone; AtOffset pins it to the offset"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/CivilDateTimeTests.cs",
+          "symbol": "CivilDateTimeTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Marks tasks datetime-plus-hours, now."
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "native-intent-required"
+        }
+      ],
+      "tasks": [
+        "datetime-plus-hours",
+        "now"
+      ]
+    },
+    {
+      "id": "civil-time",
+      "title": "CivilTime examples",
+      "summary": "09:30 without and with seconds, compared with TimeOnly.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "representation-equality"
+        }
+      ],
+      "criteria": [
+        "Of writes no seconds when none are given, and writes them when they are"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/CivilTimeTests.cs",
+          "symbol": "CivilTimeTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Marks tasks time-of-day."
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "representation-equality"
+        }
+      ],
+      "tasks": [
+        "time-of-day"
+      ]
+    },
+    {
+      "id": "civil-year-month",
+      "title": "CivilYearMonth examples",
+      "summary": "A month without a day, compared with .NET's day-1 stand-in.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "Of creates a month without a day",
+        "AddMonths carries into the next year"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/CivilYearMonthTests.cs",
+          "symbol": "CivilYearMonthTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "elapsed-seconds",
+      "title": "ElapsedSeconds examples",
+      "summary": "SI seconds, compared with TimeSpan.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "text-from-tostring"
+        }
+      ],
+      "criteria": [
+        "Of holds 5400 seconds for ninety minutes",
+        "86,400 SI seconds is not a calendar day"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/ElapsedSecondsTests.cs",
+          "symbol": "ElapsedSecondsTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "text-from-tostring"
+        }
+      ]
+    },
+    {
+      "id": "fixed-offset-date-time",
+      "title": "FixedOffsetDateTime examples",
+      "summary": "Wall times at an offset and the round trip through DateTimeOffset.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "native-intent-required"
+        }
+      ],
+      "criteria": [
+        "FromDateTimeOffset keeps the wall time and offset",
+        "ToDateTimeOffset returns the original",
+        "ToInstant returns the UTC moment"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/FixedOffsetDateTimeTests.cs",
+          "symbol": "FixedOffsetDateTimeTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Marks tasks round-trip."
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "native-intent-required"
+        }
+      ],
+      "tasks": [
+        "round-trip"
+      ]
+    },
+    {
+      "id": "gregorian-civil",
+      "title": "GregorianCivil examples",
+      "summary": "Semantic validation of dates written as UTV JSON.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "separate-validity-checks"
+        }
+      ],
+      "criteria": [
+        "Validate returns valid for a real date and for a year alone",
+        "Validate returns invalid (day-out-of-range) for 29 February 2026",
+        "Validate returns unsupported for a Hebrew date"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/GregorianCivilTests.cs",
+          "symbol": "GregorianCivilTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "separate-validity-checks"
+        }
+      ]
+    },
+    {
+      "id": "instant",
+      "title": "Instant examples",
+      "summary": "Clock readings as inputs, exact fractions and differences, POSIX vs SI seconds, and instants in a zone.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "exact-rationals"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "rules-never-extrapolated"
+        }
+      ],
+      "criteria": [
+        "FromDateTimeOffset takes a clock reading as an input",
+        "FromUnixSeconds returns the epoch, keeps every nanosecond and a quarter second",
+        "Until returns exactly 14403/4 s, and 23 hours across the day DST takes an hour from",
+        "Add(PosixSeconds) moves by exactly those seconds; Add(ElapsedSeconds) returns unsupported (needs-leap-seconds)",
+        "InZone returns the local wall time from the pinned rules"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/InstantTests.cs",
+          "symbol": "InstantTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Marks tasks now, timestamps, day-vs-24h, meeting-in-paris."
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "exact-rationals"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "rules-never-extrapolated"
+        }
+      ],
+      "tasks": [
+        "now",
+        "timestamps",
+        "day-vs-24h",
+        "meeting-in-paris"
+      ],
+      "sources": [
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/Fixtures.cs",
+          "symbol": "Fixtures.DemoZoneRules"
+        }
+      ]
+    },
+    {
+      "id": "interval",
+      "title": "Interval examples",
+      "summary": "November as half-open and closed ranges, open-ended and with an unknown end.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "three-valued-ranges"
+        }
+      ],
+      "criteria": [
+        "HalfOpen definitely contains 15 November and cannot contain 1 December",
+        "Closed definitely contains 30 November",
+        "Of with an unbounded end definitely contains 1 January 3000",
+        "Of with an unknown end possibly contains 1 June 2027"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/IntervalTests.cs",
+          "symbol": "IntervalTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Marks tasks ranges."
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "three-valued-ranges"
+        }
+      ],
+      "tasks": [
+        "ranges"
+      ]
+    },
+    {
+      "id": "period",
+      "title": "Period examples",
+      "summary": "Calendar periods are not second counts.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "text-from-tostring"
+        }
+      ],
+      "criteria": [
+        "Period.Days(1) is not 86,400 seconds",
+        "Period.Months(1) writes P1M"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/PeriodTests.cs",
+          "symbol": "PeriodTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "text-from-tostring"
+        }
+      ]
+    },
+    {
+      "id": "temporal-context",
+      "title": "TemporalContext examples",
+      "summary": "Ordering zoned values when an overlap decides.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "zoned-order-needs-a-context"
+        }
+      ],
+      "criteria": [
+        "Compare returns multiple (ambiguous) for 01:30 and 01:45 on the night New York's clocks go back"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/TemporalContextTests.cs",
+          "symbol": "TemporalContextTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Marks tasks compare-dates."
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "zoned-order-needs-a-context"
+        }
+      ],
+      "tasks": [
+        "compare-dates"
+      ],
+      "sources": [
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/Fixtures.cs",
+          "symbol": "Fixtures.DemoZoneRules"
+        }
+      ]
+    },
+    {
+      "id": "temporal",
+      "title": "Temporal examples",
+      "summary": "Z and +00:00 parse into different types.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        }
+      ],
+      "criteria": [
+        "Parse returns an Instant for text ending in Z",
+        "Parse returns a FixedOffsetDateTime for text ending in +00:00"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/TemporalTests.cs",
+          "symbol": "TemporalTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Marks tasks parse-offsets."
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        }
+      ],
+      "tasks": [
+        "parse-offsets"
+      ]
+    },
+    {
+      "id": "utv-validator",
+      "title": "UtvValidator examples",
+      "summary": "Values with no typed API and no .NET counterpart, written as UTV JSON.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        }
+      ],
+      "criteria": [
+        "ValidateStructural returns valid for a year alone, 23:59:60 UTC, start plus amount, a union of ranges, a weekly recurrence and an uncertain year",
+        "It returns unsupported for utv/2.0, and invalid for utv/4, duplicate keys and an unknown kind"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/UtvValidatorTests.cs",
+          "symbol": "UtvValidatorTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        }
+      ]
+    },
+    {
+      "id": "zoned-intent",
+      "title": "ZonedIntent examples",
+      "summary": "Meetings in Paris, the New York DST gap and overlap, and noon plus one day.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        }
+      ],
+      "criteria": [
+        "Resolve returns the instant when the wall time happens once",
+        "Resolve returns none (gap) in a gap, and 03:30 EDT with Gap.ShiftForward",
+        "Resolve returns both instants (ambiguous) in an overlap, one of which .NET picks, and the earlier with Overlap.Earliest",
+        "AddDays keeps the wall time across a DST change"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/ZonedIntentTests.cs",
+          "symbol": "ZonedIntentTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp; dotnet test tests/Utv.Examples.Tests runs only the examples."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers",
+          "description": "Marks tasks meeting-in-paris, dst-gap, dst-overlap, day-vs-24h."
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        }
+      ],
+      "tasks": [
+        "meeting-in-paris",
+        "dst-gap",
+        "dst-overlap",
+        "day-vs-24h"
+      ],
+      "sources": [
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/Fixtures.cs",
+          "symbol": "Fixtures.DemoZoneRules"
+        }
+      ]
+    }
+  ]
+}

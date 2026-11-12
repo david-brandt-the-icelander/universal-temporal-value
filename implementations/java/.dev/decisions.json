@@ -1,0 +1,164 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "utv-core (Java) decisions",
+  "folder": "implementations/java",
+  "entities": [
+    {
+      "id": "java-21",
+      "title": "Java 21",
+      "summary": "From 0.3.0 the library needs Java 21; it was 17 up to 0.2.",
+      "status": "accepted",
+      "context": "library-api §3 makes Outcome an exhaustive sum type that callers take apart by case.",
+      "decision": "pom.xml sets maven.compiler.release to 21. Outcome is a sealed interface with record cases, and TemporalValue, IntervalPoint and Bound are sealed too.",
+      "rationale": "Sealed interfaces, records and pattern switch let the compiler check that every outcome is handled.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/pom.xml",
+          "symbol": "maven.compiler.release"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Outcome.java",
+          "symbol": "Outcome"
+        },
+        {
+          "path": "implementations/java/CHANGELOG.md",
+          "symbol": "0.3.0"
+        }
+      ]
+    },
+    {
+      "id": "years-as-big-integer",
+      "title": "Years are BigInteger",
+      "summary": "Civil years are java.math.BigInteger in every typed value and in the JSON layer's arithmetic.",
+      "status": "accepted",
+      "context": "Integers in UTV are decimal strings of any size (the arbitrary-precision obligation); library-api §1 names BigInteger for Java.",
+      "decision": "CivilDate and CivilYearMonth hold a BigInteger year; CivilDate.of and tryOf take a long or a BigInteger; Gregorian day arithmetic works on BigInteger. Instants and second amounts are exact rationals of BigIntegers.",
+      "rationale": "No year or fraction is ever rounded or wrapped; java.time's range is checked only when converting to it.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.of"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Gregorian.java",
+          "symbol": "Gregorian.epochDay"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Rational.java",
+          "symbol": "Rational"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "1. Types"
+        }
+      ]
+    },
+    {
+      "id": "typed-over-json-layer",
+      "title": "The typed layer calls the JSON layer",
+      "summary": "Every typed operation builds UTV JSON, calls the 0.2 function and reads the answer back, through one bridge, Typed.",
+      "status": "accepted",
+      "context": "library-api §2: every operation must agree with the JSON-level API and its fixtures, and implementations should call the 0.2 functions rather than re-implement them.",
+      "decision": "Typed.outcome, Typed.total and Typed.decode turn a UtvResult into an Outcome or a plain value. A total operation that answers anything but unique throws IllegalStateException, as a bug in the library.",
+      "rationale": "One implementation of each rule, tested by the shared fixtures, serves both layers.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.total"
+        },
+        {
+          "path": "implementations/java/README.md",
+          "symbol": "The JSON layer (0.2, unchanged)"
+        }
+      ]
+    },
+    {
+      "id": "temporal-value-parse",
+      "title": "TemporalValue.parse, not Utv.parse",
+      "summary": "The contract's Utv.parse(text) is spelled TemporalValue.parse(text) in Java.",
+      "status": "accepted",
+      "context": "Utv.parse(String json), JSON parsing with duplicate-key detection, has existed since 0.1 with the same signature.",
+      "decision": "Parsing any text-form value is TemporalValue.parse, a static method of the sealed interface; Utv.parse keeps its behaviour.",
+      "rationale": "The same name and signature cannot mean two things, and the 0.2 method stays.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+          "symbol": "TemporalValue.parse"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+          "symbol": "Utv.parse"
+        },
+        {
+          "path": "implementations/java/README.md",
+          "symbol": "Naming"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "6. Naming"
+        }
+      ]
+    },
+    {
+      "id": "native-intent-by-method",
+      "title": "The method names the native intent",
+      "summary": "A java.time value with two readings is converted by the method that names the reading, so no intent-required outcome arises.",
+      "status": "accepted",
+      "context": "everyday-api, Native interop: the caller names the intent, and a value tied to the host's local zone is refused.",
+      "decision": "Typed: FixedOffsetDateTime.from(OffsetDateTime) reads the wall time at its offset and Instant.from(OffsetDateTime) the instant. JSON layer: JavaTime.fromOffsetDateTime and fromDate take a JavaTime.As. java.util.Date is accepted only As.INSTANT; a civil reading is unsupported (local-zone). Conversions back return an Outcome (or NativeResult) with precision-loss or zone-dropped warnings, or unsupported (out-of-native-range).",
+      "rationale": "The target type is the intent, so nothing is chosen silently, and Date's fields come from ZoneId.systemDefault().",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java",
+          "symbol": "FixedOffsetDateTime.from"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.from"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.As"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.fromDate"
+        },
+        {
+          "path": "implementations/java/README.md",
+          "symbol": "Native interop on the types"
+        }
+      ]
+    },
+    {
+      "id": "zoned-date-time-uses-jdk-tzdb",
+      "title": "toZonedDateTime checks the JDK's tz database",
+      "summary": "Converting a zoned value to java.time.ZonedDateTime is the one place the library reads the JDK's tz database.",
+      "status": "accepted",
+      "context": "The library never reads the host's tz database, but a ZonedDateTime cannot exist without one.",
+      "decision": "ZonedIntent.toZonedDateTime and JavaTime.toZonedDateTime need an asserted offset (from resolve or Instant.inZone) and check it with ZonedDateTime.ofStrict: invalid (offset-mismatch) if the JDK disagrees, unsupported (unknown-zone) if it lacks the zone. Without an asserted offset the value is refused, because choosing an offset is resolve's job.",
+      "rationale": "The JDK's rules are used only to build the native value, never to choose an answer.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.toZonedDateTime"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.toZonedDateTime"
+        }
+      ]
+    }
+  ]
+}
