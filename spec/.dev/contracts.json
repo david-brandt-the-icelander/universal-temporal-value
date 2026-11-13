@@ -1,0 +1,83 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "Specification contracts",
+  "folder": "spec",
+  "entities": [
+    {
+      "id": "utv-1-0",
+      "title": "UTV 1.0 values (utv/1.0)",
+      "summary": "The serialized form of a temporal value: one envelope, {\"schema\": \"utv/1.0\", \"kind\": …, \"value\": …}, with 26 core kinds.",
+      "contractType": "data-format",
+      "consumers": [
+        "Every UTV library under implementations/, which reads and writes these values",
+        "Any outside reader or writer of UTV values"
+      ],
+      "guarantees": [
+        "schema and kind are mandatory; schema is the wire identifier utv/<major>.<minor>, and nested values carry the same identifier as their envelope.",
+        "Readers fail closed: unknown kinds, unknown core properties, unknown critical extensions and duplicate JSON keys are rejected.",
+        "A well-formed identifier newer than the reader implements is unsupported, not invalid.",
+        "Arbitrary-precision integers are canonical decimal strings; fractions are exact rationals reduced to lowest terms; null is never a placeholder for an unknown.",
+        "The specification governs meaning; the JSON Schema governs only serialized field names and shapes."
+      ],
+      "compatibility": "VERSIONING.md: adding a kind, an optional property or an enum value is a minor version (utv/1.1); renaming or removing one, or changing what a value means, is a major version (utv/2.0); editorial fixes are a patch and leave the wire identifier alone. A reader implementing 1.N accepts utv/1.M for every M ≤ N.",
+      "definition": "spec/SPECIFICATION.md",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§2 Serialization and profiles"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Reader rules"
+        },
+        {
+          "path": "spec/DECISIONS.md",
+          "symbol": "1. One envelope, multiple semantic kinds"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema",
+          "description": "The structural half of the format."
+        }
+      ]
+    },
+    {
+      "id": "utv-result-1-0",
+      "title": "Evaluation results (utv-result/1.0)",
+      "summary": "The envelope every semantic operation returns: operation, status, candidates, cardinality, manifest, assumptions, loss and diagnostics.",
+      "contractType": "data-format",
+      "consumers": [
+        "Every UTV library under implementations/, whose results mirror this envelope",
+        "Callers of a UTV engine"
+      ],
+      "guarantees": [
+        "status is one of invalid, unsupported, indeterminate, none, unique, multiple, range, symbolic, resource-limit, error, or valid for validation.",
+        "none, multiple, indeterminate, unsupported and resource-limit are successful, truthful outcomes; none is allowed only after a complete proof within the declared domain.",
+        "Operations are pure functions of explicit context and immutable registries: no fetching, shelling out or hidden system time.",
+        "compare returns a set of possible relations, never a forced boolean."
+      ],
+      "compatibility": "Versioned in lockstep with the specification (VERSIONING.md, Wire identifiers).",
+      "definition": "spec/RESULT-CONTRACT.md",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/RESULT-CONTRACT.md",
+          "symbol": "Mandatory fields"
+        },
+        {
+          "path": "spec/RESULT-CONTRACT.md",
+          "symbol": "Status invariants"
+        },
+        {
+          "path": "spec/RESULT-CONTRACT.md",
+          "symbol": "Error and operation behavior"
+        }
+      ]
+    }
+  ]
+}

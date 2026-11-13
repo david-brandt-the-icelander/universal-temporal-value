@@ -1,0 +1,499 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "C# library decisions",
+  "folder": "implementations/csharp",
+  "description": "The twelve design decisions of the C# engine-interface plan (docs/engine-interface.md), each with what library 0.3 does today, and the open decisions the plan leaves to the owner.",
+  "entities": [
+    {
+      "id": "engine-1-values-are-data",
+      "title": "Values are data; questions go to an engine",
+      "summary": "In the plan, each of the 26 kinds is an immutable sealed record with no comparison, operators, implicit conversions or rule-dependent methods; every rule-dependent question goes through ITemporalEngine.",
+      "status": "relaxed",
+      "context": "The C# engine-interface plan (written after 0.1.0) set out how the library would grow from validation to every question of docs/operations.md, profile by profile.",
+      "decision": "Each kind is a sealed record deriving from UtvValue. Values have no CompareTo, no < or > operators, no implicit conversions and no methods that need rule data. Every question that depends on rules (time zones, calendars, leap seconds, holidays) goes through an ITemporalEngine.",
+      "rationale": "The dependency on rule data always shows up in the method signature.",
+      "currentState": "Relaxed in 0.3 (the plan's own note): typed values carry rule-free operations (AddDays, CompareTo and the operators on types whose order needs no rules: CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime, Instant). Anything that needs rules still takes them explicitly (zoned.Resolve(ctx), instant.InZone(id, ctx)), and ZonedIntent has no comparison operators. There is no UtvValue base and no ITemporalEngine.",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.CompareTo"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "ZonedIntent"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "ZonedIntent.Resolve"
+        }
+      ]
+    },
+    {
+      "id": "engine-2-one-engine-segregated-interfaces",
+      "title": "One engine object, segregated interfaces",
+      "summary": "In the plan, ITemporalEngine is a facade composed of one interface per question family, implemented by an immutable, thread-safe TemporalEngine built from an IRuleRegistry.",
+      "status": "proposed",
+      "context": "The C# engine-interface plan (written after 0.1.0) set out how the library would grow from validation to every question of docs/operations.md, profile by profile.",
+      "decision": "ITemporalEngine composes IValidation, IResolution, IComparison, IArithmetic, IConversion, IGeneration, IHistory, IReasoning, ISeriesOperations and IInterchange. The concrete TemporalEngine is immutable and thread-safe, is constructed from an IRuleRegistry, and has no static state.",
+      "rationale": "A consumer that only compares values can depend on IComparison, and an implementation can grow profile by profile.",
+      "currentState": "Not realized: there is no ITemporalEngine, no question-family interfaces and no IRuleRegistry. 0.3 offers static classes (Calendar, Zones, Ranges, …) on JSON and methods on typed values; TemporalContext holds zone rules.",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones"
+        }
+      ]
+    },
+    {
+      "id": "engine-3-every-answer-a-result",
+      "title": "Every answer is a UtvResult<T>",
+      "summary": "In the plan, every answer is a UtvResult<T> mirroring the utv-result/1.0 envelope, with no throwing .Value: callers use TryGetUnique or switch on Status.",
+      "status": "realized-in-a-different-form",
+      "context": "The C# engine-interface plan (written after 0.1.0) set out how the library would grow from validation to every question of docs/operations.md, profile by profile.",
+      "decision": "UtvResult<T> carries Status, Candidates, Cardinality, Manifest, Assumptions, Loss, Diagnostics and ContextDigest. It has no .Value property that throws; a single answer comes from TryGetUnique(out T) or a switch on Status. A Roslyn analyzer, UTV001 (result status not inspected), is planned.",
+      "rationale": "The honest outcomes (None, Multiple, Indeterminate, Unsupported, ResourceLimit) become impossible to miss by accident.",
+      "currentState": "Realized in a different form in 0.3 (the plan's note): answers to partial questions are Outcome<T>, an abstract record with Unique, Multiple, None, Unsupported and Invalid cases, rather than UtvResult<T>; total operations return plain values. TryGetUnique exists as planned; Single() throws OutcomeException by design. Outcome<T> has no manifest, assumptions, loss, cardinality or context digest; ToResult() bridges to the non-generic UtvResult, which is still the sealed 0.1 class, and whose Value does throw (InvalidOperationException) unless the status is unique. UTV001 does not exist (backlog.json, utv001-analyzer).",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome.Single"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/UtvResult.cs",
+          "symbol": "UtvResult.Value"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "implementations/csharp/.dev/backlog.json",
+          "entityId": "utv001-analyzer"
+        },
+        {
+          "relation": "relates-to",
+          "path": "implementations/csharp/.dev/decisions.json",
+          "entityId": "generic-utv-result"
+        }
+      ]
+    },
+    {
+      "id": "engine-4-exceptions-for-programmer-errors",
+      "title": "Exceptions only for programmer errors",
+      "summary": "In the plan, semantic outcomes are statuses; exceptions are for programmer errors and cancellation, and running out of budget is ResourceLimit.",
+      "status": "realized-in-part",
+      "context": "The C# engine-interface plan (written after 0.1.0) set out how the library would grow from validation to every question of docs/operations.md, profile by profile.",
+      "decision": "Semantic outcomes are statuses. Exceptions are reserved for ArgumentNullException and the like, and for OperationCanceledException from a CancellationToken. Running out of budget is UtvStatus.ResourceLimit, never an exception.",
+      "rationale": "Callers handle every honest outcome in the normal flow; only bugs and cancellation unwind the stack.",
+      "currentState": "Checked in the code (the plan's note does not mention it): every JSON-layer operation runs inside Op.Run, which turns the internal OpFailure into a status, and the typed layer does the same with outcomes. Exceptions are for misuse: null arguments, Of with fields that name nothing (ArgumentOutOfRangeException, as docs/library-api.md requires), MonthEnd.Reject passed to a total overload (ArgumentException), Single() on a non-unique outcome (OutcomeException). There is no CancellationToken and no budget, so neither OperationCanceledException nor ResourceLimit arises.",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+          "symbol": "Op.Run"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.OrThrow"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.AddMonths"
+        }
+      ]
+    },
+    {
+      "id": "engine-5-truth-for-yes-no",
+      "title": "Yes/no questions return UtvResult<Truth>",
+      "summary": "In the plan, yes/no questions answer Definitely, Possibly or Impossible, with Indeterminate and Unsupported as result statuses; never a bare bool.",
+      "status": "realized-in-part",
+      "context": "The C# engine-interface plan (written after 0.1.0) set out how the library would grow from validation to every question of docs/operations.md, profile by profile.",
+      "decision": "Truth is Definitely, Possibly or Impossible. \"We can't tell\" is the result status Indeterminate, and \"this engine can't tell\" is Unsupported. None of these methods returns a bool.",
+      "rationale": "A bare bool can express neither kind of not knowing.",
+      "currentState": "Realized in 0.3 (the plan's note): Truth (Definitely, Possibly, Impossible) for Interval<T>.Contains and Overlaps, and \"definitely\", \"possibly\", \"impossible\" from Ranges in the JSON layer. Because 0.3's intervals are valid by construction, the typed methods return a plain Truth rather than a result; nothing returns Indeterminate.",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Enums.cs",
+          "symbol": "Truth"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+          "symbol": "Interval.Contains"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Ranges.cs",
+          "symbol": "Ranges.Contains"
+        }
+      ]
+    },
+    {
+      "id": "engine-6-comparison-returns-relations",
+      "title": "Comparison returns a set of relations",
+      "summary": "In the plan, Compare returns a [Flags] RelationSet over Allen's 13 interval relations; uncertainty sets several flags, and Holds(a, relations, b) asks whether the true relation is in a set.",
+      "status": "proposed",
+      "context": "The C# engine-interface plan (written after 0.1.0) set out how the library would grow from validation to every question of docs/operations.md, profile by profile.",
+      "decision": "Compare returns a RelationSet covering Allen's 13 interval relations, with point relations as the degenerate cases. A certain answer has exactly one flag set; uncertainty sets several. Holds(a, relations, b) is the convenience form.",
+      "rationale": "Ordering under uncertainty is a set of possibilities, not a single answer.",
+      "currentState": "Not realized. 0.3 orders points only: Calendar.Compare answers before, equal or after, and TemporalContext.Compare returns Outcome<Ordering> (Before, Equal, After), with Multiple listing the possible orderings when a DST overlap decides. There is no RelationSet, no interval comparison and no Holds.",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Enums.cs",
+          "symbol": "Ordering"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext.Compare"
+        }
+      ]
+    },
+    {
+      "id": "engine-7-evaluation-context",
+      "title": "EvaluationContext is the only source of outside facts",
+      "summary": "In the plan, EvaluationContext carries the pinned rules, an optional reference observation for \"now\", an optional location, a deterministic budget and the caller's approved assumptions.",
+      "status": "realized-in-part",
+      "context": "The C# engine-interface plan (written after 0.1.0) set out how the library would grow from validation to every question of docs/operations.md, profile by profile.",
+      "decision": "EvaluationContext carries the pinned rules (RuleManifest), an optional ReferenceObservation standing in for \"now\", an optional location, a deterministic Budget and the assumptions the caller approves. There is no DateTime.Now, TimeZoneInfo.Local, CultureInfo.CurrentCulture or installed tzdb anywhere in the library.",
+      "rationale": "Every answer depends only on its arguments and the context, so it is reproducible.",
+      "currentState": "Realized in part (the plan's note): TemporalContext holds the zone rules once, created with TemporalContext.With(rules); there is no default context. It has no reference observation, location, budget or assumptions, and there is no ITemporalEngine. The second half holds: the library reads no clock, host zone, culture or tzdb, which a test checks by scanning the source.",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext.With"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Tests/EverydayApiTests.cs",
+          "symbol": "EverydayApiTests.LibraryNeverReadsClockZoneOrCulture"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        }
+      ]
+    },
+    {
+      "id": "engine-8-budgets-count-steps",
+      "title": "Budgets count steps, not milliseconds",
+      "summary": "In the plan, budgets limit candidates, steps and depth, never wall time; wall-clock limits belong to the caller's CancellationToken.",
+      "status": "proposed",
+      "context": "The C# engine-interface plan (written after 0.1.0) set out how the library would grow from validation to every question of docs/operations.md, profile by profile.",
+      "decision": "Budget(MaxCandidates, MaxSteps, MaxDepth) bounds evaluation and gives ResourceLimit when it runs out. Wall-clock limits are the caller's, through CancellationToken.",
+      "rationale": "Counting steps keeps results reproducible.",
+      "currentState": "Not realized: 0.3 has no recurrence expansion, constraint solving or series processing, and no Budget or CancellationToken. The only fixed limit is StrictJson's maximum nesting depth of 128.",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/StrictJson.cs",
+          "symbol": "StrictJson.MaxDepth"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "bounded-evaluation"
+        }
+      ]
+    },
+    {
+      "id": "engine-9-async-load-sync-evaluate",
+      "title": "Rules load asynchronously; evaluation is synchronous",
+      "summary": "In the plan, loading rule data into an IRuleRegistry may be async; evaluation is synchronous CPU work, and long enumerations are paged with continuation tokens bound to their manifest.",
+      "status": "proposed",
+      "context": "The C# engine-interface plan (written after 0.1.0) set out how the library would grow from validation to every question of docs/operations.md, profile by profile.",
+      "decision": "Loading TZif files, leap tables or CLDR data into an IRuleRegistry is I/O and may be async. Engine methods are synchronous. Long enumerations are paged (PageRequest → Page<T> + ContinuationToken), and a token is bound to the manifest it was issued under.",
+      "rationale": "Evaluation is pure CPU work over immutable data.",
+      "currentState": "Not realized as planned: ZoneRules.Load reads its file synchronously, there is no IRuleRegistry, TZif loader or paging. Evaluation is synchronous, as planned.",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+          "symbol": "ZoneRules.Load"
+        }
+      ]
+    },
+    {
+      "id": "engine-10-policies-with-presets",
+      "title": "Policies are explicit objects with named presets",
+      "summary": "In the plan, ResolutionPolicy.Strict and ResolutionPolicy.AllCandidates are presets, ArithmeticPolicy.Strict rejects month-end ambiguity, and results record which policy was used.",
+      "status": "realized-in-part",
+      "context": "The C# engine-interface plan (written after 0.1.0) set out how the library would grow from validation to every question of docs/operations.md, profile by profile.",
+      "decision": "ResolutionPolicy.Strict (reject gaps and overlaps) is the recommended preset whenever one exact instant is required; ResolutionPolicy.AllCandidates reports everything. ArithmeticPolicy.Strict rejects month-end ambiguity instead of clamping. Results record which policy was used.",
+      "rationale": "Choosing how to treat a gap, an overlap or a missing day is the caller's decision, made visibly.",
+      "currentState": "Realized in part (the plan's note): ResolutionPolicy.Strict and ResolutionPolicy.AllCandidates exist, with typed Gap and Overlap and the JSON layer's GapPolicy and OverlapPolicy. AllCandidates is (gap reject, overlap all) where the sketch had (preserve-unresolved, all); both answer none in a gap. There is no ArithmeticPolicy: MonthEnd (Reject by default, or Constrain) plays its part. Results do not record the policy used.",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Policies.cs",
+          "symbol": "ResolutionPolicy.AllCandidates"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Enums.cs",
+          "symbol": "MonthEnd"
+        }
+      ]
+    },
+    {
+      "id": "engine-11-representation-equality",
+      "title": "Record equality means representation equality",
+      "summary": "In the plan, == means identical canonical forms; semantic sameness is Equivalent(a, b, mode).",
+      "status": "realized-in-part",
+      "context": "The C# engine-interface plan (written after 0.1.0) set out how the library would grow from validation to every question of docs/operations.md, profile by profile.",
+      "decision": "Two values are == only if their canonical forms are identical. Semantic sameness (\"the same instant\", \"the same meeting\") is Equivalent(a, b, mode). Values use ImmutableArray<T> internally and override equality over canonical form.",
+      "rationale": "Sameness depends on rules and on which notion of \"same\" is meant.",
+      "currentState": "Realized in part (the plan's note, M2): the 0.3 typed values are immutable sealed records with representation equality, so 09:30 and 09:30:00 are not equal; Outcome<T>.Multiple overrides equality to compare its values in order. There is no canonical form (RFC 8785) and no Equivalent.",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilTime.cs",
+          "symbol": "CivilTime"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome.Multiple.Equals"
+        }
+      ]
+    },
+    {
+      "id": "engine-12-bcl-interop",
+      "title": "BCL interop is explicit and lossy where it must be",
+      "summary": "In the plan, Bcl adapters make the caller choose an intent, report the offset lost when a DateTimeOffset becomes an instant, and return Unrepresentable when going back cannot be exact.",
+      "status": "realized-in-part",
+      "context": "The C# engine-interface plan (written after 0.1.0) set out how the library would grow from validation to every question of docs/operations.md, profile by profile.",
+      "decision": "A DateTimeOffset can become an instant (the offset is reported as lost) or a civil value with a fixed offset (lossless). Going back to DateTimeOffset returns Unrepresentable for leap-second labels, years outside 1–9999 and precision finer than 100 ns.",
+      "rationale": "Nothing is converted with a meaning the caller did not choose, and nothing is lost silently.",
+      "currentState": "Realized in part (the plan's note): typed interop where the target type names the intent (CivilDate.FromDateOnly, Instant.FromDateTimeOffset, FixedOffsetDateTime.FromDateTimeOffset, ToDateOnly(), ToDateTimeOffset(), …) and the JSON layer's Interop with DateTimeOffsetIntent. There is no Bcl class. Going back gives unsupported (out-of-native-range) for years outside 1..9999 and precision finer than 100 ns, and second 60 is never held. Interop.FromDateTimeOffset with the Instant intent discards the offset without a loss report (its documentation says so); a zoned value converted to DateTimeOffset reports IsLossy and zone-dropped.",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop.FromDateTimeOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "DateTimeOffsetIntent"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.FromDateTimeOffset"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-silent-conversions"
+        }
+      ]
+    },
+    {
+      "id": "generic-utv-result",
+      "title": "Keep the plan to make UtvResult the base of UtvResult<T>?",
+      "summary": "The plan unseals UtvResult and makes it the abstract base of a generic UtvResult<T>; 0.3 put Outcome<T> beside it instead. Whether the generic result is still wanted waits on the owner.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "The plan's table How 0.1.0 evolves into this: sealed class UtvResult, with a constructor and IReadOnlyList<JsonElement> Candidates, becomes the abstract base of UtvResult<T> with typed candidates; this breaks the 0.x API, which is acceptable before 1.0.0 and must be recorded in the CHANGELOG. In 0.3 UtvResult is still the sealed class, and Outcome<T> carries typed answers without manifest, assumptions, loss or cardinality.",
+      "options": [
+        {
+          "title": "Unseal UtvResult and add UtvResult<T> as planned",
+          "consequences": "A breaking 0.x change; two typed result shapes (Outcome<T> and UtvResult<T>) unless one is retired."
+        },
+        {
+          "title": "Keep Outcome<T> as the typed answer and grow it",
+          "consequences": "Manifest, assumptions and loss would be added to Outcome<T> or reached through ToResult(); the plan's sketch is updated."
+        },
+        {
+          "title": "Keep both as they are",
+          "consequences": "Typed answers stay without manifest or loss information."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "implementations/csharp/.dev/backlog.json",
+          "entityId": "validation-returns-typed-values"
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/UtvResult.cs",
+          "symbol": "UtvResult"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome.ToResult"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "implementations/csharp/.dev/decisions.json",
+          "entityId": "engine-3-every-answer-a-result"
+        }
+      ]
+    },
+    {
+      "id": "cldr-data-source",
+      "title": "Which CLDR data source should Format use?",
+      "summary": "Formatting for people in their language and locale (question I3) needs CLDR data; the plan schedules Format once a source is chosen. The choice waits on the owner.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "The plan: Format (I3) depends on a CLDR data source and is scheduled once one is chosen. UTV never reads the host locale, so locale data would be an explicit, versioned rule dependency like zone rules (DisplayFormat in the sketch takes a Locale RuleRef).",
+      "blocks": [
+        {
+          "path": "implementations/csharp/.dev/backlog.json",
+          "entityId": "format-for-people"
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "I3"
+        }
+      ]
+    }
+  ]
+}

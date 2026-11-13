@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Internals",
+  "folder": "implementations/csharp/src/Utv/Internal",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Internals",
+      "summary": "The machinery behind structural validation (a strict JSON reader and a JSON Schema interpreter for the embedded UTV schema), and the shared helpers of the everyday operations in Everyday/.",
+      "purpose": "Reads JSON text strictly into its own node tree (StrictJson), so duplicate keys, lone surrogates and excessive depth are caught, and checks that tree against schema/utv-1.0.schema.json with an interpreter of exactly the keywords that schema uses (SchemaInterpreter). UtvValidator is the public face of both.",
+      "boundaries": [
+        "Internal to the Utv assembly; UtvValidator and GregorianCivil in the parent folder are the public entrypoints.",
+        "The schema is the repository's file, embedded at build time; nothing here edits or copies it.",
+        "Reads no clock, host time zone or culture."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Internal/StrictJson.cs",
+          "symbol": "StrictJson.Parse"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/SchemaInterpreter.cs",
+          "symbol": "SchemaInterpreter.CheckUtvValue"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+          "symbol": "UtvValidator.ValidateStructural"
+        }
+      ]
+    }
+  ]
+}

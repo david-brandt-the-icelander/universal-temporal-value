@@ -1,0 +1,687 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-use-case/schema.json",
+  "kind": "use-case",
+  "title": "Typed layer use cases",
+  "folder": "implementations/rust/src/typed",
+  "description": "What an application developer does with the typed API, step by step, and the branches the code has. Steps the JSON layer runs are cited to src/ and described in its views.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/typed/civil.rs",
+      "symbol": "CivilDate"
+    },
+    {
+      "path": "implementations/rust/src/typed/context.rs",
+      "symbol": "TemporalContext"
+    }
+  ],
+  "entities": [
+    {
+      "id": "create-a-date",
+      "name": "Create a date",
+      "description": "A developer makes a date from year, month and day, or from text, and learns why it can't exist when it can't (tasks a-date and feb-30 of docs/side-by-side.md).",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::of"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "read_as"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Hold a value for a calendar day, or know exactly why the day doesn't exist.",
+      "preconditions": [
+        "The developer's crate depends on utv."
+      ],
+      "postconditions": [
+        "The developer holds a CivilDate that names a real proleptic Gregorian day, or a Diagnostics (or an Outcome) whose code says why there is none."
+      ],
+      "flow": [
+        {
+          "id": "ask",
+          "actor": "Application developer",
+          "action": "Calls CivilDate::of(year, month, day), or CivilDate::parse(text) or text.parse::<CivilDate>().",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "CivilDate::of"
+            },
+            {
+              "path": "implementations/rust/src/typed/mod.rs",
+              "symbol": "typed_value"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "write",
+          "actor": "Typed layer",
+          "action": "Writes the fields as a canonical UTV civil date (for text, parse_text reads it).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "of"
+            },
+            {
+              "path": "implementations/rust/src/model.rs",
+              "symbol": "Civil::to_json"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "check",
+          "actor": "Typed layer",
+          "action": "Reads the value back with the JSON layer's reader: the month, the day in that year's month, and that its day number fits i128.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "read_as"
+            },
+            {
+              "path": "implementations/rust/src/model.rs",
+              "symbol": "read_civil"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "Typed layer",
+          "action": "Returns Ok(CivilDate) (Outcome::Unique for parse).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "CivilDate"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "check",
+          "condition": "The month is not 1 to 12.",
+          "outcome": "Err with month-out-of-range (invalid).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/model.rs",
+              "symbol": "read_civil"
+            }
+          ]
+        },
+        {
+          "atStep": "check",
+          "condition": "The day doesn't exist in that month: 30 February, or 29 February in 2026 or 1900.",
+          "outcome": "Err with day-out-of-range (invalid) and a message such as 2026-02 has no day 30.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/model.rs",
+              "symbol": "read_civil"
+            }
+          ]
+        },
+        {
+          "atStep": "check",
+          "condition": "The year is so large that its day number leaves the i128 range.",
+          "outcome": "Err with implementation-limit (unsupported).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "read_as"
+            },
+            {
+              "path": "implementations/rust/src/model.rs",
+              "symbol": "Civil::day_number"
+            }
+          ]
+        },
+        {
+          "atStep": "write",
+          "condition": "The text is not ISO 8601 extended date text.",
+          "outcome": "Outcome::Invalid with syntax; a week or ordinal date or basic format is Outcome::Unsupported with unsupported-form.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/iso.rs",
+              "symbol": "parse"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "The text is a valid value of another type, such as 2026-11.",
+          "outcome": "Outcome::Invalid with kind-mismatch.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/mod.rs",
+              "symbol": "kind_mismatch"
+            },
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "read_as"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "add-months",
+      "name": "Add months to a date",
+      "description": "A developer moves a date by months and decides what happens when the day doesn't exist in the target month (task month-end).",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_months"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "add"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Move a date by whole months, and choose deliberately what 31 January + 1 month is.",
+      "preconditions": [
+        "The developer holds a CivilDate (CivilDateTime and ZonedIntent have the same methods)."
+      ],
+      "postconditions": [
+        "The developer has the date in the target month, or Outcome::None with month-end and then the clamped date if they ask for it."
+      ],
+      "flow": [
+        {
+          "id": "ask",
+          "actor": "Application developer",
+          "action": "Calls date.add_months(n), or add_years(n) or add(Period).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "CivilDate::add_months"
+            },
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "CivilDate::add"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "add",
+          "actor": "Typed layer",
+          "action": "Writes the date and Period::months(n) as UTV JSON with the policy monthEnd reject, and calls the JSON layer's add, which adds years and months first.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "add"
+            },
+            {
+              "path": "implementations/rust/src/ops.rs",
+              "symbol": "add"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "check-day",
+          "actor": "JSON layer",
+          "action": "Checks that the day exists in the resulting month, then adds weeks and days.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/ops.rs",
+              "symbol": "add"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "Typed layer",
+          "action": "Returns Outcome::Unique with the new date.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/outcome.rs",
+              "symbol": "outcome"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "decide",
+          "actor": "Application developer",
+          "action": "Matches on the outcome; for a missing day, calls add_months_constrained(n) to clamp, or answers in their own way.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "CivilDate::add_months_constrained"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "check-day",
+          "condition": "The day doesn't exist in the target month (31 January + 1 month).",
+          "outcome": "Outcome::None with month-end and a message such as 2026-02 has no day 31.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/ops.rs",
+              "symbol": "add"
+            }
+          ]
+        },
+        {
+          "atStep": "decide",
+          "condition": "The developer asks for the constrained form.",
+          "outcome": "add_months_constrained clamps to the last day of the month (28 February 2026) and returns the date itself.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "CivilDate::add_months_constrained"
+            },
+            {
+              "path": "implementations/rust/src/ops.rs",
+              "symbol": "add"
+            }
+          ]
+        },
+        {
+          "atStep": "add",
+          "condition": "add(Period) on a CivilDate is given hours, minutes or seconds.",
+          "outcome": "Outcome::Invalid with kind-mismatch.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/ops.rs",
+              "symbol": "add"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "The value is a ZonedIntent with an asserted offset.",
+          "outcome": "The zone is kept and the assertion dropped; Unique carries the info code offset-assertion-dropped.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/ops.rs",
+              "symbol": "add"
+            },
+            {
+              "path": "implementations/rust/src/ops.rs",
+              "symbol": "replace_fields"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "resolve-a-zoned-time",
+      "name": "Resolve a wall time in a named zone",
+      "description": "A developer turns a wall time in an IANA zone into an instant under rules they loaded, including a wall time that never happened or happened twice (tasks meeting-in-paris, dst-gap, dst-overlap).",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::resolve_with"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "resolve"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Know which instant a wall time in a zone is, or that there is none or more than one, under rules they chose.",
+      "preconditions": [
+        "The developer has a zone rule bundle in the format of conformance/rules/demo-zones.json.",
+        "The wall time is a valid CivilDateTime."
+      ],
+      "postconditions": [
+        "The developer has the instant, both instants of an overlap, or an outcome whose code says why there is no answer; the rules used are the ones in their TemporalContext."
+      ],
+      "flow": [
+        {
+          "id": "load-rules",
+          "actor": "Application developer",
+          "action": "Loads the rules and builds a context: TemporalContext::with(ZoneRules::load(path)?).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/zones.rs",
+              "symbol": "Rules::load"
+            },
+            {
+              "path": "implementations/rust/src/typed/context.rs",
+              "symbol": "TemporalContext::with"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "name-zone",
+          "actor": "Application developer",
+          "action": "Names the zone: CivilDateTime::of(2027, 6, 1, 9, 0)?.in_zone(\"Europe/Paris\").",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "CivilDateTime::in_zone"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "resolve",
+          "actor": "Application developer",
+          "action": "Calls zoned.resolve(&ctx), or resolve_with(&ctx, policy) with a Gap and an Overlap.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "ZonedIntent::resolve"
+            },
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "ZonedIntent::resolve_with"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "find-candidates",
+          "actor": "JSON layer",
+          "action": "Reads the wall time as if it were UTC (L), takes every offset in force within a day of L, and keeps t = L − o where the offset at t is o.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/context.rs",
+              "symbol": "TemporalContext::resolve_with"
+            },
+            {
+              "path": "implementations/rust/src/zones.rs",
+              "symbol": "resolve"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "apply-policy",
+          "actor": "JSON layer",
+          "action": "Applies an asserted offset first, then the gap and overlap policy to the candidates.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/zones.rs",
+              "symbol": "resolve"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "Typed layer",
+          "action": "Returns Outcome::Unique with the Instant.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/outcome.rs",
+              "symbol": "outcome"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "load-rules",
+          "condition": "The file can't be read or isn't a rule bundle.",
+          "outcome": "Err with malformed-value.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/zones.rs",
+              "symbol": "Rules::load"
+            }
+          ]
+        },
+        {
+          "atStep": "find-candidates",
+          "condition": "The rules have no such zone.",
+          "outcome": "Outcome::Unsupported with unknown-zone.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/zones.rs",
+              "symbol": "Rules::zone"
+            }
+          ]
+        },
+        {
+          "atStep": "find-candidates",
+          "condition": "The wall time is less than a day inside the rules' validity window.",
+          "outcome": "Outcome::Unsupported with outside-rule-window: rules are never extrapolated.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/zones.rs",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "apply-policy",
+          "condition": "The value asserts an offset that no candidate has, including any assertion in a gap.",
+          "outcome": "Outcome::Invalid with offset-mismatch, whatever the policy.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/zones.rs",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "apply-policy",
+          "condition": "No candidate (a gap) under Gap::Reject or Gap::PreserveUnresolved.",
+          "outcome": "Outcome::None with gap.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/zones.rs",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "apply-policy",
+          "condition": "No candidate under Gap::ShiftForward.",
+          "outcome": "Outcome::Unique with the wall time shifted forward by the gap (02:30 gives 03:30 EDT), and an info note gap.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/zones.rs",
+              "symbol": "resolve"
+            },
+            {
+              "path": "implementations/rust/src/zones.rs",
+              "symbol": "offset_before_gap"
+            }
+          ]
+        },
+        {
+          "atStep": "apply-policy",
+          "condition": "Two candidates (an overlap) under Overlap::Reject or Overlap::All.",
+          "outcome": "Outcome::Multiple with both instants, ascending; Reject adds the warning ambiguous.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/zones.rs",
+              "symbol": "resolve"
+            }
+          ]
+        },
+        {
+          "atStep": "apply-policy",
+          "condition": "Two candidates under Overlap::Earliest or Overlap::Latest.",
+          "outcome": "Outcome::Unique with the earlier or the later instant.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/zones.rs",
+              "symbol": "resolve"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "compare-values",
+      "name": "Compare two values",
+      "description": "A developer orders two values. Values whose order can't depend on zone rules compare with < and Ord; zoned intentions have no Ord, so `<` on them doesn't compile, and they compare through the context, which may answer that the order depends on an overlap (task compare-dates). At the JSON layer, compare refuses zoned values with needs-zone-rules.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::compare"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "ZonedIntent"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Know which of two values comes first, or that the answer depends on which side of a DST overlap is meant.",
+      "preconditions": [
+        "The developer holds two values of the same type; for zoned values, a TemporalContext with rules for their zones."
+      ],
+      "postconditions": [
+        "The developer has an Ordering, or an outcome listing the possible orders or saying why there is none."
+      ],
+      "flow": [
+        {
+          "id": "ask",
+          "actor": "Application developer",
+          "action": "Asks for the order: a < b or a.cmp(&b) for a type with Ord; ctx.compare(&a, &b) for two ZonedIntents.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/context.rs",
+              "symbol": "TemporalContext::compare"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "resolve-both",
+          "actor": "Typed layer",
+          "action": "Resolves both values under ResolutionPolicy::STRICT and keeps every candidate instant and every diagnostic.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/context.rs",
+              "symbol": "TemporalContext::compare"
+            },
+            {
+              "path": "implementations/rust/src/typed/context.rs",
+              "symbol": "TemporalContext::resolve"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "order-candidates",
+          "actor": "Typed layer",
+          "action": "Compares every candidate of one with every candidate of the other, and keeps the distinct orders.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/context.rs",
+              "symbol": "TemporalContext::compare"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "Typed layer",
+          "action": "Returns Outcome::Unique(Ordering) when there is one order.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/context.rs",
+              "symbol": "TemporalContext::compare"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "ask",
+          "condition": "Both values are of a type with Ord: dates, year-months, times, date-times, fixed-offset date-times or instants.",
+          "outcome": "The Ordering itself, with no Outcome: civil values by their fields (a missing second as 0, then 09:30 before 09:30:00), fixed-offset date-times by instant, instants exactly.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "CivilTime::key"
+            },
+            {
+              "path": "implementations/rust/src/typed/civil.rs",
+              "symbol": "impl Ord for FixedOffsetDateTime"
+            },
+            {
+              "path": "implementations/rust/src/typed/instant.rs",
+              "symbol": "impl Ord for Instant"
+            }
+          ]
+        },
+        {
+          "atStep": "order-candidates",
+          "condition": "The order depends on which side of an overlap is meant, such as 01:30 against 01:45 on 1 November 2026 in New York.",
+          "outcome": "Outcome::Multiple with the possible orders, ascending, keeping ambiguous.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/context.rs",
+              "symbol": "TemporalContext::compare"
+            }
+          ]
+        },
+        {
+          "atStep": "resolve-both",
+          "condition": "Either value can't be resolved.",
+          "outcome": "That resolution's outcome: None (gap), Unsupported (unknown-zone, outside-rule-window) or Invalid (offset-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/context.rs",
+              "symbol": "TemporalContext::compare"
+            },
+            {
+              "path": "implementations/rust/src/typed/outcome.rs",
+              "symbol": "failure"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/operation.json",
+      "relationship": "The operations the steps call."
+    },
+    {
+      "kind": "capability",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/capability.json",
+      "relationship": "The capabilities these use cases use."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/feature.json",
+      "relationship": "The typed-layer behaviour they exercise."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/feature.json",
+      "relationship": "Month end and DST resolution, which the JSON-layer steps carry out."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/operation.json",
+      "relationship": "The JSON-layer operations add, resolve and parse_text that the system steps run."
+    }
+  ]
+}

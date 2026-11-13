@@ -1,0 +1,147 @@
+{
+  "$schema": "../../../../../../../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "net.icelander.utv backlog",
+  "folder": "implementations/java/src/main/java/net/icelander/utv",
+  "entities": [
+    {
+      "id": "kind-table-copy",
+      "title": "Derive the kind table from the schema",
+      "summary": "KindTable holds the 26 kinds' required and allowed properties as code, 'generated from schema/utv-1.0.schema.json', but no generator is in the repository and nothing checks the copy.",
+      "type": "debt",
+      "compromise": "The schema's per-kind property lists are copied into KindTable.java by hand or by a tool that is not kept; the C# and Rust libraries read the schema file itself.",
+      "cost": "A change to schema/utv-1.0.schema.json leaves the Java validator silently out of step; nested value types, enums, $ref and oneOf are not enforced at all (README: structural validation is partial).",
+      "acceptanceCriteria": [
+        "Utv.validateStructural reads schema/utv-1.0.schema.json (for example as a resource), or a check fails when KindTable and the schema disagree.",
+        "ConformanceTest passes."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/java/src/main/java/net/icelander/utv/KindTable.java",
+        "description": "The class comment: generated from schema/utv-1.0.schema.json."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/KindTable.java",
+          "symbol": "KindTable"
+        },
+        {
+          "path": "implementations/java/README.md",
+          "symbol": "The JSON layer (0.2, unchanged)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "implementations/java/.dev/limitations.json",
+          "entityId": "partial-structural-validation"
+        }
+      ]
+    },
+    {
+      "id": "civil-time-order-ties",
+      "title": "Break compareTo ties between 09:30 and 09:30:00",
+      "summary": "CivilTime and CivilDateTime compare 09:30 and 09:30:00 as equal although they are not equals, against library-api §1.",
+      "type": "defect",
+      "expected": "docs/library-api.md §1: where a language requires ordering to agree with equality (Java's compareTo contract), ties between equal times break by representation, so 09:30 comes before 09:30:00.",
+      "observed": "compareTo returns 0 for CivilTime.of(9, 30) and CivilTime.of(9, 30, 0), and likewise for date-times; the Java README documents it ('they compare as equal') and TypedApiTest.civilTime asserts it. A TreeSet or TreeMap of such values keeps only one of them.",
+      "acceptanceCriteria": [
+        "CivilTime.of(9, 30).compareTo(CivilTime.of(9, 30, 0)) < 0, and the same for CivilDateTime.",
+        "TypedApiTest and the README say so."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "docs/library-api.md",
+        "description": "§1, Seconds are optional."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilTime.java",
+          "symbol": "CivilTime.compareTo"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.compareTo"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.civilOrder"
+        },
+        {
+          "path": "implementations/java/src/test/java/net/icelander/utv/TypedApiTest.java",
+          "symbol": "TypedApiTest.civilTime"
+        }
+      ]
+    },
+    {
+      "id": "days-until-overflow",
+      "title": "daysUntil wraps beyond a long",
+      "summary": "CivilDate.daysUntil reads the JSON layer's BigInteger day count with JsonNode.longValue, which keeps only the low 64 bits.",
+      "type": "defect",
+      "expected": "A day count beyond a long is refused, as elsewhere in the library (Instant.unixSeconds throws ArithmeticException; Period.fromJson answers unsupported, implementation-limit).",
+      "observed": "Operations.daysBetween returns the exact count (Json.integer makes a BigIntegerNode beyond 64 bits), and daysUntil narrows it silently with JsonNode::longValue. Years are unbounded, so CivilDate.of(BigInteger…) can reach it.",
+      "acceptanceCriteria": [
+        "daysUntil between dates more than 2^63 days apart throws ArithmeticException (or the API returns a BigInteger)."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+        "description": "CivilDate.daysUntil maps the result with JsonNode::longValue."
+      },
+      "status": "open",
+      "priority": "low",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.daysUntil"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.daysBetween"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Json.java",
+          "symbol": "Json.integer"
+        }
+      ]
+    },
+    {
+      "id": "zoned-from-offset-region",
+      "title": "ZonedIntent.from throws OutcomeException for UTC+01:00 zones",
+      "summary": "A ZonedDateTime whose zone is an offset-style region (ZoneId.of(\"UTC+01:00\")) is refused with OutcomeException rather than the documented IllegalArgumentException.",
+      "type": "defect",
+      "expected": "ZonedIntent.from's Javadoc: a ZonedDateTime whose zone is only an offset is refused with IllegalArgumentException, pointing to FixedOffsetDateTime.from.",
+      "observed": "ZonedIntent.from checks only `instanceof ZoneOffset`. For a region id such as UTC+01:00 or GMT+1, JavaTime.fromZonedDateTime builds a fixed-offset date-time, ZonedIntent.fromJson answers invalid (kind-mismatch), and read(...).single() throws OutcomeException.",
+      "acceptanceCriteria": [
+        "ZonedIntent.from throws IllegalArgumentException for every zone that JavaTime.fromZonedDateTime treats as a fixed offset."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+        "description": "ZonedIntent.from and JavaTime.fromZonedDateTime disagree on what an offset-only zone is."
+      },
+      "status": "open",
+      "priority": "low",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.from"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.fromZonedDateTime"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.civil"
+        }
+      ]
+    }
+  ]
+}

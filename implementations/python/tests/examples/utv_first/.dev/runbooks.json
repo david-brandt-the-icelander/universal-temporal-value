@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/runbooks.schema.json",
+  "kind": "runbooks",
+  "title": "UTV-first example runbooks",
+  "folder": "implementations/python/tests/examples/utv_first",
+  "entities": [
+    {
+      "id": "refresh-side-by-side",
+      "title": "Refresh the side-by-side page after changing a marked example",
+      "summary": "docs/side-by-side.md shows the marked tests verbatim, so it is regenerated whenever one changes.",
+      "purpose": "operate",
+      "when": "After adding or changing a test between # BEGIN <task-id> and # END <task-id> in this folder.",
+      "steps": [
+        "From the repository root: python3 tools/side_by_side.py",
+        "Commit docs/side-by-side.md with the test change.",
+        "python3 tools/side_by_side.py --check"
+      ],
+      "verify": "The check reports nothing out of date; CI runs the same check and fails otherwise.",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "symbol": "2. Examples are unit tests"
+        },
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "main"
+        },
+        {
+          "path": ".github/workflows/validate.yml",
+          "symbol": "jobs"
+        }
+      ]
+    }
+  ]
+}

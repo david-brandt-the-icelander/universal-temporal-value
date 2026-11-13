@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Structural examples",
+  "folder": "conformance/examples",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Structural examples",
+      "summary": "Named UTV values that are structurally valid (valid.json, 31 values covering 24 of the 26 core kinds) or must be rejected (invalid-structural.json, 8 values).",
+      "purpose": "Shows what well-formed and malformed UTV JSON looks like, and lets tools/validate.py and each library's structural validator prove they accept and reject the same values.",
+      "boundaries": [
+        "Structure only: a value in valid.json may still be semantically invalid or unresolvable (new-york-gap-intention resolves to no instant)."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "conformance/examples/valid.json",
+          "symbol": "new-york-gap-intention"
+        },
+        {
+          "path": "conformance/examples/invalid-structural.json",
+          "symbol": "unknown-kind"
+        },
+        {
+          "path": "tools/validate.py",
+          "symbol": "check_examples"
+        }
+      ]
+    }
+  ]
+}

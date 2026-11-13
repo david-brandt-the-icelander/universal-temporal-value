@@ -1,0 +1,37 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/limitations.schema.json",
+  "kind": "limitations",
+  "title": "Rule bundle limitations",
+  "folder": "conformance/rules",
+  "entities": [
+    {
+      "id": "demo-window",
+      "title": "Three zones, 2026 and 2027 only",
+      "summary": "The bundle knows America/New_York, Europe/Paris and Atlantic/Reykjavik from 2026-01-01T00:00:00Z (inclusive) to 2028-01-01T00:00:00Z (exclusive), and nothing else.",
+      "impact": "Fixtures and example tests can only use those zones and years; any other zone or instant resolves to unsupported (unknown-zone, outside-rule-window), never an extrapolation.",
+      "workaround": "An application loads a pinned tzdb release through the library's rule loader instead.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "conformance/rules/demo-zones.json",
+          "symbol": "validFrom"
+        },
+        {
+          "path": "conformance/rules/demo-zones.json",
+          "symbol": "validUntil"
+        },
+        {
+          "path": "conformance/rules/demo-zones.json",
+          "symbol": "zones"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "part-of",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        }
+      ]
+    }
+  ]
+}

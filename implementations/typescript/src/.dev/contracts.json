@@ -1,0 +1,65 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "TypeScript library source contracts",
+  "folder": "implementations/typescript/src",
+  "entities": [
+    {
+      "id": "utv-result-envelope",
+      "title": "The JSON layer's result envelope",
+      "summary": "Every JSON-layer operation and validator returns a UtvResult, this library's form of the utv-result/1.0 envelope; the typed layer's Outcome.toResult builds the same shape.",
+      "contractType": "data-format",
+      "consumers": [
+        "Application developers who call the JSON layer (builders, parseIso, add, resolve, validateStructural, …)",
+        "The typed layer in values.ts, which turns each result into an Outcome",
+        "test/everyday.test.ts and test/text-form.test.ts, which compare results with the shared fixtures"
+      ],
+      "guarantees": [
+        "schema is \"utv-result/1.0\"; operation is \"validate\" for validation, otherwise the operation's name (parseIso, add, resolve, parseText, fromDate, …).",
+        "status is one of invalid, unsupported, indeterminate, none, unique, multiple, range, symbolic, resource-limit, error, valid.",
+        "unique has exactly one candidate, multiple all of them in ascending order, every other status none.",
+        "Diagnostics are {code, severity, path, message}, with path a JSON pointer into the arguments (/0, /1, …) or the value.",
+        "resolve and toZone with a named zone, and fromDate with a zone, list the rule bundle's ruleSet in manifest.dependencies.",
+        "assumptions is always empty; loss is lossless except where a native conversion reports what it lost.",
+        "A semantic outcome is never thrown; an unexpected exception inside an operation becomes status error with code internal-error."
+      ],
+      "compatibility": "Follows spec/RESULT-CONTRACT.md, versioned with the specification. The operation names extend the contract's list (docs/everyday-api.md, Clarifications 5; OI-17).",
+      "definition": "implementations/typescript/src/result.ts",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/result.ts",
+          "symbol": "UtvResult"
+        },
+        {
+          "path": "implementations/typescript/src/result.ts",
+          "symbol": "makeResult"
+        },
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "run"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "OutcomeBase.toResult"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-result-1-0"
+        },
+        {
+          "relation": "part-of",
+          "path": "implementations/typescript/.dev/contracts.json",
+          "entityId": "json-layer-api"
+        }
+      ]
+    }
+  ]
+}

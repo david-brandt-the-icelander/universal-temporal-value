@@ -1,0 +1,41 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Typed layer",
+  "folder": "implementations/csharp/src/Utv/Typed",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Typed layer",
+      "summary": "The typed API of library 0.3: CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime, ZonedIntent, Instant, Period, PosixSeconds, ElapsedSeconds and Interval<T>, with Outcome<T>, the typed policies and TemporalContext.",
+      "purpose": "Gives each everyday UTV value its own immutable type, valid by construction, so that total operations return plain values and only partial ones return an Outcome<T>. It is what the README and the example tests show. Each operation builds the value's JSON, calls the JSON-layer function in the parent folder and converts the UtvResult back.",
+      "boundaries": [
+        "Holds no arithmetic, parsing or zone logic of its own: Calendar, Zones, Ranges, TextForm and Interop in the parent folder answer every question.",
+        "Holds only the everyday shapes; any other valid UTV value is unsupported (unsupported-operand) and stays in the JSON layer.",
+        "Everything is in namespace Utv, as the JSON layer is."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.AddMonths"
+        },
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "The typed API (0.3)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    }
+  ]
+}

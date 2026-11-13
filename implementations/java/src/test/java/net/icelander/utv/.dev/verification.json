@@ -1,0 +1,348 @@
+{
+  "$schema": "../../../../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Library test verification",
+  "folder": "implementations/java/src/test/java/net/icelander/utv",
+  "entities": [
+    {
+      "id": "everyday-fixtures",
+      "title": "Everyday fixtures",
+      "summary": "Every fixture in conformance/operations/everyday.json gives its expected status, candidates and diagnostic codes through the JSON layer.",
+      "subject": [
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        },
+        {
+          "path": "implementations/java/.dev/contracts.json",
+          "entityId": "json-layer"
+        }
+      ],
+      "criteria": [
+        "Each fixture runs as one dynamic test named by its id, through the operation it names (parseIso … toOffset).",
+        "The status, the result's operation name and the candidates (compared as JSON) match.",
+        "Every code in expect.diagnostics appears among the result's diagnostics.",
+        "Rule bundles named by the file are read from the repository, never copied."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/EverydayFixturesTest.java",
+          "symbol": "EverydayFixturesTest.everydayFixtures",
+          "command": "mvn -q test"
+        }
+      ],
+      "details": "Run from implementations/java; the test reads the shared files at ../../conformance in place.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/.dev/contracts.json",
+          "entityId": "json-layer"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "shared-conformance-material"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "text-form-fixtures",
+      "title": "Text-form fixtures",
+      "summary": "Every fixture in conformance/operations/text-form.json parses and formats as expected through TextForm.",
+      "subject": [
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        }
+      ],
+      "criteria": [
+        "Fixtures with direction both or parse: parseText gives the expected status, value and codes.",
+        "Fixtures with direction both or format: formatText gives the expected status, text and codes."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/TextFormFixturesTest.java",
+          "symbol": "TextFormFixturesTest.textFormFixtures",
+          "command": "mvn -q test"
+        }
+      ],
+      "details": "Run from implementations/java; the test reads the shared files at ../../conformance in place.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "structural-validation",
+      "title": "Structural and Gregorian validation",
+      "summary": "The structural examples are accepted or rejected, versions and duplicate keys fail closed, and Gregorian validation knows its calendar.",
+      "subject": [
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "structural-examples"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        }
+      ],
+      "criteria": [
+        "Every value in conformance/examples/valid.json is valid, and none is invalid as a Gregorian date.",
+        "Every value in conformance/examples/invalid-structural.json is rejected with at least one diagnostic.",
+        "Other well-formed versions are unsupported; malformed identifiers, unknown properties, unknown kinds and duplicate keys are invalid.",
+        "A repeated key is reported as duplicate-key at its JSON pointer; text that is not JSON as utv.json.malformed.",
+        "Leap years follow the Gregorian rules for any year; missing days and months are invalid; other calendars are unsupported."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/ConformanceTest.java",
+          "symbol": "ConformanceTest",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/UtvTest.java",
+          "symbol": "UtvTest.ValidateStructural",
+          "command": "mvn -q test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/GregorianCivilTest.java",
+          "symbol": "GregorianCivilTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "details": "Run from implementations/java; the test reads the shared files at ../../conformance in place.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "structural-examples"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "separate-validity-checks"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "typed-layer",
+      "title": "Typed layer",
+      "summary": "At least one test per row of library-api §2, the outcome helpers, text and JSON round trips, constructors, interop on the types and explicit rules.",
+      "subject": [
+        {
+          "path": "implementations/java/.dev/contracts.json",
+          "entityId": "typed-api"
+        }
+      ],
+      "criteria": [
+        "Every total operation of §2 returns its plain value, and every partial one its outcome with the expected diagnostic code (month-end, gap, ambiguous, unknown-zone, outside-rule-window, offset-mismatch, needs-leap-seconds, kind-mismatch, reversed-interval).",
+        "Outcome helpers never pick silently: single throws OutcomeException, tryGetUnique is empty and uniqueOr gives the fallback unless Unique.",
+        "toString round-trips through parse, and fromJson(toJson(v)) equals v.",
+        "Constructors reject values that cannot exist; fromJson refuses wrong kinds and values it cannot hold.",
+        "ZonedIntent is not Comparable; the context orders zoned values.",
+        "The typed java.time adapters convert exactly or report out-of-native-range and precision-loss.",
+        "Rules are loaded explicitly, and a context needs them."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/TypedApiTest.java",
+          "symbol": "TypedApiTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "details": "Run from implementations/java; the test reads the shared files at ../../conformance in place. TypedApiTest.civilTime also pins that 09:30 and 09:30:00 compare as equal; see the source folder's backlog, civil-time-order-ties.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/java/.dev/contracts.json",
+          "entityId": "typed-api"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "month-end-none"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "wall-clock-arithmetic"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "zoned-order-needs-context"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "exact-instants-and-seconds"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "three-valued-ranges"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "outcomes-never-guess"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "explicit-zone-rules"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "context-compare",
+      "title": "One ambiguous diagnostic from compare",
+      "summary": "TemporalContext.compare reports a single ambiguous warning however many sides fall in an overlap.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "zoned-order-needs-context"
+        }
+      ],
+      "criteria": [
+        "Two wall times in the same New York overlap: multiple, with exactly one diagnostic, ambiguous.",
+        "One wall time in an overlap against an instant between its two readings: multiple, with exactly one ambiguous."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/TemporalContextTest.java",
+          "symbol": "TemporalContextTest.Compare",
+          "command": "mvn -q test"
+        }
+      ],
+      "details": "Uses the demo zone rules through Fixtures.demoZoneRules (examples/).",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "zoned-order-needs-context"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    },
+    {
+      "id": "java-time-adapters",
+      "title": "java.time adapters (JSON layer)",
+      "summary": "The caller names the intent, local-zone readings are refused, lossy conversions say so, and conversions that cannot hold the value are refused.",
+      "subject": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "explicit-native-interop"
+        }
+      ],
+      "criteria": [
+        "LocalDate, LocalTime and LocalDateTime convert both ways; a LocalDateTime becomes a floating date-time, which resolves as symbolic.",
+        "An OffsetDateTime becomes an instant, an offset date-time or a local date-time only as asked; +00:00 stays an offset of zero.",
+        "A ZonedDateTime keeps its zone and asserts its offset, round-trips, and a ZoneOffset zone becomes a fixed offset.",
+        "java.util.Date is accepted only as an instant; civil readings are unsupported.",
+        "Converting a zoned value to OffsetDateTime reports zone-dropped; a sub-nanosecond fraction is truncated and reported.",
+        "Years beyond LocalDate, missing asserted offsets, time components in a Period and second 60 are refused; a wrong asserted offset is invalid."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/JavaTimeTest.java",
+          "symbol": "JavaTimeTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "details": "zonedDateTimeBecomesAZonedIntentionWithItsOffsetAsserted and conversionsThatCannotHoldTheValueAreRefused read the JDK's tz database through ZonedDateTime.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+          "entityId": "explicit-native-interop"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-silent-conversions"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    }
+  ]
+}

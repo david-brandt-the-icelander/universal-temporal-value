@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Rule bundles",
+  "folder": "conformance/rules",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Rule bundles",
+      "summary": "demo-zones.json: zone transitions for America/New_York, Europe/Paris and Atlantic/Reykjavik, for 2026 and 2027 only.",
+      "purpose": "Gives the fixtures and the example tests pinned, explicit zone rules, so no test depends on the host's tz database.",
+      "boundaries": [
+        "Demonstration data, not a tz database release: real applications load a pinned tzdb release instead."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "conformance/rules/demo-zones.json",
+          "symbol": "note"
+        },
+        {
+          "path": "conformance/rules/demo-zones.json",
+          "symbol": "ruleSet"
+        }
+      ]
+    }
+  ]
+}

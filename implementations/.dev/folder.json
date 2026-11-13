@@ -1,0 +1,33 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Implementations",
+  "folder": "implementations",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Language libraries",
+      "summary": "One self-contained project per language: csharp, java, python, rust and typescript, each a UTV library at 0.3.",
+      "purpose": "Holds the libraries and the conventions they share: each library implements the everyday JSON layer and the typed layer, reads the shared conformance material in place, has two example test suites, and states in its README which specification versions and profiles it supports.",
+      "boundaries": [
+        "Each library is versioned with SemVer on its own and tagged <language>/vX.Y.Z.",
+        "No library copies the fixtures; a fix for a scenario too vague to test belongs in conformance/, not in a library."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/README.md",
+          "symbol": "Layout of a language directory"
+        },
+        {
+          "path": "implementations/README.md",
+          "symbol": "Shared conformance material"
+        },
+        {
+          "path": "README.md",
+          "symbol": "Status"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,833 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "TypeScript library test verification",
+  "folder": "implementations/typescript/test",
+  "entities": [
+    {
+      "id": "everyday-fixtures",
+      "title": "Every everyday fixture",
+      "summary": "The JSON layer gives exactly the status, results and diagnostic codes of conformance/operations/everyday.json.",
+      "subject": [
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        },
+        {
+          "path": "implementations/typescript/.dev/contracts.json",
+          "entityId": "json-layer-api"
+        }
+      ],
+      "criteria": [
+        "Fixture ids are unique and there is at least one fixture.",
+        "Each fixture's operation gives the expected status, and its candidates equal the expected result(s) as JSON, ignoring key order.",
+        "A unique result has exactly one candidate.",
+        "Every code in expect.diagnostics appears in the result's diagnostics.",
+        "Every fixture in the file ran and passed."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/everyday.test.ts",
+          "symbol": "everyday.json has fixtures with unique ids",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/everyday.test.ts",
+          "symbol": "everyday: <fixture id>",
+          "command": "npm test",
+          "description": "One test per fixture, named after its id."
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/everyday.test.ts",
+          "symbol": "all everyday fixtures passed",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/everyday.test.ts",
+          "symbol": "OPS"
+        },
+        {
+          "path": "conformance/operations/everyday.json",
+          "symbol": "fixtures"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/.dev/contracts.json",
+          "entityId": "json-layer-api"
+        }
+      ]
+    },
+    {
+      "id": "text-form-fixtures",
+      "title": "Every text-form fixture",
+      "summary": "parseText and formatText agree with conformance/operations/text-form.json, in the directions each fixture names.",
+      "subject": [
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        },
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        }
+      ],
+      "criteria": [
+        "Fixture ids are unique.",
+        "A both-ways fixture parses to its value and formats back to its text.",
+        "A parse-only or format-only fixture gives the expected status, value or text, and diagnostic codes; only unique has a candidate.",
+        "Every fixture in the file ran and passed."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/text-form.test.ts",
+          "symbol": "text-form.json has fixtures with unique ids",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/text-form.test.ts",
+          "symbol": "text-form: <fixture id> (<direction>)",
+          "command": "npm test",
+          "description": "One test per fixture."
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/text-form.test.ts",
+          "symbol": "all text-form fixtures passed",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/text-form.test.ts",
+          "symbol": "check"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        }
+      ]
+    },
+    {
+      "id": "structural-validation",
+      "title": "Structural validation fails closed",
+      "summary": "Every shared valid example passes, every invalid one is rejected, and version identifiers, duplicate keys and unknown properties are handled as the reader rules say.",
+      "subject": [
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "structural-examples"
+        },
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        }
+      ],
+      "criteria": [
+        "Every value in conformance/examples/valid.json is valid.",
+        "Every value in conformance/examples/invalid-structural.json is invalid, or unsupported when its identifier is another well-formed utv/M.N, with at least one diagnostic.",
+        "No valid example is semantically invalid: validateSemantic gives valid or unsupported.",
+        "utv/1.7, utv/2.0, utv/0.9 and utv/10.0 are unsupported; utv/4, utv/1, utv/1.01, a missing or non-string schema and other malformed identifiers are invalid.",
+        "Duplicate keys, also nested, are invalid with duplicate-key; unknown top-level properties, unknown kinds, malformed JSON and an instant with both ticks and coordinate are invalid.",
+        "The result is a utv-result/1.0 envelope with operation validate."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/conformance.test.ts",
+          "symbol": "valid: <example name>",
+          "command": "npm test",
+          "description": "One test per value in valid.json."
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/conformance.test.ts",
+          "symbol": "rejected: <example name>",
+          "command": "npm test",
+          "description": "One test per value in invalid-structural.json."
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/conformance.test.ts",
+          "symbol": "valid semantic (never invalid): <example name>",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/envelope.test.ts",
+          "symbol": "well-formed <identifier> is unsupported",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/envelope.test.ts",
+          "symbol": "schema <identifier> is invalid",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/envelope.test.ts",
+          "symbol": "duplicate keys are invalid",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/envelope.test.ts",
+          "symbol": "nested duplicate keys are invalid",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/envelope.test.ts",
+          "symbol": "unknown top-level property is invalid",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/envelope.test.ts",
+          "symbol": "unknown kind is invalid",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/envelope.test.ts",
+          "symbol": "result envelope shape",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/conformance.test.ts",
+          "symbol": "valid"
+        },
+        {
+          "path": "implementations/typescript/test/envelope.test.ts",
+          "symbol": "inst"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "structural-examples"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed"
+        }
+      ]
+    },
+    {
+      "id": "semantic-validation",
+      "title": "Gregorian semantic validation",
+      "summary": "validateSemantic accepts days that exist in the proleptic Gregorian calendar and rejects those that don't, apart from the structural check.",
+      "subject": [
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "separate-validity-checks"
+        }
+      ],
+      "criteria": [
+        "29 February is valid in 2024, 2000, year 0, year −4 and a 24-digit leap year, and invalid in 2026 and 1900.",
+        "30 February, 31 April, month 13 and day 0 are invalid; 31 December is valid; 29 February without a year is valid.",
+        "Another calendar and another kind are unsupported; a structurally invalid value stays invalid.",
+        "isLeapYear follows the four Gregorian rules."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/civil.test.ts",
+          "symbol": "Feb 30 is invalid",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/civil.test.ts",
+          "symbol": "Feb 29 1900 is invalid",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/civil.test.ts",
+          "symbol": "huge leap year is exact",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/civil.test.ts",
+          "symbol": "month-day Feb 29 without year is valid",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/civil.test.ts",
+          "symbol": "other calendar is unsupported",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/civil.test.ts",
+          "symbol": "structurally invalid stays invalid",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/civil.test.ts",
+          "symbol": "isLeapYear",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/civil.test.ts",
+          "symbol": "date"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "separate-validity-checks"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "separate-validity-checks"
+        }
+      ]
+    },
+    {
+      "id": "json-layer-behaviour",
+      "title": "JSON-layer behaviour beyond the fixtures",
+      "summary": "Builders, ISO round trips, offset assertions, policies, intervals and garbage input, in the JSON layer.",
+      "subject": [
+        {
+          "path": "implementations/typescript/.dev/contracts.json",
+          "entityId": "json-layer-api"
+        },
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "wall-clock-arithmetic"
+        }
+      ],
+      "criteria": [
+        "Every builder produces a structurally valid value; positional and named period forms agree.",
+        "parseIso and formatIso round-trip eleven forms, and reject or refuse further invalid and unsupported ones.",
+        "add drops a stale offsetAssertion with offset-assertion-dropped; negative months, carried seconds and constrain work; an unknown monthEnd is unsupported.",
+        "resolve honours an asserted offset in an overlap and rejects a contradicting one; overlap all gives multiple without diagnostics; an unknown policy is unsupported; rules may be text; bad rule text is invalid.",
+        "Z and +00:00 values don't compare (unsupported).",
+        "Intervals with an excluded start, an empty one and an unknown start answer as the three-valued rules say.",
+        "Operations never throw on garbage: they answer invalid or unsupported."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/api.test.ts",
+          "symbol": "builders produce structurally valid values",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/api.test.ts",
+          "symbol": "parseIso and formatIso round-trip",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/api.test.ts",
+          "symbol": "parseIso: more invalid and unsupported forms",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/api.test.ts",
+          "symbol": "add drops a stale offsetAssertion and says so",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/api.test.ts",
+          "symbol": "add: negative months, seconds carry, constrain",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/api.test.ts",
+          "symbol": "resolve honours an offsetAssertion in an overlap, and rejects a contradicting one",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/api.test.ts",
+          "symbol": "resolve: overlap policy all, unknown policy values, rules as JSON text",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/api.test.ts",
+          "symbol": "compare: Z and +00:00 are different kinds",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/api.test.ts",
+          "symbol": "intervals: excluded start, empty, unknown start",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/api.test.ts",
+          "symbol": "operations never throw on garbage",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/api.test.ts",
+          "symbol": "rules"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/.dev/contracts.json",
+          "entityId": "json-layer-api"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "wall-clock-arithmetic"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "three-valued-ranges"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "truthful-non-answers"
+        }
+      ]
+    },
+    {
+      "id": "typed-layer",
+      "title": "The typed layer, row by row",
+      "summary": "At least one test per row of library-api §2, plus Outcome handling, constructors, text and JSON round trips, value semantics and policy overloads.",
+      "subject": [
+        {
+          "path": "implementations/typescript/.dev/contracts.json",
+          "entityId": "typed-api"
+        },
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "outcomes-for-partial-operations"
+        }
+      ],
+      "criteria": [
+        "A switch over an Outcome is exhaustive, and leaving out a case does not compile (@ts-expect-error).",
+        "uniqueOr, single (OutcomeError with status and diagnostics), toString and toResult never pick an answer silently.",
+        "Constructors reject values that can't exist, with the shared codes; tryOf returns the outcome.",
+        "parse(String(v)) and fromJson(v.toJSON()) give back an equal value of the same class.",
+        "Wrong kinds, bad text and bad JSON are outcomes, never exceptions.",
+        "Every row of §2: CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime, ZonedIntent, TemporalContext.compare, Instant, the amounts and Interval.",
+        "The total addMonths and addYears overloads take only Constrain; literal policy strings work.",
+        "Instant.subSecond is exact and nanoseconds floors it; an interval with no point has no domain."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "Outcome: exhaustive switch, helpers never pick silently",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "constructors reject values that can't exist",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "toString round-trips through parse",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "fromJson(toJSON(v)) equals v, and JSON.stringify uses toJSON",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "fromJson and parse: wrong kinds, bad text and bad JSON are outcomes",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "value semantics: equals, immutability, display",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "CivilDate: total operations",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "CivilDate: partial operations",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "CivilYearMonth: total operations and comparison",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "CivilTime: comparison only",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "CivilDateTime: wall-clock arithmetic, parts, zones",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "FixedOffsetDateTime: instant, parts, comparison by instant",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "ZonedIntent: wall-clock arithmetic, resolve, no comparison",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "TemporalContext.compare: zoned values resolve first; an overlap can make the order multiple",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "Instant: exact arithmetic, zones, offsets, native interop",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "Period, PosixSeconds, ElapsedSeconds: components, negate, equality",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "Interval: contains and overlaps give Truth; start and end are Bounds",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "policy overloads: the total addMonths / addYears take only Constrain (library-api §2)",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "Instant.subSecond is exact; nanoseconds floors it (library-api §1)",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "text form: an interval with no point has no domain",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "policies accept the typed constants and the literal strings",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "describeOutcome"
+        },
+        {
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "samples"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/.dev/contracts.json",
+          "entityId": "typed-api"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "outcomes-for-partial-operations"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "month-end-none"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "zoned-ordering-needs-context"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "exact-arithmetic"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "explicit-zone-rules"
+        }
+      ]
+    },
+    {
+      "id": "native-interop",
+      "title": "Native interop names its intent and reports loss",
+      "summary": "fromDate, toDate, epoch milliseconds and plain dates convert as the caller asks, refuse the host's zone and report what they lose.",
+      "subject": [
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "native-interop-with-intent"
+        }
+      ],
+      "criteria": [
+        "A Date becomes an instant, a fixed-offset date-time or a zoned date-time with explicit rules (with the rules in the manifest).",
+        "A Date as local civil time is unsupported (local-zone), with no candidate; an Invalid Date is invalid; a zone outside the rules is unsupported.",
+        "To a Date: lossless at millisecond precision; sub-millisecond digits are floored and reported; a fixed offset is reported dropped; zoned and floating date-times and instants beyond the Date range are unsupported.",
+        "Epoch milliseconds round-trip, accept bigint, refuse fractions and report sub-millisecond loss.",
+        "Plain dates round-trip; 30 February and month 0 are invalid, not rolled over; huge years and zoned dates are unsupported."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "Date as an instant",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "Date in a named zone uses explicit rules",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "Date as local civil time is refused (host zone)",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "sub-millisecond instant to Date reports loss",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "fixed-offset date-time to Date reports the dropped offset",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "zoned date-time to Date is unsupported (resolve first)",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "floating date-time to Date is unsupported (would need host zone)",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "instant beyond the Date range is unsupported",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "Date round trip",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "epoch milliseconds to instant and back",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "fractional epoch milliseconds are invalid",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "plain 30 February is invalid, not rolled over",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "huge year to plain date is unsupported",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "d"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "native-interop-with-intent"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-silent-conversions"
+        }
+      ]
+    },
+    {
+      "id": "no-hidden-environment",
+      "title": "Library sources never read the environment",
+      "summary": "A source scan fails if library code mentions the clock, the host's zone or the locale.",
+      "subject": [
+        {
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "no-hidden-environment"
+        }
+      ],
+      "criteria": [
+        "No file in src/ (comments stripped) matches Date.now, new Date(), Intl., getTimezoneOffset, toLocale, process., performance. or a local get…() Date method.",
+        "The scan finds native.ts and zones.ts, so it is looking at the library sources."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "library sources never read the clock, host zone or locale",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/native.test.ts",
+          "symbol": "forbidden"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "no-hidden-environment"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,208 @@
+{
+  "$schema": "../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "UTV repository component diagram",
+  "folder": ".",
+  "description": "The parts of the repository and what depends on what. The specification is the source of truth; everything else encodes, checks or implements it. Nothing here is deployed: the libraries are packages an application takes in-process.",
+  "sources": [
+    {
+      "path": "README.md",
+      "symbol": "Repository layout"
+    },
+    {
+      "path": "implementations/README.md",
+      "symbol": "Shared conformance material"
+    },
+    {
+      "path": "tools/validate.py",
+      "symbol": "main"
+    },
+    {
+      "path": "tools/side_by_side.py",
+      "symbol": "LANGUAGES"
+    },
+    {
+      "path": ".github/workflows/validate.yml",
+      "symbol": "jobs.structural"
+    }
+  ],
+  "components": [
+    {
+      "id": "utv",
+      "name": "UTV repository",
+      "responsibility": "The specification, its checks and its five libraries, versioned together for the specification and separately for each library.",
+      "folder": "."
+    },
+    {
+      "id": "spec",
+      "name": "Specification",
+      "responsibility": "The normative model, decisions, result contract and traceability matrices: the source of truth for meaning.",
+      "folder": "spec"
+    },
+    {
+      "id": "schema",
+      "name": "Structural schema",
+      "responsibility": "Field names and shapes of utv/1.0 values, as JSON Schema 2020-12.",
+      "folder": "schema"
+    },
+    {
+      "id": "conformance",
+      "name": "Conformance material",
+      "responsibility": "Structural examples, executable operation fixtures, the demo zone rules and the semantic scenarios.",
+      "folder": "conformance"
+    },
+    {
+      "id": "implementations",
+      "name": "Language libraries",
+      "responsibility": "The C#, Java, Python, Rust and TypeScript libraries, each implementing the JSON layer and the typed layer.",
+      "folder": "implementations",
+      "diagram": "implementations/.dev/component-diagram.json"
+    },
+    {
+      "id": "docs",
+      "name": "Documentation",
+      "responsibility": "The library contracts, the question catalogue, the example catalogue, the rationale and the generated side-by-side page.",
+      "folder": "docs"
+    },
+    {
+      "id": "tools",
+      "name": "Repository tooling",
+      "responsibility": "The structural checks and the side-by-side page generator.",
+      "folder": "tools"
+    },
+    {
+      "id": "workflows",
+      "name": "CI workflow",
+      "responsibility": "Runs the tooling's two checks on every push and pull request.",
+      "folder": ".github/workflows"
+    },
+    {
+      "id": "github-actions",
+      "name": "GitHub Actions",
+      "responsibility": "Runs the workflow on ubuntu-latest.",
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "utv",
+      "to": "spec",
+      "kind": "contains",
+      "description": "Versioned with the schema and the conformance material."
+    },
+    {
+      "from": "utv",
+      "to": "schema",
+      "kind": "contains",
+      "description": "One file per specification MAJOR.MINOR."
+    },
+    {
+      "from": "utv",
+      "to": "conformance",
+      "kind": "contains",
+      "description": "Versioned with the specification."
+    },
+    {
+      "from": "utv",
+      "to": "implementations",
+      "kind": "contains",
+      "description": "Each library versioned on its own."
+    },
+    {
+      "from": "utv",
+      "to": "docs",
+      "kind": "contains",
+      "description": "Contracts and rationale."
+    },
+    {
+      "from": "utv",
+      "to": "tools",
+      "kind": "contains",
+      "description": "Repository checks."
+    },
+    {
+      "from": "utv",
+      "to": "workflows",
+      "kind": "contains",
+      "description": "CI."
+    },
+    {
+      "from": "schema",
+      "to": "spec",
+      "kind": "depends-on",
+      "description": "Encodes the shapes the specification defines; the specification governs where they differ (OI-01 … OI-06)."
+    },
+    {
+      "from": "conformance",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "Its examples and fixture values are valid or invalid against the schema."
+    },
+    {
+      "from": "conformance",
+      "to": "spec",
+      "kind": "depends-on",
+      "description": "The scenarios trace the falsehoods matrix and the standards review."
+    },
+    {
+      "from": "implementations",
+      "to": "conformance",
+      "kind": "depends-on",
+      "description": "Every library's tests read the examples, the fixtures and demo-zones.json in place."
+    },
+    {
+      "from": "implementations",
+      "to": "docs",
+      "kind": "depends-on",
+      "description": "Implement the everyday API, the library API and the text form."
+    },
+    {
+      "from": "implementations",
+      "to": "spec",
+      "kind": "depends-on",
+      "description": "Read and write utv/1.0 values and mirror utv-result/1.0."
+    },
+    {
+      "from": "tools",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "validate.py checks the schema and validates against it."
+    },
+    {
+      "from": "tools",
+      "to": "conformance",
+      "kind": "depends-on",
+      "description": "validate.py checks the examples, scenarios and fixtures."
+    },
+    {
+      "from": "tools",
+      "to": "spec",
+      "kind": "depends-on",
+      "description": "validate.py checks the embedded JSON examples and the falsehoods matrix."
+    },
+    {
+      "from": "tools",
+      "to": "implementations",
+      "kind": "depends-on",
+      "description": "side_by_side.py reads the five UTV-first example suites."
+    },
+    {
+      "from": "tools",
+      "to": "docs",
+      "kind": "depends-on",
+      "description": "side_by_side.py writes and checks docs/side-by-side.md."
+    },
+    {
+      "from": "workflows",
+      "to": "tools",
+      "kind": "depends-on",
+      "description": "Runs validate.py and side_by_side.py --check."
+    },
+    {
+      "from": "workflows",
+      "to": "github-actions",
+      "kind": "depends-on",
+      "description": "runs-on: ubuntu-latest."
+    }
+  ]
+}

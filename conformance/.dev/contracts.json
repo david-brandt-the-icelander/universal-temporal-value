@@ -1,0 +1,148 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "Conformance material contracts",
+  "folder": "conformance",
+  "entities": [
+    {
+      "id": "everyday-fixtures",
+      "title": "Everyday operation fixtures",
+      "summary": "conformance/operations/everyday.json: the executable fixtures every library's JSON layer must pass, each an operation, its arguments and the expected status, diagnostics and result. Expected values were computed with Python's datetime and zoneinfo, independently of the UTV libraries.",
+      "contractType": "data-format",
+      "consumers": [
+        "implementations/csharp/tests/Utv.Tests/EverydayFixtureTests.cs",
+        "implementations/java/src/test/java/net/icelander/utv/EverydayFixturesTest.java",
+        "implementations/python/tests/test_everyday_fixtures.py",
+        "implementations/rust/tests/everyday.rs",
+        "implementations/typescript/test/everyday.test.ts",
+        "tools/validate.py, which checks every UTV value in it against the structural schema"
+      ],
+      "guarantees": [
+        "A JSON object with description, rules (named rule bundles, as paths from the repository root), comparison and fixtures.",
+        "Each fixture has an id, an op named in docs/everyday-api.md, args and expect; expect.diagnostics lists the codes that must appear, and others may also be present.",
+        "Results are compared as JSON values; object key order is irrelevant.",
+        "Libraries read the file in place from the repository root and never copy it (implementations/README.md, Shared conformance material)."
+      ],
+      "compatibility": "Fixtures are added for new clarifications; the file is the arbiter of the everyday API, so a change to an expected outcome is a change to the contract in docs/everyday-api.md.",
+      "definition": "conformance/operations/everyday.json",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "conformance/operations/everyday.json",
+          "symbol": "fixtures"
+        },
+        {
+          "path": "tools/validate.py",
+          "symbol": "check_everyday_fixtures"
+        },
+        {
+          "path": "implementations/java/src/test/java/net/icelander/utv/EverydayFixturesTest.java",
+          "symbol": "FIXTURES"
+        }
+      ]
+    },
+    {
+      "id": "text-form-fixtures",
+      "title": "Text-form fixtures",
+      "summary": "conformance/operations/text-form.json: pairs of text and UTV JSON that every library's parseText and formatText must agree with.",
+      "contractType": "data-format",
+      "consumers": [
+        "implementations/csharp/tests/Utv.Tests/TextFormFixtureTests.cs",
+        "implementations/java/src/test/java/net/icelander/utv/TextFormFixturesTest.java",
+        "implementations/python/tests/test_text_form.py",
+        "implementations/rust/tests/text_form.rs",
+        "implementations/typescript/test/text-form.test.ts",
+        "tools/validate.py, which checks every UTV value in it against the structural schema and that ids are unique"
+      ],
+      "guarantees": [
+        "Each fixture has an id, a direction, the text and the value (or an expect with a status and diagnostics); direction both means parseText(text) gives value with status unique and formatText(value) gives text, and parse and format test one direction only.",
+        "expect.diagnostics lists codes that must each appear among the result's diagnostics."
+      ],
+      "definition": "conformance/operations/text-form.json",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "conformance/operations/text-form.json",
+          "symbol": "description"
+        },
+        {
+          "path": "implementations/java/src/test/java/net/icelander/utv/TextFormFixturesTest.java",
+          "symbol": "FIXTURES"
+        }
+      ]
+    },
+    {
+      "id": "demo-zone-rules",
+      "title": "Demo zone-rule bundle",
+      "summary": "conformance/rules/demo-zones.json: transitions for America/New_York, Europe/Paris and Atlantic/Reykjavik, valid for 2026 and 2027 only, in the rule-bundle format every library's ZoneRules loader reads.",
+      "contractType": "data-format",
+      "consumers": [
+        "The zone-rule loaders: implementations/csharp/src/Utv/ZoneRules.cs, implementations/java/src/main/java/net/icelander/utv/RuleBundle.java, implementations/python/src/utv/zones.py, implementations/rust/src/zones.rs, implementations/typescript/src/zones.ts",
+        "conformance/operations/everyday.json, which names it under rules",
+        "Every library's example tests, through their shared fixture"
+      ],
+      "guarantees": [
+        "A ruleSet identity (system, id, version), validFrom and validUntil as POSIX seconds, and per-zone transitions.",
+        "It is demonstration data for examples and tests only, taken from IANA tzdb: valid from 2026-01-01T00:00:00Z (inclusive) to 2028-01-01T00:00:00Z (exclusive). Outside that window, or for any other zone, a resolver returns unsupported (outside-rule-window, unknown-zone) and never extrapolates. Real applications load a pinned tzdb release instead."
+      ],
+      "definition": "conformance/rules/demo-zones.json",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "conformance/rules/demo-zones.json",
+          "symbol": "note"
+        },
+        {
+          "path": "conformance/rules/demo-zones.json",
+          "symbol": "validUntil"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "Rules::parse"
+        }
+      ]
+    },
+    {
+      "id": "structural-examples",
+      "title": "Structural examples",
+      "summary": "conformance/examples/valid.json and invalid-structural.json: named UTV values the schema, and every library's structural validator, must accept or reject.",
+      "contractType": "data-format",
+      "consumers": [
+        "tools/validate.py",
+        "implementations/csharp/tests/Utv.Tests/ConformanceTests.cs",
+        "implementations/java/src/test/java/net/icelander/utv/ConformanceTest.java",
+        "implementations/python/tests/test_conformance.py",
+        "implementations/rust/tests/conformance.rs",
+        "implementations/typescript/test/conformance.test.ts"
+      ],
+      "guarantees": [
+        "Each file is one JSON object mapping a value's name to a UTV value.",
+        "Every value in valid.json passes structural validation and round-trips to canonical JSON without loss; every value in invalid-structural.json is rejected, a newer or unknown version identifier as unsupported.",
+        "The examples test structure only: a valid value may still be semantically invalid or unresolvable."
+      ],
+      "definition": "conformance/README.md",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "conformance/README.md",
+          "symbol": "Structural vs. semantic"
+        },
+        {
+          "path": "implementations/README.md",
+          "symbol": "Shared conformance material"
+        },
+        {
+          "path": "tools/validate.py",
+          "symbol": "check_examples"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema"
+        }
+      ]
+    }
+  ]
+}

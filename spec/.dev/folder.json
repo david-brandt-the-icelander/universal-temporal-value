@@ -1,0 +1,30 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Specification",
+  "folder": "spec",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Specification",
+      "summary": "The normative specification of UTV 1.0, the source of truth for what values and results mean.",
+      "purpose": "Defines the temporal data model: the core model and standards convergence (SPECIFICATION.md, Parts I and II), the binding design decisions and implementation obligations (DECISIONS.md), the result contract (RESULT-CONTRACT.md), coverage of published standards (STANDARDS-MATRIX.md) and the falsehood traceability matrix (FALSEHOODS-MATRIX.md). OPEN-ISSUES.md holds the precedence rule for open issues and points at their records.",
+      "boundaries": [
+        "Governs semantics; the JSON Schema in schema/ governs only serialized field names and shapes.",
+        "A design specification for independently implemented engines, not an ISO or IETF standard.",
+        "Versioned with the schema and the conformance material under one version number (VERSIONING.md)."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "Universal Temporal Value (UTV) — Specification"
+        },
+        {
+          "path": "README.md",
+          "symbol": "Repository layout"
+        }
+      ]
+    }
+  ]
+}

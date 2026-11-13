@@ -1,0 +1,1440 @@
+{
+  "$schema": "../../../../../../../../../Meta/Agents/Skills/describe-use-case/schema.json",
+  "kind": "use-case",
+  "title": "net.icelander.utv use cases",
+  "folder": "implementations/java/src/main/java/net/icelander/utv",
+  "description": "What an application developer does with the Java library, step by step, with the branches the code has.",
+  "sources": [
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+      "symbol": "TemporalValue"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+      "symbol": "TemporalContext"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+      "symbol": "JavaTime"
+    }
+  ],
+  "entities": [
+    {
+      "id": "create-a-date",
+      "name": "Create a date",
+      "description": "Make a date from its fields or from text, and learn why it cannot exist when it cannot (tasks a-date, feb-30).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.of"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.tryOf"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.parse"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Hold a CivilDate for a real day, or a reason why the given day is not one.",
+      "preconditions": [
+        "utv-core 0.3 and Jackson are on the class path of a Java 21 application."
+      ],
+      "postconditions": [
+        "The caller holds an immutable CivilDate with exactly the given year, month and day.",
+        "Or the caller has the reason: an outcome with a shared diagnostic code, or an IllegalArgumentException whose message names it."
+      ],
+      "flow": [
+        {
+          "id": "ask",
+          "actor": "Application developer",
+          "action": "Calls CivilDate.of(year, month, day), CivilDate.tryOf(year, month, day) or CivilDate.parse(text).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.of"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.tryOf"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.parse"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "build",
+          "actor": "utv-core",
+          "action": "Builds the date's UTV JSON (Values.date), or parses the text with TextForm.parseText.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Values.java",
+              "symbol": "Values.date"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.parse"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "check",
+          "actor": "utv-core",
+          "action": "Validates the JSON's structure and decodes it as a proleptic Gregorian date: month 1–12, and the day within that month.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.decode"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Civil.java",
+              "symbol": "Civil.decode"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "utv-core",
+          "action": "Returns the CivilDate from of, or Outcome.Unique with it from tryOf and parse.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.argument"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.decode"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "build",
+          "condition": "The text is not ISO 8601 extended form.",
+          "outcome": "Invalid (syntax); week, ordinal and basic dates are unsupported (unsupported-form).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+              "symbol": "Iso.parse"
+            }
+          ]
+        },
+        {
+          "atStep": "check",
+          "condition": "The month is outside 1–12.",
+          "outcome": "tryOf and parse: invalid (month-out-of-range). of: IllegalArgumentException.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Civil.java",
+              "symbol": "Civil.num"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.argument"
+            }
+          ]
+        },
+        {
+          "atStep": "check",
+          "condition": "The day does not exist in the month (30 February; 29 February in a common year).",
+          "outcome": "tryOf and parse: invalid (day-out-of-range). of: IllegalArgumentException.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Civil.java",
+              "symbol": "Civil.decode"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+              "symbol": "Iso.Parts.date"
+            }
+          ]
+        },
+        {
+          "atStep": "check",
+          "condition": "The text names another kind of value, such as 2026-11-05T14:30.",
+          "outcome": "Invalid (kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.civil"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "add-months",
+      "name": "Add months",
+      "description": "Month arithmetic where the day may be missing from the target month (task month-end).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.addMonths"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.doAddFields"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Move a date (or a date-time, or a zoned wall time) by whole months, and decide what happens when the day does not exist.",
+      "preconditions": [
+        "utv-core 0.3 and Jackson are on the class path of a Java 21 application.",
+        "The caller holds a CivilDate, CivilDateTime or ZonedIntent."
+      ],
+      "postconditions": [
+        "The caller holds the value n months on, or knows the day is missing (none, month-end) and has chosen MonthEnd.CONSTRAIN explicitly."
+      ],
+      "flow": [
+        {
+          "id": "ask",
+          "actor": "Application developer",
+          "action": "Calls addMonths(n) (or addYears(n), or add(Period)).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.addMonths"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.addYears"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.add"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "add",
+          "actor": "utv-core",
+          "action": "Adds 12·years + months to the year and month, through Operations.add with MonthEnd.REJECT.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+              "symbol": "Operations.add"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+              "symbol": "Operations.doAddFields"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "utv-core",
+          "action": "The day exists in the target month: returns Outcome.Unique with the new value.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.outcome"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "answer",
+          "condition": "The day is missing from the target month (31 January + 1 month).",
+          "outcome": "None (month-end), with the message '2026-02 has no day 31'.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+              "symbol": "Operations.doAddFields"
+            }
+          ]
+        },
+        {
+          "atStep": "ask",
+          "condition": "The caller asks to clamp: addMonths(n, MonthEnd.CONSTRAIN) (or addYears).",
+          "outcome": "The value on the target month's last day, as a plain value: 28 February.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.constrained"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+              "symbol": "CivilDateTime.addMonths"
+            }
+          ]
+        },
+        {
+          "atStep": "ask",
+          "condition": "The caller passes MonthEnd.REJECT to the total overload.",
+          "outcome": "IllegalArgumentException: the rejecting form is addMonths(n).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.constrained"
+            }
+          ]
+        },
+        {
+          "atStep": "add",
+          "condition": "add(Period) on a date with hours, minutes or seconds.",
+          "outcome": "Invalid (kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+              "symbol": "Operations.doAddFields"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "The value is a ZonedIntent with an asserted offset.",
+          "outcome": "Unique without the asserted offset, which may no longer hold (offset-assertion-dropped).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+              "symbol": "Operations.doAdd"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+              "symbol": "ZonedIntent.addMonths"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "resolve-a-zoned-time",
+      "name": "Resolve a zoned time",
+      "description": "Turn a wall time in an IANA zone into an instant, with gaps and overlaps answered by policy (tasks meeting-in-paris, dst-gap, dst-overlap).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.resolve"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.doResolve"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Know which instant (or instants) a wall time in a named zone is, under rules the caller chose.",
+      "preconditions": [
+        "utv-core 0.3 and Jackson are on the class path of a Java 21 application.",
+        "The caller has a zone-rule bundle in the format of conformance/rules/demo-zones.json."
+      ],
+      "postconditions": [
+        "The caller holds the instant, both instants of an overlap, or the reason there is none; the result depended only on the rules given."
+      ],
+      "flow": [
+        {
+          "id": "load",
+          "actor": "Application developer",
+          "action": "Loads the rules with ZoneRules.load(path) and holds them in TemporalContext.with(rules).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/ZoneRules.java",
+              "symbol": "ZoneRules.load"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+              "symbol": "TemporalContext.with"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "intend",
+          "actor": "Application developer",
+          "action": "Makes the wall time in a zone: CivilDateTime.of(…).inZone(\"Europe/Paris\"), or ZonedIntent.parse(text).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+              "symbol": "CivilDateTime.inZone"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+              "symbol": "ZonedIntent.of"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "resolve",
+          "actor": "Application developer",
+          "action": "Calls zoned.resolve(ctx), or resolve(ctx, policy) with a ResolutionPolicy, a Gap or an Overlap.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+              "symbol": "ZonedIntent.resolve"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+              "symbol": "TemporalContext.resolve"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "candidates",
+          "actor": "utv-core",
+          "action": "Checks the zone is in the rules and the wall time a day inside their window, then keeps each offset in force within a day whose instant really has that offset.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+              "symbol": "Zones.doResolve"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/RuleBundle.java",
+              "symbol": "RuleBundle.ZoneData"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "utv-core",
+          "action": "One candidate: returns Outcome.Unique with the Instant.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+              "symbol": "Zones.doResolve"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.outcome"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "see-elsewhere",
+          "actor": "Application developer",
+          "action": "Optionally sees the instant in another zone: instant.inZone(\"America/New_York\", ctx), a ZonedIntent with the offset in force asserted.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+              "symbol": "Instant.inZone"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+              "symbol": "Zones.toZone"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "load",
+          "condition": "The file is not a well-formed bundle.",
+          "outcome": "IllegalArgumentException from load and parse; tryParse returns invalid (malformed-value).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/RuleBundle.java",
+              "symbol": "RuleBundle.fromJson"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/ZoneRules.java",
+              "symbol": "ZoneRules.tryParse"
+            }
+          ]
+        },
+        {
+          "atStep": "intend",
+          "condition": "The zone id is not Area/Location-shaped.",
+          "outcome": "IllegalArgumentException.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+              "symbol": "ZonedIntent.of"
+            }
+          ]
+        },
+        {
+          "atStep": "candidates",
+          "condition": "The zone is not in the rules.",
+          "outcome": "Unsupported (unknown-zone).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+              "symbol": "Zones.doResolve"
+            }
+          ]
+        },
+        {
+          "atStep": "candidates",
+          "condition": "The wall time is within a day of the rules' window, or outside it.",
+          "outcome": "Unsupported (outside-rule-window): never extrapolated.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+              "symbol": "Zones.doResolve"
+            }
+          ]
+        },
+        {
+          "atStep": "candidates",
+          "condition": "The value asserts an offset that is not in force.",
+          "outcome": "Invalid (offset-mismatch), even in a gap.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+              "symbol": "Zones.doResolve"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "No candidate (a gap) with Gap.REJECT or PRESERVE_UNRESOLVED.",
+          "outcome": "None (gap).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+              "symbol": "Zones.doResolve"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "No candidate with Gap.SHIFT_FORWARD.",
+          "outcome": "Unique: the wall time moved forward by the gap, 02:30 becoming 03:30 daylight time.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+              "symbol": "Zones.doResolve"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Gap.java",
+              "symbol": "Gap"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "Two candidates (an overlap) with Overlap.REJECT, or ALL.",
+          "outcome": "Multiple with both instants ascending; REJECT adds the ambiguous diagnostic.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+              "symbol": "Zones.doResolve"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "Two candidates with Overlap.EARLIEST or LATEST.",
+          "outcome": "Unique: the first or the last instant.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+              "symbol": "Zones.doResolve"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Overlap.java",
+              "symbol": "Overlap"
+            }
+          ]
+        },
+        {
+          "atStep": "see-elsewhere",
+          "condition": "The zone is not in the rules, or the instant is outside their window.",
+          "outcome": "Unsupported (unknown-zone, outside-rule-window).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+              "symbol": "Zones.toZone"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "compare-values",
+      "name": "Compare values",
+      "description": "Order two values; zoned ones need a context and may be ambiguous (task compare-dates).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext.compare"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.compare"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Know whether one value comes before, at or after another, or that the answer depends on information nobody has.",
+      "preconditions": [
+        "utv-core 0.3 and Jackson are on the class path of a Java 21 application.",
+        "For zoned values, a TemporalContext with rules covering them."
+      ],
+      "postconditions": [
+        "The caller has an order, the possible orders, or the reason none can be given."
+      ],
+      "flow": [
+        {
+          "id": "plain",
+          "actor": "Application developer",
+          "action": "For values that always have an order (dates, year-months, times, date-times, offset date-times, instants), calls compareTo, isBefore or isAfter.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.compareTo"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.isBefore"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+              "symbol": "Instant.compareTo"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "order",
+          "actor": "utv-core",
+          "action": "Orders them through Operations.compare: civil fields with a missing second counted as 0, instants and offset date-times exactly on the timeline.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+              "symbol": "Operations.compare"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.order"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "zoned",
+          "actor": "Application developer",
+          "action": "For a ZonedIntent, which has no compareTo, calls ctx.compare(a, b).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+              "symbol": "TemporalContext.compare"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "resolve",
+          "actor": "utv-core",
+          "action": "Resolves each zoned side strictly and collects every order the possible instants allow.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+              "symbol": "TemporalContext.instants"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+              "symbol": "TemporalContext.resolve"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "utv-core",
+          "action": "One possible order: returns Outcome.Unique with BEFORE, EQUAL or AFTER.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+              "symbol": "TemporalContext.compare"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "answer",
+          "condition": "The order depends on which side of a DST overlap is meant (01:30 vs 01:45 on 1 November 2026 in New York).",
+          "outcome": "Multiple with the possible orders and one ambiguous warning.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+              "symbol": "TemporalContext.compare"
+            }
+          ]
+        },
+        {
+          "atStep": "resolve",
+          "condition": "A zoned side falls in a gap, is outside the rules, or asserts a wrong offset.",
+          "outcome": "That side's outcome: none (gap), unsupported (unknown-zone, outside-rule-window) or invalid (offset-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+              "symbol": "TemporalContext.instants"
+            }
+          ]
+        },
+        {
+          "atStep": "resolve",
+          "condition": "A zoned value is compared with something other than an Instant, a FixedOffsetDateTime or a ZonedIntent.",
+          "outcome": "Unsupported (unsupported-operand).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+              "symbol": "TemporalContext.instants"
+            }
+          ]
+        },
+        {
+          "atStep": "zoned",
+          "condition": "Neither value is zoned.",
+          "outcome": "Ordered as compareTo would; values of different kinds or forms are unsupported (unsupported-operand).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+              "symbol": "TemporalContext.compare"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+              "symbol": "Operations.compare"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "convert-native",
+      "name": "Convert native values",
+      "description": "Bring java.time values in and out, naming the reading by the method called; there is no intent-required outcome in Java (tasks now, round-trip).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.from"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java",
+          "symbol": "FixedOffsetDateTime.from"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Use UTV with code that already speaks java.time, without a silent choice or a silent loss.",
+      "preconditions": [
+        "utv-core 0.3 and Jackson are on the class path of a Java 21 application."
+      ],
+      "postconditions": [
+        "The caller holds the UTV value the native one names in the reading they chose, or a native value with any loss reported, or the reason there is none."
+      ],
+      "flow": [
+        {
+          "id": "now",
+          "actor": "Application developer",
+          "action": "Reads the clock in their own code and passes the reading in: Instant.from(java.time.Instant.now()).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+              "symbol": "Instant.from"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "bring-in",
+          "actor": "Application developer",
+          "action": "Brings in other native values with the method that names the reading: FixedOffsetDateTime.from(odt) for the wall time at its offset or Instant.from(odt) for the instant, ZonedIntent.from(zdt), CivilDate.from(localDate).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java",
+              "symbol": "FixedOffsetDateTime.from"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+              "symbol": "ZonedIntent.from"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.from"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "convert-in",
+          "actor": "utv-core",
+          "action": "Builds the value from the native fields (CivilDate.from, Instant.from), or through the matching JavaTime adapter (FixedOffsetDateTime.from, ZonedIntent.from, where the ZonedDateTime's offset becomes the asserted offset), and reads it as the typed value.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.from"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+              "symbol": "Instant.from"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+              "symbol": "JavaTime.fromOffsetDateTime"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+              "symbol": "JavaTime.fromZonedDateTime"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "take-out",
+          "actor": "Application developer",
+          "action": "Converts back: toOffsetDateTime(), toZonedDateTime(), toLocalDate(), toJavaInstant().",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java",
+              "symbol": "FixedOffsetDateTime.toOffsetDateTime"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+              "symbol": "ZonedIntent.toZonedDateTime"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.toLocalDate"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+              "symbol": "Instant.toJavaInstant"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "convert-out",
+          "actor": "utv-core",
+          "action": "Converts through JavaTime and returns Outcome.Unique with the native value; a value that came from java.time comes back equal.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.fromNative"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+              "symbol": "JavaTime.toOffsetDateTime"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "bring-in",
+          "condition": "A ZonedDateTime whose zone is a ZoneOffset.",
+          "outcome": "IllegalArgumentException: use FixedOffsetDateTime.from.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+              "symbol": "ZonedIntent.from"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-in",
+          "condition": "In the JSON layer, a java.util.Date read as anything but As.INSTANT.",
+          "outcome": "Unsupported (local-zone): its fields come from ZoneId.systemDefault().",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+              "symbol": "JavaTime.fromDate"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-out",
+          "condition": "java.time cannot hold the value (a year beyond ±999,999,999, a period component beyond an int, a Duration out of range).",
+          "outcome": "Unsupported (out-of-native-range).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+              "symbol": "JavaTime.year"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+              "symbol": "JavaTime.toPeriod"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+              "symbol": "JavaTime.toDuration"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-out",
+          "condition": "The value has a fraction of a second finer than a nanosecond.",
+          "outcome": "Unique with a precision-loss warning: truncated toward the past.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+              "symbol": "JavaTime.instant"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/NativeResult.java",
+              "symbol": "NativeResult.lossy"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-out",
+          "condition": "In the JSON layer, a zoned value with an asserted offset converted to OffsetDateTime.",
+          "outcome": "Unique with a zone-dropped warning.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+              "symbol": "JavaTime.toOffsetDateTime"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-out",
+          "condition": "toZonedDateTime on a value with no asserted offset.",
+          "outcome": "Unsupported (unsupported-operand): resolve it, or come from Instant.inZone, first.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+              "symbol": "JavaTime.toZonedDateTime"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-out",
+          "condition": "The JDK's tz database disagrees with the asserted offset, or lacks the zone.",
+          "outcome": "Invalid (offset-mismatch), or unsupported (unknown-zone).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+              "symbol": "JavaTime.toZonedDateTime"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "read-and-write-text",
+      "name": "Read and write text",
+      "description": "Write values in the UTV text form and parse it back, ISO 8601 / RFC 9557 included (task parse-offsets).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+          "symbol": "TextForm"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.text"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+          "symbol": "TemporalValue.parse"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Show values as text and read text into the right typed value, losslessly.",
+      "preconditions": [
+        "utv-core 0.3 and Jackson are on the class path of a Java 21 application."
+      ],
+      "postconditions": [
+        "Text written by toString parses back to an equal value; text read names its type (Instant for Z, FixedOffsetDateTime for +00:00), or the caller knows why it could not be read."
+      ],
+      "flow": [
+        {
+          "id": "write",
+          "actor": "Application developer",
+          "action": "Calls toString() on a value.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.text"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "format",
+          "actor": "utv-core",
+          "action": "Formats the value's JSON with TextForm.formatText: ISO points, ISO periods, bracket intervals.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+              "symbol": "TextForm.format"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+              "symbol": "Iso.format"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "read",
+          "actor": "Application developer",
+          "action": "Calls TemporalValue.parse(text), or a type's own parse such as Instant.parse.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+              "symbol": "TemporalValue.parse"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+              "symbol": "Instant.parse"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "parse",
+          "actor": "utv-core",
+          "action": "Parses the text into UTV JSON: brackets and EDTF slashes as intervals, P… as periods, the rest with Iso.parse.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+              "symbol": "TextForm.parse"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+              "symbol": "Iso.parse"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "type",
+          "actor": "utv-core",
+          "action": "Reads the JSON as the matching typed value and returns Outcome.Unique with it.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.parse"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.anyFromJson"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "format",
+          "condition": "The value has no text form (a mixed-sign period).",
+          "outcome": "toString() prints the value's JSON instead.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.text"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+              "symbol": "TextForm.period"
+            }
+          ]
+        },
+        {
+          "atStep": "format",
+          "condition": "The value is a PosixSeconds or ElapsedSeconds.",
+          "outcome": "A display string such as 3600.75 s (POSIX) that parse does not read.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.seconds"
+            }
+          ]
+        },
+        {
+          "atStep": "parse",
+          "condition": "The text matches no grammar.",
+          "outcome": "Invalid (syntax).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+              "symbol": "Iso.parse"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+              "symbol": "TextForm.period"
+            }
+          ]
+        },
+        {
+          "atStep": "parse",
+          "condition": "Valid notation outside the profile: week, ordinal or basic dates, EDTF qualifiers, decimal period components, an interval with no point.",
+          "outcome": "Unsupported (unsupported-form).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+              "symbol": "Iso.parse"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+              "symbol": "TextForm.parse"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+              "symbol": "TextForm.interval"
+            }
+          ]
+        },
+        {
+          "atStep": "parse",
+          "condition": "An annotation other than one [Area/Location], or a [zone] after Z; second 60; 24:00.",
+          "outcome": "Unsupported (unsupported-annotation, leap-second, end-of-day).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+              "symbol": "Iso.parse"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+              "symbol": "Iso.Parts.time"
+            }
+          ]
+        },
+        {
+          "atStep": "parse",
+          "condition": "A field or offset out of range, a reversed interval, or interval endpoints of different kinds.",
+          "outcome": "Invalid (day-out-of-range, month-out-of-range, field-out-of-range, offset-out-of-range, reversed-interval, kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+              "symbol": "Iso.Parts.check"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+              "symbol": "TextForm.interval"
+            }
+          ]
+        },
+        {
+          "atStep": "type",
+          "condition": "A type's own parse is given another kind of value.",
+          "outcome": "Invalid (kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.civil"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.requireKind"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "validate-utv-json",
+      "name": "Validate UTV JSON",
+      "description": "Structurally validate UTV JSON and read it into typed values (fromJson).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+          "symbol": "Utv.validateStructural"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/GregorianCivil.java",
+          "symbol": "GregorianCivil.validate"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+          "symbol": "TemporalValue.fromJson"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Accept UTV JSON from elsewhere only when it is exactly a value the library understands.",
+      "preconditions": [
+        "utv-core 0.3 and Jackson are on the class path of a Java 21 application.",
+        "The caller has UTV JSON text or a Jackson JsonNode."
+      ],
+      "postconditions": [
+        "The caller knows whether the JSON is structurally valid, whether a civil date in it exists, and holds the typed value, or has the reason."
+      ],
+      "flow": [
+        {
+          "id": "validate",
+          "actor": "Application developer",
+          "action": "Calls Utv.validateStructural(json).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+              "symbol": "Utv.validateStructural"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "structure",
+          "actor": "utv-core",
+          "action": "Parses with duplicate-key detection and checks the envelope, the version, the kind and its required and allowed properties.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+              "symbol": "Utv.parse"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+              "symbol": "Utv.check"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/KindTable.java",
+              "symbol": "KindTable.RULES"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/KindRules.java",
+              "symbol": "KindRules.check"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "gregorian",
+          "actor": "Application developer",
+          "action": "For a civil value, calls GregorianCivil.validate(json) to check that the date exists.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/GregorianCivil.java",
+              "symbol": "GregorianCivil.validate"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "read",
+          "actor": "Application developer",
+          "action": "Reads it as a typed value: TemporalValue.fromJson(node) or a type's fromJson.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+              "symbol": "TemporalValue.fromJson"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+              "symbol": "CivilDate.fromJson"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "decode",
+          "actor": "utv-core",
+          "action": "Validates again, decodes, and checks that the typed value's own JSON is the input; returns Outcome.Unique with it.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.decode"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.anyFromJson"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "structure",
+          "condition": "An object repeats a key.",
+          "outcome": "Invalid (duplicate-key), with the pointer of the repeated key.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+              "symbol": "Utv.validateStructural"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+              "symbol": "Utv.isDuplicateKey"
+            }
+          ]
+        },
+        {
+          "atStep": "structure",
+          "condition": "The text is not JSON.",
+          "outcome": "Invalid (utv.json.malformed).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+              "symbol": "Utv.malformed"
+            }
+          ]
+        },
+        {
+          "atStep": "structure",
+          "condition": "A well-formed version other than utv/1.0 (utv/2.0).",
+          "outcome": "Unsupported (utv.version.unsupported).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+              "symbol": "Utv.check"
+            }
+          ]
+        },
+        {
+          "atStep": "structure",
+          "condition": "A malformed or missing version identifier (utv/4, utv/1.01).",
+          "outcome": "Invalid (utv.envelope.schema).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+              "symbol": "Utv.check"
+            }
+          ]
+        },
+        {
+          "atStep": "structure",
+          "condition": "An unknown kind, a missing required property or an unknown property.",
+          "outcome": "Invalid (utv.kind.unknown, utv.value.required, utv.value.unknown-property, utv.envelope.unknown-property).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+              "symbol": "Utv.check"
+            }
+          ]
+        },
+        {
+          "atStep": "gregorian",
+          "condition": "Another calendar, kind or form.",
+          "outcome": "Unsupported (utv.unsupported).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/GregorianCivil.java",
+              "symbol": "GregorianCivil.validate"
+            }
+          ]
+        },
+        {
+          "atStep": "gregorian",
+          "condition": "The day or month does not exist.",
+          "outcome": "Invalid (day-out-of-range, month-out-of-range).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/GregorianCivil.java",
+              "symbol": "GregorianCivil.validate"
+            }
+          ]
+        },
+        {
+          "atStep": "decode",
+          "condition": "The wrong kind or form for the type asked.",
+          "outcome": "Invalid (kind-mismatch).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.civil"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.requireKind"
+            }
+          ]
+        },
+        {
+          "atStep": "decode",
+          "condition": "JSON of the wrong shape.",
+          "outcome": "Invalid (malformed-value), with the 0.1 structural code beside it.",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Civil.java",
+              "symbol": "Civil.structural"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Fail.java",
+              "symbol": "Fail.malformed"
+            }
+          ]
+        },
+        {
+          "atStep": "decode",
+          "condition": "A valid UTV value no typed type holds (a zoned date, a date-time with a resolutionPolicy, another kind).",
+          "outcome": "Unsupported (unsupported-operand).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.decode"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.anyFromJson"
+            }
+          ]
+        },
+        {
+          "atStep": "decode",
+          "condition": "A period component beyond 64 bits, or second 60.",
+          "outcome": "Unsupported (implementation-limit, leap-second).",
+          "sources": [
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.exactLong"
+            },
+            {
+              "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+              "symbol": "Typed.civil"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/java/src/main/java/net/icelander/utv",
+      "path": "implementations/java/src/main/java/net/icelander/utv/.dev/operation.json",
+      "relationship": "The operations the steps call."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/java/src/main/java/net/icelander/utv",
+      "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+      "relationship": "The features these use cases exercise."
+    },
+    {
+      "kind": "capability",
+      "folder": "implementations/java/src/main/java/net/icelander/utv",
+      "path": "implementations/java/src/main/java/net/icelander/utv/.dev/capability.json",
+      "relationship": "The capabilities they use."
+    }
+  ]
+}

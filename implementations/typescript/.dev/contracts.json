@@ -1,0 +1,192 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "TypeScript library contracts",
+  "folder": "implementations/typescript",
+  "entities": [
+    {
+      "id": "utv-core-package",
+      "title": "The @utv/core package",
+      "summary": "@utv/core 0.3.0, an ES module whose one entry point is src/index.ts, compiled to dist/src/index.js with type declarations in dist/src/index.d.ts.",
+      "contractType": "library-api",
+      "consumers": [
+        "Application developers who import @utv/core in Node.js",
+        "The test suites under test/, which import ../src/index.js"
+      ],
+      "guarantees": [
+        "Everything public is exported from src/index.ts; modules are not imported one by one.",
+        "SPEC_VERSION is \"utv/1.0\" and LIBRARY_VERSION is \"0.3.0\".",
+        "The package reads utv/1.0 values, writes utv-result/1.0 results and the text form utv-text/1; any other well-formed utv/M.N is unsupported, and a missing, non-string or malformed identifier invalid.",
+        "No runtime dependencies; typescript is the only devDependency.",
+        "Library code never reads the clock, the host's time zone or tz database, or its locale."
+      ],
+      "compatibility": "Versioned independently of the specification with Semantic Versioning (VERSIONING.md, Implementation versions), tagged typescript/vX.Y.Z. At 0.y.z SemVer allows any change in a minor version; CHANGELOG.md records each change, and every version so far is unreleased. The 0.2 JSON layer is kept unchanged beneath the 0.3 typed layer (docs/library-api.md §7).",
+      "definition": "implementations/typescript/src/index.ts",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/package.json",
+          "symbol": "name"
+        },
+        {
+          "path": "implementations/typescript/package.json",
+          "symbol": "main"
+        },
+        {
+          "path": "implementations/typescript/src/index.ts",
+          "symbol": "SPEC_VERSION"
+        },
+        {
+          "path": "implementations/typescript/src/index.ts",
+          "symbol": "LIBRARY_VERSION"
+        },
+        {
+          "path": "implementations/typescript/src/structural.ts",
+          "symbol": "checkSchemaId"
+        },
+        {
+          "path": "implementations/typescript/README.md",
+          "symbol": "Library version"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0"
+        },
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-result-1-0"
+        }
+      ]
+    },
+    {
+      "id": "typed-api",
+      "title": "Typed API (0.3)",
+      "summary": "One immutable class per everyday value, Outcome<T> for partial operations, typed policies and TemporalContext, in TypeScript's idiom of docs/library-api.md.",
+      "contractType": "library-api",
+      "consumers": [
+        "Application developers",
+        "The example suites under test/examples/, and test/typed.test.ts"
+      ],
+      "guarantees": [
+        "CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime, ZonedIntent, Instant, Period, PosixSeconds, ElapsedSeconds and Interval<CivilDate | Instant> with Bound<T>; private constructors and static factories.",
+        "of throws a RangeError for a value that can't exist; tryOf, parse and fromJson return an Outcome and never throw for bad input.",
+        "Outcome<T> is a union of Unique, Multiple, None, Unsupported and Invalid discriminated on status, with assertNever, uniqueOr, single (throws OutcomeError), toString and toResult.",
+        "Total operations return plain values; addMonths(n, MonthEnd.Constrain) and addYears(n, MonthEnd.Constrain) are total, and passing another policy to them throws a RangeError.",
+        "compare, isBefore and isAfter exist only where the order is defined; ZonedIntent has none, and TemporalContext.compare answers Outcome<Ordering>.",
+        "toString is the text form, toJSON the UTV JSON (so JSON.stringify works), equals compares by representation; Node's inspector shows CivilDate(2026-11-05).",
+        "Policies are typed constants whose string literals type-check too: MonthEnd, Gap, Overlap, ResolutionPolicy (Strict, AllCandidates, of).",
+        "Years are bigint; numbers passed as integers must be safe integers."
+      ],
+      "compatibility": "The naming follows the TypeScript column of docs/library-api.md §6 (of, tryOf, parse, toJSON, fromJson, uniqueOr, single). See utv-core-package for versioning.",
+      "definition": "docs/library-api.md",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "TemporalValue"
+        },
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "Outcome"
+        },
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "TemporalContext"
+        },
+        {
+          "path": "implementations/typescript/README.md",
+          "symbol": "Typed API (0.3)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        },
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "text-form"
+        },
+        {
+          "relation": "depends-on",
+          "path": "implementations/typescript/.dev/contracts.json",
+          "entityId": "json-layer-api",
+          "description": "Every typed operation calls the JSON layer underneath."
+        },
+        {
+          "relation": "part-of",
+          "path": "implementations/typescript/.dev/contracts.json",
+          "entityId": "utv-core-package"
+        }
+      ]
+    },
+    {
+      "id": "json-layer-api",
+      "title": "JSON layer (0.2) and validation (0.1)",
+      "summary": "Builders, parseIso, formatIso, parseText, formatText, fields, add, compare, daysBetween, posixSecondsBetween, contains, overlaps, resolve, toZone, toOffset, loadRules, the native adapters, and validateStructural and validateSemantic, on plain UTV JSON.",
+      "contractType": "library-api",
+      "consumers": [
+        "Application developers who work with UTV JSON directly",
+        "The typed layer",
+        "test/everyday.test.ts and test/text-form.test.ts, which run the shared fixtures through it"
+      ],
+      "guarantees": [
+        "Every operation returns a UtvResult (see implementations/typescript/src/.dev/contracts.json, utv-result-envelope) and never throws for a semantic outcome.",
+        "Outcomes and canonical shapes are those of conformance/operations/everyday.json and conformance/operations/text-form.json.",
+        "Rules are an argument: a ZoneRules, rule-bundle text or a parsed bundle.",
+        "Native adapters make the caller name the intent; \"local\" is refused with local-zone; conversions back report loss with precision-loss and zone-dropped warnings, or are unsupported.",
+        "parseStrict rejects duplicate keys; validateStructural checks all 26 kinds structurally; validateSemantic checks proleptic Gregorian civil values."
+      ],
+      "compatibility": "Kept unchanged from 0.3 on beneath the typed layer; diagnostic codes were renamed to the shared table in 0.3.0 (CHANGELOG.md). See utv-core-package for versioning.",
+      "definition": "docs/everyday-api.md",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/index.ts",
+          "symbol": "Everyday API (0.2)"
+        },
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "run"
+        },
+        {
+          "path": "implementations/typescript/README.md",
+          "symbol": "JSON layer (0.2)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        },
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "text-form"
+        },
+        {
+          "relation": "verified-by",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        },
+        {
+          "relation": "verified-by",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        },
+        {
+          "relation": "part-of",
+          "path": "implementations/typescript/.dev/contracts.json",
+          "entityId": "utv-core-package"
+        }
+      ]
+    }
+  ]
+}

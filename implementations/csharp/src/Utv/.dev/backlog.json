@@ -1,0 +1,54 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Utv library backlog",
+  "folder": "implementations/csharp/src/Utv",
+  "entities": [
+    {
+      "id": "manifest-in-results",
+      "title": "Say in each result which rules it used",
+      "summary": "Every result reports an empty manifest, so a resolve or toZone answer does not name the rule bundle it came from.",
+      "type": "debt",
+      "compromise": "UtvResult.ToJson writes an empty manifest, no assumptions and a lossless loss report for every result; its remarks justify this by the everyday operations being exact and the caller knowing which ZoneRules it passed.",
+      "cost": "A stored result cannot be checked against a later rule release, and the obligation that every nontrivial result carries a manifest of the exact rule data used (explicit-versioned-rules) is not met. The README also lists result inputDigest and contextDigest as not implemented.",
+      "acceptanceCriteria": [
+        "A resolve or toZone result names the rule set (system, id, version) of the ZoneRules it used in its manifest.",
+        "Results of operations that use no rules keep an empty manifest.",
+        "dotnet test passes, including every everyday fixture."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/csharp/src/Utv/UtvResult.cs",
+        "description": "The remarks on UtvResult: ToJson always reports an empty manifest, no assumptions and a lossless loss report."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/UtvResult.cs",
+          "symbol": "UtvResult.ToJson"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+          "symbol": "ZoneRules.RuleSetId"
+        },
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "What is not implemented"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "explicit-versioned-rules"
+        },
+        {
+          "relation": "relates-to",
+          "path": "implementations/csharp/src/Utv/.dev/decisions.json",
+          "entityId": "empty-manifest"
+        }
+      ]
+    }
+  ]
+}

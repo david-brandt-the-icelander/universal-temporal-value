@@ -1,6 +1,6 @@
 # UTV 1.0 — Falsehoods coverage and design traceability
 
-This matrix groups the recurring false assumptions from the classic lists, time-zone literature, and the design reviews recorded in `docs/design-history.md`. It is **not** a claim that every conceivable future assumption has been enumerated. Every row specifies a semantics decision and a planned test case. A complete implementation MUST add executable tests for every ID.
+This matrix groups the recurring false assumptions from the classic lists, time-zone literature, and the design reviews recorded in the design history (`.dev/decisions.json`). It is **not** a claim that every conceivable future assumption has been enumerated. Every row specifies a semantics decision and a planned test case. A complete implementation MUST add executable tests for every ID.
 
 | ID | False assumption | UTV safeguard | Conformance scenario | Variant(s) | Spec § |
 |---|---|---|---|---|---|

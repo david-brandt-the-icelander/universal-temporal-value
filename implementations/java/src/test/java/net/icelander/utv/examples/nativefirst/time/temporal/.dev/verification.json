@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../../../../../../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Native-first examples: java.time.temporal verification",
+  "folder": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/temporal",
+  "entities": [
+    {
+      "id": "isofields",
+      "title": "IsoFields",
+      "summary": "IsoFields, compared with CivilDate.isoWeek.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "IsoFields.WEEK_OF_WEEK_BASED_YEAR reads 45 for 5 November 2026, as CivilDate.isoWeek does."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/temporal/IsoFieldsTest.java",
+          "symbol": "IsoFieldsTest",
+          "command": "mvn -q test"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "evidenceStatus": "source-verified"
+    }
+  ]
+}

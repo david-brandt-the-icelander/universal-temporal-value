@@ -1,0 +1,61 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "Utv library contracts",
+  "folder": "implementations/csharp/src/Utv",
+  "entities": [
+    {
+      "id": "result-envelope",
+      "title": "The utv-result/1.0 JSON the library writes",
+      "summary": "UtvResult and its ToJson(): the C# form of the evaluation-result envelope every JSON-layer operation returns.",
+      "contractType": "file-format",
+      "consumers": [
+        "Applications that store or send results as JSON",
+        "The typed layer, through Outcome<T>.ToResult()",
+        "The shared everyday and text-form fixtures, which compare status, candidates and diagnostic codes"
+      ],
+      "guarantees": [
+        "ToJson writes, in this order, schema (utv-result/1.0), operation, status, candidates, manifest (dependencies), assumptions, loss (classification, fields) and diagnostics ({code, severity, path, message}).",
+        "operation is the everyday operation's name (validate, parseIso, add, resolve, …; fromDateTime for interop).",
+        "status is a wire string of UtvStatus; none has no candidates and unique exactly one, enforced by the constructor.",
+        "multiple lists its candidates in ascending order.",
+        "Candidates are UTV values, or plain JSON for answers that are a string, number or object (formatIso, compare, fields, daysBetween, contains, overlaps).",
+        "Diagnostic paths are RFC 6901 JSON Pointers into the input; codes follow the shared table of docs/library-api.md §5, plus the 0.1 structural codes and offset-not-known.",
+        "manifest is always empty, assumptions always empty and loss always lossless (see decisions.json, empty-manifest)."
+      ],
+      "compatibility": "Follows spec/RESULT-CONTRACT.md for the wire form; the operation names extend its list (OI-17). Diagnostic codes changed from 0.2 to 0.3 to follow the shared table, as the CHANGELOG records; such changes are allowed before 1.0.0 and are listed in CHANGELOG.md.",
+      "definition": "implementations/csharp/src/Utv/UtvResult.cs",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/UtvResult.cs",
+          "symbol": "UtvResult.ToJson"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/UtvResult.cs",
+          "symbol": "UtvResult"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/UtvStatus.cs",
+          "symbol": "UtvStatusExtensions.ToWireString"
+        },
+        {
+          "path": "implementations/csharp/CHANGELOG.md",
+          "symbol": "0.3.0"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-result-1-0"
+        },
+        {
+          "relation": "verified-by",
+          "path": "implementations/csharp/tests/Utv.Tests/.dev/verification.json",
+          "entityId": "result-envelope"
+        }
+      ]
+    }
+  ]
+}

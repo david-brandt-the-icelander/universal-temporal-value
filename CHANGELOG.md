@@ -4,7 +4,7 @@ All notable changes to the UTV specification are recorded here. Language impleme
 
 ## [1.0.0] — 2026-11-05
 
-First published version of the specification. It is the published form of the final internal design draft (v4); see `docs/design-history.md`.
+First published version of the specification. It is the published form of the final internal design draft (v4); see the design history in `.dev/decisions.json`.
 
 ### Contents
 

@@ -1,0 +1,75 @@
+{
+  "$schema": "../Meta/Agents/Knowledge/schemas/limitations.schema.json",
+  "kind": "limitations",
+  "title": "What UTV 1.0 does not do yet",
+  "folder": ".",
+  "entities": [
+    {
+      "id": "design-specification",
+      "title": "A complete design, implemented in part",
+      "summary": "UTV 1.0 is a complete design specification; the libraries implement an everyday subset, and anything outside it returns unsupported.",
+      "impact": "Recurrences, uncertainty, series, history, business calendars, logical clocks and most of the 26 kinds have a wire form and semantics but no library operations; a caller gets unsupported, never a guess.",
+      "workaround": "Hold such values as UTV JSON; each library's JSON layer validates their structure.",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "README.md",
+          "symbol": "Status"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "1. Types"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": ".dev/decisions.json",
+          "entityId": "v3-close-the-gaps",
+          "description": "Implementation was allowed to lag the design."
+        }
+      ]
+    },
+    {
+      "id": "scenarios-not-executable",
+      "title": "The semantic scenarios are requirements, not tests",
+      "summary": "The 94 semantic scenarios in conformance/scenarios/ have no inputs, contexts or expected results, so no implementation can be checked against them.",
+      "impact": "No library can claim a conformance profile by passing the semantic scenarios, and none may reach 1.0.0 until it does (VERSIONING.md).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "conformance/README.md",
+          "symbol": "Structural vs. semantic"
+        },
+        {
+          "path": "conformance/scenarios/falsehoods.json",
+          "symbol": "status"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "resolved-by",
+          "path": "conformance/scenarios/.dev/backlog.json",
+          "entityId": "OI-12"
+        }
+      ]
+    },
+    {
+      "id": "schema-checks-shapes-only",
+      "title": "The schema checks shapes only",
+      "summary": "A value can pass the JSON Schema and still be semantically invalid or unresolvable.",
+      "impact": "Structural validation is not a conformance claim: calendar correctness, graph consistency, registration, cross-field arithmetic and adapters need semantic conformance tests.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/DECISIONS.md",
+          "symbol": "18. Explicit schema limitations"
+        },
+        {
+          "path": "conformance/examples/valid.json",
+          "symbol": "new-york-gap-intention"
+        }
+      ]
+    }
+  ]
+}

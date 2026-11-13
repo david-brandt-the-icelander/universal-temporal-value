@@ -1,0 +1,537 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Specification decisions waiting on the owner",
+  "folder": "spec",
+  "description": "The open issues of UTV 1.0 that need a decision, under their OI IDs (spec/OPEN-ISSUES.md links here), and one question raised by the .dev convention itself.",
+  "entities": [
+    {
+      "id": "OI-01",
+      "title": "civil: precision and interpretation, or quality and location?",
+      "summary": "The specification gives civil values precision and interpretation; schema 1.0 has quality and location instead.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "Spec §4 lists precision and interpretation among civil.value's fields. Schema 1.0's civil value has quality and location and neither of the two. While an issue is open, the specification governs semantics and the JSON Schema governs serialized field names and shapes; an implementation that hits the gap MUST return unsupported for the affected feature and MUST NOT invent a serialization (spec/OPEN-ISSUES.md).",
+      "options": [
+        {
+          "title": "precision and interpretation belong inside quality",
+          "consequences": "A prose clarification, if quality can carry them as it is; otherwise new properties inside quality (minor)."
+        },
+        {
+          "title": "They are missing properties",
+          "consequences": "Add them to the civil value in a new schema file (minor, utv/1.1)."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0",
+          "description": "Serializing a civil value's precision and interpretation; claiming the core-civil profile for them."
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section A, Prose and schema field mismatches of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§4 Civil dates, calendar fields and time of day"
+        },
+        {
+          "path": "schema/utv-1.0.schema.json",
+          "symbol": "civil"
+        }
+      ]
+    },
+    {
+      "id": "OI-02",
+      "title": "zoneRuleBinding on single civil values",
+      "summary": "The specification gives civil values a zoneRuleBinding (latest-at-evaluation, pinned, as-known-at); the schema has it only on recurrence, without an enum.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "Spec §4 defines zoneRuleBinding for civil values; future appointments need it. Schema 1.0 has it only on recurrence, and without the three values as an enum. While an issue is open, the specification governs semantics and the JSON Schema governs serialized field names and shapes; an implementation that hits the gap MUST return unsupported for the affected feature and MUST NOT invent a serialization (spec/OPEN-ISSUES.md).",
+      "options": [
+        {
+          "title": "Add zoneRuleBinding to civil, with an enum",
+          "consequences": "A new optional property and enum (minor, utv/1.1)."
+        },
+        {
+          "title": "Keep rule binding on recurrence only",
+          "consequences": "A single future appointment cannot say which rules it was resolved under; the prose would have to change."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0",
+          "description": "Serializing a single future appointment's rule binding."
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section A, Prose and schema field mismatches of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§4 Named zone, offset, geographical intent"
+        }
+      ]
+    },
+    {
+      "id": "OI-03",
+      "title": "interval: ruleBinding and granularity",
+      "summary": "The specification gives intervals endpointSemantics, ruleBinding and granularity; the schema has per-boundary state, which covers endpointSemantics, but no ruleBinding or granularity.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "Spec §6 and §22 describe interval endpointSemantics, ruleBinding and granularity. Schema 1.0 has per-boundary state plus empty, construction, amount and arithmeticPolicy. Per-boundary state covers endpointSemantics; ruleBinding and granularity are missing. While an issue is open, the specification governs semantics and the JSON Schema governs serialized field names and shapes; an implementation that hits the gap MUST return unsupported for the affected feature and MUST NOT invent a serialization (spec/OPEN-ISSUES.md).",
+      "options": [
+        {
+          "title": "Add ruleBinding and granularity to interval",
+          "consequences": "New optional properties (minor, utv/1.1)."
+        },
+        {
+          "title": "Drop them from the prose",
+          "consequences": "A change of meaning in the specification; at least a minor version, and VERSIONING.md would decide whether it is major."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0",
+          "description": "Serializing an interval's rule binding and granularity."
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section A, Prose and schema field mismatches of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§6 Intervals, relations, sets and constraints"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§22 Interval construction, topology, extents, and boundaries"
+        }
+      ]
+    },
+    {
+      "id": "OI-04",
+      "title": "assertion: the bitemporal correction fields",
+      "summary": "The specification's assertion has assertedTemporalValue, recordedAt, effectiveValidity, supersedes, correction reason, authority, confidence and evidence; the schema has claimedTime, recordedAt and a string source.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "Spec §11 describes assertions with all of those fields. Schema 1.0 has claimedTime (its name for assertedTemporalValue), recordedAt and source as a string, so a bitemporal correction cannot be fully serialized yet. While an issue is open, the specification governs semantics and the JSON Schema governs serialized field names and shapes; an implementation that hits the gap MUST return unsupported for the affected feature and MUST NOT invent a serialization (spec/OPEN-ISSUES.md).",
+      "options": [
+        {
+          "title": "Add the missing fields, keeping claimedTime",
+          "consequences": "New optional properties (minor, utv/1.1)."
+        },
+        {
+          "title": "Rename claimedTime to assertedTemporalValue as well",
+          "consequences": "A rename is a major version (utv/2.0)."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0",
+          "description": "Serializing bitemporal corrections; claiming the history profile."
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section A, Prose and schema field mismatches of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§11 Assertions, corrections and bitemporal history"
+        }
+      ]
+    },
+    {
+      "id": "OI-05",
+      "title": "event-history: constrain revisions to assertions",
+      "summary": "The specification says revisions are assertions with immutable IDs; the schema allows any UTV value in revisions.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "Spec §11 makes event-history revisions assertions with immutable IDs. Schema 1.0 types revisions as an array of any UTV value. While an issue is open, the specification governs semantics and the JSON Schema governs serialized field names and shapes; an implementation that hits the gap MUST return unsupported for the affected feature and MUST NOT invent a serialization (spec/OPEN-ISSUES.md).",
+      "options": [
+        {
+          "title": "Constrain revisions to assertion values in the schema",
+          "consequences": "Values that were structurally valid become invalid; VERSIONING.md decides whether that is a patch correction to match the prose or a major change."
+        },
+        {
+          "title": "Keep the schema open and check it semantically",
+          "consequences": "The rule lives only in a semantic validator."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0",
+          "description": "Structural rejection of event histories whose revisions are not assertions."
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section A, Prose and schema field mismatches of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§11 Assertions, corrections and bitemporal history"
+        }
+      ]
+    },
+    {
+      "id": "OI-06",
+      "title": "Formalize rule-bound objects",
+      "summary": "Policies, predicates and arithmetic policies are rule-bound objects in the prose, and open {\"type\":\"object\"} in the schema; their dependent field constraints are not formalized.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "Many kinds take rule-bound objects whose fields depend on each other. Schema 1.0 leaves them as open objects. The design history notes this as the qualification carried over from draft v3. While an issue is open, the specification governs semantics and the JSON Schema governs serialized field names and shapes; an implementation that hits the gap MUST return unsupported for the affected feature and MUST NOT invent a serialization (spec/OPEN-ISSUES.md).",
+      "options": [
+        {
+          "title": "Give each rule-bound object a schema",
+          "consequences": "Tighter structural validation; new definitions per kind (minor or patch, depending on what was already valid)."
+        },
+        {
+          "title": "Leave them open and define them through the registry contract",
+          "consequences": "Validation of these objects needs a registry (see OI-11)."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0",
+          "description": "Structural validation of policies, predicates and arithmetic policies."
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section A, Prose and schema field mismatches of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": ".dev/decisions.json",
+          "entityId": "v3-close-the-gaps",
+          "description": "The design-history decision this issue came from."
+        }
+      ]
+    },
+    {
+      "id": "OI-07",
+      "title": "One vocabulary for loss classification",
+      "summary": "Loss is classified three ways: spec §2 (lossless, lossy, unrepresentable), RESULT-CONTRACT (lossless, information-losing, assumption-dependent, unrepresentable) and STANDARDS-MATRIX (six fidelity levels).",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "The three documents use three vocabularies for related ideas. They should become one vocabulary for loss.classification, plus a separate one for adapter fidelity. While an issue is open, the specification governs semantics and the JSON Schema governs serialized field names and shapes; an implementation that hits the gap MUST return unsupported for the affected feature and MUST NOT invent a serialization (spec/OPEN-ISSUES.md).",
+      "options": [
+        {
+          "title": "RESULT-CONTRACT's four values for loss.classification; STANDARDS-MATRIX's six levels for adapter fidelity",
+          "consequences": "Spec §2's lossy is replaced in the prose; result values do not change."
+        },
+        {
+          "title": "Another split",
+          "consequences": "Depends on which serialized values change; a renamed value is a major version."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0",
+          "description": "A single loss vocabulary in results and adapters."
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section B, Vocabulary inconsistencies of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "spec/RESULT-CONTRACT.md",
+          "symbol": "Mandatory fields"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "Interoperability fidelity levels"
+        }
+      ]
+    },
+    {
+      "id": "OI-08",
+      "title": "lossy is not a result status",
+      "summary": "FALSEHOODS-MATRIX lists lossy as an expected test status, but lossy is a loss classification, not a result status.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "The matrix's expected statuses should use the result statuses of RESULT-CONTRACT, with loss reported in loss.classification. While an issue is open, the specification governs semantics and the JSON Schema governs serialized field names and shapes; an implementation that hits the gap MUST return unsupported for the affected feature and MUST NOT invent a serialization (spec/OPEN-ISSUES.md).",
+      "options": [
+        {
+          "title": "Rewrite the affected matrix rows to a status plus a loss classification",
+          "consequences": "Editorial (patch), after OI-07 fixes the loss vocabulary."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0",
+          "description": "Executable falsehood scenarios whose expectation is lossy (OI-12)."
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section B, Vocabulary inconsistencies of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "spec/FALSEHOODS-MATRIX.md",
+          "symbol": "ID"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "spec/.dev/decisions.json",
+          "entityId": "OI-07"
+        }
+      ]
+    },
+    {
+      "id": "OI-09",
+      "title": "One taxonomy of conformance profiles",
+      "summary": "The profile names in §2 (core-civil, zoned, …) and the profile families in §27 item 6 (data expression, reasoning, storage, interoperability, scientific) are not yet one taxonomy.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "Libraries must state the profiles they claim (VERSIONING.md, implementations/README.md), and §2's names and §27's families do not line up. While an issue is open, the specification governs semantics and the JSON Schema governs serialized field names and shapes; an implementation that hits the gap MUST return unsupported for the affected feature and MUST NOT invent a serialization (spec/OPEN-ISSUES.md).",
+      "options": [
+        {
+          "title": "Make §27's families groups of §2's profiles",
+          "consequences": "Prose only (patch), if no profile name changes."
+        },
+        {
+          "title": "Replace one list with the other",
+          "consequences": "Changes what libraries can claim; at least a minor version."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0",
+          "description": "Libraries' conformance claims; a library reaching 1.0.0 (VERSIONING.md)."
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section B, Vocabulary inconsistencies of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§2 Serialization and profiles"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§27 Completeness gates"
+        }
+      ]
+    },
+    {
+      "id": "OI-14",
+      "title": "range as a first-class alias for interval?",
+      "summary": "Should range, for example date1..date2 syntax, be a first-class alias for interval? Current position: not a wire kind; libraries MAY offer a range name or constructor that produces interval values.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "Left as an API question when draft v3 confirmed it covers the conventional vocabulary, interval and range included. interval already carries the semantics. While an issue is open, the specification governs semantics and the JSON Schema governs serialized field names and shapes; an implementation that hits the gap MUST return unsupported for the affected feature and MUST NOT invent a serialization (spec/OPEN-ISSUES.md).",
+      "options": [
+        {
+          "title": "Keep the current position",
+          "consequences": "No wire change; libraries choose their own range constructors."
+        },
+        {
+          "title": "Add a range kind",
+          "consequences": "A new kind (minor, utv/1.1) that duplicates interval."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0",
+          "description": "Whether libraries' range constructors need to agree on a name."
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section D, Design questions deferred to library APIs of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        }
+      ],
+      "currentPosition": "Not a wire kind: interval already carries the semantics. Libraries MAY offer a range name or constructor that produces interval values.",
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": ".dev/decisions.json",
+          "entityId": "v3-close-the-gaps",
+          "description": "The design-history decision this issue came from."
+        }
+      ]
+    },
+    {
+      "id": "OI-15",
+      "title": "Time series in core, or a companion model?",
+      "summary": "Should time series stay in core or move to a companion model? Current position: in core for 1.0 (series, sample); revisit if implementations show the core is too heavy.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "The design discussion first preferred a companion model; draft v4 put series and samples in core. While an issue is open, the specification governs semantics and the JSON Schema governs serialized field names and shapes; an implementation that hits the gap MUST return unsupported for the affected feature and MUST NOT invent a serialization (spec/OPEN-ISSUES.md).",
+      "options": [
+        {
+          "title": "Keep them in core",
+          "consequences": "Every full-conformance claim covers series and samples."
+        },
+        {
+          "title": "Move them to a companion model",
+          "consequences": "Removes kinds from core: a major version (utv/2.0)."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0",
+          "description": "Nothing today; the scientific profile's scope if it changes."
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "spec/OPEN-ISSUES.md",
+        "description": "Listed in section D, Design questions deferred to library APIs of the open issues, found while turning the design package into this repository or flagged in the design discussion; moved here from that file's table (its earlier text is in git history)."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/OPEN-ISSUES.md",
+          "symbol": "Where the issues are recorded"
+        }
+      ],
+      "currentPosition": "In core for 1.0 (series, sample). Revisit if implementations show the core is too heavy.",
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": ".dev/decisions.json",
+          "entityId": "v4-standards-convergence",
+          "description": "The design-history decision this issue came from."
+        }
+      ]
+    },
+    {
+      "id": "normative-documents-stay-markdown",
+      "title": "Should the normative decision list also become .dev records?",
+      "summary": "spec/DECISIONS.md is a decision log, but it is part of the normative specification, so it was left in place rather than moved into decisions.json.",
+      "status": "open",
+      "waitingOn": "Owner",
+      "context": "HASD keeps decisions as records in .dev/decisions.json. spec/DECISIONS.md lists the 20 binding design decisions and the API design requirements; other documents cite it as normative (\"DECISIONS item 18\"), and the README tells readers to start with it after SPECIFICATION.md. Moving it would move normative text out of the specification. The same applies to the specification's CHANGELOG.md, which VERSIONING.md requires and which a versions.json would duplicate.",
+      "options": [
+        {
+          "title": "Keep the Markdown as the single source",
+          "consequences": "The explorer shows no decisions for the specification's core design; .dev records link to the Markdown instead."
+        },
+        {
+          "title": "Move the decisions into spec/.dev/decisions.json and reduce DECISIONS.md to a link",
+          "consequences": "One machine-readable list; the normative text then lives in a .dev file, and citations of DECISIONS items must change."
+        },
+        {
+          "title": "Keep both, generated one from the other",
+          "consequences": "Needs a generator and a check in CI."
+        }
+      ],
+      "blocks": [
+        {
+          "path": "spec/DECISIONS.md",
+          "description": "Its form, and whether a spec/.dev/versions.json is wanted."
+        }
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "AGENTS.md",
+        "description": "Raised while installing the HASD .dev convention: decision logs become .dev records, but this one is normative."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "spec/DECISIONS.md",
+          "symbol": "UTV 1.0 — Binding design decisions and implementation obligations"
+        },
+        {
+          "path": "README.md",
+          "symbol": "Repository layout"
+        }
+      ]
+    }
+  ]
+}

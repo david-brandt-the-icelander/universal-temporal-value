@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Native-first examples",
+  "folder": "implementations/python/tests/examples/native_first",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Native-first examples",
+      "summary": "What Python's standard library does for each task of docs/example-tests.md, one module per standard module and class, compared with UTV.",
+      "purpose": "Holds the native-first example suite: test_datetime_date.py, test_datetime_time.py, test_datetime_datetime.py, test_datetime_timedelta.py, test_zoneinfo_zone_info.py, test_calendar.py and test_json.py, one TestCase per function. Where the standard library and UTV agree, a test computes its expected value with UTV; where they differ, it is a literal and the docstring says what UTV does instead.",
+      "boundaries": [
+        "The standard library's zone operations read this machine's tz database, so these tests need one that knows the 2026–2027 rules of New York and Paris. UTV's side uses ../fixtures.py (demo_zone_rules).",
+        "No task markers: only the UTV-first suite feeds docs/side-by-side.md."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/native_first/__init__.py"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_zoneinfo_zone_info.py"
+        },
+        {
+          "path": "implementations/python/tests/examples/fixtures.py",
+          "symbol": "demo_zone_rules"
+        }
+      ]
+    }
+  ]
+}

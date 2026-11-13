@@ -1,0 +1,42 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Library test backlog",
+  "folder": "implementations/csharp/tests/Utv.Tests",
+  "entities": [
+    {
+      "id": "tests-follow-agents-md",
+      "title": "Bring the library tests in line with the test directives",
+      "summary": "The tests in Utv.Tests predate AGENTS.md section 1: their names do not describe one branch, and they have no GIVEN/WHEN/THEN sections, role-prefixed names or documentation comments.",
+      "type": "debt",
+      "compromise": "AGENTS.md lets tests that predate the directives stay as they are until they are next changed. Names such as ValidExampleIsValid, ResolvePolicies or CivilDateTotalOperations cover several branches each, and assert without the labelled sections.",
+      "cost": "A maintainer reading a failure cannot tell from the name which branch broke, and the library's tests read in two styles (the example tests follow the directives).",
+      "acceptanceCriteria": [
+        "Each test in Utv.Tests follows AGENTS.md section 1: one documentation comment, labelled sections, role-prefixed variables, and one branch per test named Test_<Function>_<Result>_When<Trigger>.",
+        "Fixture-driven theories keep one test per fixture id.",
+        "dotnet test passes."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "AGENTS.md",
+        "description": "Section 1: tests that predate these directives are brought in line when they are next changed."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/tests/Utv.Tests/TypedApiTests.cs",
+          "symbol": "TypedApiTests.CivilDateTotalOperations"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Tests/ConformanceTests.cs",
+          "symbol": "ConformanceTests.ValidExampleIsValid"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "1. Tests are written for the maintainer"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,878 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Skills/describe-operation/schema.json",
+  "kind": "operation",
+  "title": "Typed layer operations",
+  "folder": "implementations/csharp/src/Utv/Typed",
+  "description": "The public entrypoints of the typed API (library 0.3). Where several types have the same method (Of, TryOf, Parse, FromJson, AddDays, CompareTo), one entity names a representative entrypoint and lists the others in its sources. Accessors (Year, DayOfWeek, ZoneId, …) are left out.",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+      "symbol": "CivilDate"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+      "symbol": "TemporalContext"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+      "symbol": "Instant"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+      "symbol": "Outcome"
+    }
+  ],
+  "entities": [
+    {
+      "id": "of",
+      "name": "Construct a civil value",
+      "description": "CivilDate.Of, CivilYearMonth.Of, CivilTime.Of and CivilDateTime.Of build a value that is valid by construction, or throw.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilYearMonth.cs",
+          "symbol": "CivilYearMonth.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilTime.cs",
+          "symbol": "CivilTime.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.OrThrow"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+        "symbol": "CivilDate.Of"
+      },
+      "action": "query",
+      "transport": "static method of CivilDate (and of CivilYearMonth, CivilTime, CivilDateTime)",
+      "authorization": "None: an in-process library call.",
+      "result": "The value. Years are BigInteger, so 275760 and -500 are ordinary dates.",
+      "failures": [
+        "ArgumentOutOfRangeException, named after the field (day, month, hour, second, nanosecond), when TryOf would not return Unique: a day missing from the month, month outside 1..12, a time field out of range, or second 60."
+      ]
+    },
+    {
+      "id": "try-of",
+      "name": "Try to construct a civil value",
+      "description": "CivilDate.TryOf and its siblings return an outcome instead of throwing. The fields are written as UTV JSON and read back through the JSON layer's checks.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.TryOf"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.TryOf"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilTime.cs",
+          "symbol": "CivilTime.TryOf"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+          "symbol": "Values.RequireDate"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+          "symbol": "Values.RequireTime"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+        "symbol": "CivilDate.TryOf"
+      },
+      "action": "query",
+      "transport": "static method of CivilDate (and of CivilYearMonth, CivilTime, CivilDateTime)",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome<T>.Unique with the value.",
+      "failures": [
+        "Invalid (day-out-of-range) when the day is missing from the month, such as 30 February or 29 February in a common year.",
+        "Invalid (month-out-of-range) for a month outside 1..12.",
+        "Invalid (field-out-of-range) for an hour, minute, second or nanosecond out of range.",
+        "Unsupported (leap-second) for second 60."
+      ]
+    },
+    {
+      "id": "parse",
+      "name": "Parse text into a typed value",
+      "description": "T.Parse(text) reads the text form into the type asked for; Temporal.Parse(text) reads any text-form value as an ITemporalValue. Parsing never throws for bad input.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Temporal.Parse"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.Parse"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.Parse"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/TextForm.cs",
+          "symbol": "TextForm.ParseNode"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+        "symbol": "Temporal.Parse"
+      },
+      "action": "query",
+      "transport": "static method of Temporal (and Parse on every type except PosixSeconds and ElapsedSeconds)",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome<T>.Unique with the value: an Instant for text ending in Z, a FixedOffsetDateTime for +00:00, a ZonedIntent for [Area/Location], a Period for P…, an Interval for bracket or slash notation.",
+      "failures": [
+        "Invalid (syntax) for text outside the grammar.",
+        "Invalid (day-out-of-range, month-out-of-range, field-out-of-range, offset-out-of-range) for out-of-range fields.",
+        "Invalid (kind-mismatch) when the text is another kind of value than the type asked for, or an interval mixes kinds of point.",
+        "Invalid (reversed-interval) for an interval that ends before it starts.",
+        "Unsupported (unsupported-form) for week dates, ordinal dates, basic format, a year alone, decimal period components, EDTF qualifiers and intervals with no point.",
+        "Unsupported (unsupported-annotation) for any annotation other than one [Area/Location], and for Z or -00:00 followed by a zone.",
+        "Unsupported (leap-second, end-of-day, implementation-limit) for second 60, 24:00 and more than nine fraction digits."
+      ]
+    },
+    {
+      "id": "from-json",
+      "name": "Read UTV JSON into a typed value",
+      "description": "T.FromJson(json) and Temporal.FromJson(json) validate the JSON structurally, read it, and check that the typed value holds every property of the input.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Temporal.FromJson"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.FromJson"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.Read"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+        "symbol": "Temporal.FromJson"
+      },
+      "action": "query",
+      "transport": "static method of Temporal (and FromJson on every typed value)",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome<T>.Unique with the value; ToJson() of it gives back the same JSON.",
+      "failures": [
+        "Invalid (malformed-value, followed by the structural codes such as duplicate-key or missing-property) for JSON that is not a well-formed UTV value.",
+        "Unsupported (unsupported-version) for a newer specification version.",
+        "Invalid (kind-mismatch) when the value is another kind or form than the type asked for.",
+        "Unsupported (unsupported-operand) for a valid value no typed type holds: another kind, a zoned date, a floating date-time with a resolutionPolicy, extra properties.",
+        "Unsupported (unsupported-calendar) for a non-Gregorian calendar.",
+        "Invalid (day-out-of-range and the like) for a civil value that names no real date or time.",
+        "Invalid (reversed-interval) and Unsupported (unsupported-form) for intervals that are reversed or have no point.",
+        "Unsupported (implementation-limit) for a period component beyond 64 bits."
+      ]
+    },
+    {
+      "id": "add-wall-clock",
+      "name": "Add days, weeks, hours, minutes or seconds",
+      "description": "The total additions: AddDays and AddWeeks on CivilDate; AddDays, AddWeeks, AddHours, AddMinutes and AddSeconds on CivilDateTime and ZonedIntent (wall-clock arithmetic, carrying into days); AddMonths and AddYears on CivilYearMonth.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.AddDays"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.AddHours"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "ZonedIntent.AddDays"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilYearMonth.cs",
+          "symbol": "CivilYearMonth.AddMonths"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+        "symbol": "CivilDate.AddDays"
+      },
+      "action": "query",
+      "transport": "method of CivilDate, CivilDateTime, ZonedIntent and CivilYearMonth",
+      "authorization": "None: an in-process library call.",
+      "result": "A new value. A ZonedIntent keeps its zone and wall time (noon plus one day is noon, across a DST change) and drops an asserted offset.",
+      "failures": []
+    },
+    {
+      "id": "add-months",
+      "name": "Add months or years",
+      "description": "AddMonths(n) and AddYears(n) on CivilDate, AddMonths(n) on CivilDateTime and ZonedIntent: the partial form, which refuses a missing day.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.AddMonths"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.AddYears"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.AddMonths"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "ZonedIntent.AddMonths"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+        "symbol": "CivilDate.AddMonths"
+      },
+      "action": "query",
+      "transport": "method of CivilDate, CivilDateTime and ZonedIntent",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome<T>.Unique with the later value when the day exists in the target month.",
+      "failures": [
+        "None (month-end) when the day is missing from the target month: 31 January plus one month."
+      ]
+    },
+    {
+      "id": "add-months-constrained",
+      "name": "Add months or years, clamping to the month's end",
+      "description": "AddMonths(n, MonthEnd.Constrain) and AddYears(n, MonthEnd.Constrain): the total overloads, which always answer.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.AddMonths"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.AddMonths"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+        "symbol": "CivilDate.AddMonths"
+      },
+      "action": "query",
+      "transport": "method of CivilDate (AddMonths, AddYears) and CivilDateTime (AddMonths)",
+      "authorization": "None: an in-process library call.",
+      "result": "The later value, clamped to the last day of the month (31 January plus one month is 28 February 2026).",
+      "failures": [
+        "ArgumentException when the policy is MonthEnd.Reject: the rejecting form is the overload without a policy."
+      ]
+    },
+    {
+      "id": "add-period",
+      "name": "Add a period",
+      "description": "CivilDate.Add(Period[, MonthEnd]) and CivilDateTime.Add(Period[, MonthEnd]): years and months first, then the month-end rule, then weeks and days, then hours, minutes and seconds on the wall clock.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.Add"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.Add"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.Add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+        "symbol": "CivilDate.Add"
+      },
+      "action": "query",
+      "transport": "method of CivilDate and CivilDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome<T>.Unique with the later value.",
+      "failures": [
+        "None (month-end) when the day is missing after the months and the policy is MonthEnd.Reject (the default).",
+        "Invalid (kind-mismatch) when a period with hours, minutes or seconds is added to a CivilDate."
+      ]
+    },
+    {
+      "id": "days-until",
+      "name": "Count days between two dates",
+      "description": "CivilDate.DaysUntil(other): other minus this, in days.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.DaysUntil"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+        "symbol": "CivilDate.DaysUntil"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call.",
+      "result": "A long; 5 November to 25 December is 50.",
+      "failures": []
+    },
+    {
+      "id": "compare",
+      "name": "Order two values whose order needs no rules",
+      "description": "CompareTo and the < > <= >= operators on CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime (by instant) and Instant. A missing second compares as 0. ZonedIntent has neither.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.CompareTo"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "FixedOffsetDateTime.CompareTo"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.CompareTo"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.Compare"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+        "symbol": "CivilDate.CompareTo"
+      },
+      "action": "query",
+      "transport": "method and operators of CivilDate (and of the other rule-free types)",
+      "authorization": "None: an in-process library call.",
+      "result": "An int (negative, zero, positive) or a bool from the operators; null compares before any value.",
+      "failures": []
+    },
+    {
+      "id": "in-zone",
+      "name": "Follow a time zone",
+      "description": "CivilDateTime.InZone(zoneId): the same wall time, now an intention in an IANA zone. No rules are needed or read.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.InZone"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Iso.cs",
+          "symbol": "Iso.ZoneNamePattern"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+        "symbol": "CivilDateTime.InZone"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "A ZonedIntent with no asserted offset.",
+      "failures": [
+        "ArgumentException for a null or empty id, or one that is not an IANA zone name such as Europe/Paris."
+      ]
+    },
+    {
+      "id": "at-offset",
+      "name": "Pin a fixed offset",
+      "description": "CivilDateTime.AtOffset(seconds) keeps the wall time at that offset; Instant.AtOffset(seconds) shows the instant's wall time there.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.AtOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.AtOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "FixedOffsetDateTime.CheckOffset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+        "symbol": "CivilDateTime.AtOffset"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime and Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "A FixedOffsetDateTime.",
+      "failures": [
+        "ArgumentOutOfRangeException for an offset beyond ±18:00 (64800 s)."
+      ]
+    },
+    {
+      "id": "to-instant",
+      "name": "Turn a fixed-offset date-time into an instant",
+      "description": "FixedOffsetDateTime.ToInstant(): exact, and needs no rules.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "FixedOffsetDateTime.ToInstant"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+        "symbol": "FixedOffsetDateTime.ToInstant"
+      },
+      "action": "query",
+      "transport": "method of FixedOffsetDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "The Instant.",
+      "failures": []
+    },
+    {
+      "id": "context-with",
+      "name": "Hold zone rules in a context",
+      "description": "TemporalContext.With(rules): the only way to give typed operations zone rules. There is no default or ambient context.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext.With"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+        "symbol": "TemporalContext.With"
+      },
+      "action": "query",
+      "transport": "static method of TemporalContext",
+      "authorization": "None: an in-process library call.",
+      "result": "A TemporalContext whose Rules are the bundle given.",
+      "failures": [
+        "ArgumentNullException for null rules."
+      ]
+    },
+    {
+      "id": "resolve",
+      "name": "Resolve a zoned intention to an instant",
+      "description": "ZonedIntent.Resolve(ctx[, policy]), and its Gap and Overlap overloads, which call TemporalContext.Resolve. Without a policy it is ResolutionPolicy.Strict.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "ZonedIntent.Resolve"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext.Resolve"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.Resolve"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+        "symbol": "ZonedIntent.Resolve"
+      },
+      "action": "query",
+      "transport": "method of ZonedIntent and of TemporalContext",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome<Instant>.Unique when the wall time happens once, or when Gap.ShiftForward, Overlap.Earliest or Overlap.Latest picks one.",
+      "failures": [
+        "None (gap) when the wall time falls in a gap and the gap policy is Reject or PreserveUnresolved.",
+        "Multiple with both instants, ascending, in an overlap under Overlap.Reject (with ambiguous) or Overlap.All (without).",
+        "Invalid (offset-mismatch) when an asserted offset is not in force at that wall time, including any assertion in a gap.",
+        "Unsupported (unknown-zone) for a zone not in the context's rules.",
+        "Unsupported (outside-rule-window) within a day of the rules' validity window or outside it.",
+        "Unsupported (unsupported-policy) for a ResolutionPolicy built from GapPolicy or OverlapPolicy values that are not implemented."
+      ]
+    },
+    {
+      "id": "instant-in-zone",
+      "name": "See an instant's wall time in a zone",
+      "description": "Instant.InZone(zoneId, ctx), which calls TemporalContext.InZone.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.InZone"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext.InZone"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.ToZone"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+        "symbol": "Instant.InZone"
+      },
+      "action": "query",
+      "transport": "method of Instant and of TemporalContext",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome<ZonedIntent>.Unique with seconds always present and the offset in force as the asserted offset.",
+      "failures": [
+        "Unsupported (unknown-zone) for a zone not in the rules.",
+        "Unsupported (outside-rule-window) for an instant outside the rules' validity window."
+      ]
+    },
+    {
+      "id": "context-compare",
+      "name": "Order zoned values",
+      "description": "TemporalContext.Compare(a, b) for two ZonedIntents, or a ZonedIntent and an Instant: both are resolved strictly, then every pair of candidates is compared.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext.Compare"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+        "symbol": "TemporalContext.Compare"
+      },
+      "action": "query",
+      "transport": "method of TemporalContext",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome<Ordering>.Unique when every pair of candidates gives the same order.",
+      "failures": [
+        "Multiple (ambiguous) with the possible orderings when the order depends on which side of a DST overlap is meant.",
+        "None, Invalid or Unsupported, with that side's diagnostics (gap, offset-mismatch, unknown-zone, outside-rule-window), when a side does not resolve to one or more instants."
+      ]
+    },
+    {
+      "id": "instant-add",
+      "name": "Add POSIX seconds to an instant",
+      "description": "Instant.Add(PosixSeconds) and the + operator: exact rational arithmetic.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.Add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+        "symbol": "Instant.Add"
+      },
+      "action": "query",
+      "transport": "method and + operator of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "The later Instant.",
+      "failures": []
+    },
+    {
+      "id": "instant-add-elapsed",
+      "name": "Add SI seconds to an instant",
+      "description": "Instant.Add(ElapsedSeconds): SI seconds on a POSIX coordinate.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.Add"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.AddToInstant"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+        "symbol": "Instant.Add"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "Never Unique in this library.",
+      "failures": [
+        "Unsupported (needs-leap-seconds) always: it needs a leap-second table, which this library does not ship."
+      ]
+    },
+    {
+      "id": "instant-until",
+      "name": "Measure POSIX seconds between instants",
+      "description": "Instant.Until(other): other minus this, exactly.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.Until"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+        "symbol": "Instant.Until"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "PosixSeconds as a reduced rational, such as 14403/4 s.",
+      "failures": []
+    },
+    {
+      "id": "instant-from-unix",
+      "name": "Make an instant from Unix time",
+      "description": "Instant.FromUnixSeconds(seconds, nanoseconds) and Instant.FromUnixNanoseconds(n).",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.FromUnixSeconds"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.FromUnixNanoseconds"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+        "symbol": "Instant.FromUnixSeconds"
+      },
+      "action": "query",
+      "transport": "static method of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "An Instant with all nine nanosecond digits kept exactly.",
+      "failures": [
+        "ArgumentOutOfRangeException for nanoseconds outside 0..999,999,999 (FromUnixSeconds)."
+      ]
+    },
+    {
+      "id": "make-period",
+      "name": "Make a period or a second count",
+      "description": "Period.Of, Period.Days, Period.Months and the other component builders; PosixSeconds.Of and ElapsedSeconds.Of, whole or as numerator and denominator; Negate on each.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+          "symbol": "Period.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+          "symbol": "PosixSeconds.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+          "symbol": "ElapsedSeconds.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+          "symbol": "Period.Negate"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+        "symbol": "Period.Of"
+      },
+      "action": "query",
+      "transport": "static method of Period, PosixSeconds and ElapsedSeconds",
+      "authorization": "None: an in-process library call.",
+      "result": "The amount. Period.Months(1) is P1M, never PT1M; Period.Days(1) is not 86,400 seconds.",
+      "failures": [
+        "ArgumentOutOfRangeException from the rational for a zero denominator (PosixSeconds.Of, ElapsedSeconds.Of).",
+        "OverflowException from Period.Negate when a component is long.MinValue."
+      ]
+    },
+    {
+      "id": "make-interval",
+      "name": "Make an interval",
+      "description": "Interval.HalfOpen(a, b), Interval.Closed(a, b) and Interval.Of(start, end) with Bound.Included, Bound.Excluded, Bound.Unbounded and Bound.Unknown, over CivilDate or Instant.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+          "symbol": "Interval.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+          "symbol": "Interval.HalfOpen"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+          "symbol": "Bound"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+        "symbol": "Interval.Of"
+      },
+      "action": "query",
+      "transport": "static method of Interval",
+      "authorization": "None: an in-process library call.",
+      "result": "An Interval<T>.",
+      "failures": [
+        "ArgumentException (reversed-interval) when the end is before the start.",
+        "ArgumentException (unsupported-form) when neither end has a point."
+      ]
+    },
+    {
+      "id": "interval-contains",
+      "name": "Ask whether an interval contains a point or overlaps another",
+      "description": "Interval<T>.Contains(point) and Interval<T>.Overlaps(other), with three-valued answers.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+          "symbol": "Interval.Contains"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+          "symbol": "Interval.Overlaps"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+        "symbol": "Interval.Contains"
+      },
+      "action": "query",
+      "transport": "method of Interval<T>",
+      "authorization": "None: an in-process library call.",
+      "result": "Truth.Definitely, Truth.Possibly (an unknown end decides it) or Truth.Impossible.",
+      "failures": []
+    },
+    {
+      "id": "native-in",
+      "name": "Bring a .NET value in",
+      "description": "CivilDate.FromDateOnly, CivilTime.FromTimeOnly, CivilDateTime.FromDateTime, Instant.FromDateTime, Instant.FromDateTimeOffset, FixedOffsetDateTime.FromDateTimeOffset and PosixSeconds.FromTimeSpan: the method's type names the intent.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.FromDateTime"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.FromDateTime"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.FromDateTimeOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "FixedOffsetDateTime.FromDateTimeOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.FromDateOnly"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+        "symbol": "CivilDateTime.FromDateTime"
+      },
+      "action": "query",
+      "transport": "static method of CivilDate, CivilTime, CivilDateTime, Instant, FixedOffsetDateTime and PosixSeconds",
+      "authorization": "None: an in-process library call.",
+      "result": "The typed value: a plain value where every input converts (DateOnly, TimeOnly, DateTimeOffset, TimeSpan), an Outcome for DateTime.",
+      "failures": [
+        "Unsupported (local-zone) for a DateTimeKind.Local value: the host's zone is never read.",
+        "Invalid (intent-required) for a DateTimeKind.Utc value given to CivilDateTime.FromDateTime, or a DateTimeKind.Unspecified value given to Instant.FromDateTime."
+      ]
+    },
+    {
+      "id": "native-out",
+      "name": "Convert back to .NET",
+      "description": "CivilDate.ToDateOnly, CivilTime.ToTimeOnly, CivilDateTime.ToDateTime, FixedOffsetDateTime.ToDateTimeOffset, Instant.ToDateTimeOffset and PosixSeconds.ToTimeSpan.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.ToDateOnly"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "FixedOffsetDateTime.ToDateTimeOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.ToDateTimeOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.ToOutcome"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+        "symbol": "FixedOffsetDateTime.ToDateTimeOffset"
+      },
+      "action": "query",
+      "transport": "method of CivilDate, CivilTime, CivilDateTime, FixedOffsetDateTime, Instant and PosixSeconds",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome<T>.Unique with the .NET value; a FixedOffsetDateTime that came from a DateTimeOffset gives back an EqualsExact copy. An Instant is shown at +00:00 with an info diagnostic offset-not-known.",
+      "failures": [
+        "Unsupported (out-of-native-range) for years outside 1..9999, nanoseconds that are not a multiple of 100, offsets that are not whole minutes or are beyond ±14:00, and amounts beyond TimeSpan's range."
+      ]
+    },
+    {
+      "id": "outcome-single",
+      "name": "Take the one answer of an outcome",
+      "description": "Outcome<T>.Single(), with TryGetUnique(out value) and UniqueOr(fallback) as the non-throwing forms. None of them ever picks among several answers.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome.Single"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome.TryGetUnique"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome.UniqueOr"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+        "symbol": "Outcome.Single"
+      },
+      "action": "query",
+      "transport": "method of Outcome<T>",
+      "authorization": "None: an in-process library call.",
+      "result": "The value of a Unique outcome.",
+      "failures": [
+        "OutcomeException, carrying the status and diagnostics, for Multiple, None, Unsupported and Invalid."
+      ]
+    },
+    {
+      "id": "outcome-to-result",
+      "name": "Bridge an outcome to the JSON layer",
+      "description": "Outcome<T>.ToResult(): the utv-result/1.0 envelope of the 0.2 JSON layer.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome.ToResult"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+        "symbol": "Outcome.ToResult"
+      },
+      "action": "query",
+      "transport": "method of Outcome<T>",
+      "authorization": "None: an in-process library call.",
+      "result": "A UtvResult with the operation's name, the status, the diagnostics and the candidates as UTV JSON (or wire strings for Ordering and Truth).",
+      "failures": [
+        "NotSupportedException for a Unique or Multiple outcome whose values have no UTV JSON, such as a .NET DateOnly."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/capability.json",
+      "relationship": "The capabilities these operations expose."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/csharp/src/Utv/Typed",
+      "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+      "relationship": "The typed layer's features these operations carry out."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/operation.json",
+      "relationship": "The JSON-layer operations each typed operation calls."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/use-case.json",
+      "relationship": "The application developer's goals that call these operations."
+    }
+  ]
+}

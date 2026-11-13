@@ -1,0 +1,117 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-capability/schema.json",
+  "kind": "capability",
+  "title": "Native interop capability",
+  "folder": "implementations/rust/src/interop",
+  "description": "What the interop folder can do for code that already holds Rust's own time values.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/interop/mod.rs",
+      "symbol": "module documentation"
+    },
+    {
+      "path": "implementations/rust/src/interop/chrono.rs",
+      "symbol": "module documentation"
+    }
+  ],
+  "entities": [
+    {
+      "id": "native-interop",
+      "name": "Native interop",
+      "description": "Brings SystemTime and chrono values into UTV and back, saying what each conversion would lose.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "from_system_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_fixed_offset"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_local"
+        }
+      ],
+      "responsibility": "Converts between UTV values and std's SystemTime and chrono's NaiveDate, NaiveTime, NaiveDateTime, DateTime<FixedOffset> and DateTime<Utc>, with the intent named by the caller, refusing DateTime<Local>, and refusing any conversion back that the native type can't hold exactly.",
+      "operations": [
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "from_system_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "to_system_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_naive_date"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_naive_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_naive_date_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_fixed_offset"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_utc"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_local"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "to_naive_date"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "to_naive_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "to_naive_date_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "to_fixed_offset"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "to_utc"
+        }
+      ],
+      "access": [
+        "Nothing checks: an in-process library call that any code linking the crate may make.",
+        "The chrono conversions exist only when the crate is built with the cargo feature chrono; the SystemTime ones always do."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/rust/src/interop",
+      "path": "implementations/rust/src/interop/.dev/operation.json",
+      "relationship": "The operations through which it is reached."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/rust/src/interop",
+      "path": "implementations/rust/src/interop/.dev/feature.json",
+      "relationship": "The features it offers."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/rust/src/interop",
+      "path": "implementations/rust/src/interop/.dev/use-case.json",
+      "relationship": "The use case that uses it."
+    }
+  ]
+}

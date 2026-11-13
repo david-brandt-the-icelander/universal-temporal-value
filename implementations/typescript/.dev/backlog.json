@@ -1,0 +1,40 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "TypeScript library backlog",
+  "folder": "implementations/typescript",
+  "entities": [
+    {
+      "id": "readme-conformance-profiles",
+      "title": "State the conformance profiles the library claims",
+      "summary": "The README states the library version and the specification versions it reads, but not which conformance profiles it claims or which registries it ships.",
+      "type": "defect",
+      "expected": "VERSIONING.md (Implementation versions): each library MUST state in its README which specification versions and which conformance profiles it supports; implementations/README.md also asks for the registries it ships or can load. The C#, Java and Python READMEs say \"Conformance profiles claimed: none yet.\"",
+      "observed": "implementations/typescript/README.md lists Library version, Specification versions read, Contracts and Runtime dependencies, with no conformance-profile line and no registries line.",
+      "acceptanceCriteria": [
+        "The README states the conformance profiles claimed (for example \"none yet\") and the registries it ships (none; zone rules are loaded from a file the caller names)."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "VERSIONING.md",
+        "description": "Implementation versions, compared with implementations/typescript/README.md."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/README.md",
+          "symbol": "Library version"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Implementation versions"
+        },
+        {
+          "path": "implementations/README.md",
+          "symbol": "Layout of a language directory"
+        }
+      ]
+    }
+  ]
+}

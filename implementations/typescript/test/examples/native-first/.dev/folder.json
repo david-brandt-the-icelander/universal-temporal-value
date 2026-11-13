@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Native-first examples",
+  "folder": "implementations/typescript/test/examples/native-first",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Native-first examples",
+      "summary": "Examples organized by JavaScript's standard objects and methods: each test does a task with Date, Intl.DateTimeFormat or JSON and compares the result with UTV.",
+      "purpose": "One file per standard object (date.test.ts, intl-date-time-format.test.ts, json.test.ts), with a describe per method. Where the two agree, UTV supplies the expected value; where they differ, it is a literal and the doc comment says what UTV does.",
+      "boundaries": [
+        "The Date tests use the UTC methods so the host's zone cannot change them; the one test about the host's zone, and the one that reads the clock, say so.",
+        "Intl.DateTimeFormat reads the host's tz database, which must know the 2026–2027 rules of New York."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/native-first/date.test.ts",
+          "symbol": "Date"
+        },
+        {
+          "path": "implementations/typescript/README.md",
+          "symbol": "Examples"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,529 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Test verification",
+  "folder": "implementations/python/tests",
+  "entities": [
+    {
+      "id": "everyday-fixtures",
+      "title": "Everyday fixtures",
+      "summary": "Every fixture of conformance/operations/everyday.json, through the JSON layer, with its status, candidates and diagnostic codes.",
+      "criteria": [
+        "Every fixture gives its expected status, and its candidates compare equal as JSON (key order ignored).",
+        "Every code in a fixture's expect.diagnostics is among the result's diagnostic codes.",
+        "Fixture ids are unique and every op is one of the twelve operations.",
+        "Every UTV value an operation returns passes structural validation."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_everyday_fixtures.py",
+          "symbol": "EverydayFixtures",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "details": "The rule bundles a fixture names are loaded with load_rules from the paths in the fixture file.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/contracts.json",
+          "entityId": "result-envelope"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "shared-conformance-material"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/test_everyday_fixtures.py",
+          "symbol": "EverydayFixtures"
+        }
+      ]
+    },
+    {
+      "id": "text-form-fixtures",
+      "title": "Text-form fixtures",
+      "summary": "Every fixture of conformance/operations/text-form.json through parse_text and format_text, plus edge cases of the text form.",
+      "criteria": [
+        "Each fixture parses, formats, or both, to its expected value or status and codes.",
+        "Parsed values pass structural validation.",
+        "A non-str input is malformed-value; a zone annotation's slash is not an EDTF interval; bad interval syntax is invalid and an interval with no point unsupported-form.",
+        "Periods round-trip through the text form; an instant at a third of a second has no text form.",
+        "Display strings of second counts are decimals when the fraction terminates, fractions otherwise."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_text_form.py",
+          "symbol": "TextFormFixtures",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_text_form.py",
+          "symbol": "TextFormEdges",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "text-form"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/test_text_form.py",
+          "symbol": "TextFormFixtures"
+        }
+      ]
+    },
+    {
+      "id": "structural-validation",
+      "title": "Structural examples and the envelope",
+      "summary": "validate_structural accepts conformance/examples/valid.json and rejects invalid-structural.json, and handles versions, duplicate keys and unknown kinds.",
+      "criteria": [
+        "Every value in valid.json is valid; every value in invalid-structural.json is invalid.",
+        "A repeated key is invalid with duplicate-key.",
+        "Newer and other well-formed versions are unsupported; malformed identifiers are invalid.",
+        "Unknown top-level properties and unknown kinds are invalid; text that isn't a JSON object is invalid."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_conformance.py",
+          "symbol": "ConformanceExamples",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_conformance.py",
+          "symbol": "Envelope",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "structural-examples"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/test_conformance.py",
+          "symbol": "ConformanceExamples"
+        }
+      ]
+    },
+    {
+      "id": "bundled-schema",
+      "title": "The bundled schema is the repository's",
+      "summary": "src/utv/data/utv-1.0.schema.json is byte for byte schema/utv-1.0.schema.json.",
+      "criteria": [
+        "The two files have the same bytes."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_conformance.py",
+          "symbol": "BundledSchema",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "details": "The only check that keeps the copy in step, and CI doesn't run it (src/utv/data/.dev/backlog.json, schema-copy-outside-ci).",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema"
+        },
+        {
+          "relation": "relates-to",
+          "path": "implementations/python/src/utv/data/.dev/backlog.json",
+          "entityId": "schema-copy-outside-ci"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/test_conformance.py",
+          "symbol": "BundledSchema"
+        }
+      ]
+    },
+    {
+      "id": "typed-layer",
+      "title": "Typed layer",
+      "summary": "At least one test per row of docs/library-api.md §2, outcomes, policies, the context, round trips and constructor checks.",
+      "criteria": [
+        "Each type's total operations return values and its partial ones outcomes with the right codes (CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime, ZonedIntent, Instant, the amounts, Interval).",
+        "Resolve answers gap, ambiguous, offset-mismatch, unknown-zone and outside-rule-window, and the policies choose as documented.",
+        "Outcome helpers never pick an answer silently; to_result is the JSON layer's envelope; TemporalContext.compare answers Multiple when the order depends on an overlap.",
+        "Policy forms take only CONSTRAIN; policies accept wire strings; a context needs ZoneRules.",
+        "parse(str(v)) and from_json(to_json(v)) give v back; values are hashable and immutable; JSON a typed value can't hold exactly is unsupported-operand.",
+        "Constructors reject impossible values with the right code, try_of returns outcomes, wrong Python types raise TypeError.",
+        "from_native and to_native follow the interop rules."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_typed.py",
+          "symbol": "CivilDateRow",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_typed.py",
+          "symbol": "OtherCivilRows",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_typed.py",
+          "symbol": "ZonedRow",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_typed.py",
+          "symbol": "InstantRow",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_typed.py",
+          "symbol": "AmountRows",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_typed.py",
+          "symbol": "IntervalRow",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_typed.py",
+          "symbol": "Outcomes",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_typed.py",
+          "symbol": "RoundTrips",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_typed.py",
+          "symbol": "Constructors",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_typed.py",
+          "symbol": "NativeInterop",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "details": "The context is built from conformance/rules/demo-zones.json at the repository root.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "month-end-returns-none"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "typed-outcomes"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "exact-timeline"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "three-valued-intervals"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/.dev/contracts.json",
+          "entityId": "utv-package"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/test_typed.py",
+          "symbol": "CivilDateRow"
+        }
+      ]
+    },
+    {
+      "id": "json-layer",
+      "title": "Builders and the result type",
+      "summary": "The builders' canonical shapes, the Result envelope, and the clarifications of the everyday API.",
+      "criteria": [
+        "Builders keep only given fields, reduce sub-ticks, keep only non-zero period components and reject wrong Python types.",
+        "Values round-trip through parse_iso and format_iso.",
+        "A unique Result has value and candidates; malformed input is invalid, not an exception.",
+        "resolve records the rule set in manifest.dependencies and reports its loss.",
+        "add drops a stale offsetAssertion with offset-assertion-dropped; dates relate only in one zone; an asserted offset in a gap is offset-mismatch."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_everyday_api.py",
+          "symbol": "Builders",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_everyday_api.py",
+          "symbol": "ResultType",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/contracts.json",
+          "entityId": "result-envelope"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "explicit-zone-rules"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/test_everyday_api.py",
+          "symbol": "ResultType"
+        }
+      ]
+    },
+    {
+      "id": "no-hidden-environment",
+      "title": "No hidden environment",
+      "summary": "The library's source never reads the clock, the host time zone, the locale or the environment.",
+      "criteria": [
+        "No module of src/utv, with strings and comments removed, calls now(), today(), time.time(), time_ns, astimezone() without an argument, localtime, fromtimestamp, utcnow or ZoneInfo(), imports locale, or reads environ."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_everyday_api.py",
+          "symbol": "Purity",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "details": "A static check of the source tokens, not of behaviour.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "no-host-environment"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/test_everyday_api.py",
+          "symbol": "Purity.FORBIDDEN"
+        }
+      ]
+    },
+    {
+      "id": "native-adapters",
+      "title": "Native adapters",
+      "summary": "utv.native: the caller names the intent, a naive datetime is never local, lossy conversions back are refused or reported.",
+      "criteria": [
+        "Dates and times convert directly; wrong types raise TypeError; an aware time is unsupported.",
+        "A naive datetime is floating, and never read as an instant, offset or zoned (local-zone).",
+        "A fixed timezone needs an intent (intent-required); an unknown tzinfo or intent is refused; a timedelta needs an intent.",
+        "A ZoneInfo datetime asserts the offset of its fold; a gap is not silently shifted; ZoneInfo(\"localtime\") is refused.",
+        "Conversions back round-trip; years outside 1–9999 and sub-microsecond values are unsupported unless allow_loss, which reports precision-loss; a zoned value needs tz or reports zone-dropped.",
+        "An asserted offset picks the fold; without one an overlap is multiple and a gap none; the tz must be the same zone."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_native.py",
+          "symbol": "FromNative",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_native.py",
+          "symbol": "FromZoneInfo",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_native.py",
+          "symbol": "ToNative",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_native.py",
+          "symbol": "ToZoneInfo",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "details": "FromZoneInfo and ToZoneInfo read this machine's tz database and are skipped when it has no America/New_York.",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "native-interop-intent"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "no-host-environment"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/use-case.json",
+          "entityId": "convert-native"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/test_native.py",
+          "symbol": "FromNative"
+        },
+        {
+          "path": "implementations/python/tests/test_native.py",
+          "symbol": "needs_tzdb"
+        }
+      ]
+    },
+    {
+      "id": "gregorian-validation",
+      "title": "Gregorian date validation",
+      "summary": "validate_gregorian_date and the leap-year rule.",
+      "criteria": [
+        "The leap rule holds for 2000, 2024, 0, −4, 1900 and 2026.",
+        "Real dates are valid and missing days, month 13 and day 0 invalid, also for month-day values and 21-digit years.",
+        "Other calendars and other kinds are unsupported; a structural error comes first."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/test_gregorian.py",
+          "symbol": "Gregorian",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "separate-validity-checks"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/use-case.json",
+          "entityId": "validate-utv-json"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/test_gregorian.py",
+          "symbol": "Gregorian"
+        }
+      ]
+    }
+  ]
+}

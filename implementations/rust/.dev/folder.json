@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Rust library",
+  "folder": "implementations/rust",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Rust library (utv 0.3.0)",
+      "summary": "The Rust implementation of UTV: one Cargo package, utv, with the JSON layer and the typed layer, its tests and its two example suites.",
+      "purpose": "Holds the crate utv (Cargo.toml, edition 2021): the library in src/, its integration tests and example suites in tests/, and its README and CHANGELOG. It reads and writes utv/1.0, answers utv-result/1.0 and reads and writes the text form utv-text/1, without reading the clock, the host's zone or locale.",
+      "boundaries": [
+        "The specification, the structural schema and the conformance material belong to spec/, schema/ and conformance/; the crate compiles the schema in and the tests read the fixtures in place, never copies.",
+        "There are no example programs: the examples are the unit tests in tests/utv_first and tests/native_first.",
+        "The CHANGELOG is the record of the crate's versions."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/Cargo.toml",
+          "symbol": "package"
+        },
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "utv (Rust) 0.3.0"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "SCHEMA_TEXT"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        },
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "shared-conformance-material"
+        }
+      ]
+    }
+  ]
+}

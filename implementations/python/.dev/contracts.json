@@ -1,0 +1,94 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "utv for Python contracts",
+  "folder": "implementations/python",
+  "entities": [
+    {
+      "id": "utv-package",
+      "title": "The utv package API",
+      "summary": "The Python package utv 0.3.0: everything public is importable from utv and listed in utv.__all__.",
+      "contractType": "library-api",
+      "consumers": [
+        "Application developers' Python code (Actors/application-developer.md)",
+        "This library's tests and example suites"
+      ],
+      "guarantees": [
+        "Distribution and import name utv; version 0.3.0 in pyproject.toml and utv.__version__.",
+        "The typed layer (0.3) and the JSON layer (0.1, 0.2 and the text form) are importable from utv and listed in utv.__all__; the JSON layer's functions are also in their modules (utv.build, utv.iso, utv.text, utv.ops, utv.zones, utv.native, utv.validate, utv.gregorian).",
+        "Reads and writes utv/1.0 values (utv.SPEC_VERSION); the JSON layer's results are utv-result/1.0; the text form is profile utv-text/1.",
+        "Total operations return values; partial ones return Outcome[T], the union of the frozen dataclasses Unique, Multiple, NoneOf, Unsupported and Invalid, each with diagnostics and __match_args__.",
+        "Typed values are frozen, slotted, hashable dataclasses, equal when their UTV JSON is equal.",
+        "Constructors raise OutcomeError, a ValueError carrying the status and diagnostics, for a value that can't exist; try_of returns an outcome; wrong Python types raise TypeError.",
+        "Parsing and the JSON layer never raise for bad input or a semantic outcome.",
+        "Diagnostic codes are those of docs/library-api.md §5; messages are free text.",
+        "Python's naming deviations: NoneOf for the none case; Period.of_days, of_months, of_weeks and of_years; TemporalContext(rules) and TemporalContext.with_rules(rules).",
+        "No clock, host time zone, locale, installed tz database or network access in library code."
+      ],
+      "compatibility": "Versioned with SemVer independently of the specification (VERSIONING.md) and still 0.x, so a minor release may change the API: 0.3.0 renamed the JSON layer's diagnostic codes and kept its functions and statuses. CHANGELOG.md records every change. Values labelled with another well-formed utv/ version are unsupported, never guessed at.",
+      "definition": "implementations/python/src/utv/__init__.py",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/__init__.py",
+          "symbol": "__all__"
+        },
+        {
+          "path": "implementations/python/src/utv/__init__.py",
+          "symbol": "SPEC_VERSION"
+        },
+        {
+          "path": "implementations/python/pyproject.toml",
+          "symbol": "project"
+        },
+        {
+          "path": "implementations/python/CHANGELOG.md",
+          "symbol": "0.3.0"
+        },
+        {
+          "path": "implementations/python/README.md",
+          "symbol": "The typed API"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        },
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        },
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "text-form"
+        },
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0"
+        },
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-result-1-0"
+        },
+        {
+          "relation": "depends-on",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema",
+          "description": "validate_structural checks values against a bundled copy of it."
+        },
+        {
+          "relation": "depends-on",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules",
+          "description": "ZoneRules reads bundles in this format."
+        }
+      ]
+    }
+  ]
+}

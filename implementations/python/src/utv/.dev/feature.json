@@ -1,0 +1,577 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-feature/schema.json",
+  "kind": "feature",
+  "title": "utv package features",
+  "folder": "implementations/python/src/utv",
+  "description": "The behaviours the utv package offers, with their outcomes and limits.",
+  "sources": [
+    {
+      "path": "implementations/python/src/utv/values.py",
+      "symbol": "CivilDate"
+    },
+    {
+      "path": "implementations/python/src/utv/zones.py",
+      "symbol": "resolve"
+    },
+    {
+      "path": "implementations/python/src/utv/validate.py",
+      "symbol": "validate_structural"
+    }
+  ],
+  "entities": [
+    {
+      "id": "month-end-returns-none",
+      "name": "Month arithmetic that may have no answer",
+      "description": "Adding months or years says so when the day doesn't exist in the target month.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_month_step"
+        }
+      ],
+      "behavior": "Month arithmetic adds 12 × years + months, then checks the day. When the day is missing from the target month (31 January + 1 month), add_months and add_years without a policy return NoneOf with diagnostic month-end. With MonthEnd.CONSTRAIN they clamp to the month's last day and return the value itself. add(period) always returns an outcome and takes either policy. Weeks and days are added after the month step, and hours, minutes and seconds after that, as wall-clock time carrying into days.",
+      "outcome": "A caller never gets 28 February silently; they get it by asking for it.",
+      "constraints": [
+        "The policy form of add_months and add_years accepts only CONSTRAIN; MonthEnd.REJECT raises ValueError, because rejecting is what the call without a policy does.",
+        "A period with hours, minutes or seconds added to a date is Invalid (kind-mismatch).",
+        "A time of day has no arithmetic: wrapping past midnight would lose the day."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_month_step"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.add_months"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.add"
+        }
+      ]
+    },
+    {
+      "id": "dst-gap-and-overlap",
+      "name": "DST gaps and overlaps answered truthfully",
+      "description": "Resolving a zoned wall time gives zero, one or two instants, and a policy chooses only when asked.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "Zone.offsets_near"
+        }
+      ],
+      "behavior": "resolve takes each offset in force in the zone within a day of the wall time L and keeps t = L − offset when the zone's offset at t is that offset. One candidate is Unique. None (a gap) is NoneOf (gap) under Gap.REJECT or PRESERVE_UNRESOLVED, and under SHIFT_FORWARD the instant L − (offset before the gap), so 02:30 in New York's spring-forward gap is the instant labelled 03:30. Two (an overlap) are Multiple, ascending, with ambiguous under Overlap.REJECT and without it under ALL; EARLIEST and LATEST pick one. An asserted offset selects among the candidates before the policy applies.",
+      "outcome": "Nobody's meeting silently moves by an hour; the caller sees that the time never happened, or happened twice, and decides.",
+      "constraints": [
+        "The default is ResolutionPolicy.STRICT (reject both). In the JSON layer the value's own resolutionPolicy applies when no policy is passed.",
+        "An asserted offset that matches no candidate is Invalid (offset-mismatch), even in a gap under SHIFT_FORWARD.",
+        "A zone not in the rules is Unsupported (unknown-zone). A wall time within a day of either end of the rules' window is Unsupported (outside-rule-window): the rules are never extrapolated.",
+        "Any other policy value is unsupported (unsupported-policy) in the JSON layer; the typed policies can't express one."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "Zone.offsets_near"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "Zone.gap_offset_before"
+        },
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.resolve"
+        },
+        {
+          "path": "implementations/python/src/utv/policy.py",
+          "symbol": "ResolutionPolicy"
+        }
+      ]
+    },
+    {
+      "id": "explicit-zone-rules",
+      "name": "Zone rules are an explicit, recorded input",
+      "description": "Every zone operation uses rules the caller loaded, and says which.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "parse_rules"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "ZoneRules.manifest"
+        }
+      ],
+      "behavior": "Zone operations take a rule bundle in the format of conformance/rules/demo-zones.json, loaded by the caller with ZoneRules.load(path) or ZoneRules.parse(text) and held in a TemporalContext. There is no default or global context. resolve and to_zone list the bundle's rule set in manifest.dependencies, which Outcome.to_result() shows.",
+      "outcome": "Results are reproducible and say which rules they depend on; a change of rules is a change of input, never of the machine.",
+      "constraints": [
+        "A bundle has ruleSet, validFrom, validUntil and, per zone, initialOffset and transitions; transitions must be in order and within ±18:00, or ZoneRules.parse raises ValueError.",
+        "The package ships no rule bundle; the repository's only one is the demo bundle (three zones, 2026–2027)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "parse_rules"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "ZoneRules.manifest"
+        },
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.__post_init__"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "to_zone"
+        }
+      ]
+    },
+    {
+      "id": "exact-timeline",
+      "name": "Exact instants and second counts",
+      "description": "Instants and second counts are exact rationals, and the three kinds of amount stay apart.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant"
+        },
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "instant_value"
+        }
+      ],
+      "behavior": "An Instant holds a Fraction of POSIX seconds since 1970. nanoseconds is the floor of the sub-second part and sub_second the exact fraction. until returns an exact PosixSeconds (from 13:30:00.25 to 14:30:01 is 14403/4 s), add(PosixSeconds) is exact, and add(ElapsedSeconds) is Unsupported (needs-leap-seconds). Period, PosixSeconds and ElapsedSeconds are different types: a calendar day is not 86,400 seconds. Second counts print as display strings such as 3600.75 s (POSIX) or 1/3 s (POSIX).",
+      "outcome": "No timestamp is rounded through a float, and no SI duration is treated as POSIX time.",
+      "constraints": [
+        "Only the unix-posix timescale with ticks is implemented; other instants are Unsupported (unsupported-operand).",
+        "An instant has a text form only when its fraction fits in nine digits.",
+        "Display strings of second counts can't be parsed."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant"
+        },
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "instant_value"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "posix_seconds_between"
+        },
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "seconds_display"
+        },
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "decimal_text"
+        }
+      ]
+    },
+    {
+      "id": "arbitrary-precision-years",
+      "name": "Years of any size",
+      "description": "Years are Python ints, so dates are not limited to 1–9999.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "days_from_civil"
+        },
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "civil_from_days"
+        }
+      ],
+      "behavior": "A year is a Python int in the typed values, a decimal string in JSON, and four digits or a sign and four or more digits in text (+275760-09-13, -0500-03-01). Calendar arithmetic goes through day numbers (Hinnant's algorithm), exact for any year.",
+      "outcome": "Historical, astronomical and far-future dates work the same way as this year's.",
+      "constraints": [
+        "An integer string beyond Python's int–string conversion limit (4300 digits by default) is not handled: resource-limit with implementation-limit in the JSON layer, Unsupported in the typed layer.",
+        "Conversion to datetime holds only years 1–9999 (out-of-native-range)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "days_from_civil"
+        },
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "civil_from_days"
+        },
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "integer_string"
+        },
+        {
+          "path": "implementations/python/src/utv/iso.py",
+          "symbol": "_fmt_year"
+        }
+      ]
+    },
+    {
+      "id": "valid-by-construction",
+      "name": "Values that can't exist can't be built",
+      "description": "Typed constructors run the same checks as the JSON layer.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_check"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.__post_init__"
+        }
+      ],
+      "behavior": "Constructing a typed value builds its JSON and runs the JSON layer's checks on it. A value that can't exist raises OutcomeError, a ValueError that carries the status and diagnostics, as datetime.date raises ValueError. try_of returns the same answer as an outcome. Wrong Python types raise TypeError. Reversed intervals and intervals with no point are construction errors too.",
+      "outcome": "A typed value in hand is always a value that exists, and the reason for a refusal is a diagnostic code, not a message to parse.",
+      "constraints": [
+        "Only the codes of the JSON layer's checks are raised: day-out-of-range, month-out-of-range, field-out-of-range, offset-out-of-range, leap-second, end-of-day, syntax (zone id), reversed-interval, unsupported-form, kind-mismatch."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_check"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.__post_init__"
+        },
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "civil"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Interval.__post_init__"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_try"
+        }
+      ]
+    },
+    {
+      "id": "typed-outcomes",
+      "name": "Partial answers as an Outcome",
+      "description": "Only a partial operation returns an outcome, and nothing picks an answer for the caller.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/outcome.py",
+          "symbol": "_Case"
+        },
+        {
+          "path": "implementations/python/src/utv/outcome.py",
+          "symbol": "Outcome"
+        }
+      ],
+      "behavior": "Partial operations return Outcome[T]: Unique, Multiple, NoneOf, Unsupported or Invalid, each a frozen dataclass with diagnostics and __match_args__, so match handles every case. unique_or needs a fallback; single() raises OutcomeError for anything but Unique; status is the wire string; codes lists the diagnostic codes; str() is the value's text or, for example, none (month-end); to_result() is the JSON layer's Result.",
+      "outcome": "Every Outcome in the caller's code marks a question time can refuse to answer.",
+      "constraints": [
+        "Statuses the typed layer has no case for (symbolic, resource-limit, …) become Unsupported."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/python/src/utv/outcome.py",
+          "symbol": "_Case"
+        },
+        {
+          "path": "implementations/python/src/utv/outcome.py",
+          "symbol": "Outcome"
+        },
+        {
+          "path": "implementations/python/src/utv/outcome.py",
+          "symbol": "outcome_of"
+        },
+        {
+          "path": "implementations/python/src/utv/outcome.py",
+          "symbol": "failure"
+        }
+      ]
+    },
+    {
+      "id": "zoned-wall-clock-arithmetic",
+      "name": "Zoned arithmetic keeps the wall time",
+      "description": "Adding to a zoned value moves the wall time, not the instant.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "ZonedIntent._step"
+        }
+      ],
+      "behavior": "Adding days, weeks, hours, minutes or seconds to a ZonedIntent changes the wall time and keeps the zone: noon plus a day across a DST change is noon the next day. An asserted offset is dropped, because it may no longer be true (the JSON layer reports offset-assertion-dropped, info). The instant comes only from resolve. Adding 86,400 POSIX seconds to the instant instead lands an hour away from noon on such a day.",
+      "outcome": "\"Same time tomorrow\" stays the same time on the clock, and the difference from 24 hours is visible.",
+      "constraints": [],
+      "implementation": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "ZonedIntent._step"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "ZonedIntent.add_days"
+        }
+      ]
+    },
+    {
+      "id": "three-valued-intervals",
+      "name": "Ranges whose ends may be unknown",
+      "description": "Containment and overlap answer definitely, possibly or impossible.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "contains"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "overlaps"
+        }
+      ],
+      "behavior": "Each endpoint condition is true, false or unknown: included is ≤, excluded is <, unbounded is always true and unknown is unknown. Conditions combine with three-valued AND: impossible if any is false, definitely if all are true, possibly otherwise. Date intervals are normalised to half-open before overlaps, and an interval that is provably empty overlaps nothing.",
+      "outcome": "An unknown end is never mistaken for no end: [2026-11-01, ?) only possibly contains 1 June 2027.",
+      "constraints": [
+        "Only civil-date and instant intervals built from a start and an end.",
+        "Dates relate only when all are unzoned or all share one zone (different-zones)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "contains"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "overlaps"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "_and"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "_half_open"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Interval"
+        }
+      ]
+    },
+    {
+      "id": "lossless-text-form",
+      "name": "A text form that round-trips",
+      "description": "str(value) is the text form, and parse reads it back to the same value.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "parse_text"
+        },
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "format_text"
+        }
+      ],
+      "behavior": "str(value) is the utv-text/1 text form: ISO 8601 / RFC 9557 points, ISO durations, bracket intervals with explicit endpoint state. utv.parse(text) returns the type the text describes as an outcome and never raises: Z gives an Instant and +00:00 a FixedOffsetDateTime. EDTF slash intervals are accepted on input. A value with no text form prints as its compact JSON, and second counts as their display strings.",
+      "outcome": "Values read well in code, logs and tests, and text from outside can't crash the program.",
+      "constraints": [
+        "A period with mixed signs and an instant with a fraction beyond nanoseconds have no text form (no-text-form).",
+        "Week dates, ordinal dates, basic format, decimal period components and EDTF qualifiers are Unsupported (unsupported-form).",
+        "Only one [Area/Location] annotation is read (unsupported-annotation)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "parse_text"
+        },
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "format_text"
+        },
+        {
+          "path": "implementations/python/src/utv/iso.py",
+          "symbol": "parse_iso"
+        },
+        {
+          "path": "implementations/python/src/utv/iso.py",
+          "symbol": "format_iso"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_text"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "parse"
+        }
+      ]
+    },
+    {
+      "id": "fail-closed-json",
+      "name": "Structural validation that fails closed",
+      "description": "UTV JSON is rejected when it is not exactly a utv/1.0 value this library knows.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "validate_structural"
+        }
+      ],
+      "behavior": "validate_structural parses JSON text rejecting duplicate keys (duplicate-key) and NaN or Infinity. The schema identifier must be exactly utv/1.0: another well-formed version is unsupported (unsupported-version) and anything else invalid (unknown-schema). The value is then checked against the bundled utv-1.0 schema by a small interpreter of the keywords that schema uses, so unknown kinds and properties are invalid. from_json gives unsupported-operand when no typed value holds the JSON exactly, rather than dropping what it can't hold.",
+      "outcome": "A value from outside is either understood completely or refused, never half-read.",
+      "constraints": [
+        "The interpreter handles $ref to #/$defs, type, const, enum, minLength, pattern, minItems, items, properties, required, additionalProperties, anyOf, oneOf and not.",
+        "utv.from_json given JSON text parses it with json.loads, which keeps the last of two equal keys (backlog: from-json-text-duplicate-keys)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "validate_structural"
+        },
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "validate_value"
+        },
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "_check"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "from_json"
+        }
+      ]
+    },
+    {
+      "id": "no-host-environment",
+      "name": "No clock, host zone or locale",
+      "description": "The library reads nothing from the machine it runs on.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "from_datetime"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "_zone_key"
+        },
+        {
+          "path": "implementations/python/tests/test_everyday_api.py",
+          "symbol": "Purity"
+        }
+      ],
+      "behavior": "Library code never reads the clock, the host time zone, the locale or the environment, and never constructs a ZoneInfo. \"Now\" comes in as a value: Instant.from_unix_nanoseconds(time.time_ns()) or from_native(datetime.now(timezone.utc), Intent.INSTANT). A naive datetime is only ever a floating wall time, and ZoneInfo(\"localtime\") is refused (local-zone).",
+      "outcome": "The same call gives the same answer on every machine, and tests can fix \"now\".",
+      "constraints": [
+        "Conversions to and from datetime use the tz data of a ZoneInfo the caller passes, which may differ from the rules in a TemporalContext."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "from_datetime"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "_zone_key"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant.from_unix_nanoseconds"
+        }
+      ]
+    },
+    {
+      "id": "native-interop-intent",
+      "name": "Native conversions that name their meaning and their losses",
+      "description": "Converting to and from datetime never guesses a meaning and never drops anything quietly.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "from_datetime"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "to_datetime"
+        }
+      ],
+      "behavior": "from_native needs an intent where a native value has more than one meaning: a datetime with a fixed timezone is an INSTANT or an OFFSET date-time, and a timedelta is POSIX_SECONDS or a PERIOD. A datetime with a ZoneInfo becomes a ZonedIntent with the offset of its fold asserted; one in a gap asked for an instant is NoneOf (gap). to_native refuses years outside 1–9999 and sub-microsecond values (out-of-native-range) unless allow_loss=True, which reports precision-loss or zone-dropped and names the lost fields. A zoned value needs tz=ZoneInfo of the same id; in an overlap with no asserted offset it gives both folds.",
+      "outcome": "A round trip from datetime through UTV and back returns the original, and every other trip says what it lost.",
+      "constraints": [
+        "Only date, time, datetime and timedelta; UTC offsets with fractions of a second are not handled.",
+        "Calendar periods have no timedelta (unsupported-operand)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "from_datetime"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "to_datetime"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "_done"
+        },
+        {
+          "path": "implementations/python/src/utv/interop.py",
+          "symbol": "from_native"
+        },
+        {
+          "path": "implementations/python/src/utv/interop.py",
+          "symbol": "to_native"
+        }
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/python/src/utv",
+      "path": "implementations/python/src/utv/.dev/capability.json",
+      "relationship": "The capabilities these features make up."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/python/src/utv",
+      "path": "implementations/python/src/utv/.dev/operation.json",
+      "relationship": "The operations that carry them out."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/python/src/utv",
+      "path": "implementations/python/src/utv/.dev/use-case.json",
+      "relationship": "The use cases that exercise them."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Library tests",
+  "folder": "implementations/csharp/tests/Utv.Tests",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Library tests",
+      "summary": "xUnit tests of the library itself: every shared fixture, the structural examples, the schema, results, the JSON layer, interop and the typed layer.",
+      "purpose": "Checks the library against the repository's shared conformance material and its own unit tests. Fixtures.PathOf resolves files under the repository root, which the project file records at build time, so the tests read schema/ and conformance/ in place.",
+      "boundaries": [
+        "May see the library's internal members (InternalsVisibleTo Utv.Tests in Utv.csproj).",
+        "These tests predate the repository's test directives (AGENTS.md section 1) and do not follow them yet; see backlog.json."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/tests/Utv.Tests/Fixtures.cs",
+          "symbol": "Fixtures.PathOf"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Tests/Utv.Tests.csproj",
+          "symbol": "UtvRepositoryRoot"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Utv.csproj",
+          "symbol": "InternalsVisibleTo"
+        }
+      ]
+    }
+  ]
+}

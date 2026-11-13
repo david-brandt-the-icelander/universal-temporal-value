@@ -1,0 +1,42 @@
+{
+  "$schema": "../../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Everyday internals",
+  "folder": "implementations/csharp/src/Utv/Internal/Everyday",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Everyday internals",
+      "summary": "The helpers every everyday operation shares: Gregorian day arithmetic, exact rationals, reading and writing UTV JSON, and turning semantic failures into results.",
+      "purpose": "Holds what the JSON layer (Build, Calendar, Iso, Zones, Ranges, TextForm, Interop) and the typed layer both need, so that each operation reads its arguments and reports its outcome the same way: CivilMath for proleptic Gregorian days with BigInteger years, Rational for exact seconds, Values for reading civil and instant JSON, and OpFailure with Op for semantic outcomes.",
+      "boundaries": [
+        "Everything here is internal to the Utv assembly (and visible to Utv.Tests); nothing is part of the package's public API.",
+        "Reads no clock, host time zone or culture: every number is formatted with CultureInfo.InvariantCulture.",
+        "An OpFailure never escapes the library: Op.Run and the typed layer turn it into a UtvResult or an Outcome."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+          "symbol": "Op.Run"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+          "symbol": "OpFailure"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/CivilMath.cs",
+          "symbol": "CivilMath"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Rational.cs",
+          "symbol": "Rational"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Utv.csproj",
+          "symbol": "InternalsVisibleTo"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Rust library backlog",
+  "folder": "implementations/rust",
+  "entities": [
+    {
+      "id": "declare-rust-version",
+      "title": "Declare the minimum Rust version",
+      "type": "defect",
+      "status": "proposed",
+      "summary": "Cargo.toml admits any toolchain with edition 2021, but the code uses standard-library methods added much later.",
+      "expected": "A toolchain the manifest admits builds the crate, or Cargo refuses it up front with a clear message (Cargo's rust-version key).",
+      "observed": "Cargo.toml has edition = \"2021\" (Rust 1.56 or later) and no rust-version; src/ops.rs calls u32::is_multiple_of and src/zones.rs Option::is_none_or, which Rust's release notes date to 1.87 and 1.82, so an older toolchain fails mid-compile.",
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/rust/Cargo.toml",
+        "description": "No rust-version key; found while documenting the folder."
+      },
+      "evidenceStatus": "documented",
+      "details": "The two call sites were checked in the code; the versions in which those methods became stable come from Rust's release notes and were not checked by building with older toolchains.",
+      "sources": [
+        {
+          "path": "implementations/rust/Cargo.toml",
+          "symbol": "package"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "resolve"
+        }
+      ]
+    },
+    {
+      "id": "claim-conformance-profiles",
+      "title": "State the conformance profiles the crate claims",
+      "type": "defect",
+      "status": "proposed",
+      "summary": "VERSIONING.md requires each library to state, in its README and its package metadata where possible, the specification versions and the conformance profiles it supports; the Rust README and Cargo.toml state the versions only.",
+      "expected": "The README (and Cargo.toml's description where it fits) names the profiles of spec §2 the crate claims (core-civil, global-instant, zoned, ...), as VERSIONING.md and implementations/README.md ask.",
+      "observed": "README.md names utv/1.0, utv-result/1.0 and utv-text/1, and Cargo.toml's description utv/1.0; neither names a conformance profile.",
+      "origin": {
+        "kind": "document",
+        "reference": "VERSIONING.md",
+        "description": "Implementation versions: \"Each library MUST state ... which specification versions ... and which conformance profiles it supports.\""
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "utv (Rust) 0.3.0"
+        },
+        {
+          "path": "implementations/rust/Cargo.toml",
+          "symbol": "package.description"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Implementation versions"
+        },
+        {
+          "path": "implementations/README.md",
+          "symbol": "Layout of a language directory"
+        }
+      ]
+    }
+  ]
+}

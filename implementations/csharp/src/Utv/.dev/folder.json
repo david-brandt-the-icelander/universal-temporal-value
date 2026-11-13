@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Utv library",
+  "folder": "implementations/csharp/src/Utv",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Utv library",
+      "summary": "The C# library and its project, Utv.csproj (NuGet package Utv 0.3.0, net8.0): structural validation, the JSON-layer everyday API, the text form, zone rules and .NET interop here, and the typed API in Typed/.",
+      "purpose": "Holds everything that ships in the package. The files in this folder are the 0.1 and 0.2 layers on UTV JSON (UtvValidator, GregorianCivil, UtvResult, Build, Iso, TextForm, Calendar, Ranges, Zones, ZoneRules, Interop, the policies); Typed/ is the 0.3 typed layer built on them, and Internal/ holds what both use. Everything public is in namespace Utv.",
+      "boundaries": [
+        "Never reads the system clock, host time zone, locale, installed tz database or the network: zone rules and \"now\" are passed in by the caller.",
+        "The structural schema is the repository's schema/utv-1.0.schema.json, embedded at build time, never copied.",
+        "No runtime dependencies beyond the .NET 8 base class library.",
+        "Tests live in ../../tests; Utv.Tests may see internal members (InternalsVisibleTo)."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Utv.csproj",
+          "symbol": "PackageId"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Utv.csproj",
+          "symbol": "EmbeddedResource"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/.editorconfig",
+          "symbol": "CA1304"
+        },
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "Utv (C#)"
+        }
+      ]
+    }
+  ]
+}

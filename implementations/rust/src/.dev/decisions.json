@@ -1,0 +1,98 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Library source decisions",
+  "folder": "implementations/rust/src",
+  "entities": [
+    {
+      "id": "i128-exact-arithmetic",
+      "title": "Exact i128 arithmetic, refusing what doesn't fit",
+      "summary": "Years and day counts are i128 and fractions reduced i128 rationals, every step checked; beyond that range the answer is unsupported (implementation-limit).",
+      "status": "accepted",
+      "context": "UTV requires arbitrary precision: integers are decimal strings and fractions exact rationals. The contract lets each language choose its integer type: BigInteger in C# and Java, int in Python, bigint in TypeScript, i128 in Rust.",
+      "decision": "Checked i128 everywhere (num.rs Q, days_from_civil, civil_from_days); an overflow is None, reported as unsupported with implementation-limit.",
+      "rationale": "\"Years are arbitrary precision ... i128 in Rust, where anything beyond the range gives unsupported with implementation-limit\" (docs/library-api.md section 1); \"anything beyond is unsupported (implementation-limit), never a wrapped value\" (README, The JSON layer).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/num.rs",
+          "symbol": "module documentation"
+        },
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "range_err"
+        },
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "The JSON layer (0.1, 0.2)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "arbitrary-precision",
+          "description": "Meets it within i128, and refuses beyond."
+        }
+      ]
+    },
+    {
+      "id": "separate-semantic-check",
+      "title": "The Gregorian check is a separate function",
+      "summary": "validate_structural no longer judges dates; validate_gregorian_civil does, as its own question.",
+      "status": "accepted",
+      "context": "Until 0.2.0, validate_structural also ran the Gregorian date check, so 30 February was structurally invalid.",
+      "decision": "validate_structural checks the envelope and schema only; validate_gregorian_civil runs it first and then checks month and day, answering unsupported for other kinds and calendars.",
+      "rationale": "\"Structural and semantic validation are separate questions\" (CHANGELOG 0.2.0; validate_gregorian_civil's documentation cites implementations/README.md).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_gregorian_civil"
+        },
+        {
+          "path": "implementations/rust/CHANGELOG.md",
+          "symbol": "0.2.0, Also in 0.2.0"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "separate-validity-checks"
+        }
+      ]
+    },
+    {
+      "id": "strict-json-parsing",
+      "title": "A strict JSON parser for validation and rule bundles",
+      "summary": "JSON text is parsed through a custom serde visitor that refuses a repeated object key, which serde_json alone accepts.",
+      "status": "accepted",
+      "context": "serde_json keeps the last value of a repeated key (tests/native_first/json.rs shows it). UTV libraries must fail closed on duplicate JSON keys.",
+      "decision": "parse_strict and the validators parse through StrictVisitor; a data error from it is reported as duplicate-key, anything else as syntax (since the Unreleased changes; before, both were syntax).",
+      "rationale": "Fail closed on duplicate keys (implementations/README.md, obligation 7), with the shared code the other libraries report.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "StrictVisitor"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "parse_for_validation"
+        },
+        {
+          "path": "implementations/rust/CHANGELOG.md",
+          "symbol": "Unreleased"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed"
+        }
+      ]
+    }
+  ]
+}

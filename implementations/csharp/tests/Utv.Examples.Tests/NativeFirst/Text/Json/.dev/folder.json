@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "System.Text.Json examples",
+  "folder": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/Text/Json",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "System.Text.Json examples",
+      "summary": "Native-first examples for System.Text.Json: JsonDocument.",
+      "purpose": "Shows that JsonDocument keeps the last value of a repeated key, which is why the library detects duplicate keys itself.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/Text/Json/JsonDocumentTests.cs",
+          "symbol": "JsonDocumentTests"
+        }
+      ]
+    }
+  ]
+}

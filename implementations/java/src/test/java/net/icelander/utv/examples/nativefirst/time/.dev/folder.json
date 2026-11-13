@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../../../../../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Native-first examples: java.time",
+  "folder": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Native-first examples: java.time",
+      "summary": "One test class per java.time class, one @Nested class per method: each test does a task with java.time and compares the result with UTV.",
+      "purpose": "Shows what java.time does for the same scenarios as the UTV-first suite. Expected values come from UTV wherever the two agree; otherwise they are literals, and the Javadoc's 'Compared with:' sentence says what UTV does. Subpackages chrono/, temporal/ and zone/ mirror java.time's.",
+      "boundaries": [
+        "java.time's zone operations read the JDK's tz database; the class comments say so.",
+        "Tests mirror production (AGENTS.md 1.9): each test class is named after the class it exercises, and verification.json names it."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/LocalDateTest.java",
+          "symbol": "LocalDateTest"
+        },
+        {
+          "path": "docs/example-tests.md",
+          "symbol": "Scenario catalog"
+        }
+      ]
+    }
+  ]
+}

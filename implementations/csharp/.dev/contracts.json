@@ -1,0 +1,154 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "C# library contracts",
+  "folder": "implementations/csharp",
+  "entities": [
+    {
+      "id": "utv-package",
+      "title": "The Utv package",
+      "summary": "NuGet package id Utv, version 0.3.0, assembly Utv, target net8.0, everything public in namespace Utv, no runtime dependencies beyond the BCL.",
+      "contractType": "library-api",
+      "consumers": [
+        "Applications that reference the package or the project",
+        "The example tests, which use only the public API"
+      ],
+      "guarantees": [
+        "Reads utv/1.0 values; writes utv-result/1.0 results and utv-text/1 text.",
+        "Claims no conformance profile; ships no registries.",
+        "Never reads the system clock, host time zone, locale, installed tz database or network.",
+        "Public API documented by XML documentation comments (GenerateDocumentationFile)."
+      ],
+      "compatibility": "Semantic Versioning, tagged csharp/vX.Y.Z (VERSIONING.md). Before 1.0.0, minor versions may break the API: 0.3.0 changed 0.2's diagnostic codes, and every such change is listed in CHANGELOG.md. The library may not reach 1.0.0 until it passes the structural material and every semantic scenario of the profiles it claims.",
+      "definition": "implementations/csharp/src/Utv/Utv.csproj",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Utv.csproj",
+          "symbol": "PackageId"
+        },
+        {
+          "path": "implementations/csharp/CHANGELOG.md",
+          "symbol": "0.3.0"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Implementation versions"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0"
+        },
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-result-1-0"
+        }
+      ]
+    },
+    {
+      "id": "typed-api",
+      "title": "Typed API 0.3",
+      "summary": "CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime, ZonedIntent, Instant, Period, PosixSeconds, ElapsedSeconds, Interval<T> and Bound<T>, Outcome<T>, MonthEnd, Gap, Overlap, ResolutionPolicy, TemporalContext and Temporal.",
+      "contractType": "library-api",
+      "consumers": [
+        "Application developers (Actors/application-developer.md)"
+      ],
+      "guarantees": [
+        "Every type and operation of docs/library-api.md §1–§4, with the C# names of its naming table: Temporal.Parse for Utv.Parse, period.Components for period components.",
+        "Total operations return values; partial ones return Outcome<T>, whose cases carry the diagnostic codes of library-api §5.",
+        "Of throws ArgumentOutOfRangeException; TryOf, Parse and FromJson never throw for bad input.",
+        "ToString() is the text form; FromJson(ToJson(v)) equals v."
+      ],
+      "compatibility": "Changes with docs/library-api.md, in all five languages together; library-specific deviations are recorded in the README.",
+      "definition": "implementations/csharp/src/Utv/Typed",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Temporal"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome"
+        },
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "The typed API (0.3)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        },
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "text-form"
+        }
+      ]
+    },
+    {
+      "id": "json-layer-api",
+      "title": "JSON layer 0.1 and 0.2",
+      "summary": "UtvValidator, GregorianCivil, UtvResult, Build, Iso, TextForm, Calendar, Ranges, Zones, ZoneRules, the policies, and Interop with NativeResult<T>, on UTV JSON held as JsonElement.",
+      "contractType": "library-api",
+      "consumers": [
+        "Applications that work with UTV JSON directly",
+        "The typed layer",
+        "The shared everyday and text-form fixtures"
+      ],
+      "guarantees": [
+        "Every operation of docs/everyday-api.md, including its Clarifications, and parseText / formatText, returning a UtvResult and never throwing for a semantic outcome.",
+        "Every fixture of conformance/operations/everyday.json and conformance/operations/text-form.json, diagnostic codes included.",
+        "Structural validation agrees with schema/utv-1.0.schema.json; semantic validation and resolvability are separate operations.",
+        "Native interop: the caller names the intent, DateTimeKind.Local is refused, conversions back report what does not fit."
+      ],
+      "compatibility": "Kept unchanged by the typed layer (docs/library-api.md §7). 0.3.0 changed diagnostic codes to the shared table; such changes are listed in CHANGELOG.md.",
+      "definition": "implementations/csharp/src/Utv",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+          "symbol": "UtvValidator"
+        },
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "The JSON layer (0.1 and 0.2)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        },
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "text-form"
+        },
+        {
+          "relation": "implements",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema"
+        },
+        {
+          "relation": "relates-to",
+          "path": "implementations/csharp/src/Utv/.dev/contracts.json",
+          "entityId": "result-envelope",
+          "description": "The JSON form of its results is owned by src/Utv."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "../../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "System.Globalization examples",
+  "folder": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/Globalization",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "System.Globalization examples",
+      "summary": "Native-first examples for System.Globalization: HebrewCalendar and ISOWeek.",
+      "purpose": "Shows what .NET's calendar classes do where UTV has a counterpart (the ISO week) or none (a Hebrew date, which UTV's Gregorian validation reports as unsupported).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/Globalization/HebrewCalendarTests.cs",
+          "symbol": "HebrewCalendarTests"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/Globalization/ISOWeekTests.cs",
+          "symbol": "ISOWeekTests"
+        }
+      ]
+    }
+  ]
+}

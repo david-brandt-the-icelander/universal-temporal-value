@@ -91,7 +91,7 @@ Operations that can't fail, such as adding days to a valid date, return plain va
 
 ## 5. How the design was developed
 
-The specification was developed iteratively. Each draft was reviewed against two things: the published catalogues of incorrect time assumptions, and the relevant standards, listed in [`spec/STANDARDS-MATRIX.md`](../spec/STANDARDS-MATRIX.md). Every gap found was either addressed in the design or recorded as an open issue. [`spec/FALSEHOODS-MATRIX.md`](../spec/FALSEHOODS-MATRIX.md) traces each known false assumption to the design rule that addresses it. [`design-history.md`](design-history.md) records the drafts, and why each change was made.
+The specification was developed iteratively. Each draft was reviewed against two things: the published catalogues of incorrect time assumptions, and the relevant standards, listed in [`spec/STANDARDS-MATRIX.md`](../spec/STANDARDS-MATRIX.md). Every gap found was either addressed in the design or recorded as an open issue. [`spec/FALSEHOODS-MATRIX.md`](../spec/FALSEHOODS-MATRIX.md) traces each known false assumption to the design rule that addresses it. The design history in [`.dev/decisions.json`](../.dev/decisions.json) records the drafts, and why each change was made.
 
 The libraries were developed against shared, executable fixtures whose expected results were computed independently of the implementations, so all five libraries give the same answers.
 

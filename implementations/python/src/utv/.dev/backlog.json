@@ -1,0 +1,143 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "utv package backlog",
+  "folder": "implementations/python/src/utv",
+  "entities": [
+    {
+      "id": "from-json-text-duplicate-keys",
+      "title": "Reject duplicate keys in JSON text given to from_json",
+      "summary": "utv.from_json and T.from_json accept JSON text, parse it with json.loads, and so keep the last of two equal keys instead of rejecting the value.",
+      "type": "defect",
+      "expected": "JSON text with a repeated object key is rejected, as validate_structural rejects it (invalid, duplicate-key): the library fails closed on duplicate keys.",
+      "observed": "values.from_json parses text with json.loads and its default hooks, which keep the last value of a repeated key, then checks only the resulting dict. The repeated key is never reported. The same call uses no parse_constant hook, so NaN and Infinity are parsed as floats rather than rejected as they are by validate.parse.",
+      "acceptanceCriteria": [
+        "utv.from_json('{\"schema\":\"utv/1.0\",\"schema\":\"utv/1.0\",…}') returns Invalid with a duplicate-key diagnostic.",
+        "A test in tests/ pins the branch, and from_json of a dict is unchanged."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/python/src/utv/values.py",
+        "description": "from_json's json.loads call, compared with validate.parse, which passes object_pairs_hook=_no_duplicates and parse_constant=_reject_constant."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "from_json"
+        },
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "parse"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed"
+        },
+        {
+          "relation": "affects",
+          "path": "implementations/python/src/utv/.dev/use-case.json",
+          "entityId": "validate-utv-json"
+        }
+      ]
+    },
+    {
+      "id": "implementation-limit-status",
+      "title": "Report implementation-limit as unsupported in the JSON layer",
+      "summary": "An integer string too long for Python's int conversion gives status resource-limit in the JSON layer, where the shared table pairs implementation-limit with unsupported.",
+      "type": "defect",
+      "expected": "docs/library-api.md §5: implementation-limit has status unsupported (beyond this library's numeric range). resource-limit is the status for an evaluation that ran out of its budget (spec/RESULT-CONTRACT.md).",
+      "observed": "_core.integer_string raises Outcome(Status.RESOURCE_LIMIT, \"implementation-limit\", …) when int(text) fails on a digit string beyond Python's int–string conversion limit, so parse_iso, add, fields and the rest return resource-limit. The typed layer turns it into Unsupported (outcome.failure).",
+      "acceptanceCriteria": [
+        "The JSON layer returns unsupported with implementation-limit for such a value.",
+        "A test pins the status."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/python/src/utv/_core.py",
+        "description": "integer_string's except ValueError branch, compared with the code table in docs/library-api.md §5."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "integer_string"
+        },
+        {
+          "path": "implementations/python/src/utv/outcome.py",
+          "symbol": "failure"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "5. Diagnostic codes"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        },
+        {
+          "relation": "relates-to",
+          "path": "implementations/python/.dev/limitations.json",
+          "entityId": "int-string-limit"
+        }
+      ]
+    },
+    {
+      "id": "compare-diagnostics",
+      "title": "Report one ambiguous diagnostic from TemporalContext.compare",
+      "summary": "Python's TemporalContext.compare copies each side's resolve diagnostics; C# and Java report one compare-level ambiguous warning, and no diagnostics on a unique answer.",
+      "type": "debt",
+      "compromise": "compare concatenates the diagnostics of resolving both sides. Two wall times in the same overlap give Multiple with ambiguous twice (severity info); a unique order still carries the ambiguous diagnostic of a side that fell in an overlap. Java changed to one warning in commit e0e80ff, \"as the C# library does\"; Python, like TypeScript, did not.",
+      "cost": "The same comparison reports different diagnostics in different languages, and code that counts or reads them behaves differently by language. The example test asserts only that ambiguous is among the codes, so it passes either way.",
+      "acceptanceCriteria": [
+        "compare returns one ambiguous warning naming the possible orders when the order depends on an overlap, and none on a unique order.",
+        "A test covers one side and both sides in an overlap, as Java's TemporalContextTest does."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/python/src/utv/context.py",
+        "description": "TemporalContext.compare, compared with implementations/java/CHANGELOG.md (Unreleased) and the C# TemporalContext.Compare in implementations/csharp/src/Utv/Typed/ZonedValues.cs."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.compare"
+        },
+        {
+          "path": "implementations/java/CHANGELOG.md",
+          "symbol": "Unreleased"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext.Compare"
+        },
+        {
+          "path": "implementations/python/tests/examples/utv_first/test_temporal_context.py",
+          "symbol": "TestCompare"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "affects",
+          "path": "implementations/python/src/utv/.dev/use-case.json",
+          "entityId": "compare-values"
+        },
+        {
+          "relation": "relates-to",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    }
+  ]
+}

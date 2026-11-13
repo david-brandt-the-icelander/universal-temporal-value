@@ -1,0 +1,75 @@
+{
+  "$schema": "../../Meta/Agents/Skills/describe-capability/schema.json",
+  "kind": "capability",
+  "title": "Tool capabilities",
+  "folder": "tools",
+  "description": "What the repository's tooling can do for a contributor and for CI.",
+  "sources": [
+    {
+      "path": "tools/validate.py",
+      "symbol": "main"
+    },
+    {
+      "path": "tools/side_by_side.py",
+      "symbol": "main"
+    }
+  ],
+  "entities": [
+    {
+      "id": "structural-checks",
+      "name": "Structural checks of the specification material",
+      "description": "Checks that the schema, the conformance material and the specification's JSON examples agree with each other.",
+      "sources": [
+        {
+          "path": "tools/validate.py",
+          "symbol": "main"
+        }
+      ],
+      "responsibility": "Fails when a schema is not valid Draft 2020-12, a conformance example is accepted or rejected wrongly, an embedded spec example or a fixture value breaks the schema, fixture or scenario ids repeat, or the falsehoods matrix and its scenarios disagree.",
+      "operations": [
+        {
+          "path": "tools/validate.py",
+          "symbol": "main"
+        }
+      ],
+      "access": [
+        "Nothing checks: anyone with a checkout and jsonschema installed can run it; CI runs it on every push and pull request."
+      ]
+    },
+    {
+      "id": "side-by-side-page",
+      "name": "Side-by-side page",
+      "description": "Builds the cross-language page of everyday tasks from code that is compiled and run as tests.",
+      "sources": [
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "render"
+        }
+      ],
+      "responsibility": "Lays out each of the 18 tasks in SECTIONS with the marked UTV-first test code of C#, Java, Python, TypeScript and Rust, and tells whether docs/side-by-side.md is current.",
+      "operations": [
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "main"
+        }
+      ],
+      "access": [
+        "Nothing checks: a local script; CI runs it with --check."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "tools",
+      "path": "tools/.dev/operation.json",
+      "relationship": "The commands through which they are reached."
+    },
+    {
+      "kind": "use-case",
+      "folder": "tools",
+      "path": "tools/.dev/use-case.json",
+      "relationship": "The contributor's goals they serve."
+    }
+  ]
+}

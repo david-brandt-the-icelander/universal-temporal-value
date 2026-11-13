@@ -1,0 +1,327 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/references.schema.json",
+  "kind": "references",
+  "title": "Standards the specification relies on",
+  "folder": "spec",
+  "description": "Sources are normative only for specifically named adapters; UTV semantics supersede adapters where stricter, and differences MUST be disclosed (§17). spec/STANDARDS-MATRIX.md gives each standard's coverage class and acceptance test.",
+  "entities": [
+    {
+      "id": "iso-8601",
+      "title": "ISO 8601-1 and ISO 8601-2",
+      "summary": "Dates, times, durations, intervals and repetitions; part 2 adds approximate, unknown and unspecified values, sets, seasons and selections.",
+      "relevance": "civil, instant, interval, recurrence, uncertain, set and selection map to it, native plus an adapter. ISO 8601-2 grammar must be checked against the licensed normative text before claiming it (OI-13).",
+      "citation": "ISO 8601-1:2019; ISO 8601-2:2019 and Amd 1:2025",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        }
+      ]
+    },
+    {
+      "id": "rfc-3339",
+      "title": "RFC 3339",
+      "summary": "Machine timestamps with offsets, including -00:00 for an unknown local offset.",
+      "relevance": "The instant and civil adapter must keep offset-unknown intent and fractional precision.",
+      "citation": "RFC 3339, Date and Time on the Internet: Timestamps",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        }
+      ],
+      "url": "https://www.rfc-editor.org/rfc/rfc3339"
+    },
+    {
+      "id": "rfc-9557",
+      "title": "RFC 9557",
+      "summary": "Named-zone annotations on timestamps, with criticality and offset semantics.",
+      "relevance": "civil.zone and offsetAssertion; the everyday API accepts a single [Area/Location] annotation and returns unsupported for any other.",
+      "citation": "RFC 9557, Date and Time on the Internet: Timestamps with Additional Information",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        },
+        {
+          "path": "docs/everyday-api.md",
+          "symbol": "Clarifications"
+        }
+      ],
+      "url": "https://www.rfc-editor.org/rfc/rfc9557"
+    },
+    {
+      "id": "iana-tzdb",
+      "title": "IANA tz database and TZif",
+      "summary": "Zone rules, including historical transitions; RFC 8536 defines the TZif file format.",
+      "relevance": "Zone rules are a registry dependency, pinned by version and content; the IANA database defines no geographic boundaries.",
+      "citation": "IANA Time Zone Database; RFC 8536, The Time Zone Information Format (TZif)",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        }
+      ],
+      "url": "https://www.iana.org/time-zones"
+    },
+    {
+      "id": "rfc-5545",
+      "title": "RFC 5545 with verified errata",
+      "summary": "iCalendar recurrences, DTSTART/UNTIL, EXDATE/RDATE and DST behaviour; erratum 4271 treats nonexistent local times differently from invalid dates.",
+      "relevance": "The recurrence adapter must reproduce exact recurrence generation and §3.3.5 DST behaviour, as a policy separate from UTV's stricter default.",
+      "citation": "RFC 5545, Internet Calendaring and Scheduling Core Object Specification (iCalendar), with erratum 4271",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        }
+      ],
+      "url": "https://www.rfc-editor.org/rfc/rfc5545"
+    },
+    {
+      "id": "rfc-7529",
+      "title": "RFC 7529",
+      "summary": "Non-Gregorian recurrence rules: RSCALE and SKIP.",
+      "relevance": "Exact BYxxx/SKIP ordering is mandatory for the matching recurrence conformance claim.",
+      "citation": "RFC 7529, Non-Gregorian Recurrence Rules in iCalendar",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        }
+      ],
+      "url": "https://www.rfc-editor.org/rfc/rfc7529"
+    },
+    {
+      "id": "rfc-8984",
+      "title": "RFC 8984 (JSCalendar)",
+      "summary": "JSON events with recurrenceId, overrides and rule arrays.",
+      "relevance": "Moving an occurrence must keep its original recurrenceId.",
+      "citation": "RFC 8984, JSCalendar: A JSON Representation of Calendar Data",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        }
+      ],
+      "url": "https://www.rfc-editor.org/rfc/rfc8984"
+    },
+    {
+      "id": "rfc-8785",
+      "title": "RFC 8785 (JCS)",
+      "summary": "The JSON Canonicalization Scheme.",
+      "relevance": "The canonicalization profile produces deterministic UTF-8 JSON with JCS; large integers are strings, so no numeric rounding happens.",
+      "citation": "RFC 8785, JSON Canonicalization Scheme (JCS)",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§2 Canonical JSON"
+        }
+      ],
+      "url": "https://www.rfc-editor.org/rfc/rfc8785"
+    },
+    {
+      "id": "rfc-2119",
+      "title": "RFC 2119",
+      "summary": "MUST, MUST NOT, SHOULD and MAY.",
+      "relevance": "The specification's normative terms have their RFC 2119 meanings.",
+      "citation": "RFC 2119, Key words for use in RFCs to Indicate Requirement Levels",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "Normative terms"
+        }
+      ],
+      "url": "https://www.rfc-editor.org/rfc/rfc2119"
+    },
+    {
+      "id": "owl-time",
+      "title": "W3C/OGC OWL-Time and ISO 19108",
+      "summary": "Nominal and numeric temporal positions, reference systems, temporal topology and interval relations.",
+      "relevance": "ordinal-position, temporal-reference, relation and temporal-graph; Allen's 13 relations and partial-order uncertainty.",
+      "citation": "W3C/OGC Time Ontology in OWL; ISO 19108 Geographic information — Temporal schema",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        }
+      ],
+      "url": "https://www.w3.org/TR/owl-time/"
+    },
+    {
+      "id": "hl7-fhir-timing",
+      "title": "HL7 FHIR R5 Timing",
+      "summary": "Event-anchored schedules (meal and waking codes) and frequency obligations.",
+      "relevance": "event-relative and pattern: never invent concrete clock times from a frequency rule.",
+      "citation": "HL7 FHIR R5, Timing datatype",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        }
+      ]
+    },
+    {
+      "id": "ogc-observations",
+      "title": "OGC SensorThings, TimeseriesML and ISO 19156",
+      "summary": "Observations, samples and series, with phenomenon time apart from result time.",
+      "relevance": "series, sample and observation keep measurement and reporting times separate, and handle duplicate and missing samples.",
+      "citation": "OGC SensorThings API; OGC TimeseriesML; ISO 19156 Observations and measurements",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        }
+      ]
+    },
+    {
+      "id": "sql-2011",
+      "title": "SQL:2011 temporal tables",
+      "summary": "Application time, system time and periods.",
+      "relevance": "assertion and event-history: bitemporal correction and overlap semantics.",
+      "citation": "ISO/IEC 9075:2011 (SQL:2011), temporal features",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        }
+      ]
+    },
+    {
+      "id": "timescales",
+      "title": "POSIX, UTC, TAI, UT1 and astronomical timescales",
+      "summary": "Epoch seconds, leap-second behaviour, Earth orientation, Julian Date and TT.",
+      "relevance": "instant, clock and temporal-reference: explicit timescales, leap tables and validity windows; POSIX seconds are not SI seconds across a leap second.",
+      "citation": "IEEE 1003.1 (POSIX); BIPM/CGPM and ITU-R resolutions on UTC; IERS",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "spec/STANDARDS-MATRIX.md",
+          "symbol": "UTV 1.0 — Published-standard coverage matrix"
+        }
+      ]
+    },
+    {
+      "id": "cldr",
+      "title": "Unicode CLDR",
+      "summary": "Locale data for formatting dates and times.",
+      "relevance": "Formatting (operation I3) depends on a CLDR data source, which no library ships yet.",
+      "citation": "Unicode Common Locale Data Repository",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§17 Conformance and specification completeness"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "I. Getting values in and out"
+        }
+      ],
+      "url": "https://cldr.unicode.org/"
+    },
+    {
+      "id": "edtf",
+      "title": "EDTF",
+      "summary": "The Extended Date/Time Format: uncertain, approximate and unspecified dates, and slash intervals.",
+      "relevance": "An interchange adapter; the text form reads EDTF slash intervals, and EDTF qualifiers are not yet mapped (docs/.dev/backlog.json, edtf-qualifiers).",
+      "citation": "Library of Congress, Extended Date/Time Format (EDTF) Specification",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "§2 Interchange"
+        },
+        {
+          "path": "docs/text-form.md",
+          "symbol": "Not (yet) in the text form"
+        }
+      ],
+      "url": "https://www.loc.gov/standards/datetime/"
+    },
+    {
+      "id": "json-schema-2020-12",
+      "title": "JSON Schema Draft 2020-12",
+      "summary": "The schema language of schema/utv-1.0.schema.json.",
+      "relevance": "It validates shapes only; calendar correctness, graph consistency, registration and cross-field arithmetic need semantic conformance tests (DECISIONS item 18).",
+      "citation": "JSON Schema: A Media Type for Describing JSON Documents, draft 2020-12",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "schema/utv-1.0.schema.json",
+          "symbol": "$schema"
+        },
+        {
+          "path": "spec/DECISIONS.md",
+          "symbol": "18. Explicit schema limitations"
+        }
+      ],
+      "url": "https://json-schema.org/draft/2020-12"
+    }
+  ]
+}

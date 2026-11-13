@@ -1,0 +1,50 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Shared test fixture verification",
+  "folder": "implementations/rust/tests/fixtures",
+  "entities": [
+    {
+      "id": "demo-zone-rules-fixture",
+      "title": "The demo zone rules load",
+      "summary": "fixtures::demo_zone_rules() loads the three demo zones, and nothing else.",
+      "subject": [
+        {
+          "path": "implementations/rust/tests/fixtures/mod.rs",
+          "description": "demo_zone_rules"
+        },
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        }
+      ],
+      "criteria": [
+        "The bundle loads from conformance/rules/demo-zones.json without an error",
+        "Its zone ids are exactly America/New_York, Atlantic/Reykjavik and Europe/Paris"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/rust/tests/fixtures/mod.rs",
+          "symbol": "demo_zone_rules::contains_the_three_demo_zones_when_loaded",
+          "command": "cargo test",
+          "description": "Runs twice, once in each example suite, because both include the module."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/fixtures/mod.rs",
+          "symbol": "demo_zone_rules::contains_the_three_demo_zones_when_loaded"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        }
+      ]
+    }
+  ]
+}

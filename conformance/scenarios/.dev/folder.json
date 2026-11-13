@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Semantic scenarios",
+  "folder": "conformance/scenarios",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Semantic scenarios",
+      "summary": "94 semantic scenarios: 62 falsehoods (one per row of spec/FALSEHOODS-MATRIX.md) and 32 from the standards review (STD-001 … STD-032).",
+      "purpose": "States the semantic behaviour every engine must eventually satisfy: the expected outcome of validation, resolution, comparison or transformation for each known falsehood and standards construct.",
+      "boundaries": [
+        "Requirements, not executable tests: no scenario has inputs, a context or an expected result envelope yet (OI-12).",
+        "A scenario's status describes the fixture itself (design-test-required, design-requirement-not-implemented), not any library."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "conformance/scenarios/falsehoods.json",
+          "symbol": "designSafeguard"
+        },
+        {
+          "path": "conformance/scenarios/standards-convergence.json",
+          "symbol": "expectedDesignOutcome"
+        },
+        {
+          "path": "conformance/README.md",
+          "symbol": "Structural vs. semantic"
+        }
+      ]
+    }
+  ]
+}

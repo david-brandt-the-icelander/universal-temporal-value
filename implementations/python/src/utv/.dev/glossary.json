@@ -1,0 +1,71 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/glossary.schema.json",
+  "kind": "glossary",
+  "title": "utv package glossary",
+  "folder": "implementations/python/src/utv",
+  "entities": [
+    {
+      "id": "none-of",
+      "title": "NoneOf",
+      "summary": "Python's name for the none case of an outcome: proven that no answer exists (31 February, a wall time in a DST gap).",
+      "notToBeConfusedWith": [
+        "Python's None, which the library never returns for a missing answer.",
+        "Status.NONE, the same case in the JSON layer's Result."
+      ],
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/outcome.py",
+          "symbol": "NoneOf"
+        }
+      ]
+    },
+    {
+      "id": "intent",
+      "title": "Intent",
+      "summary": "What a native value means, named by the caller: FLOATING, INSTANT, OFFSET or ZONED for a datetime; POSIX_SECONDS or PERIOD for a timedelta.",
+      "notToBeConfusedWith": [
+        "A ZonedIntent, which is a typed value: a wall time intended in an IANA zone.",
+        "zoneIntent, the property of a civil UTV value."
+      ],
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "Intent"
+        }
+      ]
+    },
+    {
+      "id": "fold",
+      "title": "fold",
+      "summary": "Python's datetime attribute (PEP 495) that picks the first (0) or second (1) occurrence of a repeated wall time. The adapters read it to assert an offset, and set it from an asserted offset.",
+      "notToBeConfusedWith": [
+        "A UTV offsetAssertion, which names the offset itself rather than which occurrence."
+      ],
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "from_datetime"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "to_datetime"
+        }
+      ]
+    },
+    {
+      "id": "allow-loss",
+      "title": "allow_loss",
+      "summary": "The keyword that lets a conversion to datetime drop what the native type can't hold (nanoseconds below a microsecond, a zone kept only as its asserted offset), and report it as precision-loss or zone-dropped.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "to_datetime"
+        },
+        {
+          "path": "implementations/python/src/utv/interop.py",
+          "symbol": "to_native"
+        }
+      ]
+    }
+  ]
+}

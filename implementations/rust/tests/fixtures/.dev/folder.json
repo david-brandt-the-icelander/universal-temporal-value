@@ -1,0 +1,41 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Shared test fixture",
+  "folder": "implementations/rust/tests/fixtures",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Shared test fixture",
+      "summary": "One fixture, demo_zone_rules(), that loads the pinned demo zone rules for both example suites.",
+      "purpose": "Gives the UTV-first and native-first suites the same zone rules: conformance/rules/demo-zones.json, read in place through ZoneRules::load. Each suite includes mod.rs as its own fixtures module (#[path = \"../fixtures/mod.rs\"]), so the fixture's test runs in both.",
+      "boundaries": [
+        "Reads the rule bundle from the repository; it is never copied here.",
+        "Not a test target of its own: Cargo builds it only as a module of tests/utv_first and tests/native_first."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/tests/fixtures/mod.rs",
+          "symbol": "demo_zone_rules"
+        },
+        {
+          "path": "implementations/rust/tests/utv_first/main.rs",
+          "symbol": "fixtures"
+        },
+        {
+          "path": "implementations/rust/tests/native_first/main.rs",
+          "symbol": "fixtures"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules",
+          "description": "The rule bundle it loads."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1414 @@
+{
+  "$schema": "../../../../../../../../../Meta/Agents/Skills/describe-operation/schema.json",
+  "kind": "operation",
+  "title": "net.icelander.utv operations",
+  "folder": "implementations/java/src/main/java/net/icelander/utv",
+  "description": "The public entrypoints of the typed API and of the 0.2 JSON layer, without accessors, toJson and toString. Every one is a pure query; overloads are folded into one entry where they behave the same. Static methods are listed as exported functions; the entrypoint names their class.",
+  "sources": [
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+      "symbol": "CivilDate"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+      "symbol": "ZonedIntent"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+      "symbol": "TemporalContext"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+      "symbol": "Operations"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+      "symbol": "Zones"
+    }
+  ],
+  "entities": [
+    {
+      "id": "civil-date-of",
+      "name": "Make a date",
+      "description": "A CivilDate from a year (long or BigInteger), a month and a day.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.of"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+        "symbol": "CivilDate.of"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "The CivilDate.",
+      "failures": [
+        "IllegalArgumentException, its message naming the reason (month-out-of-range, day-out-of-range), when the day cannot exist."
+      ]
+    },
+    {
+      "id": "civil-date-try-of",
+      "name": "Make a date, or learn why not",
+      "description": "Like of, but reports a day that cannot exist as an outcome.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.tryOf"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+        "symbol": "CivilDate.tryOf"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the CivilDate.",
+      "failures": [
+        "Invalid (month-out-of-range) for a month outside 1–12.",
+        "Invalid (day-out-of-range) for a day the month lacks, such as 30 February or 29 February 2026."
+      ]
+    },
+    {
+      "id": "civil-date-add-days",
+      "name": "Add days to a date",
+      "description": "Days (or, with addWeeks, weeks) later or earlier; always has an answer.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.addDays"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+        "symbol": "CivilDate.addDays"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call.",
+      "result": "The CivilDate.",
+      "failures": []
+    },
+    {
+      "id": "civil-date-add-months",
+      "name": "Add months to a date",
+      "description": "Month arithmetic that refuses to invent a day (the default MonthEnd.REJECT). addYears(n) works the same way.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.addMonths"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.addYears"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.doAddFields"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+        "symbol": "CivilDate.addMonths"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the CivilDate when the day exists in the target month.",
+      "failures": [
+        "None (month-end) when the day is missing from the target month (31 January + 1 month; 29 February + 1 year)."
+      ]
+    },
+    {
+      "id": "civil-date-add-months-constrained",
+      "name": "Add months, clamping to the month's end",
+      "description": "The total overload addMonths(n, MonthEnd.CONSTRAIN) (and addYears(n, policy)): clamps to the last day of the target month.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.addMonths"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.constrained"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+        "symbol": "CivilDate.constrained"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call.",
+      "result": "The CivilDate, clamped to the month's last day when the day is missing.",
+      "failures": [
+        "IllegalArgumentException when the policy is not MonthEnd.CONSTRAIN; the rejecting form is addMonths(n)."
+      ]
+    },
+    {
+      "id": "civil-date-add-period",
+      "name": "Add a period to a date",
+      "description": "Years and months first, then weeks and days.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+        "symbol": "CivilDate.add"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the CivilDate.",
+      "failures": [
+        "None (month-end) when the intermediate day does not exist.",
+        "Invalid (kind-mismatch) when the period has hours, minutes or seconds."
+      ]
+    },
+    {
+      "id": "civil-date-days-until",
+      "name": "Count the days between two dates",
+      "description": "Days from this date to another, negative when the other is earlier.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.daysUntil"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+        "symbol": "CivilDate.daysUntil"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call.",
+      "result": "A long.",
+      "failures": []
+    },
+    {
+      "id": "civil-year-month-add-months",
+      "name": "Add months to a month",
+      "description": "Months (or, with addYears, years) on a CivilYearMonth; a month has no missing day.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilYearMonth.java",
+          "symbol": "CivilYearMonth.addMonths"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilYearMonth.java",
+        "symbol": "CivilYearMonth.addMonths"
+      },
+      "action": "query",
+      "transport": "method of CivilYearMonth",
+      "authorization": "None: an in-process library call.",
+      "result": "The CivilYearMonth.",
+      "failures": []
+    },
+    {
+      "id": "civil-date-time-try-of",
+      "name": "Make a date-time, or learn why not",
+      "description": "A floating wall-clock date-time from its fields.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.tryOf"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+        "symbol": "CivilDateTime.tryOf"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the CivilDateTime.",
+      "failures": [
+        "Invalid (month-out-of-range, day-out-of-range, field-out-of-range) for a field out of range.",
+        "Unsupported (leap-second) for second 60."
+      ]
+    },
+    {
+      "id": "civil-date-time-add-hours",
+      "name": "Add wall-clock time to a date-time",
+      "description": "Hours (and, with the sibling methods, days, weeks, minutes or seconds) as wall-clock arithmetic, carrying into days.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.addHours"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+        "symbol": "CivilDateTime.addHours"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "The CivilDateTime.",
+      "failures": []
+    },
+    {
+      "id": "civil-date-time-add-months",
+      "name": "Add months to a date-time",
+      "description": "Month arithmetic on a date-time; add(Period) adds every component.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.addMonths"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+        "symbol": "CivilDateTime.addMonths"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the CivilDateTime.",
+      "failures": [
+        "None (month-end) when the day is missing from the target month.",
+        "IllegalArgumentException from addMonths(n, policy) when the policy is not MonthEnd.CONSTRAIN."
+      ]
+    },
+    {
+      "id": "zone-rules-load",
+      "name": "Load zone rules",
+      "description": "Reads a rule bundle in the format of conformance/rules/demo-zones.json from a file the caller names (parse reads text; tryParse reports a bad bundle as an outcome).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZoneRules.java",
+          "symbol": "ZoneRules.load"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZoneRules.java",
+          "symbol": "ZoneRules.tryParse"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/RuleBundle.java",
+          "symbol": "RuleBundle.fromJson"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/ZoneRules.java",
+        "symbol": "ZoneRules.load"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "The ZoneRules.",
+      "failures": [
+        "IOException when the file cannot be read.",
+        "IllegalArgumentException when it is not a well-formed bundle; tryParse returns invalid (malformed-value) instead."
+      ]
+    },
+    {
+      "id": "temporal-context-with",
+      "name": "Hold the rules in a context",
+      "description": "Wraps loaded rules for the zone operations. There is no default context.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext.with"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+        "symbol": "TemporalContext.with"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "The TemporalContext.",
+      "failures": [
+        "NullPointerException when the rules are null."
+      ]
+    },
+    {
+      "id": "civil-date-time-in-zone",
+      "name": "Put a wall time in a zone",
+      "description": "A ZonedIntent: this wall time in a named IANA zone, an intention resolved later.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.inZone"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.of"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+        "symbol": "CivilDateTime.inZone"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "The ZonedIntent.",
+      "failures": [
+        "IllegalArgumentException when the zone id is not Area/Location-shaped."
+      ]
+    },
+    {
+      "id": "civil-date-time-at-offset",
+      "name": "Pin a wall time to an offset",
+      "description": "A FixedOffsetDateTime at an offset in seconds.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.atOffset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+        "symbol": "CivilDateTime.atOffset"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "The FixedOffsetDateTime.",
+      "failures": [
+        "IllegalArgumentException (offset-out-of-range) beyond ±18:00."
+      ]
+    },
+    {
+      "id": "fixed-offset-to-instant",
+      "name": "The instant of an offset date-time",
+      "description": "Needs no zone rules.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java",
+          "symbol": "FixedOffsetDateTime.toInstant"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java",
+        "symbol": "FixedOffsetDateTime.toInstant"
+      },
+      "action": "query",
+      "transport": "method of FixedOffsetDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "The Instant.",
+      "failures": []
+    },
+    {
+      "id": "zoned-resolve",
+      "name": "Resolve a zoned wall time",
+      "description": "The instant(s) a ZonedIntent names under the context's rules, with ResolutionPolicy.STRICT or the policy given (a ResolutionPolicy, a Gap or an Overlap).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.resolve"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext.resolve"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.doResolve"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+        "symbol": "ZonedIntent.resolve"
+      },
+      "action": "query",
+      "transport": "method of ZonedIntent",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the Instant, or Multiple with both instants of an overlap, ascending.",
+      "failures": [
+        "Unsupported (unknown-zone) when the zone is not in the rules.",
+        "Unsupported (outside-rule-window) within a day of the rules' validity window or outside it.",
+        "Invalid (offset-mismatch) when an asserted offset is not in force.",
+        "None (gap) for a wall time in a gap, with Gap.REJECT or PRESERVE_UNRESOLVED; Gap.SHIFT_FORWARD gives the shifted instant instead.",
+        "Multiple (ambiguous) for a wall time in an overlap with Overlap.REJECT; ALL gives Multiple without the diagnostic; EARLIEST and LATEST give Unique."
+      ]
+    },
+    {
+      "id": "zoned-add-days",
+      "name": "Add wall-clock time to a zoned value",
+      "description": "Days (and, with the sibling methods, weeks, hours, minutes or seconds) in the same zone; the wall time is kept, whatever the DST rules.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.addDays"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.doAdd"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+        "symbol": "ZonedIntent.addDays"
+      },
+      "action": "query",
+      "transport": "method of ZonedIntent",
+      "authorization": "None: an in-process library call.",
+      "result": "The ZonedIntent, without any asserted offset (the JSON layer reports offset-assertion-dropped, info).",
+      "failures": []
+    },
+    {
+      "id": "zoned-add-months",
+      "name": "Add months to a zoned value",
+      "description": "Month arithmetic in the same zone.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.addMonths"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+        "symbol": "ZonedIntent.addMonths"
+      },
+      "action": "query",
+      "transport": "method of ZonedIntent",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the ZonedIntent.",
+      "failures": [
+        "None (month-end) when the day is missing from the target month."
+      ]
+    },
+    {
+      "id": "instant-in-zone",
+      "name": "See an instant in a zone",
+      "description": "The wall time in a named zone, with the offset in force asserted (also TemporalContext.inZone).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.inZone"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext.inZone"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.toZone"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+        "symbol": "Instant.inZone"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the ZonedIntent.",
+      "failures": [
+        "Unsupported (unknown-zone) when the zone is not in the rules.",
+        "Unsupported (outside-rule-window) outside the rules' validity window.",
+        "Unsupported (implementation-limit) for a fraction of a second finer than a nanosecond."
+      ]
+    },
+    {
+      "id": "context-compare",
+      "name": "Order two values that may need zone rules",
+      "description": "Resolves zoned values strictly, then compares; values without a zone compare as compareTo would.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext.compare"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext.instants"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+        "symbol": "TemporalContext.compare"
+      },
+      "action": "query",
+      "transport": "method of TemporalContext",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with an Ordering (BEFORE, EQUAL, AFTER).",
+      "failures": [
+        "Multiple with the possible orders and one ambiguous warning when the order depends on which side of an overlap is meant.",
+        "None (gap), Unsupported (unknown-zone, outside-rule-window) or Invalid (offset-mismatch) when a zoned side cannot be resolved.",
+        "Unsupported (unsupported-operand) when a zoned value is compared with anything but an Instant, a FixedOffsetDateTime or another ZonedIntent, or two unzoned values of different kinds or forms."
+      ]
+    },
+    {
+      "id": "instant-from-unix-seconds",
+      "name": "Make an instant",
+      "description": "Seconds since 1970-01-01T00:00:00Z plus nanoseconds (fromUnixNanoseconds takes nanoseconds alone), held exactly.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.fromUnixSeconds"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+        "symbol": "Instant.fromUnixSeconds"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "The Instant.",
+      "failures": []
+    },
+    {
+      "id": "instant-add-posix-seconds",
+      "name": "Move an instant by POSIX seconds",
+      "description": "add(PosixSeconds): exact rational arithmetic, so a third of a second stays a third.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+        "symbol": "Instant.add"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "The Instant.",
+      "failures": []
+    },
+    {
+      "id": "instant-add-elapsed-seconds",
+      "name": "Move an instant by SI seconds",
+      "description": "add(ElapsedSeconds): refused, because SI seconds on a POSIX coordinate need a leap-second table.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+        "symbol": "Instant.add"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "Never Unique in this version.",
+      "failures": [
+        "Unsupported (needs-leap-seconds), always."
+      ]
+    },
+    {
+      "id": "instant-until",
+      "name": "Measure between two instants",
+      "description": "The exact POSIX seconds from this instant to another, as a reduced fraction.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.until"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+        "symbol": "Instant.until"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "A PosixSeconds.",
+      "failures": []
+    },
+    {
+      "id": "instant-at-offset",
+      "name": "See an instant at an offset",
+      "description": "The wall time at a fixed offset in seconds.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.atOffset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+        "symbol": "Instant.atOffset"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "The FixedOffsetDateTime.",
+      "failures": [
+        "IllegalArgumentException beyond ±18:00.",
+        "ArithmeticException when the instant has a fraction finer than a nanosecond."
+      ]
+    },
+    {
+      "id": "interval-try-of",
+      "name": "Make a range",
+      "description": "An interval of dates or instants from two Bounds (halfOpen, closed and of throw instead of returning an outcome).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+          "symbol": "Interval.tryOf"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+          "symbol": "Interval.build"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+        "symbol": "Interval.tryOf"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the Interval.",
+      "failures": [
+        "Invalid (reversed-interval) when the end is before the start.",
+        "Unsupported (unsupported-form) when neither end has a point."
+      ]
+    },
+    {
+      "id": "interval-contains",
+      "name": "Test whether a range contains a point",
+      "description": "Three-valued: unknown ends make some answers possible.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+          "symbol": "Interval.contains"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+          "symbol": "Intervals.contains"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+        "symbol": "Interval.contains"
+      },
+      "action": "query",
+      "transport": "method of Interval",
+      "authorization": "None: an in-process library call.",
+      "result": "A Truth: DEFINITELY, POSSIBLY or IMPOSSIBLE.",
+      "failures": []
+    },
+    {
+      "id": "interval-overlaps",
+      "name": "Test whether two ranges overlap",
+      "description": "Three-valued; dates are normalized to half-open first.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+          "symbol": "Interval.overlaps"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+          "symbol": "Intervals.overlaps"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+        "symbol": "Interval.overlaps"
+      },
+      "action": "query",
+      "transport": "method of Interval",
+      "authorization": "None: an in-process library call.",
+      "result": "A Truth.",
+      "failures": []
+    },
+    {
+      "id": "temporal-value-parse",
+      "name": "Parse text",
+      "description": "Reads any text-form value into the sealed TemporalValue (Instant for Z, FixedOffsetDateTime for +00:00, …). Each type's own parse reads the same text and answers kind-mismatch for another kind.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+          "symbol": "TemporalValue.parse"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.parse"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+          "symbol": "TextForm.parse"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+        "symbol": "TemporalValue.parse"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the value.",
+      "failures": [
+        "Invalid (syntax) for text outside the grammar.",
+        "Invalid (day-out-of-range, month-out-of-range, field-out-of-range, offset-out-of-range, reversed-interval, kind-mismatch).",
+        "Unsupported (unsupported-form) for week, ordinal and basic dates, EDTF qualifiers, decimal period components and intervals without any point.",
+        "Unsupported (unsupported-annotation, leap-second, end-of-day)."
+      ]
+    },
+    {
+      "id": "temporal-value-from-json",
+      "name": "Read UTV JSON as a typed value",
+      "description": "Each type's fromJson, or TemporalValue.fromJson for any of them.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+          "symbol": "TemporalValue.fromJson"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.anyFromJson"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.decode"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+        "symbol": "TemporalValue.fromJson"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the value.",
+      "failures": [
+        "Invalid (kind-mismatch) for the wrong kind or form.",
+        "Invalid (malformed-value), with the 0.1 structural code beside it, for JSON of the wrong shape.",
+        "Unsupported (unsupported-operand) for a valid value no typed type can hold, such as a zoned date or a date-time with a resolutionPolicy.",
+        "Unsupported (implementation-limit) for a period component beyond 64 bits; unsupported (leap-second) for second 60."
+      ]
+    },
+    {
+      "id": "outcome-single",
+      "name": "Take the one answer",
+      "description": "The value of a Unique outcome (tryGetUnique and uniqueOr are the non-throwing forms).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Outcome.java",
+          "symbol": "Outcome.single"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Outcome.java",
+        "symbol": "Outcome.single"
+      },
+      "action": "query",
+      "transport": "method of Outcome",
+      "authorization": "None: an in-process library call.",
+      "result": "The value.",
+      "failures": [
+        "OutcomeException, carrying the status and diagnostics, for every case but Unique."
+      ]
+    },
+    {
+      "id": "instant-from-java",
+      "name": "Bring in a java.time.Instant",
+      "description": "Exact, so a clock reading taken by the caller (Instant.now()) goes in unchanged. Instant.from(OffsetDateTime) reads an OffsetDateTime as the instant it names.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.from"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+        "symbol": "Instant.from"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "The Instant.",
+      "failures": []
+    },
+    {
+      "id": "instant-to-java",
+      "name": "Convert an instant to java.time.Instant",
+      "description": "Convert an instant to java.time.Instant.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.toJavaInstant"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.instant"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+        "symbol": "Instant.toJavaInstant"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the java.time.Instant.",
+      "failures": [
+        "Unique with a precision-loss warning when a fraction finer than a nanosecond is truncated.",
+        "Unsupported (out-of-native-range) outside java.time.Instant's range."
+      ]
+    },
+    {
+      "id": "civil-date-to-local-date",
+      "name": "Convert a date to LocalDate",
+      "description": "Convert a date to LocalDate.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.toLocalDate"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.year"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+        "symbol": "CivilDate.toLocalDate"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the LocalDate.",
+      "failures": [
+        "Unsupported (out-of-native-range) beyond LocalDate's years."
+      ]
+    },
+    {
+      "id": "fixed-offset-from-java",
+      "name": "Bring in an OffsetDateTime as a wall time",
+      "description": "The wall time at its offset (the instant is Instant.from).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java",
+          "symbol": "FixedOffsetDateTime.from"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java",
+        "symbol": "FixedOffsetDateTime.from"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "The FixedOffsetDateTime.",
+      "failures": []
+    },
+    {
+      "id": "fixed-offset-to-java",
+      "name": "Convert to OffsetDateTime",
+      "description": "Exact: the round trip gives back an equal OffsetDateTime.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java",
+          "symbol": "FixedOffsetDateTime.toOffsetDateTime"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/FixedOffsetDateTime.java",
+        "symbol": "FixedOffsetDateTime.toOffsetDateTime"
+      },
+      "action": "query",
+      "transport": "method of FixedOffsetDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the OffsetDateTime.",
+      "failures": [
+        "Unsupported (out-of-native-range) beyond java.time's years."
+      ]
+    },
+    {
+      "id": "zoned-from-java",
+      "name": "Bring in a ZonedDateTime",
+      "description": "The wall time and zone, with the offset java.time chose as the asserted offset.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.from"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+        "symbol": "ZonedIntent.from"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "The ZonedIntent.",
+      "failures": [
+        "IllegalArgumentException when the zone is a ZoneOffset; use FixedOffsetDateTime.from."
+      ]
+    },
+    {
+      "id": "zoned-to-java",
+      "name": "Convert a zoned value to ZonedDateTime",
+      "description": "Checks the asserted offset against the JDK's tz database.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.toZonedDateTime"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.toZonedDateTime"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+        "symbol": "ZonedIntent.toZonedDateTime"
+      },
+      "action": "query",
+      "transport": "method of ZonedIntent",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome.Unique with the ZonedDateTime.",
+      "failures": [
+        "Unsupported (unsupported-operand) without an asserted offset: resolve first, or come from Instant.inZone.",
+        "Invalid (offset-mismatch) when the JDK's tz database disagrees with the asserted offset.",
+        "Unsupported (unknown-zone) when the JDK does not know the zone; unsupported (out-of-native-range) beyond java.time's years."
+      ]
+    },
+    {
+      "id": "validate-structural",
+      "name": "Validate UTV JSON structurally",
+      "description": "Parses with duplicate-key detection, then checks the envelope, the version, the kind and its properties.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+          "symbol": "Utv.validateStructural"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+          "symbol": "Utv.check"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+        "symbol": "Utv.validateStructural"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult with status valid.",
+      "failures": [
+        "Invalid (duplicate-key, at the repeated key) for a repeated key; invalid (utv.json.malformed) for text that is not JSON.",
+        "Unsupported (utv.version.unsupported) for a well-formed version other than utv/1.0; invalid (utv.envelope.schema) for a malformed or missing identifier such as utv/4.",
+        "Invalid (utv.kind.unknown, utv.value.required, utv.value.unknown-property, utv.envelope.unknown-property) for unknown kinds and missing or unknown properties."
+      ]
+    },
+    {
+      "id": "gregorian-validate",
+      "name": "Validate a Gregorian civil value",
+      "description": "Structural validation, then the proleptic Gregorian calendar for year, year-month, date and datetime forms.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/GregorianCivil.java",
+          "symbol": "GregorianCivil.validate"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/GregorianCivil.java",
+        "symbol": "GregorianCivil.validate"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult with status valid.",
+      "failures": [
+        "Any structural outcome first.",
+        "Unsupported (utv.unsupported) for other calendars, kinds or forms.",
+        "Invalid (month-out-of-range, day-out-of-range, field-out-of-range, utv.civil.fields, utv.civil.year)."
+      ]
+    },
+    {
+      "id": "parse-iso",
+      "name": "Parse ISO 8601 / RFC 3339 / RFC 9557 text",
+      "description": "The 0.2 parser; parseText adds periods and intervals on top of it.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+          "symbol": "Iso.parseIso"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+          "symbol": "Iso.parse"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+        "symbol": "Iso.parseIso"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with the UTV value.",
+      "failures": [
+        "The same invalid and unsupported outcomes as TemporalValue.parse for points."
+      ]
+    },
+    {
+      "id": "format-iso",
+      "name": "Format ISO text",
+      "description": "Format ISO text.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+          "symbol": "Iso.formatIso"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+        "symbol": "Iso.formatIso"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with the text as a JSON string.",
+      "failures": [
+        "Unsupported (unsupported-operand) for other kinds and for a zone on anything but a date-time; unsupported (leap-second); unsupported (no-text-form) for an offset with seconds or a fraction with no finite decimal."
+      ]
+    },
+    {
+      "id": "parse-text",
+      "name": "Parse the text form (JSON layer)",
+      "description": "Parse the text form (JSON layer).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+          "symbol": "TextForm.parseText"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+        "symbol": "TextForm.parseText"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with the UTV value.",
+      "failures": [
+        "As TemporalValue.parse."
+      ]
+    },
+    {
+      "id": "format-text",
+      "name": "Format the text form (JSON layer)",
+      "description": "Format the text form (JSON layer).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+          "symbol": "TextForm.formatText"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+        "symbol": "TextForm.formatText"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with the text as a JSON string.",
+      "failures": [
+        "Unsupported (no-text-form) for mixed-sign periods, exact second counts, start-amount intervals and other kinds."
+      ]
+    },
+    {
+      "id": "json-fields",
+      "name": "Calendar fields of a date",
+      "description": "Day of week (Monday 1), day of year, ISO week and week year, days in month, leap year.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.fields"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+        "symbol": "Operations.fields"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with an object of the fields.",
+      "failures": [
+        "Unsupported (unsupported-operand) for forms other than date and datetime; unsupported (unsupported-calendar); invalid for a date that does not exist."
+      ]
+    },
+    {
+      "id": "json-add",
+      "name": "Add an amount (JSON layer)",
+      "description": "A calendar amount to a civil value, or POSIX seconds to an instant, with a MonthEnd or JSON policy.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.add"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.doAddFields"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+        "symbol": "Operations.add"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with the new value; info offset-assertion-dropped when an asserted offset was removed.",
+      "failures": [
+        "None (month-end).",
+        "Invalid (kind-mismatch): time components on a date, a calendar amount on an instant, a second argument that is not an amount.",
+        "Unsupported (needs-leap-seconds) for SI seconds on an instant; unsupported (unsupported-operand) for a time of day; unsupported (unsupported-policy) for an unknown policy."
+      ]
+    },
+    {
+      "id": "json-compare",
+      "name": "Compare two values (JSON layer)",
+      "description": "Compare two values (JSON layer).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.compare"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+        "symbol": "Operations.compare"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with \"before\", \"equal\" or \"after\".",
+      "failures": [
+        "Unsupported (needs-zone-rules) for anything in a named zone.",
+        "Unsupported (unsupported-operand) for different kinds or forms, or an unzoned value against an offset one."
+      ]
+    },
+    {
+      "id": "json-days-between",
+      "name": "Days between two dates (JSON layer)",
+      "description": "Days between two dates (JSON layer).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.daysBetween"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+        "symbol": "Operations.daysBetween"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with an integer.",
+      "failures": [
+        "Unsupported (unsupported-operand) unless both are dates; unsupported (different-zones) unless both have the same zone or none."
+      ]
+    },
+    {
+      "id": "json-posix-seconds-between",
+      "name": "POSIX seconds between two instants (JSON layer)",
+      "description": "POSIX seconds between two instants (JSON layer).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.posixSecondsBetween"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+        "symbol": "Operations.posixSecondsBetween"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with a posixSeconds amount.",
+      "failures": [
+        "Unsupported (unsupported-operand) for anything but POSIX instants."
+      ]
+    },
+    {
+      "id": "json-contains",
+      "name": "Contains (JSON layer)",
+      "description": "Contains (JSON layer).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+          "symbol": "Intervals.contains"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+        "symbol": "Intervals.contains"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with \"definitely\", \"possibly\" or \"impossible\".",
+      "failures": [
+        "Unsupported (unsupported-operand) for other constructions, domains or point kinds; unsupported (different-zones)."
+      ]
+    },
+    {
+      "id": "json-overlaps",
+      "name": "Overlaps (JSON layer)",
+      "description": "Overlaps (JSON layer).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+          "symbol": "Intervals.overlaps"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+        "symbol": "Intervals.overlaps"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with \"definitely\", \"possibly\" or \"impossible\".",
+      "failures": [
+        "Unsupported (unsupported-operand) when the domains differ; unsupported (different-zones)."
+      ]
+    },
+    {
+      "id": "json-resolve",
+      "name": "Resolve (JSON layer)",
+      "description": "With a ResolutionPolicy, a JSON policy, or the value's own resolutionPolicy.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.resolve"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.doResolve"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+        "symbol": "Zones.resolve"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique or multiple with instants.",
+      "failures": [
+        "Symbolic (no-zone) for an unzoned date-time.",
+        "Unsupported (unsupported-operand) for anything but a civil date-time; unsupported (needs-zone-rules) without rules; unsupported (unknown-zone, outside-rule-window, leap-second, unsupported-policy).",
+        "Invalid (offset-mismatch); none (gap); multiple (ambiguous)."
+      ]
+    },
+    {
+      "id": "json-to-zone",
+      "name": "To a zone (JSON layer)",
+      "description": "To a zone (JSON layer).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.toZone"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+        "symbol": "Zones.toZone"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with a zoned date-time carrying offsetAssertion.",
+      "failures": [
+        "Unsupported (needs-zone-rules, unknown-zone, outside-rule-window, implementation-limit)."
+      ]
+    },
+    {
+      "id": "json-to-offset",
+      "name": "To an offset (JSON layer)",
+      "description": "To an offset (JSON layer).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.toOffset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+        "symbol": "Zones.toOffset"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with a fixed-offset date-time.",
+      "failures": [
+        "Invalid (offset-out-of-range); unsupported (implementation-limit)."
+      ]
+    },
+    {
+      "id": "java-time-from-date",
+      "name": "Bring in a java.util.Date (JSON layer)",
+      "description": "Bring in a java.util.Date (JSON layer).",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.fromDate"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+        "symbol": "JavaTime.fromDate"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "UtvResult unique with an instant, for As.INSTANT.",
+      "failures": [
+        "Unsupported (local-zone) for any civil reading: Date's fields come from ZoneId.systemDefault()."
+      ]
+    },
+    {
+      "id": "java-time-from-offset-date-time",
+      "name": "Bring in an OffsetDateTime with an intent (JSON layer)",
+      "description": "As.INSTANT, OFFSET_DATE_TIME or LOCAL_DATE_TIME.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.fromOffsetDateTime"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+        "symbol": "JavaTime.fromOffsetDateTime"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call.",
+      "result": "A UTV instant, fixed-offset date-time or floating date-time.",
+      "failures": []
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/java/src/main/java/net/icelander/utv",
+      "path": "implementations/java/src/main/java/net/icelander/utv/.dev/capability.json",
+      "relationship": "The capabilities these operations expose."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/java/src/main/java/net/icelander/utv",
+      "path": "implementations/java/src/main/java/net/icelander/utv/.dev/feature.json",
+      "relationship": "The features they carry out."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/java/src/main/java/net/icelander/utv",
+      "path": "implementations/java/src/main/java/net/icelander/utv/.dev/use-case.json",
+      "relationship": "The use cases that call them."
+    }
+  ]
+}

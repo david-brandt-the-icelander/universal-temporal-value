@@ -1,0 +1,69 @@
+{
+  "$schema": "../../../Meta/Agents/Skills/describe-deployment-diagram/schema.json",
+  "kind": "deployment",
+  "title": "C# library deployment diagram",
+  "folder": "implementations/csharp",
+  "description": "How the library is used once built: Utv.csproj packs a NuGet package (id Utv, version 0.3.0) whose assembly runs in-process inside the caller's .NET 8 application, with the structural schema embedded. Zone rules are a file or text the application supplies. Nothing in the repository publishes the package to a registry, and no csharp/v* tag exists: it is built from source.",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/Utv.csproj",
+      "symbol": "PackageId"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Utv.csproj",
+      "symbol": "EmbeddedResource"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+      "symbol": "ZoneRules.Load"
+    },
+    {
+      "path": "implementations/csharp/tests/Utv.Examples.Tests/Utv.Examples.Tests.csproj",
+      "symbol": "CopyToOutputDirectory"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "runtime",
+      "name": ".NET 8 runtime",
+      "kind": "host",
+      "description": "Whatever machine runs the caller's application; the library reads nothing from it (no clock, zone, locale or tz database)."
+    },
+    {
+      "id": "application",
+      "name": "Caller's application",
+      "kind": "process",
+      "description": "A .NET 8 program that references Utv and calls it in-process; the example test assembly is one."
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "package",
+      "name": "Utv.dll (NuGet package Utv 0.3.0)",
+      "source": "implementations/csharp/src/Utv/Utv.csproj",
+      "deployedTo": "application",
+      "description": "The library assembly, built for net8.0 with the README packed alongside, and schema/utv-1.0.schema.json embedded as a resource. Loaded into the caller's process."
+    },
+    {
+      "id": "zone-rules",
+      "name": "Zone-rule bundle",
+      "source": "conformance/rules/demo-zones.json",
+      "deployedTo": "runtime",
+      "description": "Rule data in the demo-zones.json format, shipped by the application (the example tests copy demo-zones.json next to their assembly) and loaded with ZoneRules.Load(path) or ZoneRules.Parse(text). The library ships no rules."
+    }
+  ],
+  "relationships": [
+    {
+      "from": "runtime",
+      "to": "application",
+      "kind": "hosts",
+      "description": "Runs the application, which loads Utv.dll in-process."
+    },
+    {
+      "from": "application",
+      "to": "runtime",
+      "kind": "connects-to",
+      "description": "Reads the rule file at the path it chooses, through ZoneRules.Load; nothing else is read."
+    }
+  ]
+}

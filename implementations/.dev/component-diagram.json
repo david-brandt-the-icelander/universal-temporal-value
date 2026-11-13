@@ -1,0 +1,176 @@
+{
+  "$schema": "../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "Language libraries component diagram",
+  "folder": "implementations",
+  "description": "The five UTV libraries. Each is a self-contained project in its ecosystem's layout; none depends on another, and they agree because they are tested against the same shared files.",
+  "sources": [
+    {
+      "path": "implementations/README.md",
+      "symbol": "Layout of a language directory"
+    },
+    {
+      "path": "implementations/README.md",
+      "symbol": "Shared conformance material"
+    },
+    {
+      "path": "tools/side_by_side.py",
+      "symbol": "LANGUAGES"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Utv.csproj",
+      "symbol": "EmbeddedResource"
+    },
+    {
+      "path": "implementations/rust/src/lib.rs",
+      "symbol": "SCHEMA_TEXT"
+    }
+  ],
+  "components": [
+    {
+      "id": "implementations",
+      "name": "Language libraries",
+      "responsibility": "The five libraries and the conventions they share.",
+      "folder": "implementations"
+    },
+    {
+      "id": "csharp",
+      "name": "Utv (C#)",
+      "responsibility": "The .NET library.",
+      "folder": "implementations/csharp",
+      "diagram": "implementations/csharp/.dev/component-diagram.json"
+    },
+    {
+      "id": "java",
+      "name": "utv-core (Java)",
+      "responsibility": "The Java library.",
+      "folder": "implementations/java",
+      "diagram": "implementations/java/.dev/component-diagram.json"
+    },
+    {
+      "id": "python",
+      "name": "utv (Python)",
+      "responsibility": "The Python library.",
+      "folder": "implementations/python",
+      "diagram": "implementations/python/.dev/component-diagram.json"
+    },
+    {
+      "id": "rust",
+      "name": "utv (Rust)",
+      "responsibility": "The Rust crate.",
+      "folder": "implementations/rust",
+      "diagram": "implementations/rust/.dev/component-diagram.json"
+    },
+    {
+      "id": "typescript",
+      "name": "@utv/core (TypeScript)",
+      "responsibility": "The TypeScript package.",
+      "folder": "implementations/typescript",
+      "diagram": "implementations/typescript/.dev/component-diagram.json"
+    },
+    {
+      "id": "conformance",
+      "name": "Conformance material",
+      "responsibility": "The structural examples, operation fixtures and demo zone rules every library's tests read in place.",
+      "folder": "conformance"
+    },
+    {
+      "id": "schema",
+      "name": "Structural schema",
+      "responsibility": "The shapes every library's structural validation should agree with.",
+      "folder": "schema"
+    }
+  ],
+  "relationships": [
+    {
+      "from": "implementations",
+      "to": "csharp",
+      "kind": "contains",
+      "description": "Built and tested with dotnet."
+    },
+    {
+      "from": "implementations",
+      "to": "java",
+      "kind": "contains",
+      "description": "Built and tested with Maven."
+    },
+    {
+      "from": "implementations",
+      "to": "python",
+      "kind": "contains",
+      "description": "Tested with unittest."
+    },
+    {
+      "from": "implementations",
+      "to": "rust",
+      "kind": "contains",
+      "description": "Built and tested with Cargo."
+    },
+    {
+      "from": "implementations",
+      "to": "typescript",
+      "kind": "contains",
+      "description": "Built and tested with npm."
+    },
+    {
+      "from": "csharp",
+      "to": "conformance",
+      "kind": "depends-on",
+      "description": "Its tests read the examples, the fixtures and demo-zones.json."
+    },
+    {
+      "from": "java",
+      "to": "conformance",
+      "kind": "depends-on",
+      "description": "Its tests read the examples, the fixtures and demo-zones.json."
+    },
+    {
+      "from": "python",
+      "to": "conformance",
+      "kind": "depends-on",
+      "description": "Its tests read the examples, the fixtures and demo-zones.json."
+    },
+    {
+      "from": "rust",
+      "to": "conformance",
+      "kind": "depends-on",
+      "description": "Its tests read the examples, the fixtures and demo-zones.json."
+    },
+    {
+      "from": "typescript",
+      "to": "conformance",
+      "kind": "depends-on",
+      "description": "Its tests read the examples, the fixtures and demo-zones.json."
+    },
+    {
+      "from": "csharp",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "Embeds schema/utv-1.0.schema.json as a resource at build time (Utv.csproj) and validates against it."
+    },
+    {
+      "from": "rust",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "Compiles schema/utv-1.0.schema.json in with include_str! (src/lib.rs, SCHEMA_TEXT)."
+    },
+    {
+      "from": "python",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "Ships a byte copy as package data (src/utv/data/); a test compares it with the original."
+    },
+    {
+      "from": "java",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "Its kind table (KindTable) is a hand copy from the schema; nothing checks the copy."
+    },
+    {
+      "from": "typescript",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "Its KINDS table (src/structural.ts) is a hand transcription of the schema; nothing checks it."
+    }
+  ]
+}

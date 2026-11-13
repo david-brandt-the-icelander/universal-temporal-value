@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/pipeline.schema.json",
+  "kind": "pipeline",
+  "title": "CI pipeline",
+  "folder": ".github/workflows",
+  "entities": [
+    {
+      "id": "validate-specification",
+      "title": "Validate specification",
+      "summary": "One job, structural, on ubuntu-latest with Python 3.12: install tools/requirements.txt, run the structural checks, then check the side-by-side page.",
+      "trigger": "Every push to any branch, and every pull request.",
+      "checks": [
+        "pip install -r tools/requirements.txt",
+        "python3 tools/validate.py: the schema, the conformance examples and fixtures, the JSON examples in spec/*.md, and the falsehoods matrix against its scenarios (tools/.dev/operation.json, validate-structure).",
+        "python3 tools/side_by_side.py --check: docs/side-by-side.md matches the five libraries' marked UTV-first tests (tools/.dev/operation.json, check-side-by-side)."
+      ],
+      "blocks": "A failing step fails the run, which shows on the commit and the pull request. Nothing in the repository says the default branch requires it to pass.",
+      "notChecked": [
+        "No library is built and no library's tests run: dotnet test, mvn -q test, the Python unittest suite, npm test and cargo test (AGENTS.md section 3) run only where a contributor runs them.",
+        "The everyday and text-form fixtures are checked for shape only; whether each library produces the expected outcomes is checked only by that library's tests.",
+        "That the Python package's bundled schema, implementations/python/src/utv/data/utv-1.0.schema.json, is still identical to schema/utv-1.0.schema.json: only the Python test BundledSchema compares them (implementations/python/src/utv/data/.dev/backlog.json, schema-copy-outside-ci).",
+        "The semantic scenarios are not executable (OI-12).",
+        "The HASD validators, Meta/Agents/Skills/validate_diagrams.py and Meta/Agents/Knowledge/validate_knowledge.py, do not run.",
+        "Whether every library marks every side-by-side task (tools/.dev/backlog.json, side-by-side-missing-tasks-pass)."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": ".github/workflows/validate.yml",
+          "symbol": "on"
+        },
+        {
+          "path": ".github/workflows/validate.yml",
+          "symbol": "jobs.structural.steps"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "tools/.dev/capability.json"
+        }
+      ]
+    }
+  ]
+}

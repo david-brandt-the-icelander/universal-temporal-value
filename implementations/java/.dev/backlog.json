@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "utv-core (Java) backlog",
+  "folder": "implementations/java",
+  "entities": [
+    {
+      "id": "pom-spec-metadata",
+      "title": "State the supported specification versions in pom.xml",
+      "summary": "VERSIONING.md asks each library to state its specification versions and conformance profiles in its package metadata where the ecosystem allows; pom.xml states neither.",
+      "type": "defect",
+      "expected": "pom.xml carries the supported specification versions (utv/1.0, utv-result/1.0, utv-text/1) and the claimed profiles (none yet), for example in <name> and <description>, as the C# project does in its package description.",
+      "observed": "pom.xml has groupId, artifactId, version and packaging only; the README is the one place that states them.",
+      "acceptanceCriteria": [
+        "pom.xml names the specification versions read and the conformance profiles claimed, matching the README."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "VERSIONING.md",
+        "description": "Implementation versions: each library MUST state, in its README and in its package metadata where the ecosystem allows, which specification versions and conformance profiles it supports."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/pom.xml",
+          "symbol": "project"
+        },
+        {
+          "path": "implementations/java/README.md",
+          "symbol": "Specification versions read"
+        }
+      ]
+    }
+  ]
+}

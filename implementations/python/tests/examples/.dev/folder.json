@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Example suites",
+  "folder": "implementations/python/tests/examples",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Example suites",
+      "summary": "The library's worked examples, as unit tests: the UTV-first and native-first suites and the fixture they share.",
+      "purpose": "Holds the two example suites of docs/example-tests.md in utv_first/ and native_first/, and fixtures.py, whose demo_zone_rules() loads conformance/rules/demo-zones.json from the repository root for every UTV zone operation in them. test_fixtures.py tests that fixture.",
+      "boundaries": [
+        "What each suite checks is recorded in its own folder's verification.json.",
+        "There are no example programs: every example runs with the library's tests."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/fixtures.py",
+          "symbol": "demo_zone_rules"
+        },
+        {
+          "path": "implementations/python/tests/examples/test_fixtures.py",
+          "symbol": "TestDemoZoneRules"
+        },
+        {
+          "path": "implementations/python/tests/examples/__init__.py"
+        }
+      ]
+    }
+  ]
+}

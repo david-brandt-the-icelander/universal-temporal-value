@@ -1,0 +1,142 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "Library contracts",
+  "folder": "docs",
+  "entities": [
+    {
+      "id": "library-api",
+      "title": "Library API 0.3: typed values and outcomes",
+      "summary": "The typed layer every UTV library offers from 0.3: one immutable type per everyday value, plain results for total operations, Outcome<T> for partial ones, shared diagnostic codes and per-language naming.",
+      "contractType": "api",
+      "consumers": [
+        "The C#, Java, Python, Rust and TypeScript libraries under implementations/, which implement it",
+        "Application developers who call those libraries"
+      ],
+      "guarantees": [
+        "Types are valid by construction; TryOf (or Rust's of) reports a bad value as an outcome instead of raising.",
+        "Only partial operations return an Outcome (unique, multiple, none, unsupported, invalid); total operations return plain values.",
+        "ZonedIntent has no comparison operators; ordering it needs a TemporalContext with zone rules.",
+        "Diagnostic codes in §5 are shared by every library; messages are free text.",
+        "Names follow the naming table in §6, and each library's README records any deviation."
+      ],
+      "compatibility": "The 0.2 JSON layer (everyday-api) stays unchanged beneath it. Libraries are versioned independently with SemVer (VERSIONING.md, Implementation versions).",
+      "definition": "docs/library-api.md",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "docs/library-api.md",
+          "symbol": "1. Types"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "2. Total operations return values; partial ones return Outcome"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "5. Diagnostic codes"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "6. Naming"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api",
+          "description": "The JSON layer it sits on."
+        },
+        {
+          "relation": "depends-on",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "text-form",
+          "description": "ToString and Parse use the text form."
+        }
+      ]
+    },
+    {
+      "id": "everyday-api",
+      "title": "Everyday API 0.2: the JSON layer",
+      "summary": "Twelve operations on UTV JSON values (parseIso, formatIso, fields, add, compare, daysBetween, posixSecondsBetween, contains, overlaps, resolve, toZone, toOffset), with canonical builder shapes and utv-result/1.0 results.",
+      "contractType": "api",
+      "consumers": [
+        "The five libraries under implementations/, which implement it",
+        "The typed layer of each library, which is built on it",
+        "Application developers who work with UTV JSON directly"
+      ],
+      "guarantees": [
+        "Every library produces exactly the outcomes in conformance/operations/everyday.json; where the prose and the fixtures disagree, the disagreement is raised rather than resolved by picking one.",
+        "Builders and operations produce exactly the canonical shapes in the document.",
+        "Operations never throw for semantic outcomes, and never read the system clock, time zone or locale.",
+        "Native adapters make the caller name the intent and refuse values tied to the host's local zone."
+      ],
+      "compatibility": "Kept unchanged from 0.3 on, beneath the typed layer (docs/library-api.md, §7).",
+      "definition": "docs/everyday-api.md",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "docs/everyday-api.md",
+          "symbol": "Operations"
+        },
+        {
+          "path": "docs/everyday-api.md",
+          "symbol": "Canonical shapes"
+        },
+        {
+          "path": "docs/everyday-api.md",
+          "symbol": "Native interop (per language)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-result-1-0",
+          "description": "Every operation returns a utv-result/1.0 result."
+        },
+        {
+          "relation": "verified-by",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        }
+      ]
+    },
+    {
+      "id": "text-form",
+      "title": "Text form (utv-text/1)",
+      "summary": "How UTV values look in code, logs and documentation: what ToString returns and Parse accepts, defined only where it is lossless.",
+      "contractType": "data-format",
+      "consumers": [
+        "The five libraries' parseText and formatText, and their typed ToString and Parse",
+        "Application developers who read and write values as text"
+      ],
+      "guarantees": [
+        "parseText(formatText(v)) == v for every value the text form can express.",
+        "Intervals use brackets, so an excluded end is visible; EDTF slash forms are accepted as input.",
+        "Exact second counts and EDTF qualifiers have no text form: formatText gives unsupported (no-text-form), and parsing a qualifier gives unsupported (unsupported-form)."
+      ],
+      "compatibility": "An interchange adapter: it adds no kinds or properties, so it changes neither the specification version nor the wire identifier.",
+      "definition": "docs/text-form.md",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "docs/text-form.md",
+          "symbol": "Intervals"
+        },
+        {
+          "path": "docs/text-form.md",
+          "symbol": "Not (yet) in the text form"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verified-by",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        }
+      ]
+    }
+  ]
+}

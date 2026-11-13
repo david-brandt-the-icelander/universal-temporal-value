@@ -1,0 +1,246 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-use-case/schema.json",
+  "kind": "use-case",
+  "title": "Native interop use cases",
+  "folder": "implementations/rust/src/interop",
+  "description": "What an application developer does to move values between Rust's own time types and UTV.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/interop/mod.rs",
+      "symbol": "module documentation"
+    },
+    {
+      "path": "implementations/rust/src/interop/chrono.rs",
+      "symbol": "module documentation"
+    }
+  ],
+  "entities": [
+    {
+      "id": "convert-native",
+      "name": "Bring a native date/time value in and out",
+      "description": "A developer turns a clock reading or a chrono value into a UTV value with the intent named, works with it, and turns it back into a native value when the native type can hold it. The shared code intent-required has no branch here: the intent is the target type, so a call without one doesn't compile.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "impl TryFrom<DateTime<FixedOffset>> for Instant"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "impl TryFrom<Instant> for DateTime<Utc>"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::from_system_time"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Use a value from SystemTime or chrono with UTV, and get a native value back, without UTV guessing what it meant or reading the host.",
+      "preconditions": [
+        "The developer's crate depends on utv; for chrono's types, with the cargo feature chrono.",
+        "The developer holds the native value: a reading they took themselves (SystemTime::now(), Utc::now()) or a chrono value."
+      ],
+      "postconditions": [
+        "The UTV value holds exactly what the native value held, as the kind the developer named, or the developer has Diagnostics saying why it could not be taken.",
+        "Converted back, the native value is the one UTV held, or an error names what would have been lost."
+      ],
+      "flow": [
+        {
+          "id": "read-native",
+          "actor": "Application developer",
+          "action": "Reads the clock, or takes a chrono value, in their own code; the library never does this for them.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/interop/mod.rs",
+              "symbol": "from_system_time"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "convert-in",
+          "actor": "Application developer",
+          "action": "Converts it with the type that names the intent: Instant::from_system_time(reading), CivilDate::from(naive_date), CivilDateTime::try_from(naive_date_time), Instant::try_from(date_time) or FixedOffsetDateTime::try_from(date_time).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/typed/instant.rs",
+              "symbol": "Instant::from_system_time"
+            },
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "impl From<NaiveDate> for CivilDate"
+            },
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "impl TryFrom<DateTime<FixedOffset>> for FixedOffsetDateTime"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "read-in",
+          "actor": "Interop adapter",
+          "action": "Writes the native fields as UTV JSON (from_system_time, from_naive_date_time, from_fixed_offset, from_utc) and reads the typed value from it with the typed layer's checks.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "from_fixed_offset"
+            },
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "typed"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "convert-out",
+          "actor": "Application developer",
+          "action": "Converts a UTV value back: NaiveDate::try_from(date), NaiveDateTime::try_from(date_time), DateTime::<FixedOffset>::try_from(fixed), DateTime::<Utc>::try_from(instant) or SystemTime::try_from(instant).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "impl TryFrom<CivilDate> for NaiveDate"
+            },
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "impl TryFrom<Instant> for DateTime<Utc>"
+            },
+            {
+              "path": "implementations/rust/src/interop/mod.rs",
+              "symbol": "impl TryFrom<crate::Instant> for SystemTime"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "write-out",
+          "actor": "Interop adapter",
+          "action": "Builds the native value from the UTV value, exactly, or returns Err(Diagnostics) with the loss it would have caused.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "to_utc"
+            },
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "naive_date"
+            },
+            {
+              "path": "implementations/rust/src/interop/mod.rs",
+              "symbol": "to_system_time"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "convert-in",
+          "condition": "The value is a chrono DateTime<Local>, tied to the host's zone.",
+          "outcome": "No typed conversion exists; the JSON-layer from_local answers unsupported (local-zone), pointing to from_fixed_offset or from_utc.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "from_local"
+            }
+          ]
+        },
+        {
+          "atStep": "read-in",
+          "condition": "chrono holds a leap second (a nanosecond field of 10^9 or more).",
+          "outcome": "Err with leap-second: UTV would need a leap-second table.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "civil_time"
+            },
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "instant_of"
+            }
+          ]
+        },
+        {
+          "atStep": "read-in",
+          "condition": "A DateTime<FixedOffset> has an offset beyond ±18:00 and the target is FixedOffsetDateTime.",
+          "outcome": "Err with offset-out-of-range (invalid).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/model.rs",
+              "symbol": "read_civil"
+            }
+          ]
+        },
+        {
+          "atStep": "write-out",
+          "condition": "The year is outside chrono's range (about ±262 000), or the instant outside SystemTime's or chrono's.",
+          "outcome": "Err with out-of-native-range (unsupported).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "naive_date"
+            },
+            {
+              "path": "implementations/rust/src/interop/mod.rs",
+              "symbol": "system_time_of"
+            }
+          ]
+        },
+        {
+          "atStep": "write-out",
+          "condition": "The instant has a fraction finer than a nanosecond, or finer than this platform's SystemTime.",
+          "outcome": "Err with precision-loss (unsupported).",
+          "sources": [
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "to_utc"
+            },
+            {
+              "path": "implementations/rust/src/interop/mod.rs",
+              "symbol": "to_system_time"
+            }
+          ]
+        },
+        {
+          "atStep": "write-out",
+          "condition": "Through the JSON-layer functions, a zoned or fixed-offset value goes to a naive type, or a named-zone value to DateTime<FixedOffset>.",
+          "outcome": "Err with zone-dropped (unsupported): the native type would keep less than the value says.",
+          "sources": [
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "read_form"
+            },
+            {
+              "path": "implementations/rust/src/interop/chrono.rs",
+              "symbol": "to_fixed_offset"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/rust/src/interop",
+      "path": "implementations/rust/src/interop/.dev/operation.json",
+      "relationship": "The operations the steps call."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/rust/src/interop",
+      "path": "implementations/rust/src/interop/.dev/feature.json",
+      "relationship": "The rules the conversions follow."
+    },
+    {
+      "kind": "capability",
+      "folder": "implementations/rust/src/interop",
+      "path": "implementations/rust/src/interop/.dev/capability.json",
+      "relationship": "The capability this use case uses."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Structural schema",
+  "folder": "schema",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Structural schema",
+      "summary": "One JSON Schema per specification MAJOR.MINOR; today schema/utv-1.0.schema.json (Draft 2020-12, $id urn:utv:schema:1.0).",
+      "purpose": "Defines the serialized field names and shapes of UTV values, so that any tool can reject malformed JSON before semantic validation.",
+      "boundaries": [
+        "Shapes only: the specification governs meaning, and a value can pass the schema and still be semantically invalid or unresolvable.",
+        "Older schema files are never changed when newer ones are added."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "schema/utv-1.0.schema.json",
+          "symbol": "title"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Schema files"
+        }
+      ]
+    }
+  ]
+}

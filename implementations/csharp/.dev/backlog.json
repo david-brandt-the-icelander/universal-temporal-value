@@ -1,0 +1,183 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "C# library backlog",
+  "folder": "implementations/csharp",
+  "description": "Work the C# engine-interface plan wants that library 0.3 does not do yet.",
+  "entities": [
+    {
+      "id": "typed-records-for-every-kind",
+      "title": "A typed record for each of the 26 kinds, with canonical JSON",
+      "summary": "Finish M2: typed values for the kinds 0.3 does not cover, RFC 8785 canonical JSON and Canonicalize.",
+      "type": "feature",
+      "acceptanceCriteria": [
+        "Every core kind reads from JSON into a typed value and writes back the same JSON",
+        "Canonicalize gives RFC 8785 bytes, and equality is over canonical form",
+        "The existing everyday types keep their behaviour"
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "status": "open",
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.ReadCore"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "part-of",
+          "path": "implementations/csharp/.dev/roadmap.json",
+          "entityId": "m2-typed-model"
+        }
+      ],
+      "details": "From the plan's evolution table: JSON-level values become a typed sealed record per kind, with canonical-form equality. 0.3 did this for the everyday shapes only."
+    },
+    {
+      "id": "validation-returns-typed-values",
+      "title": "Structural validation returns a typed value",
+      "summary": "UtvValidator.ValidateStructural becomes IValidation.Parse returning a typed UtvValue, with the static method kept as a thin wrapper.",
+      "type": "improvement",
+      "acceptanceCriteria": [
+        "IValidation.Parse returns a typed value for every valid document",
+        "UtvValidator.ValidateStructural keeps its signature and results"
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "status": "open",
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+          "symbol": "UtvValidator.ValidateStructural"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "implementations/csharp/.dev/decisions.json",
+          "entityId": "generic-utv-result"
+        },
+        {
+          "relation": "depends-on",
+          "path": "implementations/csharp/.dev/backlog.json",
+          "entityId": "typed-records-for-every-kind"
+        }
+      ]
+    },
+    {
+      "id": "gregorian-calendar-system",
+      "title": "Gregorian validation behind a calendar system",
+      "summary": "GregorianCivil.Validate becomes the Gregorian ICalendarSystem behind IValidation.Validate.",
+      "type": "improvement",
+      "acceptanceCriteria": [
+        "IValidation.Validate checks Gregorian civil values through the Gregorian ICalendarSystem",
+        "GregorianCivil.Validate keeps its results"
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "status": "open",
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+          "symbol": "GregorianCivil.Validate"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "part-of",
+          "path": "implementations/csharp/.dev/roadmap.json",
+          "entityId": "m3-core-civil"
+        }
+      ]
+    },
+    {
+      "id": "utv001-analyzer",
+      "title": "Roslyn analyzer UTV001: result status not inspected",
+      "summary": "A planned analyzer that flags results whose status is never read, so non-answers cannot be ignored by accident.",
+      "type": "feature",
+      "acceptanceCriteria": [
+        "UTV001 reports a result (an Outcome<T>, or the planned UtvResult<T>) whose status or case is never inspected",
+        "It ships with the package and is documented in the README"
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "status": "open",
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "implementations/csharp/.dev/decisions.json",
+          "entityId": "engine-3-every-answer-a-result"
+        }
+      ],
+      "details": "The plan names it for UtvResult<T>; 0.3 answers partial questions with Outcome<T>, so which type it inspects follows the open decision generic-utv-result."
+    },
+    {
+      "id": "format-for-people",
+      "title": "Format for people (question I3)",
+      "summary": "Show a value to a person in their language and locale, with an explicit locale, calendar, zone and pattern.",
+      "type": "feature",
+      "acceptanceCriteria": [
+        "Format takes explicit locale data as a versioned rule dependency, never the host's culture",
+        "Without the data it answers unsupported"
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "status": "open",
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "I3"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "implementations/csharp/.dev/decisions.json",
+          "entityId": "cldr-data-source"
+        }
+      ]
+    }
+  ]
+}

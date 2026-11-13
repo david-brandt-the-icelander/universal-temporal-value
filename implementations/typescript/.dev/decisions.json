@@ -1,0 +1,225 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "TypeScript library decisions",
+  "folder": "implementations/typescript",
+  "entities": [
+    {
+      "id": "bigint-years-and-rationals",
+      "title": "Years are bigint, seconds are bigint rationals",
+      "summary": "Years and day counts are bigint, and seconds are exact rationals of two bigints in lowest terms.",
+      "status": "accepted",
+      "context": "UTV requires arbitrary precision: integers are decimal strings and fractions exact rationals, never floating point or fixed-width integers. JavaScript's number is a double.",
+      "decision": "Typed values take and return years as bigint (a number argument must be a safe integer). Internally every instant is a Rational {n, d} of bigints, kept in lowest terms with a positive denominator; day arithmetic is on bigint epoch days.",
+      "rationale": "The README: \"Years are bigint\" and \"All arithmetic is exact: bigint years and days, rational seconds.\" library-api §1 names bigint for TypeScript.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/rational.ts",
+          "symbol": "rat"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "integer"
+        },
+        {
+          "path": "implementations/typescript/src/civil.ts",
+          "symbol": "daysFromCivil"
+        },
+        {
+          "path": "implementations/typescript/README.md",
+          "symbol": "JSON layer (0.2)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "arbitrary-precision"
+        }
+      ]
+    },
+    {
+      "id": "typed-layer-over-json-layer",
+      "title": "The typed layer calls the JSON layer",
+      "summary": "Every typed operation builds or holds its value's UTV JSON and calls a 0.2 JSON-layer function on it, rather than re-implementing the arithmetic.",
+      "status": "accepted",
+      "context": "0.3 adds a typed layer over the 0.2 JSON-level everyday API, which the shared fixtures test. library-api §2 says implementations should call the 0.2 functions underneath.",
+      "decision": "Each typed class holds its frozen UTV JSON; its methods call ops, zones, native, text and the builders, and turn the utv-result/1.0 answer into a plain value (total operations) or an Outcome (partial ones).",
+      "rationale": "values.ts: \"Every operation calls the 0.2 JSON layer underneath, so the typed layer agrees with the fixtures.\"",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "total"
+        },
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "outcomeOf"
+        },
+        {
+          "path": "implementations/typescript/CHANGELOG.md",
+          "symbol": "0.3.0 (unreleased)"
+        }
+      ]
+    },
+    {
+      "id": "valid-by-construction-factories",
+      "title": "Private constructors with static factories",
+      "summary": "Typed classes have private constructors; static of/tryOf factories validate, and module-level factory functions registered by each class's static block let decode build any class.",
+      "status": "accepted",
+      "context": "library-api §1 requires types that are valid by construction and immutable, and fromJson and parse must produce any of the classes from JSON.",
+      "decision": "Constructors are private. of validates and throws a RangeError; tryOf returns an Outcome. Each class's static block registers a factory (newDate, newInstant, …) that decode uses after the JSON layer's readers have checked the value. The JSON is deep-frozen, and the fields behind it are #private (an Interval's start and end are public readonly Bounds).",
+      "rationale": "CHANGELOG 0.3.0: \"Private constructors and static factories (of throws a RangeError, tryOf returns an Outcome)\"; values.ts: \"Factories for the private constructors, registered by each class's static block.\"",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "decode"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "deepFreeze"
+        },
+        {
+          "path": "implementations/typescript/CHANGELOG.md",
+          "symbol": "0.3.0 (unreleased)"
+        }
+      ]
+    },
+    {
+      "id": "outcome-discriminated-union",
+      "title": "Outcome<T> is a union of classes discriminated on status",
+      "summary": "The five outcome cases are classes sharing a base with the helpers, and their union narrows on the status string; assertNever makes a switch exhaustive.",
+      "status": "accepted",
+      "context": "library-api §3 asks each language for its own exhaustive sum type; for TypeScript a union discriminated on status, handled with switch and a never check.",
+      "decision": "Unique, Multiple, None, Unsupported and Invalid extend an unexported OutcomeBase that holds uniqueOr, single, toString and toResult; Outcome<T> is their union. assertNever(x: never) fails to type-check when a case is missing, and throws at run time.",
+      "rationale": "outcome.ts: \"Narrow it with switch (o.status) and finish with default: assertNever(o), so that a missing case fails to type-check.\" typed.test.ts checks with @ts-expect-error that a missing case does not compile.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "Outcome"
+        },
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "assertNever"
+        },
+        {
+          "path": "implementations/typescript/test/typed.test.ts",
+          "symbol": "missingCase"
+        }
+      ]
+    },
+    {
+      "id": "policies-as-constants-and-literals",
+      "title": "Policies are const objects that are also string-union types",
+      "summary": "MonthEnd, Gap, Overlap, Truth and Ordering are frozen const objects whose values form a string-union type of the same name, so MonthEnd.Constrain and \"constrain\" both type-check.",
+      "status": "accepted",
+      "context": "library-api §4: policies are typed in every language; Python and TypeScript may also accept the literal strings through a typed parameter. The JSON layer uses the wire strings.",
+      "decision": "Each vocabulary is `export const X = {…} as const` plus `export type X = (typeof X)[keyof typeof X]`. Weekday is a numeric enum, Monday = 1. ResolutionPolicy is an interface plus a const with Strict, AllCandidates and of.",
+      "rationale": "outcome.ts: \"each is also its own string-union type, so literals are accepted too\"; the values pass straight to the JSON layer.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "MonthEnd"
+        },
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "ResolutionPolicy"
+        },
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "Weekday"
+        }
+      ]
+    },
+    {
+      "id": "javascript-value-protocols",
+      "title": "Comparison methods and JavaScript's value protocols",
+      "summary": "Typed values offer compare, isBefore and isAfter instead of operators, equals instead of a hash, toJSON for JSON.stringify, and a Node inspect view.",
+      "status": "accepted",
+      "context": "JavaScript has no operator overloading and no hash protocol; library-api §1 says value semantics in JavaScript means equals() plus immutability, and names toJSON() for TypeScript.",
+      "decision": "Ordered<Self> adds compare(other): -1 | 0 | 1, isBefore and isAfter where the order is defined. TemporalValue provides equals (same class, same canonical JSON), toJSON, toString (the text form) and Symbol.for(\"nodejs.util.inspect.custom\") giving CivilDate(2026-11-05).",
+      "rationale": "README: \"toJSON() the UTV JSON (so JSON.stringify(value) just works), and equals() compares by value. Node's console.log shows CivilDate(2026-11-05).\"",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "TemporalValue"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Ordered"
+        },
+        {
+          "path": "implementations/typescript/README.md",
+          "symbol": "Typed API (0.3)"
+        }
+      ]
+    },
+    {
+      "id": "date-bridge-not-temporal",
+      "title": "Native interop bridges Date, not Temporal",
+      "summary": "The native adapters convert to and from Date, epoch milliseconds and plain {year, month, day} objects; Temporal is not a target.",
+      "status": "accepted",
+      "context": "everyday-api, Native interop: each library offers explicit adapters to the language's own types, the caller names the intent, nothing is read in the host's local zone and loss is reported.",
+      "decision": "fromDate takes an intent (\"instant\", { offsetSeconds }, { zone, rules }; \"local\" is refused); toDate, fromEpochMilliseconds, toEpochMilliseconds, fromPlainDate and toPlainDate complete the set. A Date is read only through getTime().",
+      "rationale": "native.ts: \"Temporal would be the natural native target, but it is not available by default in Node 22.\"",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromDate"
+        },
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "DateIntent"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        }
+      ]
+    },
+    {
+      "id": "no-runtime-dependencies",
+      "title": "No runtime dependencies",
+      "summary": "The package has no runtime dependencies: its own strict JSON parser, and ambient declarations instead of @types/node.",
+      "status": "accepted",
+      "context": "UTV must reject duplicate JSON keys, which JSON.parse silently accepts (keeping the last value). The library needs one Node built-in, readFileSync, to load a rule file.",
+      "decision": "json.ts is a hand-written parser that rejects duplicate keys (parseStrict). src/node.d.ts declares node:fs readFileSync (and readdirSync, which the tests use), and test/shim.d.ts declares node:test and node:assert/strict, so typescript is the only devDependency.",
+      "rationale": "json.ts: \"Strict JSON parser that rejects duplicate object keys. No runtime dependencies.\" node.d.ts: \"Declared here so the package needs no @types/node.\" README: \"Runtime dependencies: none.\"",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/json.ts",
+          "symbol": "parseStrict"
+        },
+        {
+          "path": "implementations/typescript/src/node.d.ts",
+          "symbol": "node:fs"
+        },
+        {
+          "path": "implementations/typescript/test/shim.d.ts",
+          "symbol": "node:test"
+        },
+        {
+          "path": "implementations/typescript/package.json",
+          "symbol": "devDependencies"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed"
+        }
+      ]
+    }
+  ]
+}

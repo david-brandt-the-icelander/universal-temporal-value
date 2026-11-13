@@ -1,0 +1,659 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-operation/schema.json",
+  "kind": "operation",
+  "title": "Typed layer operations",
+  "folder": "implementations/rust/src/typed",
+  "description": "The public constructors and methods of the typed layer, grouped where several share one path through the JSON layer. Accessors (year, day_of_week, zone_id, ...) and the Outcome helpers are left out. All are queries: values are immutable, and every operation answers a new value.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/typed/civil.rs",
+      "symbol": "CivilDate"
+    },
+    {
+      "path": "implementations/rust/src/typed/context.rs",
+      "symbol": "TemporalContext"
+    },
+    {
+      "path": "implementations/rust/src/typed/instant.rs",
+      "symbol": "Instant"
+    }
+  ],
+  "entities": [
+    {
+      "id": "create-civil-date",
+      "name": "Create a date",
+      "description": "Makes a proleptic Gregorian date from year, month and day, or refuses it with the reason.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::of"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "read_as"
+        },
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "read_civil"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/civil.rs",
+        "symbol": "CivilDate::of"
+      },
+      "action": "query",
+      "transport": "associated function CivilDate::of; also CivilYearMonth::of",
+      "authorization": "None: an in-process library call.",
+      "result": "Ok(CivilDate); Err(Diagnostics) otherwise.",
+      "failures": [
+        "Err, invalid (month-out-of-range): the month is not 1 to 12.",
+        "Err, invalid (day-out-of-range): the day doesn't exist in that month, such as 30 February or 29 February 2026.",
+        "Err, unsupported (implementation-limit): the year is so large that its day number leaves the i128 range."
+      ]
+    },
+    {
+      "id": "create-civil-time",
+      "name": "Create a time of day or a date-time",
+      "description": "Makes a CivilTime or a CivilDateTime, remembering whether a second was given.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilTime::of"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilTime::of_hms"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDateTime::of"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDateTime::of_hms_nano"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/civil.rs",
+        "symbol": "CivilDateTime::of"
+      },
+      "action": "query",
+      "transport": "associated functions CivilTime::of, of_hms, of_hms_nano and CivilDateTime::of, of_hms, of_hms_nano",
+      "authorization": "None: an in-process library call.",
+      "result": "Ok with the value; Err(Diagnostics) otherwise.",
+      "failures": [
+        "Err, invalid (field-out-of-range): hour beyond 23, minute beyond 59, second beyond 60 or nanosecond beyond 999,999,999.",
+        "Err, unsupported (leap-second): second 60 needs a leap-second table.",
+        "Err, invalid (month-out-of-range or day-out-of-range) for a date-time's date.",
+        "Err, unsupported (implementation-limit): a date-time whose local seconds leave the i128 range."
+      ]
+    },
+    {
+      "id": "add-months",
+      "name": "Add months or years",
+      "description": "Month arithmetic where the day may be missing from the target month.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_months"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_years"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDateTime::add_months"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "ZonedIntent::add_months"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/civil.rs",
+        "symbol": "CivilDate::add_months"
+      },
+      "action": "query",
+      "transport": "method of CivilDate (also add_years, and add_months on CivilDateTime and ZonedIntent)",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome::Unique with the new value when the day exists in the target month.",
+      "failures": [
+        "Outcome::None (month-end): the day doesn't exist in the target month, such as 31 January + 1 month.",
+        "Panics only if the result leaves the i128 range."
+      ]
+    },
+    {
+      "id": "add-months-constrained",
+      "name": "Add months, clamping to the month's end",
+      "description": "The total form: a missing day becomes the last day of the target month.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_months_constrained"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_years_constrained"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDateTime::add_months_constrained"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/civil.rs",
+        "symbol": "CivilDate::add_months_constrained"
+      },
+      "action": "query",
+      "transport": "method of CivilDate (also add_years_constrained, and CivilDateTime::add_months_constrained)",
+      "authorization": "None: an in-process library call.",
+      "result": "The new value: 31 January + 1 month is 28 February 2026.",
+      "failures": [
+        "Panics only if the result leaves the i128 range."
+      ]
+    },
+    {
+      "id": "add-period",
+      "name": "Add a period",
+      "description": "Years and months, then weeks and days, then wall-clock time, under a month-end policy.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_with"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDateTime::add_with"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/civil.rs",
+        "symbol": "CivilDate::add_with"
+      },
+      "action": "query",
+      "transport": "method of CivilDate and CivilDateTime: add(period) with MonthEnd::Reject, add_with(period, month_end)",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome::Unique with the new value.",
+      "failures": [
+        "Outcome::None (month-end) under MonthEnd::Reject when the day is missing after the months.",
+        "Outcome::Invalid (kind-mismatch) when a CivilDate is given a period with hours, minutes or seconds."
+      ]
+    },
+    {
+      "id": "add-wall-clock",
+      "name": "Add days, weeks or wall-clock time",
+      "description": "Total calendar and wall-clock arithmetic, carrying into days.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_days"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDateTime::add_hours"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "ZonedIntent::add_days"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilYearMonth::add_months"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/civil.rs",
+        "symbol": "CivilDateTime::add_hours"
+      },
+      "action": "query",
+      "transport": "methods add_days, add_weeks (CivilDate), add_days … add_seconds (CivilDateTime, ZonedIntent), add_months and add_years (CivilYearMonth)",
+      "authorization": "None: an in-process library call.",
+      "result": "The new value; on a ZonedIntent the wall time in the same zone, with an asserted offset dropped.",
+      "failures": [
+        "Panics only if the result leaves the i128 range."
+      ]
+    },
+    {
+      "id": "days-until",
+      "name": "Count days between dates",
+      "description": "The days from one date to another, negative if the other is earlier.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::days_until"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/civil.rs",
+        "symbol": "CivilDate::days_until"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call.",
+      "result": "An i64.",
+      "failures": [
+        "Panics only if the count leaves the i64 range."
+      ]
+    },
+    {
+      "id": "fix-offset",
+      "name": "Pin a wall time to an offset",
+      "description": "A wall time, or an instant, at a fixed offset from UTC.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDateTime::at_offset"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::at_offset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/civil.rs",
+        "symbol": "CivilDateTime::at_offset"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime and of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "Ok(FixedOffsetDateTime).",
+      "failures": [
+        "Err, invalid (offset-out-of-range): beyond ±18:00.",
+        "Err, unsupported (implementation-limit): Instant::at_offset for an instant with a fraction finer than a nanosecond, which civil fields can't hold."
+      ]
+    },
+    {
+      "id": "in-zone",
+      "name": "Name a zone for a wall time",
+      "description": "Turns a wall time into an intention to follow a named IANA zone's rules.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDateTime::in_zone"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/civil.rs",
+        "symbol": "CivilDateTime::in_zone"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "A ZonedIntent. The zone id is not checked here: an id the rules don't know is reported when the intent is resolved (unknown-zone).",
+      "failures": []
+    },
+    {
+      "id": "to-instant",
+      "name": "Turn a fixed-offset date-time into an instant",
+      "description": "The instant a wall time at a fixed offset denotes; no rules are needed.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "FixedOffsetDateTime::to_instant"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/civil.rs",
+        "symbol": "FixedOffsetDateTime::to_instant"
+      },
+      "action": "query",
+      "transport": "method of FixedOffsetDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "An Instant.",
+      "failures": []
+    },
+    {
+      "id": "resolve",
+      "name": "Resolve a zoned wall time",
+      "description": "The instant(s) of a wall time in a named zone, under explicit zone rules and a gap and overlap policy.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::resolve_with"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::resolve"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "ZonedIntent::resolve"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "ZonedIntent::resolve_with"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "resolve"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/context.rs",
+        "symbol": "TemporalContext::resolve_with"
+      },
+      "action": "query",
+      "transport": "method of TemporalContext (resolve, resolve_with) and of ZonedIntent (resolve(&ctx), resolve_with(&ctx, policy))",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome::Unique with the instant; with Gap::ShiftForward the shifted instant and an info gap note; with Overlap::Earliest or Latest one of the two.",
+      "failures": [
+        "Outcome::None (gap) for a wall time that never happened, under Gap::Reject or Gap::PreserveUnresolved.",
+        "Outcome::Multiple with both instants, ascending, for a wall time that happened twice: with ambiguous under Overlap::Reject, without it under Overlap::All.",
+        "Outcome::Invalid (offset-mismatch): the asserted offset matches no candidate, including any assertion in a gap.",
+        "Outcome::Unsupported (unknown-zone): the rules have no such zone.",
+        "Outcome::Unsupported (outside-rule-window): the wall time is not at least a day inside the rules' validity window."
+      ]
+    },
+    {
+      "id": "instant-in-zone",
+      "name": "See an instant in a zone",
+      "description": "The wall time of an instant in a named zone, with the offset in force asserted.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::in_zone"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::in_zone"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "to_zone"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/context.rs",
+        "symbol": "TemporalContext::in_zone"
+      },
+      "action": "query",
+      "transport": "method of TemporalContext; Instant::in_zone(id, &ctx)",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome::Unique with a ZonedIntent such as 2027-06-01T03:00:00-04:00[America/New_York].",
+      "failures": [
+        "Outcome::Unsupported (unknown-zone): the rules have no such zone.",
+        "Outcome::Unsupported (outside-rule-window): the instant is outside the rules' validity window.",
+        "Outcome::Unsupported (implementation-limit): a fraction finer than a nanosecond."
+      ]
+    },
+    {
+      "id": "compare-zoned",
+      "name": "Order two zoned wall times",
+      "description": "Resolves both strictly, then compares every pair of candidates.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::compare"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/context.rs",
+        "symbol": "TemporalContext::compare"
+      },
+      "action": "query",
+      "transport": "method of TemporalContext",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome::Unique(Ordering) when every candidate pair agrees.",
+      "failures": [
+        "Outcome::Multiple with the possible orders, ascending, when the order depends on which side of an overlap is meant; the ambiguous notes are kept.",
+        "Outcome::None or Outcome::Unsupported, with the resolution's diagnostics, when either value can't be resolved (gap, unknown-zone, outside-rule-window).",
+        "Outcome::Invalid (offset-mismatch) when an asserted offset contradicts the rules."
+      ]
+    },
+    {
+      "id": "instant-arithmetic",
+      "name": "Add to an instant, or measure between two",
+      "description": "Exact POSIX arithmetic on instants.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::add"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::until"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::add_elapsed"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/instant.rs",
+        "symbol": "Instant::add"
+      },
+      "action": "query",
+      "transport": "methods of Instant: add(PosixSeconds), until(other), add_elapsed(ElapsedSeconds)",
+      "authorization": "None: an in-process library call.",
+      "result": "add: the Instant exactly that many POSIX seconds later; until: the exact PosixSeconds between them.",
+      "failures": [
+        "add_elapsed: Outcome::Unsupported (needs-leap-seconds), always: SI seconds on a POSIX timeline need a leap-second table.",
+        "add and until panic only if the result leaves the i128 range."
+      ]
+    },
+    {
+      "id": "create-instant",
+      "name": "Create an instant",
+      "description": "An instant from Unix seconds, nanoseconds or a clock reading the caller made.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::from_unix_seconds"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::from_unix_seconds_nanos"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::from_unix_nanoseconds"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::from_system_time"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/instant.rs",
+        "symbol": "Instant::from_unix_seconds_nanos"
+      },
+      "action": "query",
+      "transport": "associated functions of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "An Instant; nanoseconds of 10^9 or more carry into seconds.",
+      "failures": []
+    },
+    {
+      "id": "create-amount",
+      "name": "Create an amount",
+      "description": "A calendar Period, or an exact number of POSIX or SI seconds.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "Period::of"
+        },
+        {
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "PosixSeconds"
+        },
+        {
+          "path": "implementations/rust/src/typed/amount.rs",
+          "symbol": "ElapsedSeconds"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/amount.rs",
+        "symbol": "Period::of"
+      },
+      "action": "query",
+      "transport": "const fns Period::of, years … seconds; PosixSeconds::of, of_ratio; ElapsedSeconds::of, of_ratio",
+      "authorization": "None: an in-process library call.",
+      "result": "The amount; a ratio is reduced.",
+      "failures": [
+        "of_ratio: Err, invalid (field-out-of-range) for a zero denominator."
+      ]
+    },
+    {
+      "id": "create-interval",
+      "name": "Create an interval",
+      "description": "A range of dates or instants with included, excluded, unbounded or unknown ends.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval::of"
+        },
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval::half_open"
+        },
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval::closed"
+        },
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval::checked"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/interval.rs",
+        "symbol": "Interval::of"
+      },
+      "action": "query",
+      "transport": "associated functions Interval::of, half_open, closed",
+      "authorization": "None: an in-process library call.",
+      "result": "Ok(Interval<T>).",
+      "failures": [
+        "Err, invalid (reversed-interval): the end is before the start.",
+        "Err, unsupported (unsupported-form): neither end is a point, so nothing fixes the domain."
+      ]
+    },
+    {
+      "id": "interval-contains",
+      "name": "Ask whether a range holds a point or meets another",
+      "description": "Three-valued answers, where an unknown end can leave the question open.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval::contains"
+        },
+        {
+          "path": "implementations/rust/src/typed/interval.rs",
+          "symbol": "Interval::overlaps"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/interval.rs",
+        "symbol": "Interval::contains"
+      },
+      "action": "query",
+      "transport": "methods of Interval<T>: contains(&point), overlaps(&other)",
+      "authorization": "None: an in-process library call.",
+      "result": "Truth::Definitely, Truth::Possibly or Truth::Impossible.",
+      "failures": []
+    },
+    {
+      "id": "parse",
+      "name": "Parse text",
+      "description": "Reads the text form into a typed value.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/value.rs",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "parse_as"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "typed_value"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/value.rs",
+        "symbol": "parse"
+      },
+      "action": "query",
+      "transport": "exported function utv::parse; T::parse(text) and FromStr (\"2026-11-05\".parse::<CivilDate>()) on every value type",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome::Unique with the value (utv::parse: the Value variant the text describes); FromStr gives Ok or OutcomeError.",
+      "failures": [
+        "Every outcome of the JSON layer's parse_text: invalid (syntax, a field's range code, reversed-interval, kind-mismatch) or unsupported (unsupported-form, unsupported-annotation, leap-second, end-of-day, implementation-limit).",
+        "Outcome::Invalid (kind-mismatch): T::parse of text that is another type."
+      ]
+    },
+    {
+      "id": "from-json",
+      "name": "Read UTV JSON",
+      "description": "Reads a UTV JSON value into a typed value.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "from_json"
+        },
+        {
+          "path": "implementations/rust/src/typed/value.rs",
+          "symbol": "Value::from_json"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "read_as"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "no_typed_type"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/typed/mod.rs",
+        "symbol": "from_json"
+      },
+      "action": "query",
+      "transport": "T::from_json(&json) on every value type, and Value::from_json",
+      "authorization": "None: an in-process library call.",
+      "result": "Outcome::Unique with the value, operation convert.",
+      "failures": [
+        "Outcome::Invalid (kind-mismatch): another kind or form than the type holds.",
+        "Outcome::Unsupported (unsupported-operand): a valid UTV value no typed type holds, such as a zoned date, a resolutionPolicy, extra properties, an interval of date-times or a recurrence.",
+        "Outcome::Invalid (malformed-value, then the validator's envelope.* or structural.schema codes): JSON of the wrong shape.",
+        "The JSON layer's own refusals: day-out-of-range, unsupported-calendar, leap-second, implementation-limit and the rest."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/capability.json",
+      "relationship": "The capabilities these operations expose."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/use-case.json",
+      "relationship": "The use cases that call them."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/feature.json",
+      "relationship": "The typed-layer behaviour they carry out."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/operation.json",
+      "relationship": "The JSON-layer operations each one calls underneath."
+    }
+  ]
+}

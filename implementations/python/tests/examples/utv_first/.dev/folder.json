@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "UTV-first examples",
+  "folder": "implementations/python/tests/examples/utv_first",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "UTV-first examples",
+      "summary": "How to do each task of docs/example-tests.md with UTV, one module per UTV class or function, compared with Python's standard library.",
+      "purpose": "Holds the UTV-first example suite: one test_<class>.py per UTV class (test_parse.py for utv.parse, test_interop.py for from_native / to_native, test_validate.py and test_gregorian.py for the JSON layer) and one TestCase per function. Where UTV and datetime, zoneinfo, calendar or json agree, a test computes its expected value with the standard library; where they differ, it is a literal and the docstring says what the standard library does.",
+      "boundaries": [
+        "Tests between # BEGIN <task-id> and # END <task-id> are copied verbatim into docs/side-by-side.md by tools/side_by_side.py, which reads test_*.py here.",
+        "UTV's zone operations use ../fixtures.py (demo_zone_rules); the standard library's side reads this machine's tz database."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/utv_first/__init__.py"
+        },
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "LANGUAGES"
+        },
+        {
+          "path": "implementations/python/tests/examples/fixtures.py",
+          "symbol": "demo_zone_rules"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,572 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Library test verification",
+  "folder": "implementations/csharp/tests/Utv.Tests",
+  "entities": [
+    {
+      "id": "structural-examples",
+      "title": "Structural examples",
+      "summary": "Every value of conformance/examples/valid.json is valid and every value of invalid-structural.json is invalid, with the cause reported.",
+      "subject": [
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "structural-examples"
+        }
+      ],
+      "criteria": [
+        "Every valid example validates as valid",
+        "Every invalid-structural example validates as invalid",
+        "Chosen invalid examples report the expected code at the expected path",
+        "The fixture files are not empty"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Tests/ConformanceTests.cs",
+          "symbol": "ConformanceTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The test project reads the shared material from the repository root, resolved relative to the project at build time (assembly metadata UtvRepositoryRoot)."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "structural-examples"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "shared-conformance-material"
+        }
+      ]
+    },
+    {
+      "id": "envelope-and-strict-json",
+      "title": "Envelope, versions and strict JSON",
+      "summary": "The version identifier, the envelope, duplicate keys at every depth, malformed JSON and nesting limits.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        }
+      ],
+      "criteria": [
+        "Other well-formed versions are unsupported, and that is reported before unknown vocabulary",
+        "Malformed or missing versions are invalid",
+        "Unknown top-level properties and kinds outside the core are invalid",
+        "Duplicate keys are invalid at every depth, with their JSON Pointer",
+        "Malformed JSON and excessive nesting are invalid, not a crash",
+        "integer follows JSON Schema semantics; nested values carry the same version"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Tests/EnvelopeTests.cs",
+          "symbol": "EnvelopeTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The test project reads the shared material from the repository root, resolved relative to the project at build time (assembly metadata UtvRepositoryRoot)."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Internal/.dev/decisions.json",
+          "entityId": "own-duplicate-key-detection"
+        }
+      ]
+    },
+    {
+      "id": "schema-interpreter",
+      "title": "Embedded schema and its interpreter",
+      "summary": "The embedded schema is the repository file, the interpreter knows every keyword it uses, and dispatch on kind matches the schema's oneOf.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/Internal/.dev/decisions.json",
+          "entityId": "own-schema-interpreter"
+        }
+      ],
+      "criteria": [
+        "The embedded schema equals schema/utv-1.0.schema.json",
+        "The interpreter loads the schema and knows every keyword",
+        "Value dispatch is equivalent to the schema's oneOf",
+        "The core kinds are the 26",
+        "Patterns follow ECMAScript anchoring"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Tests/SchemaTests.cs",
+          "symbol": "SchemaTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The test project reads the shared material from the repository root, resolved relative to the project at build time (assembly metadata UtvRepositoryRoot)."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Internal/.dev/decisions.json",
+          "entityId": "own-schema-interpreter"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Internal/.dev/decisions.json",
+          "entityId": "dispatch-on-kind"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/decisions.json",
+          "entityId": "schema-linked-not-copied"
+        },
+        {
+          "relation": "verifies",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema"
+        }
+      ]
+    },
+    {
+      "id": "everyday-fixtures",
+      "title": "Everyday fixtures",
+      "summary": "Every fixture of conformance/operations/everyday.json holds, status, candidates and expected diagnostic codes included.",
+      "subject": [
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        }
+      ],
+      "criteria": [
+        "Each fixture is its own test, named by its id",
+        "One more test reports all failures at once",
+        "Every fixture carries diagnostic codes, and the runner checks them",
+        "Expected values are structurally valid",
+        "JSON comparison ignores key order only"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Tests/EverydayFixtureTests.cs",
+          "symbol": "EverydayFixtureTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The test project reads the shared material from the repository root, resolved relative to the project at build time (assembly metadata UtvRepositoryRoot)."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        },
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules",
+          "description": "The fixtures' rule bundles are read from the paths the fixture file names."
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        }
+      ]
+    },
+    {
+      "id": "text-form-fixtures",
+      "title": "Text-form fixtures",
+      "summary": "Every fixture of conformance/operations/text-form.json holds through TextForm.Parse and TextForm.Format.",
+      "subject": [
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        }
+      ],
+      "criteria": [
+        "Each fixture is its own test",
+        "One more test reports all failures at once"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Tests/TextFormFixtureTests.cs",
+          "symbol": "TextFormFixtureTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The test project reads the shared material from the repository root, resolved relative to the project at build time (assembly metadata UtvRepositoryRoot)."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "text-form"
+        }
+      ]
+    },
+    {
+      "id": "typed-layer",
+      "title": "Typed layer",
+      "summary": "At least one test per row of library-api §2, round trips through text and JSON, constructors, outcomes, policies, the context and interop.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "outcomes-only-for-partial-operations"
+        }
+      ],
+      "criteria": [
+        "ToString round-trips through Parse; FromJson(ToJson(v)) equals v",
+        "Constructors reject invalid values; intervals are valid by construction",
+        "Parse never throws and checks the type; FromJson rejects wrong kinds and values no type holds",
+        "Equality is representation equality; the debugger display shows type and text",
+        "Each type's total and partial operations behave as library-api §2 says",
+        "Policy overloads take only Constrain",
+        "Gaps, overlaps and zoned comparison",
+        "Outcome helpers never pick silently; outcomes bridge to the JSON layer",
+        "There is no default context; rules load from a path"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Tests/TypedApiTests.cs",
+          "symbol": "TypedApiTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The test project reads the shared material from the repository root, resolved relative to the project at build time (assembly metadata UtvRepositoryRoot)."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "valid-by-construction"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "outcomes-only-for-partial-operations"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "helpers-never-pick-silently"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "total-overloads-take-constrain-only"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "zoned-order-needs-a-context"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "representation-equality"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+          "entityId": "text-from-tostring"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "library-test-obligations"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    },
+    {
+      "id": "interop",
+      "title": ".NET interop",
+      "summary": "Conversions to and from DateOnly, TimeOnly, DateTime, DateTimeOffset and TimeSpan: intent, refusal of Kind Local, loss and range.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "native-intent-required"
+        }
+      ],
+      "criteria": [
+        "DateOnly and TimeOnly round-trip, sub-second ticks included",
+        "Kind Unspecified is floating, Kind Utc an instant, Kind Local refused",
+        "DateTimeOffset intent is explicit",
+        "A zoned value to DateTimeOffset reports loss",
+        "Years, sub-tick precision and instants outside .NET are unsupported",
+        "TimeSpan is POSIX seconds"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Tests/InteropTests.cs",
+          "symbol": "InteropTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The test project reads the shared material from the repository root, resolved relative to the project at build time (assembly metadata UtvRepositoryRoot)."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "native-intent-required"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-silent-conversions"
+        }
+      ]
+    },
+    {
+      "id": "result-envelope",
+      "title": "Result envelope",
+      "summary": "Status wire strings, the utv-result/1.0 JSON, cloned candidates and status invariants.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/contracts.json",
+          "entityId": "result-envelope"
+        }
+      ],
+      "criteria": [
+        "Every status has its wire string",
+        "ToJson emits the result envelope's members in order",
+        "Candidates are cloned and serialized",
+        "none with candidates and unique without exactly one are refused",
+        "Diagnostic is a value record"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Tests/ResultTests.cs",
+          "symbol": "ResultTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The test project reads the shared material from the repository root, resolved relative to the project at build time (assembly metadata UtvRepositoryRoot)."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/contracts.json",
+          "entityId": "result-envelope"
+        },
+        {
+          "relation": "verifies",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-result-1-0"
+        }
+      ]
+    },
+    {
+      "id": "gregorian-civil",
+      "title": "Gregorian date validation",
+      "summary": "The leap rule, days in month, impossible but well-formed dates, partial forms, other calendars and kinds.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "separate-validity-checks"
+        }
+      ],
+      "criteria": [
+        "The leap rule and DaysInMonth",
+        "Impossible dates are structurally valid and semantically invalid",
+        "Partial and other forms are judged on the fields they have",
+        "Other calendars and kinds are unsupported",
+        "The structural result comes first",
+        "The civil examples with Gregorian dates are valid"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Tests/GregorianCivilTests.cs",
+          "symbol": "GregorianCivilTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The test project reads the shared material from the repository root, resolved relative to the project at build time (assembly metadata UtvRepositoryRoot)."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "separate-validity-checks"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "separate-validity-checks"
+        }
+      ]
+    },
+    {
+      "id": "no-hidden-environment",
+      "title": "No clock, host zone or culture",
+      "summary": "Output does not change with the current culture, and the library source reads no clock, host zone or culture.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "no-hidden-environment"
+        }
+      ],
+      "criteria": [
+        "Validation output is the same under the invariant culture and under one with another negative sign and grouping",
+        "Everyday operations do not depend on the current culture",
+        "No library source line reads DateTime.Now, UtcNow, Today, TimeZoneInfo.Local, FindSystemTimeZoneById, ConvertTime, CurrentCulture, CurrentUICulture, Stopwatch, Environment.TickCount or TimeProvider"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Tests/CultureIndependenceTests.cs",
+          "symbol": "CultureIndependenceTests.OutputDoesNotDependOnTheCurrentCulture",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The test project reads the shared material from the repository root, resolved relative to the project at build time (assembly metadata UtvRepositoryRoot)."
+        },
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Tests/EverydayApiTests.cs",
+          "symbol": "EverydayApiTests.OperationsDoNotDependOnTheCurrentCulture",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The test project reads the shared material from the repository root, resolved relative to the project at build time (assembly metadata UtvRepositoryRoot)."
+        },
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Tests/EverydayApiTests.cs",
+          "symbol": "EverydayApiTests.LibraryNeverReadsClockZoneOrCulture",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The test project reads the shared material from the repository root, resolved relative to the project at build time (assembly metadata UtvRepositoryRoot)."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "no-hidden-environment"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "no-hidden-environment"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/decisions.json",
+          "entityId": "culture-rules-are-errors"
+        }
+      ],
+      "details": "The culture tests change the current culture on purpose and restore it afterwards; the outcome cannot depend on the host's own culture, because both runs set it explicitly."
+    },
+    {
+      "id": "everyday-api",
+      "title": "JSON-layer operations",
+      "summary": "Builders, parse and format edge cases, add, resolve with policies and offset assertions, zone rules, policy wire strings, ranges and zone agreement.",
+      "subject": [
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "month-end-returns-none"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        }
+      ],
+      "criteria": [
+        "Builders produce structurally valid values and throw only for misuse",
+        "InZone replaces an offset and its assertion",
+        "Result accessors",
+        "Parse edge cases; format inverts parse and refuses what has no text",
+        "add carries the zone and drops the offset assertion; wall-clock arithmetic",
+        "resolve checks an offset assertion; resolve policies",
+        "The zone-rule loader",
+        "Policy wire strings",
+        "Ranges edge cases; dates must agree on their zone"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Tests/EverydayApiTests.cs",
+          "symbol": "EverydayApiTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The test project reads the shared material from the repository root, resolved relative to the project at build time (assembly metadata UtvRepositoryRoot)."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "month-end-returns-none"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "rules-never-extrapolated"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "three-valued-ranges"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/csharp/src/Utv/.dev/feature.json",
+          "entityId": "lossless-text-form"
+        }
+      ]
+    }
+  ]
+}

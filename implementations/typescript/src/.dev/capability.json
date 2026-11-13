@@ -1,0 +1,255 @@
+{
+  "$schema": "../../../../Meta/Agents/Skills/describe-capability/schema.json",
+  "kind": "capability",
+  "title": "TypeScript library capabilities",
+  "folder": "implementations/typescript/src",
+  "description": "What @utv/core can do for the code that imports it. Each capability is reached both through the typed layer and through the JSON layer underneath.",
+  "sources": [
+    {
+      "path": "implementations/typescript/src/index.ts",
+      "symbol": "export"
+    }
+  ],
+  "entities": [
+    {
+      "id": "civil-calendar-arithmetic",
+      "name": "Civil calendar arithmetic",
+      "description": "Dates, months, times and date-times of the proleptic Gregorian calendar, and arithmetic on them.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "fields"
+        }
+      ],
+      "responsibility": "Builds civil values that exist, adds periods to them as wall-clock arithmetic, reports a missing month end as none, and answers calendar facts (weekday, ISO week, day of year, days between).",
+      "operations": [
+        { "path": "implementations/typescript/src/values.ts", "symbol": "CivilDate.of" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "CivilDate.addMonths" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "CivilDate.addDays" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "CivilDate.add" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "CivilDate.daysUntil" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "CivilDate.at" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "CivilYearMonth.of" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "CivilTime.of" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "CivilDateTime.of" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "CivilDateTime.addHours" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "Period.of" },
+        { "path": "implementations/typescript/src/ops.ts", "symbol": "add" },
+        { "path": "implementations/typescript/src/ops.ts", "symbol": "fields" },
+        { "path": "implementations/typescript/src/ops.ts", "symbol": "daysBetween" },
+        { "path": "implementations/typescript/src/builders.ts", "symbol": "date" }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library, and any code that imports @utv/core may call it."
+      ]
+    },
+    {
+      "id": "zone-resolution",
+      "name": "Zone resolution",
+      "description": "Wall times in IANA zones, turned into instants and back under explicit rules.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "TemporalContext"
+        }
+      ],
+      "responsibility": "Loads rule bundles, resolves a zoned wall time to zero, one or several instants under a gap and overlap policy, gives the wall time in a zone or at an offset for an instant, and orders zoned values.",
+      "operations": [
+        { "path": "implementations/typescript/src/zones.ts", "symbol": "ZoneRules.load" },
+        { "path": "implementations/typescript/src/zones.ts", "symbol": "ZoneRules.parse" },
+        { "path": "implementations/typescript/src/context.ts", "symbol": "TemporalContext.with" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "CivilDateTime.inZone" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "ZonedIntent.resolve" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "ZonedIntent.addDays" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "Instant.inZone" },
+        { "path": "implementations/typescript/src/context.ts", "symbol": "TemporalContext.compare" },
+        { "path": "implementations/typescript/src/zones.ts", "symbol": "loadRules" },
+        { "path": "implementations/typescript/src/zones.ts", "symbol": "resolve" },
+        { "path": "implementations/typescript/src/zones.ts", "symbol": "toZone" },
+        { "path": "implementations/typescript/src/zones.ts", "symbol": "toOffset" }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library. The caller chooses the rule file; the library reads only that file."
+      ]
+    },
+    {
+      "id": "exact-instants-and-amounts",
+      "name": "Exact instants and amounts",
+      "description": "POSIX instants, calendar periods, POSIX seconds and SI seconds, with exact arithmetic between them.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant"
+        },
+        {
+          "path": "implementations/typescript/src/rational.ts",
+          "symbol": "rat"
+        }
+      ],
+      "responsibility": "Holds instants as exact rational seconds, adds POSIX seconds, measures the exact distance between instants, keeps SI seconds apart from POSIX seconds, and pins an instant to a fixed offset.",
+      "operations": [
+        { "path": "implementations/typescript/src/values.ts", "symbol": "Instant.fromUnixSeconds" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "Instant.fromUnixMilliseconds" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "Instant.add" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "Instant.until" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "Instant.atOffset" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "FixedOffsetDateTime.toInstant" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "PosixSeconds.of" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "ElapsedSeconds.of" },
+        { "path": "implementations/typescript/src/ops.ts", "symbol": "posixSecondsBetween" },
+        { "path": "implementations/typescript/src/builders.ts", "symbol": "instant" }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library, and any code that imports @utv/core may call it."
+      ]
+    },
+    {
+      "id": "ordering-and-ranges",
+      "name": "Ordering and ranges",
+      "description": "Which value comes first, and whether a range holds a point or meets another range.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Ordered"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Interval"
+        }
+      ],
+      "responsibility": "Orders values of one type where the order is defined, builds intervals with included, excluded, unbounded and unknown ends, and answers membership and overlap as definitely, possibly or impossible.",
+      "operations": [
+        { "path": "implementations/typescript/src/values.ts", "symbol": "Ordered.compare" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "Interval.of" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "Interval.contains" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "Interval.overlaps" },
+        { "path": "implementations/typescript/src/ops.ts", "symbol": "compare" },
+        { "path": "implementations/typescript/src/ops.ts", "symbol": "contains" },
+        { "path": "implementations/typescript/src/ops.ts", "symbol": "overlaps" },
+        { "path": "implementations/typescript/src/builders.ts", "symbol": "interval" }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library, and any code that imports @utv/core may call it."
+      ]
+    },
+    {
+      "id": "text-form",
+      "name": "Text form",
+      "description": "Reading and writing values as ISO 8601 / RFC 9557 text and the UTV text form.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "parseText"
+        },
+        {
+          "path": "implementations/typescript/src/iso.ts",
+          "symbol": "parseIso"
+        }
+      ],
+      "responsibility": "Parses text into the value it describes and formats a value back, losslessly, or says the value has no text form.",
+      "operations": [
+        { "path": "implementations/typescript/src/values.ts", "symbol": "parse" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "CivilDate.parse" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "TemporalValue.toString" },
+        { "path": "implementations/typescript/src/iso.ts", "symbol": "parseIso" },
+        { "path": "implementations/typescript/src/iso.ts", "symbol": "formatIso" },
+        { "path": "implementations/typescript/src/text.ts", "symbol": "parseText" },
+        { "path": "implementations/typescript/src/text.ts", "symbol": "formatText" }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library, and any code that imports @utv/core may call it."
+      ]
+    },
+    {
+      "id": "native-interop",
+      "name": "Native interop",
+      "description": "Conversions between UTV values and JavaScript's Date, epoch milliseconds and plain date objects.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromDate"
+        }
+      ],
+      "responsibility": "Brings native values in only with an intent the caller names, and takes values out reporting what the native type can't hold.",
+      "operations": [
+        { "path": "implementations/typescript/src/values.ts", "symbol": "Instant.fromDate" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "Instant.toDate" },
+        { "path": "implementations/typescript/src/native.ts", "symbol": "fromDate" },
+        { "path": "implementations/typescript/src/native.ts", "symbol": "toDate" },
+        { "path": "implementations/typescript/src/native.ts", "symbol": "fromEpochMilliseconds" },
+        { "path": "implementations/typescript/src/native.ts", "symbol": "toEpochMilliseconds" },
+        { "path": "implementations/typescript/src/native.ts", "symbol": "fromPlainDate" },
+        { "path": "implementations/typescript/src/native.ts", "symbol": "toPlainDate" }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library, and any code that imports @utv/core may call it."
+      ]
+    },
+    {
+      "id": "utv-json-validation",
+      "name": "UTV JSON validation",
+      "description": "Checking UTV JSON structurally and semantically, and reading it into typed values.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/structural.ts",
+          "symbol": "validateStructural"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "fromJson"
+        }
+      ],
+      "responsibility": "Parses JSON strictly, validates utv/1.0 values structurally for all 26 kinds, validates proleptic Gregorian civil values semantically, and reads the everyday kinds into typed values.",
+      "operations": [
+        { "path": "implementations/typescript/src/json.ts", "symbol": "parseStrict" },
+        { "path": "implementations/typescript/src/structural.ts", "symbol": "validateStructural" },
+        { "path": "implementations/typescript/src/structural.ts", "symbol": "validateParsed" },
+        { "path": "implementations/typescript/src/civil.ts", "symbol": "validateSemantic" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "fromJson" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "CivilDate.fromJson" },
+        { "path": "implementations/typescript/src/values.ts", "symbol": "TemporalValue.toJSON" }
+      ],
+      "access": [
+        "Nothing checks: it is an in-process library, and any code that imports @utv/core may call it."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/typescript/src",
+      "path": "implementations/typescript/src/.dev/operation.json",
+      "relationship": "The operations through which each capability is reached."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/typescript/src",
+      "path": "implementations/typescript/src/.dev/feature.json",
+      "relationship": "The features the capabilities offer."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/typescript/src",
+      "path": "implementations/typescript/src/.dev/use-case.json",
+      "relationship": "The use cases that use them."
+    },
+    {
+      "kind": "component",
+      "folder": "implementations/typescript/src",
+      "path": "implementations/typescript/src/.dev/component-diagram.json",
+      "relationship": "The modules that implement them."
+    }
+  ]
+}

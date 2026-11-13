@@ -111,7 +111,7 @@ Each row gives the question in plain words, why the usual answer is wrong, the o
 
 ## Gaps in the specification
 
-These operations are needed to answer common questions, but the specification doesn't name them yet. Adding an operation is a **minor** change (1.1). They are tracked as OI-17 in `spec/OPEN-ISSUES.md`.
+These operations are needed to answer common questions, but the specification doesn't name them yet. Adding an operation is a **minor** change (1.1). They are tracked as OI-17 in [`spec/.dev/backlog.json`](../spec/.dev/backlog.json).
 
 | Proposed operation | Answers | Notes |
 |---|---|---|

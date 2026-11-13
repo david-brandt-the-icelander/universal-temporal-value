@@ -1,0 +1,74 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "Typed layer component diagram",
+  "folder": "implementations/csharp/src/Utv/Typed",
+  "description": "The typed layer sits on the JSON layer: every typed operation builds UTV JSON, calls a JSON-layer function and turns its UtvResult into a value or an Outcome<T>.",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+      "symbol": "Typed.ToOutcome"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+      "symbol": "Typed.Total"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+      "symbol": "TemporalContext.Resolve"
+    }
+  ],
+  "components": [
+    {
+      "id": "typed",
+      "name": "Typed layer",
+      "responsibility": "Typed values valid by construction, Outcome<T>, typed policies and TemporalContext.",
+      "folder": "implementations/csharp/src/Utv/Typed"
+    },
+    {
+      "id": "json-layer",
+      "name": "JSON layer",
+      "responsibility": "Build, Calendar, Iso, TextForm, Ranges, Zones, ZoneRules and Interop: the 0.2 operations on UTV JSON.",
+      "folder": "implementations/csharp/src/Utv",
+      "diagram": "implementations/csharp/src/Utv/.dev/component-diagram.json"
+    },
+    {
+      "id": "everyday",
+      "name": "Everyday internals",
+      "responsibility": "Reading and writing UTV JSON, exact rationals, OpFailure.",
+      "folder": "implementations/csharp/src/Utv/Internal/Everyday"
+    },
+    {
+      "id": "bcl",
+      "name": ".NET base class library",
+      "responsibility": "System.Text.Json (JsonElement), System.Numerics (BigInteger) and the native types the interop methods take and return: DateOnly, TimeOnly, DateTime, DateTimeOffset and TimeSpan.",
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "typed",
+      "to": "json-layer",
+      "kind": "depends-on",
+      "description": "Calendar.Add, Calendar.Compare, Calendar.Fields, Calendar.DaysBetween, Zones.Resolve, Zones.ToZone, Ranges.Contains, TextForm.Format and Interop answer every typed operation."
+    },
+    {
+      "from": "typed",
+      "to": "everyday",
+      "kind": "depends-on",
+      "description": "Values reads JSON into typed values; OpFailure is caught and becomes an outcome."
+    },
+    {
+      "from": "json-layer",
+      "to": "typed",
+      "kind": "depends-on",
+      "description": "ResolutionPolicy has a constructor that takes the typed Gap and Overlap."
+    },
+    {
+      "from": "typed",
+      "to": "bcl",
+      "kind": "depends-on",
+      "description": "FromDateOnly, FromDateTimeOffset, ToDateTimeOffset and the like name the .NET type that carries the intent."
+    }
+  ]
+}

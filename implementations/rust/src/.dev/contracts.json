@@ -1,0 +1,68 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "Library source contracts",
+  "folder": "implementations/rust/src",
+  "entities": [
+    {
+      "id": "result-envelope",
+      "title": "Result envelope (UtvResult)",
+      "summary": "Every JSON-layer operation answers a UtvResult, and UtvResult::to_json writes it as a utv-result/1.0 object with schema, operation, status, diagnostics and candidates.",
+      "contractType": "data-format",
+      "consumers": [
+        "Callers of the JSON layer, and the shared fixture runner tests/everyday.rs, which compares status, candidates, operation and diagnostic codes",
+        "The typed layer, which turns a UtvResult into an Outcome and back (Outcome::to_result)"
+      ],
+      "guarantees": [
+        "schema is utv-result/1.0 (RESULT_SCHEMA).",
+        "operation is the everyday contract name (parseIso, formatIso, fields, add, compare, daysBetween, posixSecondsBetween, contains, overlaps, resolve, toZone, toOffset, parseText, formatText), validate for the validators, convert for native conversions and from_json, construct for a typed constructor's refusal.",
+        "status is one of the Status values written in kebab case: invalid, unsupported, indeterminate, none, unique, multiple, range, symbolic, resource-limit, error, valid.",
+        "unique has exactly one candidate and multiple all of them, ascending; none, invalid, unsupported, symbolic and validation results have none.",
+        "Each diagnostic is {code, severity (error, warning, info), path, message}; codes are the shared ones of docs/library-api.md section 5, plus the validator's envelope.* and structural.schema details after malformed-value."
+      ],
+      "compatibility": "The JSON layer is kept unchanged in behaviour (README, The JSON layer). The fields a full utv-result/1.0 has beyond these (cardinality, manifest, assumptions, loss) are not emitted; see the limitation no-result-manifest.",
+      "definition": "implementations/rust/src/lib.rs",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "UtvResult"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "UtvResult::to_json"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "Status::as_str"
+        },
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "done"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "rejected"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-result-1-0",
+          "description": "In part: the mandatory fields beyond operation, status, candidates and diagnostics are missing."
+        },
+        {
+          "relation": "relates-to",
+          "path": "implementations/rust/.dev/limitations.json",
+          "entityId": "no-result-manifest"
+        },
+        {
+          "relation": "part-of",
+          "path": "implementations/rust/.dev/contracts.json",
+          "entityId": "json-layer-api"
+        }
+      ]
+    }
+  ]
+}

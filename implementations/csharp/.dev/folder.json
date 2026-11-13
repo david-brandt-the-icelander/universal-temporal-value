@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "C# library",
+  "folder": "implementations/csharp",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "C# library",
+      "summary": "Utv for .NET 8: the C# implementation of UTV, library version 0.3.0 (NuGet package id Utv), reading utv/1.0, writing utv-result/1.0 results and the utv-text/1 text form.",
+      "purpose": "Holds one .NET solution, Utv.sln: the library in src/Utv, its tests and examples in tests/, and the C# engine-interface sketch in docs/. README.md is what a person reads first; CHANGELOG.md is the record of the library's versions.",
+      "boundaries": [
+        "Reads the shared material in schema/ and conformance/ in place; never copies it.",
+        "Claims no conformance profile yet, and ships no registries (no tzdb, leap-second table or other calendars).",
+        "Versioned on its own with SemVer, tagged csharp/vX.Y.Z (VERSIONING.md)."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/Utv.sln",
+          "symbol": "Utv"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Utv.csproj",
+          "symbol": "Version"
+        },
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "Utv (C#)"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Implementation versions"
+        }
+      ]
+    }
+  ]
+}

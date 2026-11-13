@@ -1,0 +1,206 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "Rust library contracts",
+  "folder": "implementations/rust",
+  "entities": [
+    {
+      "id": "utv-crate",
+      "title": "The utv crate",
+      "summary": "Cargo package utv 0.3.0 (edition 2021): one library crate with an optional feature chrono, reading and writing utv/1.0.",
+      "contractType": "package",
+      "consumers": [
+        "Application developers' Rust code, through a Cargo dependency on the crate (the repository shows no registry it is published to)",
+        "The crate's own tests, which depend on it with the feature chrono on"
+      ],
+      "guarantees": [
+        "SPEC_VERSION is utv/1.0 and RESULT_SCHEMA utv-result/1.0; any other well-formed utv/M.N is unsupported.",
+        "Default dependencies are serde_json (with preserve_order), serde and regex; chrono 0.4 only with the feature chrono.",
+        "Library code never reads the clock, the host's zone or locale, or environment variables.",
+        "Both layers are re-exported at the crate root (utv::CivilDate, utv::add, utv::Rules, ...)."
+      ],
+      "compatibility": "SemVer 2.0.0, independently of the specification (VERSIONING.md, Implementation versions). In 0.x a minor version may change anything; the CHANGELOG records each change. The crate must not reach 1.0.0 before it passes the structural conformance material and every semantic scenario of the profiles it claims, or answers unsupported for them.",
+      "definition": "implementations/rust/Cargo.toml",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/Cargo.toml",
+          "symbol": "package"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "SPEC_VERSION"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "RESULT_SCHEMA"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Implementation versions"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "spec/.dev/contracts.json",
+          "entityId": "utv-1-0"
+        },
+        {
+          "relation": "depends-on",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema"
+        }
+      ]
+    },
+    {
+      "id": "typed-api",
+      "title": "Typed API (0.3)",
+      "summary": "CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime, ZonedIntent, Instant, Period, PosixSeconds, ElapsedSeconds, Interval<T> and Bound<T>, Value and utv::parse, Outcome<T>, Diagnostics, OutcomeError, Truth, Weekday, MonthEnd, Gap, Overlap, ResolutionPolicy, TemporalContext and ZoneRules, at the crate root.",
+      "contractType": "library-api",
+      "consumers": [
+        "Application developers"
+      ],
+      "guarantees": [
+        "Constructors return Result<T, Diagnostics>; partial operations return Outcome<T>, whose five cases each carry Diagnostics; total operations return plain values.",
+        "Every operation agrees with the JSON layer, which it calls.",
+        "Display is the text form, Debug is Type(text); to_json, from_json, parse and FromStr connect to JSON and text.",
+        "Ord only where the order can't depend on zone rules; ZonedIntent orders through TemporalContext::compare.",
+        "Rust's deviations from the shared naming, recorded in the README: add_months_constrained and add_years_constrained for the total month-end forms, add_with(Period, MonthEnd), of / of_hms / of_hms_nano for times, ZoneRules is the JSON layer's Rules and ZoneRules::parse keeps its Result<Rules, String>."
+      ],
+      "compatibility": "Part of the crate's 0.x API: it may change in a minor version, and the CHANGELOG records each change.",
+      "definition": "implementations/rust/src/lib.rs",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "pub use typed::"
+        },
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "Typed values"
+        },
+        {
+          "path": "implementations/rust/src/typed/outcome.rs",
+          "symbol": "Outcome"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        },
+        {
+          "relation": "part-of",
+          "path": "implementations/rust/.dev/contracts.json",
+          "entityId": "utv-crate"
+        },
+        {
+          "relation": "depends-on",
+          "path": "implementations/rust/.dev/contracts.json",
+          "entityId": "json-layer-api"
+        }
+      ]
+    },
+    {
+      "id": "json-layer-api",
+      "title": "JSON layer (0.1, 0.2)",
+      "summary": "Validation (validate_structural, validate_gregorian_civil, validate_value, check_envelope, parse_strict), builders (utv::build), ISO 8601 (utv::iso), the text form (utv::text), operations (utv::ops) and zone rules (utv::zones) on serde_json values, each answering a UtvResult.",
+      "contractType": "library-api",
+      "consumers": [
+        "Application developers who work with UTV JSON",
+        "The typed layer",
+        "tests/everyday.rs and tests/text_form.rs, which run the shared fixtures through it"
+      ],
+      "guarantees": [
+        "Every function of docs/everyday-api.md is here, in snake_case (parse_iso, format_iso, fields, add, compare, days_between, posix_seconds_between, contains, overlaps, resolve, to_zone, to_offset), with the outcomes of conformance/operations/everyday.json.",
+        "Policies are JSON ({\"monthEnd\": ...}, {\"gap\": ..., \"overlap\": ...}); rules are a Rules value.",
+        "Results follow the result envelope of src/.dev/contracts.json."
+      ],
+      "compatibility": "Kept unchanged in behaviour since 0.2 (README, The JSON layer); part of the crate's 0.x API.",
+      "definition": "implementations/rust/src/lib.rs",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "pub use build::"
+        },
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "The JSON layer (0.1, 0.2)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "everyday-api"
+        },
+        {
+          "relation": "part-of",
+          "path": "implementations/rust/.dev/contracts.json",
+          "entityId": "utv-crate"
+        },
+        {
+          "relation": "depends-on",
+          "path": "implementations/rust/src/.dev/contracts.json",
+          "entityId": "result-envelope"
+        },
+        {
+          "relation": "verified-by",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        }
+      ]
+    },
+    {
+      "id": "text-form",
+      "title": "Text form (utv-text/1)",
+      "summary": "parse_text and format_text at the JSON layer; Display, parse, FromStr and utv::parse on the typed values.",
+      "contractType": "library-api",
+      "consumers": [
+        "Application developers who log, print or read values as text"
+      ],
+      "guarantees": [
+        "parse_text(format_text(v)) == v for every value the text form can express; others are unsupported (no-text-form).",
+        "Bad text is an outcome (syntax, a field's range code, unsupported-form, ...), never a panic.",
+        "PosixSeconds and ElapsedSeconds have display strings (3600.75 s (POSIX), 86400 s (SI)), which don't parse."
+      ],
+      "compatibility": "Part of the crate's 0.x API.",
+      "definition": "implementations/rust/src/text.rs",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "parse_text"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "format_text"
+        },
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "typed_value"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "text-form"
+        },
+        {
+          "relation": "part-of",
+          "path": "implementations/rust/.dev/contracts.json",
+          "entityId": "utv-crate"
+        },
+        {
+          "relation": "verified-by",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        }
+      ]
+    }
+  ]
+}

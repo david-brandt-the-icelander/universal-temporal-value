@@ -1,0 +1,41 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "C# library design documents",
+  "folder": "implementations/csharp/docs",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "C# library design documents",
+      "summary": "engine-interface.md: the C# interface sketch of the planned engine (ITemporalEngine, UtvResult<T>, EvaluationContext and the value records), with a usage example.",
+      "purpose": "Keeps the code sketch of the C# shape of docs/operations.md. The plan's decisions, milestones and wanted work are recorded in implementations/csharp/.dev (decisions.json, roadmap.json, backlog.json), which say what library 0.3 realizes of it.",
+      "boundaries": [
+        "The sketch is a plan, not the library's API; the README describes the API that exists.",
+        "docs/operations.md and docs/aesthetics-review.md link to engine-interface.md by its path, so the file stays where it is."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "engine-interface.md"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "documents",
+          "path": "implementations/csharp/.dev/decisions.json",
+          "entityId": "engine-1-values-are-data"
+        },
+        {
+          "relation": "documents",
+          "path": "implementations/csharp/.dev/roadmap.json",
+          "entityId": "m2-typed-model"
+        }
+      ]
+    }
+  ]
+}

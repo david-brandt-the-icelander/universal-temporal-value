@@ -1,0 +1,51 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Example test verification",
+  "folder": "implementations/csharp/tests/Utv.Examples.Tests",
+  "entities": [
+    {
+      "id": "demo-zone-rules-fixture",
+      "title": "The demo zone-rules fixture",
+      "summary": "Fixtures.DemoZoneRules loads conformance/rules/demo-zones.json with its three zones; every UTV zone example uses it.",
+      "subject": [
+        {
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        }
+      ],
+      "criteria": [
+        "Fixtures.DemoZoneRules loads America/New_York, Atlantic/Reykjavik and Europe/Paris"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/FixturesTests.cs",
+          "symbol": "FixturesTests.Test_DemoZoneRules_ContainsTheThreeDemoZones_WhenLoaded",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp. The fixture under test, Fixtures.DemoZoneRules in Fixtures.cs, is the check source for every UTV zone example."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        },
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog",
+          "description": "Shared fixture row of the catalog."
+        }
+      ],
+      "sources": [
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/Fixtures.cs",
+          "symbol": "Fixtures.DemoZoneRules"
+        }
+      ]
+    }
+  ]
+}

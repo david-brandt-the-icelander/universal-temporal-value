@@ -1,0 +1,194 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Native-first example verification",
+  "folder": "implementations/typescript/test/examples/native-first",
+  "entities": [
+    {
+      "id": "date",
+      "title": "Date",
+      "summary": "What Date does with the catalog's tasks, compared with UTV.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "Date.UTC rolls 30 February over to 2 March and month index 12 into the next year, agrees with UTV on 29 February, holds 13 September 275760 as its last time value and NaN after it, and reads negative years.",
+        "Date.parse reads an ISO date as midnight UTC, rolls 30 February over, cannot tell Z from +00:00, and keeps only the instant of an offset.",
+        "The constructor keeps three fractional digits, and reads local fields in the host's zone (the one test that depends on the host, on purpose).",
+        "Date.now survives the trip through UTV (reads the clock on purpose; the result does not depend on the time read).",
+        "getUTCDay numbers Sunday 0; setUTCMonth rolls 31 January + 1 month over to 3 March; setUTCHours carries; getTime differences are day counts or milliseconds; a round trip through UTV keeps the time value; < orders Dates; toISOString writes a time of day with a date."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/date.test.ts",
+          "symbol": "Date > UTC",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/date.test.ts",
+          "symbol": "Date > parse",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/date.test.ts",
+          "symbol": "Date > constructor",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/date.test.ts",
+          "symbol": "Date > now",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/date.test.ts",
+          "symbol": "Date > getUTCDay",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/date.test.ts",
+          "symbol": "Date > setUTCDate",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/date.test.ts",
+          "symbol": "Date > setUTCMonth",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/date.test.ts",
+          "symbol": "Date > setUTCHours",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/date.test.ts",
+          "symbol": "Date > getTime",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/date.test.ts",
+          "symbol": "Date > valueOf",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/date.test.ts",
+          "symbol": "Date > toISOString",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/native-first/date.test.ts",
+          "symbol": "Date"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "intl-date-time-format",
+      "title": "Intl.DateTimeFormat",
+      "summary": "What Intl.DateTimeFormat does with zones and calendars, compared with Instant.inZone, ZonedIntent and validateSemantic.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "formatToParts shows 03:00 in New York at 07:00 UTC on 1 June 2027, as Instant.inZone does.",
+        "It shows 03:00 for the minute after 01:59 on the spring-forward night, and 01:30 for the later instant of the fall-back wall time, where UTV's resolve reports gap and ambiguous.",
+        "Noon plus 86,400,000 ms before the spring-forward night shows 13:00, where ZonedIntent.addDays keeps noon.",
+        "format writes 14 Heshvan 5787 for 25 October 2026 in the Hebrew calendar, where validateSemantic answers unsupported."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/intl-date-time-format.test.ts",
+          "symbol": "Intl.DateTimeFormat > formatToParts",
+          "command": "npm test"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/intl-date-time-format.test.ts",
+          "symbol": "Intl.DateTimeFormat > format",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/native-first/intl-date-time-format.test.ts",
+          "symbol": "Intl.DateTimeFormat"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "json",
+      "title": "JSON",
+      "summary": "What JSON.parse does with a repeated key, compared with validateStructural.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "JSON.parse keeps the last value of a repeated key, where validateStructural answers invalid (duplicate-key)."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/typescript/test/examples/native-first/json.test.ts",
+          "symbol": "JSON > parse > keeps the last value when a key appears twice",
+          "command": "npm test"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/native-first/json.test.ts",
+          "symbol": "JSON"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/typescript/src/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        }
+      ]
+    }
+  ]
+}

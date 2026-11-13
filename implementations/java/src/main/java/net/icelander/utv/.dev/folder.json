@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "net.icelander.utv",
+  "folder": "implementations/java/src/main/java/net/icelander/utv",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "net.icelander.utv",
+      "summary": "The whole Java library in one package: the typed layer, the 0.2 JSON layer, the text form, structural validation and java.time interop.",
+      "purpose": "Gives Java code UTV's everyday values and operations. The typed classes (CivilDate, ZonedIntent, Instant, Interval and the rest) are what callers use; each of their operations builds UTV JSON and calls the JSON-layer functions (Operations, Zones, Intervals, Iso, TextForm) through the bridge in Typed.java, so both layers give the answers the shared fixtures expect.",
+      "boundaries": [
+        "Pure: no clock, host time zone, locale, network or file access, except ZoneRules.load, which reads the file the caller names, and the JDK's tz database in toZonedDateTime.",
+        "Package-private classes (Civil, Gregorian, Rational, Instants, Json, Fail, Typed, KindTable, KindRules) are internals and not part of the contract.",
+        "JSON is Jackson's JsonNode; nothing else from outside the JDK is used."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZoneRules.java",
+          "symbol": "ZoneRules.load"
+        }
+      ]
+    }
+  ]
+}

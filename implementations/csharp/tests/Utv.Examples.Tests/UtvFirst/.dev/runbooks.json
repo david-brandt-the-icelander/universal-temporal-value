@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/runbooks.schema.json",
+  "kind": "runbooks",
+  "title": "UTV-first example runbooks",
+  "folder": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst",
+  "entities": [
+    {
+      "id": "regenerate-side-by-side",
+      "title": "Regenerate the side-by-side page",
+      "summary": "After changing a test between // BEGIN <task-id> and // END <task-id> markers, regenerate docs/side-by-side.md.",
+      "purpose": "operate",
+      "when": "A UTV-first test inside task markers was added, changed or removed.",
+      "steps": [
+        "From the repository root: python3 tools/side_by_side.py",
+        "Check: python3 tools/side_by_side.py --check",
+        "Commit docs/side-by-side.md with the test change"
+      ],
+      "verify": "python3 tools/side_by_side.py --check passes; CI fails when the page is out of date.",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "symbol": "2. Examples are unit tests"
+        },
+        {
+          "path": ".github/workflows/validate.yml",
+          "symbol": "side_by_side.py"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "side-by-side-task-markers"
+        }
+      ]
+    }
+  ]
+}

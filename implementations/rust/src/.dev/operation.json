@@ -1,0 +1,566 @@
+{
+  "$schema": "../../../../Meta/Agents/Skills/describe-operation/schema.json",
+  "kind": "operation",
+  "title": "JSON layer operations",
+  "folder": "implementations/rust/src",
+  "description": "The public functions of the JSON layer, re-exported at the crate root. Each takes UTV JSON as serde_json::Value and answers a UtvResult named after the contract operation (validate for the validators); bad input is answered with a status, never by an error type or a panic. All are queries. The builders in utv::build only assemble values and are left out.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/lib.rs",
+      "symbol": "pub use"
+    }
+  ],
+  "entities": [
+    {
+      "id": "validate-structural",
+      "name": "Validate UTV JSON structurally",
+      "description": "Parses JSON text strictly and checks the envelope and the structural schema for the value's kind.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_structural"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "check_envelope"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_value"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "parse_for_validation"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/lib.rs",
+        "symbol": "validate_structural"
+      },
+      "action": "query",
+      "transport": "exported function utv::validate_structural(text); validate_value(&json) for parsed JSON",
+      "authorization": "None: an in-process library call.",
+      "result": "Status valid, with no candidates.",
+      "failures": [
+        "invalid (duplicate-key): an object repeats a key.",
+        "invalid (syntax): the text is not JSON.",
+        "invalid (malformed-value with envelope.not-object, envelope.schema, envelope.unknown-property, envelope.kind or envelope.value): the envelope is wrong, including a malformed version label such as utv/4.",
+        "unsupported (envelope.unsupported-version): a well-formed utv/M.N other than utv/1.0.",
+        "invalid (malformed-value with one structural.schema diagnostic per schema violation).",
+        "unsupported (structural.no-schema): a core kind the schema has no definition for."
+      ]
+    },
+    {
+      "id": "validate-gregorian-civil",
+      "name": "Check a civil value against the Gregorian calendar",
+      "description": "Structural validation, then whether the month and day exist.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "validate_gregorian_civil"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "check_civil"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/lib.rs",
+        "symbol": "validate_gregorian_civil"
+      },
+      "action": "query",
+      "transport": "exported function utv::validate_gregorian_civil(text)",
+      "authorization": "None: an in-process library call.",
+      "result": "Status valid.",
+      "failures": [
+        "Every failure of validate_structural, first.",
+        "unsupported (unsupported-operand): not a civil value.",
+        "unsupported (unsupported-calendar): not the proleptic Gregorian calendar.",
+        "unsupported (implementation-limit): a year beyond i128.",
+        "invalid (month-out-of-range).",
+        "invalid (day-out-of-range): the day doesn't exist in that month."
+      ]
+    },
+    {
+      "id": "parse-iso",
+      "name": "Parse ISO 8601 text",
+      "description": "ISO 8601 extended format and RFC 3339 / RFC 9557 text to a UTV value: date, year-month, time, unzoned or fixed-offset or zoned date-time, or an instant for Z and -00:00.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "parse_iso"
+        },
+        {
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "annotation"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/iso.rs",
+        "symbol": "parse_iso"
+      },
+      "action": "query",
+      "transport": "exported function utv::parse_iso(text)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the value, operation parseIso.",
+      "failures": [
+        "invalid (syntax): outside the grammar (lower-case t or z, a space for T, more than nine fraction digits, year -0, a malformed annotation).",
+        "invalid (month-out-of-range, day-out-of-range, field-out-of-range, offset-out-of-range).",
+        "unsupported (leap-second): second 60.",
+        "unsupported (end-of-day): 24:00.",
+        "unsupported (unsupported-form): year only, week and ordinal dates, basic format, comma fractions.",
+        "unsupported (unsupported-annotation): Z or -00:00 followed by [zone], a critical [!...] annotation, or anything but one [Area/Location].",
+        "unsupported (implementation-limit): a year beyond i128."
+      ]
+    },
+    {
+      "id": "format-iso",
+      "name": "Format as ISO 8601 text",
+      "description": "The inverse of parse_iso; instants print as UTC with seconds.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "format_iso"
+        },
+        {
+          "path": "implementations/rust/src/iso.rs",
+          "symbol": "format"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/iso.rs",
+        "symbol": "format_iso"
+      },
+      "action": "query",
+      "transport": "exported function utv::format_iso(&value)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with a JSON string, operation formatIso.",
+      "failures": [
+        "unsupported (no-text-form): an instant whose fraction has no finite decimal, or an offset with seconds.",
+        "unsupported (unsupported-operand): another kind, or a zone type other than iana, fixed-offset or floating.",
+        "The readers' refusals: invalid (day-out-of-range, ...), unsupported (unsupported-calendar, leap-second, ...).",
+        "invalid (malformed-value, then envelope.* or structural.schema): the value is not well-formed UTV JSON."
+      ]
+    },
+    {
+      "id": "parse-text",
+      "name": "Parse the text form",
+      "description": "Points as parse_iso, ISO 8601 periods, bracket intervals and EDTF slash intervals.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "parse_text"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "period"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "bracket_interval"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "edtf_interval"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "interval"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/text.rs",
+        "symbol": "parse_text"
+      },
+      "action": "query",
+      "transport": "exported function utv::parse_text(text)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the value, operation parseText.",
+      "failures": [
+        "Every refusal of parse_iso for a point.",
+        "invalid (syntax): a malformed period or interval, or .. or ? on a closed bracket.",
+        "unsupported (unsupported-form): decimal period components, EDTF qualifiers (1347~, 134X), an interval without a point.",
+        "invalid (kind-mismatch): endpoints of different kinds, forms or zone types.",
+        "invalid (reversed-interval): the end comes before the start.",
+        "unsupported (implementation-limit): a period component beyond i128."
+      ]
+    },
+    {
+      "id": "format-text",
+      "name": "Format as the text form",
+      "description": "The inverse of parse_text, defined only where it is lossless.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "format_text"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "format"
+        },
+        {
+          "path": "implementations/rust/src/text.rs",
+          "symbol": "only_keys"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/text.rs",
+        "symbol": "format_text"
+      },
+      "action": "query",
+      "transport": "exported function utv::format_text(&value)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with a JSON string, operation formatText.",
+      "failures": [
+        "unsupported (no-text-form): exact second counts, a period with mixed signs, a start-amount interval, an interval without a point or whose domain the text can't tell, another kind, or extra properties such as provenance or resolutionPolicy.",
+        "Every refusal of format_iso for a point.",
+        "invalid (malformed-value, then envelope.* or structural.schema): the value is not well-formed UTV JSON."
+      ]
+    },
+    {
+      "id": "fields",
+      "name": "Derive calendar fields",
+      "description": "Day of week (Monday = 1), day of year, ISO week and week-year, days in month and leap year of a date or date-time.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "fields"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/ops.rs",
+        "symbol": "fields"
+      },
+      "action": "query",
+      "transport": "exported function utv::fields(&value)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with a JSON object of the fields, operation fields.",
+      "failures": [
+        "unsupported (unsupported-operand): a time, a year-month or another kind.",
+        "unsupported (unsupported-calendar).",
+        "invalid (day-out-of-range and the other field codes): a date that doesn't exist.",
+        "invalid (malformed-value, then envelope.* or structural.schema): the value is not well-formed UTV JSON."
+      ]
+    },
+    {
+      "id": "add",
+      "name": "Add an amount",
+      "description": "Calendar amounts to civil values (years and months, then weeks and days, then wall-clock time); POSIX seconds to instants, exactly.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "replace_fields"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/ops.rs",
+        "symbol": "add"
+      },
+      "action": "query",
+      "transport": "exported function utv::add(&value, &amount, policy: Option<&Value>), policy {\"monthEnd\": \"reject\" | \"constrain\"}",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the new value, operation add; zone and zone intent kept; an offsetAssertion dropped with the info code offset-assertion-dropped.",
+      "failures": [
+        "none (month-end): the day doesn't exist in the target month and the policy is reject (the default).",
+        "invalid (kind-mismatch): time components on a date; weeks, days or time on a year-month; a calendar amount on an instant; something that is not an amount.",
+        "unsupported (unsupported-operand): a time of day; a non-calendar amount on a civil value; an unknown amount basis or component.",
+        "unsupported (needs-leap-seconds): SI (elapsed) seconds on a POSIX instant.",
+        "unsupported (unsupported-policy): a monthEnd value other than reject or constrain.",
+        "unsupported (unsupported-form): a decimal component.",
+        "unsupported (implementation-limit): beyond i128."
+      ]
+    },
+    {
+      "id": "compare",
+      "name": "Compare two values",
+      "description": "Orders unzoned civil values of one form by their fields, instants numerically and fixed-offset date-times by the instants they denote.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "compare"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/ops.rs",
+        "symbol": "compare"
+      },
+      "action": "query",
+      "transport": "exported function utv::compare(&a, &b)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with \"before\", \"equal\" or \"after\", operation compare.",
+      "failures": [
+        "unsupported (needs-zone-rules): either value has a named zone; resolve first.",
+        "unsupported (unsupported-operand): different kinds, forms or zone kinds.",
+        "invalid: an operand that is not a valid value, such as 30 February."
+      ]
+    },
+    {
+      "id": "days-between",
+      "name": "Count days between dates",
+      "description": "b − a in days, for two dates that are unzoned or in the same zone.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "days_between"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "same_zone"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/ops.rs",
+        "symbol": "days_between"
+      },
+      "action": "query",
+      "transport": "exported function utv::days_between(&a, &b)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with a JSON integer, operation daysBetween.",
+      "failures": [
+        "unsupported (different-zones): the dates are in different zones, or zoned and unzoned.",
+        "unsupported (unsupported-operand): not a date.",
+        "unsupported (implementation-limit): beyond i64."
+      ]
+    },
+    {
+      "id": "posix-seconds-between",
+      "name": "Measure POSIX seconds between instants",
+      "description": "b − a as an exact, reduced posixSeconds amount.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "posix_seconds_between"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/ops.rs",
+        "symbol": "posix_seconds_between"
+      },
+      "action": "query",
+      "transport": "exported function utv::posix_seconds_between(&a, &b)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the amount, operation posixSecondsBetween.",
+      "failures": [
+        "unsupported (unsupported-operand): not a POSIX instant.",
+        "unsupported (implementation-limit): beyond i128."
+      ]
+    },
+    {
+      "id": "contains",
+      "name": "Ask whether an interval contains a point",
+      "description": "Three-valued containment for date intervals with dates and instant intervals with instants.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "contains"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "before"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "all"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/ops.rs",
+        "symbol": "contains"
+      },
+      "action": "query",
+      "transport": "exported function utv::contains(&interval, &point)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with \"definitely\", \"possibly\" or \"impossible\", operation contains.",
+      "failures": [
+        "unsupported (unsupported-operand): a point of the wrong domain, another domain, or a construction other than start-end.",
+        "unsupported (different-zones): the dates don't share a zone."
+      ]
+    },
+    {
+      "id": "overlaps",
+      "name": "Ask whether two intervals overlap",
+      "description": "Three-valued overlap; date intervals are normalized to half-open first, and a provably empty interval overlaps nothing.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "overlaps"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "Interval::half_open"
+        },
+        {
+          "path": "implementations/rust/src/ops.rs",
+          "symbol": "Interval::provably_empty"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/ops.rs",
+        "symbol": "overlaps"
+      },
+      "action": "query",
+      "transport": "exported function utv::overlaps(&a, &b)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with \"definitely\", \"possibly\" or \"impossible\", operation overlaps.",
+      "failures": [
+        "unsupported (unsupported-operand): intervals of different domains, or points of the wrong kind.",
+        "unsupported (different-zones): the dates don't share a zone."
+      ]
+    },
+    {
+      "id": "resolve",
+      "name": "Resolve a civil date-time to instants",
+      "description": "A wall time to its instant(s) under explicit zone rules and a gap and overlap policy (the argument, else the value's resolutionPolicy, else reject/reject).",
+      "sources": [
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "offset_before_gap"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/zones.rs",
+        "symbol": "resolve"
+      },
+      "action": "query",
+      "transport": "exported function utv::resolve(&value, &rules, policy: Option<&Value>)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the instant (with an info gap note under shift-forward-by-gap), or multiple with both instants of an overlap; operation resolve.",
+      "failures": [
+        "symbolic (no-zone, info): an unzoned date-time; there is nothing to resolve against yet.",
+        "none (gap): the wall time is skipped, under reject or preserve-unresolved.",
+        "multiple with the warning ambiguous: an overlap under reject.",
+        "invalid (offset-mismatch): an asserted offset matches no candidate (including in a gap), or contradicts a fixed offset.",
+        "unsupported (unknown-zone), unsupported (outside-rule-window): the zone or the time is not covered; nothing is extrapolated.",
+        "unsupported (unsupported-policy): a gap or overlap value not listed in the contract.",
+        "unsupported (unsupported-operand): another form, or a zone type other than iana, fixed-offset or floating.",
+        "unsupported (leap-second): second 60.",
+        "error (gap): no forward transition explains a gap (offset_before_gap)."
+      ]
+    },
+    {
+      "id": "to-zone",
+      "name": "See an instant in a named zone",
+      "description": "The civil date-time of an instant in a zone, with offsetAssertion set to the offset in force.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "to_zone"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "civil_at"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/zones.rs",
+        "symbol": "to_zone"
+      },
+      "action": "query",
+      "transport": "exported function utv::to_zone(&instant, zone_id, &rules)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the zoned date-time, operation toZone.",
+      "failures": [
+        "unsupported (unknown-zone).",
+        "unsupported (outside-rule-window): the instant is outside validFrom ≤ t < validUntil.",
+        "unsupported (unsupported-operand): not a POSIX instant.",
+        "unsupported (implementation-limit): a fraction finer than a nanosecond."
+      ]
+    },
+    {
+      "id": "to-offset",
+      "name": "See an instant at a fixed offset",
+      "description": "The civil date-time of an instant at a fixed offset; no rules needed.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "to_offset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/zones.rs",
+        "symbol": "to_offset"
+      },
+      "action": "query",
+      "transport": "exported function utv::to_offset(&instant, offset_seconds)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the fixed-offset date-time, operation toOffset.",
+      "failures": [
+        "invalid (offset-out-of-range): beyond ±18:00.",
+        "unsupported (implementation-limit): a fraction finer than a nanosecond."
+      ]
+    },
+    {
+      "id": "load-rules",
+      "name": "Load a zone rule bundle",
+      "description": "Reads a rule bundle in the format of conformance/rules/demo-zones.json from a file the caller names, from text, or from parsed JSON.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "Rules::load"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "Rules::parse"
+        },
+        {
+          "path": "implementations/rust/src/zones.rs",
+          "symbol": "Rules::from_json"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/zones.rs",
+        "symbol": "Rules::load"
+      },
+      "action": "query",
+      "transport": "associated functions Rules::load(path) (also ZoneRules::load), Rules::parse(text), Rules::from_json(&json)",
+      "authorization": "None: an in-process library call.",
+      "result": "Ok(Rules).",
+      "failures": [
+        "load: Err(Diagnostics) with malformed-value, operation convert, when the file can't be read or isn't a bundle.",
+        "parse and from_json: Err(String) naming the problem: not JSON or a repeated key, zones not an object, transitions not strictly ascending, an offset that isn't whole seconds within ±26 hours, validFrom or validUntil missing."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/capability.json",
+      "relationship": "The capabilities these operations expose."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/feature.json",
+      "relationship": "The behaviour they carry out."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/rust/src",
+      "path": "implementations/rust/src/.dev/use-case.json",
+      "relationship": "The use cases that call them."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/rust/src/typed",
+      "path": "implementations/rust/src/typed/.dev/operation.json",
+      "relationship": "The typed operations that call these underneath."
+    }
+  ]
+}

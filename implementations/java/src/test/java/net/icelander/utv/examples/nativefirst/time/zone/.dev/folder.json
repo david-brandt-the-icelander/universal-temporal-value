@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../../../../../../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Native-first examples: java.time.zone",
+  "folder": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/zone",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Native-first examples: java.time.zone",
+      "summary": "The native-first examples for java.time.zone: java.time.zone.ZoneRules, compared with ZonedIntent.resolve.",
+      "purpose": "Mirrors the java.time.zone package: one test class per java.time class, compared with UTV.",
+      "boundaries": [
+        "Tests mirror production (AGENTS.md 1.9): each test class is named after the class it exercises, and verification.json names it."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/nativefirst/time/zone/ZoneRulesTest.java",
+          "symbol": "ZoneRulesTest"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,283 @@
+{
+  "$schema": "../../../../../../../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "net.icelander.utv component diagram",
+  "folder": "implementations/java/src/main/java/net/icelander/utv",
+  "description": "One package, grouped by responsibility. The typed values sit on top; every typed operation goes through the Typed bridge to the JSON-layer functions, which decode values with the internal Civil, Instants and Rational helpers. Structural validation is the gate every operation passes first.",
+  "sources": [
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+      "symbol": "Typed"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Civil.java",
+      "symbol": "Civil.structural"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+      "symbol": "TemporalContext"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+      "symbol": "Zones.resolve"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+      "symbol": "Utv.validateStructural"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+      "symbol": "JavaTime"
+    }
+  ],
+  "components": [
+    {
+      "id": "package",
+      "name": "net.icelander.utv",
+      "responsibility": "The library.",
+      "folder": "implementations/java/src/main/java/net/icelander/utv"
+    },
+    {
+      "id": "values",
+      "name": "Typed values",
+      "responsibility": "CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime, ZonedIntent, Instant, Period, PosixSeconds, ElapsedSeconds and Interval with Bound, under the sealed TemporalValue: valid by construction, immutable, text form and JSON at the edges.",
+      "folder": "implementations/java/src/main/java/net/icelander/utv"
+    },
+    {
+      "id": "outcomes",
+      "name": "Outcomes and policies",
+      "responsibility": "Outcome<T> and its five cases, OutcomeException, Diagnostic and Status; the MonthEnd, Gap, Overlap and ResolutionPolicy policies; Truth, Ordering and Weekday.",
+      "folder": "implementations/java/src/main/java/net/icelander/utv"
+    },
+    {
+      "id": "context",
+      "name": "Zone rules and context",
+      "responsibility": "ZoneRules (loaded by the caller), RuleBundle (the parsed bundle and its validity window) and TemporalContext, which holds the rules for resolve, inZone and compare.",
+      "folder": "implementations/java/src/main/java/net/icelander/utv"
+    },
+    {
+      "id": "bridge",
+      "name": "Typed bridge (Typed.java)",
+      "responsibility": "Turns JSON-layer results into Outcomes or plain values, decodes JSON into typed values and refuses JSON a typed value cannot hold, and formats the text form.",
+      "folder": "implementations/java/src/main/java/net/icelander/utv"
+    },
+    {
+      "id": "operations",
+      "name": "JSON-layer operations",
+      "responsibility": "Values (builders), Operations (fields, add, compare, daysBetween, posixSecondsBetween), Intervals (contains, overlaps), Zones (resolve, toZone, toOffset) and the UtvResult envelope.",
+      "folder": "implementations/java/src/main/java/net/icelander/utv"
+    },
+    {
+      "id": "text",
+      "name": "ISO and text form",
+      "responsibility": "Iso (parseIso, formatIso) and TextForm (parseText, formatText): points, periods and bracket intervals, with the EDTF slash forms on input.",
+      "folder": "implementations/java/src/main/java/net/icelander/utv"
+    },
+    {
+      "id": "validation",
+      "name": "Structural and Gregorian validation",
+      "responsibility": "Utv (JSON parsing with duplicate-key detection, envelope, version and per-kind checks), KindTable, KindRules and GregorianCivil.",
+      "folder": "implementations/java/src/main/java/net/icelander/utv"
+    },
+    {
+      "id": "interop",
+      "name": "java.time interop",
+      "responsibility": "JavaTime adapters on JSON values, returning NativeResult; the typed from/to methods call them.",
+      "folder": "implementations/java/src/main/java/net/icelander/utv"
+    },
+    {
+      "id": "internals",
+      "name": "Exact arithmetic and decoding",
+      "responsibility": "Civil (decoded civil values), Gregorian (day arithmetic on BigInteger years), Rational, Instants, Json (canonical shapes) and Fail (internal control flow that never escapes a public operation).",
+      "folder": "implementations/java/src/main/java/net/icelander/utv"
+    },
+    {
+      "id": "jackson",
+      "name": "Jackson databind",
+      "responsibility": "JsonNode values and JSON parsing.",
+      "external": true
+    },
+    {
+      "id": "java-time",
+      "name": "java.time (JDK)",
+      "responsibility": "The native types, and the JDK's tz database.",
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "package",
+      "to": "values",
+      "kind": "contains",
+      "description": "The public typed API."
+    },
+    {
+      "from": "package",
+      "to": "outcomes",
+      "kind": "contains",
+      "description": "Answers and policies."
+    },
+    {
+      "from": "package",
+      "to": "context",
+      "kind": "contains",
+      "description": "Explicit rules."
+    },
+    {
+      "from": "package",
+      "to": "bridge",
+      "kind": "contains",
+      "description": "Package-private."
+    },
+    {
+      "from": "package",
+      "to": "operations",
+      "kind": "contains",
+      "description": "The public JSON layer."
+    },
+    {
+      "from": "package",
+      "to": "text",
+      "kind": "contains",
+      "description": "Text in and out."
+    },
+    {
+      "from": "package",
+      "to": "validation",
+      "kind": "contains",
+      "description": "The 0.1 validation API."
+    },
+    {
+      "from": "package",
+      "to": "interop",
+      "kind": "contains",
+      "description": "Native adapters."
+    },
+    {
+      "from": "package",
+      "to": "internals",
+      "kind": "contains",
+      "description": "Package-private."
+    },
+    {
+      "from": "values",
+      "to": "bridge",
+      "kind": "depends-on",
+      "description": "Every operation, parse, fromJson and toString goes through Typed."
+    },
+    {
+      "from": "values",
+      "to": "outcomes",
+      "kind": "depends-on",
+      "description": "Partial operations return Outcome; arithmetic takes MonthEnd, Gap, Overlap or ResolutionPolicy."
+    },
+    {
+      "from": "values",
+      "to": "context",
+      "kind": "depends-on",
+      "description": "ZonedIntent.resolve and Instant.inZone take a TemporalContext."
+    },
+    {
+      "from": "values",
+      "to": "interop",
+      "kind": "depends-on",
+      "description": "from and to methods call JavaTime."
+    },
+    {
+      "from": "values",
+      "to": "java-time",
+      "kind": "depends-on",
+      "description": "from(LocalDate), toZonedDateTime() and the like."
+    },
+    {
+      "from": "bridge",
+      "to": "operations",
+      "kind": "depends-on",
+      "description": "Reads UtvResults."
+    },
+    {
+      "from": "bridge",
+      "to": "text",
+      "kind": "depends-on",
+      "description": "parse and toString use TextForm."
+    },
+    {
+      "from": "bridge",
+      "to": "internals",
+      "kind": "depends-on",
+      "description": "Civil.structural and Civil.decode before a typed value is built."
+    },
+    {
+      "from": "context",
+      "to": "operations",
+      "kind": "depends-on",
+      "description": "TemporalContext calls Zones.resolve, Zones.toZone and Operations.compare."
+    },
+    {
+      "from": "context",
+      "to": "validation",
+      "kind": "depends-on",
+      "description": "RuleBundle.parse reads JSON with Utv.parse."
+    },
+    {
+      "from": "operations",
+      "to": "internals",
+      "kind": "depends-on",
+      "description": "Decodes civil values and instants, computes exactly."
+    },
+    {
+      "from": "text",
+      "to": "internals",
+      "kind": "depends-on",
+      "description": "Builds canonical values and decodes them to format."
+    },
+    {
+      "from": "text",
+      "to": "operations",
+      "kind": "depends-on",
+      "description": "Values.inZone and withOffset; Operations.compare to refuse reversed intervals."
+    },
+    {
+      "from": "interop",
+      "to": "internals",
+      "kind": "depends-on",
+      "description": "Decodes the UTV side."
+    },
+    {
+      "from": "interop",
+      "to": "operations",
+      "kind": "depends-on",
+      "description": "Values builders."
+    },
+    {
+      "from": "interop",
+      "to": "java-time",
+      "kind": "depends-on",
+      "description": "The native types; ZoneId.of and ZonedDateTime.ofStrict in toZonedDateTime."
+    },
+    {
+      "from": "internals",
+      "to": "validation",
+      "kind": "depends-on",
+      "description": "Civil.structural runs Utv.validateStructural on every operand."
+    },
+    {
+      "from": "validation",
+      "to": "internals",
+      "kind": "depends-on",
+      "description": "GregorianCivil uses Civil.rangeCode for its codes."
+    },
+    {
+      "from": "validation",
+      "to": "jackson",
+      "kind": "depends-on",
+      "description": "ObjectMapper with STRICT_DUPLICATE_DETECTION."
+    },
+    {
+      "from": "operations",
+      "to": "jackson",
+      "kind": "depends-on",
+      "description": "Values are ObjectNode and JsonNode."
+    }
+  ]
+}

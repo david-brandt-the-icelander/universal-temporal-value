@@ -1,0 +1,310 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-operation/schema.json",
+  "kind": "operation",
+  "title": "Native interop operations",
+  "folder": "implementations/rust/src/interop",
+  "description": "The conversions between native time types and UTV. Each JSON-layer function returns a UtvResult (or Err(UtvResult)) named convert; each From/TryFrom impl on a typed value returns the value or Err(Diagnostics). All are queries: they build a new value and change nothing.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/interop/mod.rs",
+      "symbol": "from_system_time"
+    },
+    {
+      "path": "implementations/rust/src/interop/chrono.rs",
+      "symbol": "from_fixed_offset"
+    }
+  ],
+  "entities": [
+    {
+      "id": "from-system-time",
+      "name": "Take a SystemTime reading",
+      "description": "A SystemTime the caller read becomes a POSIX instant, exactly to the nanosecond, before or after the epoch.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "from_system_time"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::from_system_time"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/interop/mod.rs",
+        "symbol": "from_system_time"
+      },
+      "action": "query",
+      "transport": "exported function utv::interop::from_system_time; typed form Instant::from_system_time",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the instant, operation convert; Instant::from_system_time returns the Instant itself.",
+      "failures": [
+        "unsupported (implementation-limit) if the reading's seconds don't fit the arithmetic; no SystemTime reaches it in practice."
+      ]
+    },
+    {
+      "id": "to-system-time",
+      "name": "Write an instant as a SystemTime",
+      "description": "A POSIX instant becomes a SystemTime, checked by converting it back.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "to_system_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "impl TryFrom<crate::Instant> for SystemTime"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/interop/mod.rs",
+        "symbol": "to_system_time"
+      },
+      "action": "query",
+      "transport": "exported function utv::interop::to_system_time; typed form SystemTime::try_from(instant)",
+      "authorization": "None: an in-process library call.",
+      "result": "Ok(SystemTime) that converts back to the same instant.",
+      "failures": [
+        "unsupported (precision-loss) when the instant has a fraction finer than a nanosecond, or finer than this platform's SystemTime holds (the round trip differs).",
+        "unsupported (out-of-native-range) outside the range of SystemTime on this platform.",
+        "unsupported (unsupported-operand) for a value that is not a POSIX instant, such as a civil date."
+      ]
+    },
+    {
+      "id": "from-chrono-naive",
+      "name": "Take a chrono naive date, time or date-time",
+      "description": "NaiveDate becomes a date, NaiveTime a time (always with a second), NaiveDateTime an unzoned date-time: not read as local time or as UTC.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_naive_date"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_naive_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_naive_date_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "impl From<NaiveDate> for CivilDate"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "impl TryFrom<NaiveDateTime> for CivilDateTime"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/interop/chrono.rs",
+        "symbol": "from_naive_date_time"
+      },
+      "action": "query",
+      "transport": "exported functions utv::interop::chrono::from_naive_date, from_naive_time, from_naive_date_time; typed forms CivilDate::from, CivilTime::try_from, CivilDateTime::try_from (feature chrono)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the civil value, operation convert, or the typed value.",
+      "failures": [
+        "unsupported (leap-second) for chrono's leap-second representation (a nanosecond field of 10^9 or more)."
+      ]
+    },
+    {
+      "id": "from-chrono-fixed-offset",
+      "name": "Take a chrono DateTime<FixedOffset> with a named intent",
+      "description": "The caller says what the value means: a point on the timeline (an instant; the offset was only how it was written) or a wall time at that offset (a fixed-offset date-time).",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_fixed_offset"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "OffsetIntent"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "impl TryFrom<DateTime<FixedOffset>> for Instant"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "impl TryFrom<DateTime<FixedOffset>> for FixedOffsetDateTime"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/interop/chrono.rs",
+        "symbol": "from_fixed_offset"
+      },
+      "action": "query",
+      "transport": "exported function utv::interop::chrono::from_fixed_offset(dt, OffsetIntent); typed forms Instant::try_from(dt) and FixedOffsetDateTime::try_from(dt) (feature chrono)",
+      "authorization": "None: an in-process library call.",
+      "result": "An instant, or a datetime with a fixed-offset zone, as the intent says.",
+      "failures": [
+        "unsupported (leap-second) for chrono's leap-second representation.",
+        "invalid (offset-out-of-range) from FixedOffsetDateTime::try_from when chrono's offset is beyond ±18:00, which the typed reader refuses."
+      ]
+    },
+    {
+      "id": "from-chrono-utc",
+      "name": "Take a chrono DateTime<Utc>",
+      "description": "A DateTime<Utc> becomes a POSIX instant, exactly to the nanosecond.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_utc"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "impl TryFrom<DateTime<Utc>> for Instant"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/interop/chrono.rs",
+        "symbol": "from_utc"
+      },
+      "action": "query",
+      "transport": "exported function utv::interop::chrono::from_utc; typed form Instant::try_from(dt) (feature chrono)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the instant, operation convert, or the Instant.",
+      "failures": [
+        "unsupported (leap-second) for chrono's leap-second representation."
+      ]
+    },
+    {
+      "id": "from-chrono-local",
+      "name": "Refuse a chrono DateTime<Local>",
+      "description": "A value tied to the host's time zone is never interpreted. There is no From/TryFrom for it on any typed value.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_local"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/interop/chrono.rs",
+        "symbol": "from_local"
+      },
+      "action": "query",
+      "transport": "exported function utv::interop::chrono::from_local (feature chrono)",
+      "authorization": "None: an in-process library call.",
+      "result": "Always unsupported (local-zone), operation convert; the message points to from_fixed_offset or from_utc.",
+      "failures": [
+        "unsupported (local-zone), for every input."
+      ]
+    },
+    {
+      "id": "to-chrono-naive",
+      "name": "Write a date, time or date-time as a chrono naive value",
+      "description": "An unzoned date, time or date-time becomes NaiveDate, NaiveTime (a missing second becomes 0) or NaiveDateTime.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "to_naive_date"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "to_naive_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "to_naive_date_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "read_form"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "naive_date"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/interop/chrono.rs",
+        "symbol": "to_naive_date_time"
+      },
+      "action": "query",
+      "transport": "exported functions utv::interop::chrono::to_naive_date, to_naive_time, to_naive_date_time; typed forms NaiveDate::try_from, NaiveTime::from, NaiveDateTime::try_from (feature chrono)",
+      "authorization": "None: an in-process library call.",
+      "result": "Ok with the chrono value.",
+      "failures": [
+        "unsupported (zone-dropped) for a zoned or fixed-offset value: the naive type would drop the zone (JSON-layer functions only; the typed sources are unzoned).",
+        "unsupported (unsupported-operand) for another kind or form.",
+        "unsupported (out-of-native-range) for a year outside chrono's range, about ±262 000."
+      ]
+    },
+    {
+      "id": "to-chrono-fixed-offset",
+      "name": "Write a fixed-offset date-time as a chrono DateTime<FixedOffset>",
+      "description": "A wall time at a fixed offset becomes the same wall time and offset in chrono, exactly.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "to_fixed_offset"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "impl TryFrom<FixedOffsetDateTime> for DateTime<FixedOffset>"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/interop/chrono.rs",
+        "symbol": "to_fixed_offset"
+      },
+      "action": "query",
+      "transport": "exported function utv::interop::chrono::to_fixed_offset; typed form DateTime::<FixedOffset>::try_from(value) (feature chrono)",
+      "authorization": "None: an in-process library call.",
+      "result": "Ok with the DateTime<FixedOffset>.",
+      "failures": [
+        "unsupported (zone-dropped) for a named-zone value, even with an offsetAssertion: FixedOffset would keep the offset and drop the zone's rules.",
+        "unsupported (unsupported-operand) for an unzoned date-time, or another kind or form.",
+        "unsupported (out-of-native-range) outside chrono's range."
+      ]
+    },
+    {
+      "id": "to-chrono-utc",
+      "name": "Write an instant as a chrono DateTime<Utc>",
+      "description": "A POSIX instant becomes a DateTime<Utc>, exactly.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "to_utc"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "impl TryFrom<Instant> for DateTime<Utc>"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/rust/src/interop/chrono.rs",
+        "symbol": "to_utc"
+      },
+      "action": "query",
+      "transport": "exported function utv::interop::chrono::to_utc; typed form DateTime::<Utc>::try_from(instant) (feature chrono)",
+      "authorization": "None: an in-process library call.",
+      "result": "Ok with the DateTime<Utc>.",
+      "failures": [
+        "unsupported (precision-loss) for a fraction finer than a nanosecond.",
+        "unsupported (out-of-native-range) outside chrono's range.",
+        "unsupported (unsupported-operand) for a value that is not a POSIX instant."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/rust/src/interop",
+      "path": "implementations/rust/src/interop/.dev/capability.json",
+      "relationship": "The capability these operations expose."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/rust/src/interop",
+      "path": "implementations/rust/src/interop/.dev/feature.json",
+      "relationship": "The rules these operations carry out."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/rust/src/interop",
+      "path": "implementations/rust/src/interop/.dev/use-case.json",
+      "relationship": "The use case that calls them."
+    }
+  ]
+}

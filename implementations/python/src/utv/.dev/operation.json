@@ -1,0 +1,1385 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-operation/schema.json",
+  "kind": "operation",
+  "title": "utv package operations",
+  "folder": "implementations/python/src/utv",
+  "description": "The public entrypoints of the package: the typed layer's constructors, methods and functions, then the JSON layer's functions. Every one is a pure in-process call that changes nothing.",
+  "sources": [
+    {
+      "path": "implementations/python/src/utv/__init__.py",
+      "symbol": "__all__"
+    },
+    {
+      "path": "implementations/python/src/utv/values.py",
+      "symbol": "CivilDate"
+    },
+    {
+      "path": "implementations/python/src/utv/ops.py",
+      "symbol": "add"
+    },
+    {
+      "path": "implementations/python/src/utv/zones.py",
+      "symbol": "resolve"
+    }
+  ],
+  "entities": [
+    {
+      "id": "civil-date-of",
+      "name": "Make a date",
+      "description": "CivilDate.of(year, month, day), or CivilDate(year, month, day): a proleptic Gregorian day with no zone. The year is any Python int. CivilDate.try_of returns an outcome instead of raising.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.try_of"
+        },
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "civil"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "CivilDate.of"
+      },
+      "action": "query",
+      "transport": "classmethod of CivilDate",
+      "authorization": "None: an in-process library call.",
+      "result": "The CivilDate; try_of gives Unique(CivilDate).",
+      "failures": [
+        "The day doesn't exist in that month (30 February, 29 February in a common year): invalid (day-out-of-range). Constructors raise OutcomeError, a ValueError, with the status and diagnostics; try_of returns the same as an outcome.",
+        "The month is outside 1–12: invalid (month-out-of-range).",
+        "A field that isn't an int: TypeError."
+      ]
+    },
+    {
+      "id": "civil-year-month-of",
+      "name": "Make a month",
+      "description": "CivilYearMonth.of(year, month): a month of a year, with no day.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilYearMonth.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilYearMonth.try_of"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "CivilYearMonth.of"
+      },
+      "action": "query",
+      "transport": "classmethod of CivilYearMonth",
+      "authorization": "None: an in-process library call.",
+      "result": "The CivilYearMonth; try_of gives Unique(CivilYearMonth).",
+      "failures": [
+        "The month is outside 1–12: invalid (month-out-of-range). Constructors raise OutcomeError, a ValueError, with the status and diagnostics; try_of returns the same as an outcome.",
+        "A field that isn't an int: TypeError."
+      ]
+    },
+    {
+      "id": "civil-time-of",
+      "name": "Make a time of day",
+      "description": "CivilTime.of(hour, minute[, second[, nanosecond]]): a wall-clock time that remembers whether a second was given (09:30 is not 09:30:00). A non-zero nanosecond without a second sets the second to 0.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilTime.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilTime.try_of"
+        },
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "civil"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "CivilTime.of"
+      },
+      "action": "query",
+      "transport": "classmethod of CivilTime",
+      "authorization": "None: an in-process library call.",
+      "result": "The CivilTime; try_of gives Unique(CivilTime).",
+      "failures": [
+        "Hour, minute, second or nanosecond out of range: invalid (field-out-of-range). Constructors raise OutcomeError, a ValueError, with the status and diagnostics; try_of returns the same as an outcome.",
+        "Second 60: unsupported (leap-second); it needs a leap-second table.",
+        "24:00: unsupported (end-of-day); 24 with non-zero minutes or seconds is invalid (field-out-of-range).",
+        "A field that isn't an int: TypeError."
+      ]
+    },
+    {
+      "id": "civil-date-time-of",
+      "name": "Make a wall-clock date-time",
+      "description": "CivilDateTime.of(year, month, day, hour, minute[, second[, nanosecond]]), CivilDateTime(date, time) or date.at(time): a date and a time of day with no zone.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDateTime.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDateTime.try_of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.at"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "CivilDateTime.of"
+      },
+      "action": "query",
+      "transport": "classmethod of CivilDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "The CivilDateTime; try_of gives Unique(CivilDateTime).",
+      "failures": [
+        "Any failure of making the date or the time, with the same codes. Constructors raise OutcomeError, a ValueError, with the status and diagnostics; try_of returns the same as an outcome.",
+        "CivilDateTime(date, time) given anything but a CivilDate and a CivilTime: TypeError."
+      ]
+    },
+    {
+      "id": "at-offset",
+      "name": "Pin a wall time to an offset",
+      "description": "date_time.at_offset(seconds): the wall time at a fixed UTC offset, in seconds east of UTC. It names one instant without any zone rules.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDateTime.at_offset"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_offset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "CivilDateTime.at_offset"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "A FixedOffsetDateTime.",
+      "failures": [
+        "The offset is beyond ±18:00: OutcomeError (invalid, offset-out-of-range).",
+        "The offset isn't an int: TypeError."
+      ]
+    },
+    {
+      "id": "in-zone",
+      "name": "Intend a wall time in a zone",
+      "description": "date_time.in_zone(\"Europe/Paris\"): the wall time as an intention in an IANA zone. No rules are consulted, so the zone id is checked only for its shape.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDateTime.in_zone"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "ZonedIntent"
+        },
+        {
+          "path": "implementations/python/src/utv/_core.py",
+          "symbol": "ZONE_ID"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "CivilDateTime.in_zone"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "A ZonedIntent with no asserted offset.",
+      "failures": [
+        "The zone id isn't shaped like Area/Location: OutcomeError (invalid, syntax).",
+        "The zone id isn't a str: TypeError."
+      ]
+    },
+    {
+      "id": "instant-from-unix",
+      "name": "Make an instant from a clock reading",
+      "description": "Instant.from_unix_seconds(seconds[, nanoseconds]) or Instant.from_unix_nanoseconds(time.time_ns()): an exact moment on the POSIX timescale. The library never reads the clock; the caller passes the reading in.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant.from_unix_seconds"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant.from_unix_nanoseconds"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "Instant.from_unix_seconds"
+      },
+      "action": "query",
+      "transport": "classmethod of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "The Instant, holding exact rational seconds since 1970-01-01T00:00:00Z.",
+      "failures": [
+        "An argument that isn't an int: TypeError."
+      ]
+    },
+    {
+      "id": "amounts-of",
+      "name": "Make an amount",
+      "description": "Period.of(years=…, months=…, …) or Period.of_days(30) (also of_years, of_months, of_weeks, and Period(...)): calendar components. PosixSeconds.of(n[, d]) and ElapsedSeconds.of(n[, d]): exact POSIX or SI seconds.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Period.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "PosixSeconds.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "ElapsedSeconds.of"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "Period.of"
+      },
+      "action": "query",
+      "transport": "classmethod of Period",
+      "authorization": "None: an in-process library call.",
+      "result": "The Period, PosixSeconds or ElapsedSeconds; negate() gives the opposite amount.",
+      "failures": [
+        "A component or numerator that isn't an int: TypeError."
+      ]
+    },
+    {
+      "id": "interval-of",
+      "name": "Make a range",
+      "description": "Interval.half_open(a, b), Interval.closed(a, b), or Interval.of(Bound.included(a) | Bound.excluded(a) | Bound.UNBOUNDED | Bound.UNKNOWN, …) over CivilDate or Instant points; try_of returns an outcome.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Interval.of"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Interval.__post_init__"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Bound.__post_init__"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "Interval.of"
+      },
+      "action": "query",
+      "transport": "classmethod of Interval",
+      "authorization": "None: an in-process library call.",
+      "result": "The Interval; try_of gives Unique(Interval).",
+      "failures": [
+        "The end is before the start: invalid (reversed-interval). Constructors raise OutcomeError, a ValueError, with the status and diagnostics; try_of returns the same as an outcome.",
+        "No point at all, such as Interval.of(Bound.UNBOUNDED, Bound.UNKNOWN): unsupported (unsupported-form).",
+        "A date at one end and an instant at the other: invalid (kind-mismatch).",
+        "A Bound of anything but a CivilDate or an Instant: TypeError."
+      ]
+    },
+    {
+      "id": "add-days",
+      "name": "Add days or weeks to a date",
+      "description": "date.add_days(n) and date.add_weeks(n): total, through the JSON layer's add.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.add_days"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.add_weeks"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "CivilDate.add_days"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call.",
+      "result": "The CivilDate n days (or weeks) later; n may be negative.",
+      "failures": []
+    },
+    {
+      "id": "add-wall-clock",
+      "name": "Add wall-clock time to a date-time",
+      "description": "date_time.add_days / add_weeks / add_hours / add_minutes / add_seconds(n): wall-clock arithmetic carrying into days. There is no zone, so no DST.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDateTime.add_hours"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDateTime._step"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "CivilDateTime.add_hours"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "The later CivilDateTime: 23:30 + 2 hours is 01:30 the next day.",
+      "failures": []
+    },
+    {
+      "id": "add-months",
+      "name": "Add months or years",
+      "description": "date.add_months(n) and date.add_years(n), also on CivilDateTime and ZonedIntent (add_months). Without a policy the answer may not exist; with MonthEnd.CONSTRAIN it clamps.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.add_months"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_month_step"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.add_years"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "CivilDate.add_months"
+      },
+      "action": "query",
+      "transport": "method of CivilDate, CivilDateTime and ZonedIntent",
+      "authorization": "None: an in-process library call.",
+      "result": "Without a policy, Outcome: Unique(value). With MonthEnd.CONSTRAIN (or \"constrain\"), the value itself, clamped to the month's last day.",
+      "failures": [
+        "The day is missing from the target month (31 January + 1 month): NoneOf (month-end).",
+        "A policy other than CONSTRAIN in the policy form, MonthEnd.REJECT included: ValueError, because rejecting is what the call without a policy does."
+      ]
+    },
+    {
+      "id": "add-period",
+      "name": "Add a period",
+      "description": "value.add(period[, month_end]) on CivilDate, CivilDateTime and ZonedIntent. It always returns an outcome and takes either month-end policy.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.add"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDateTime.add"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "ZonedIntent.add"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "CivilDate.add"
+      },
+      "action": "query",
+      "transport": "method of CivilDate, CivilDateTime and ZonedIntent",
+      "authorization": "None: an in-process library call.",
+      "result": "Unique(value).",
+      "failures": [
+        "The day is missing after the month step and the policy is REJECT (the default): NoneOf (month-end).",
+        "Hours, minutes or seconds added to a CivilDate: Invalid (kind-mismatch)."
+      ]
+    },
+    {
+      "id": "days-until",
+      "name": "Count days between dates",
+      "description": "date.days_until(other): whole days from this date to other.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "CivilDate.days_until"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "days_between"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "CivilDate.days_until"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call.",
+      "result": "An int, negative when other is earlier.",
+      "failures": []
+    },
+    {
+      "id": "zoned-add",
+      "name": "Move a zoned wall time",
+      "description": "zoned.add_days / add_weeks / add_hours / add_minutes / add_seconds(n): the same zone, a later wall time. Turning it into an instant is resolve's job.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "ZonedIntent.add_days"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "ZonedIntent._step"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "ZonedIntent.add_days"
+      },
+      "action": "query",
+      "transport": "method of ZonedIntent",
+      "authorization": "None: an in-process library call.",
+      "result": "A ZonedIntent with the new wall time and no asserted offset (the JSON layer reports offset-assertion-dropped, info).",
+      "failures": []
+    },
+    {
+      "id": "instant-add",
+      "name": "Add seconds to an instant",
+      "description": "instant.add(PosixSeconds) adds exactly; instant.add(ElapsedSeconds) would need a leap-second table.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant.add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "Instant.add"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "With PosixSeconds, the Instant itself; with ElapsedSeconds, an Outcome[Instant].",
+      "failures": [
+        "ElapsedSeconds: Unsupported (needs-leap-seconds).",
+        "Any other argument: TypeError."
+      ]
+    },
+    {
+      "id": "instant-until",
+      "name": "Measure between instants",
+      "description": "instant.until(other): the exact POSIX seconds from this instant to other.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant.until"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "posix_seconds_between"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "Instant.until"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "A PosixSeconds holding an exact fraction, such as 14403/4 s.",
+      "failures": []
+    },
+    {
+      "id": "to-instant",
+      "name": "Turn an offset date-time into an instant",
+      "description": "fixed.to_instant(): the moment a wall time at a fixed offset names. No rules are needed.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "FixedOffsetDateTime.to_instant"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "resolve"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "FixedOffsetDateTime.to_instant"
+      },
+      "action": "query",
+      "transport": "method of FixedOffsetDateTime",
+      "authorization": "None: an in-process library call.",
+      "result": "The Instant.",
+      "failures": []
+    },
+    {
+      "id": "instant-at-offset",
+      "name": "See an instant at an offset",
+      "description": "instant.at_offset(seconds): the wall time at a fixed UTC offset at this instant.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant.at_offset"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "to_offset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "Instant.at_offset"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call.",
+      "result": "A FixedOffsetDateTime, always with seconds.",
+      "failures": [
+        "The offset is beyond ±18:00: OutcomeError (invalid, offset-out-of-range)."
+      ]
+    },
+    {
+      "id": "load-zone-rules",
+      "name": "Load zone rules",
+      "description": "ZoneRules.load(path) reads a rule bundle from the file the caller names; ZoneRules.parse(text) parses JSON text or a dict. Same as load_rules / parse_rules.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "ZoneRules.load"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "parse_rules"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "load_rules"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/zones.py",
+        "symbol": "ZoneRules.load"
+      },
+      "action": "query",
+      "transport": "classmethod of ZoneRules",
+      "authorization": "None: an in-process library call.",
+      "result": "An immutable ZoneRules: the rule set's id and version, the validity window and each zone's transitions.",
+      "failures": [
+        "Text that isn't JSON, a missing key or a wrong type (malformed rule bundle), transitions out of order or an offset beyond ±18:00: ValueError.",
+        "A file that can't be opened: the OSError of open()."
+      ]
+    },
+    {
+      "id": "make-context",
+      "name": "Hold the zone rules",
+      "description": "TemporalContext(rules) or TemporalContext.with_rules(rules). There is no default or global context.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext"
+        },
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.with_rules"
+        },
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.__post_init__"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/context.py",
+        "symbol": "TemporalContext"
+      },
+      "action": "query",
+      "transport": "constructor of TemporalContext",
+      "authorization": "None: an in-process library call.",
+      "result": "A TemporalContext that every zone operation is given.",
+      "failures": [
+        "Anything but ZoneRules, such as a path: TypeError."
+      ]
+    },
+    {
+      "id": "resolve",
+      "name": "Resolve a zoned wall time",
+      "description": "zoned.resolve(ctx[, policy]), the same as ctx.resolve(zoned, policy): the instant(s) a wall time names under the context's rules. The policy defaults to ResolutionPolicy.STRICT.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "ZonedIntent.resolve"
+        },
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.resolve"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "resolve"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "ZonedIntent.resolve"
+      },
+      "action": "query",
+      "transport": "method of ZonedIntent (and of TemporalContext)",
+      "authorization": "None: an in-process library call.",
+      "result": "Unique(Instant), or Multiple of both instants, ascending; to_result() carries the rule set in manifest.dependencies.",
+      "failures": [
+        "The wall time falls in a gap and the gap policy is REJECT or PRESERVE_UNRESOLVED: NoneOf (gap).",
+        "The wall time falls in an overlap and the overlap policy is REJECT: Multiple (ambiguous); with ALL, Multiple and no diagnostic.",
+        "The asserted offset matches no candidate: Invalid (offset-mismatch), even in a gap with SHIFT_FORWARD.",
+        "The zone isn't in the rules: Unsupported (unknown-zone).",
+        "The wall time is within a day of either end of the rules' validity window: Unsupported (outside-rule-window).",
+        "ctx.resolve given anything but a ZonedIntent: TypeError."
+      ]
+    },
+    {
+      "id": "instant-in-zone",
+      "name": "See an instant in a zone",
+      "description": "instant.in_zone(zone_id, ctx), the same as ctx.in_zone(instant, zone_id): the wall time in that zone at the instant, with the offset in force asserted.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Instant.in_zone"
+        },
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.in_zone"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "to_zone"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "Instant.in_zone"
+      },
+      "action": "query",
+      "transport": "method of Instant (and of TemporalContext)",
+      "authorization": "None: an in-process library call.",
+      "result": "Unique(ZonedIntent), such as 2027-06-01T03:00:00-04:00[America/New_York].",
+      "failures": [
+        "The zone isn't in the rules: Unsupported (unknown-zone).",
+        "The instant is outside the rules' validity window: Unsupported (outside-rule-window).",
+        "ctx.in_zone given anything but an Instant: TypeError."
+      ]
+    },
+    {
+      "id": "context-compare",
+      "name": "Order zoned values",
+      "description": "ctx.compare(a, b) for ZonedIntent, Instant and FixedOffsetDateTime values: zoned values are resolved strictly, then every candidate of a is compared with every candidate of b.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/context.py",
+          "symbol": "TemporalContext.compare"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/context.py",
+        "symbol": "TemporalContext.compare"
+      },
+      "action": "query",
+      "transport": "method of TemporalContext",
+      "authorization": "None: an in-process library call.",
+      "result": "Unique(Ordering) when only one order is possible; Multiple of the possible orders, in BEFORE, EQUAL, AFTER order, when it depends on which side of an overlap is meant. The diagnostics of resolving both sides are passed on.",
+      "failures": [
+        "A side falls in a gap: NoneOf (gap).",
+        "A side's zone is unknown or outside the rules: Unsupported (unknown-zone, outside-rule-window).",
+        "A side's asserted offset contradicts the rules: Invalid (offset-mismatch).",
+        "Any other type: TypeError."
+      ]
+    },
+    {
+      "id": "order-operators",
+      "name": "Order two values of one type",
+      "description": "<, <=, > and >= on two CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime or Instant values, through the JSON layer's compare. A missing second counts as 0, so 09:30 <= 09:30:00 holds both ways while 09:30 != 09:30:00.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_Ordered.__lt__"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_Ordered._relation"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "compare"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "_Ordered.__lt__"
+      },
+      "action": "query",
+      "transport": "comparison operator of the typed values",
+      "authorization": "None: an in-process library call.",
+      "result": "A bool. Fixed-offset date-times order by the instant they name.",
+      "failures": [
+        "The two values are of different types: TypeError (each side returns NotImplemented).",
+        "ZonedIntent has no comparison operators: TypeError. Use ctx.compare."
+      ]
+    },
+    {
+      "id": "interval-contains",
+      "name": "Ask whether a range holds a point or meets another",
+      "description": "interval.contains(point) and interval.overlaps(other), in three-valued logic.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Interval.contains"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "Interval.overlaps"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "contains"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "overlaps"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "Interval.contains"
+      },
+      "action": "query",
+      "transport": "method of Interval",
+      "authorization": "None: an in-process library call.",
+      "result": "Truth.DEFINITELY, POSSIBLY (an unknown end decides) or IMPOSSIBLE.",
+      "failures": []
+    },
+    {
+      "id": "parse",
+      "name": "Read the text form",
+      "description": "utv.parse(text) reads any text-form value and returns the type it describes; T.parse(text) narrows to one type. Bad text is an outcome, never an exception. str(value) is the way back.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_Value.parse"
+        },
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "parse_text"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "parse"
+      },
+      "action": "query",
+      "transport": "exported function (utv.parse), and classmethod parse of each typed value",
+      "authorization": "None: an in-process library call.",
+      "result": "Unique(value): 2026-11-05 a CivilDate, …Z an Instant, …+00:00 a FixedOffsetDateTime, …[Europe/Paris] a ZonedIntent, P1M a Period, [a, b) an Interval.",
+      "failures": [
+        "Text outside the grammar: Invalid (syntax).",
+        "A field out of range: Invalid (day-out-of-range, month-out-of-range, field-out-of-range, offset-out-of-range).",
+        "Week dates, ordinal dates, basic format, decimal period components, EDTF qualifiers, an interval with no point: Unsupported (unsupported-form).",
+        "Second 60: Unsupported (leap-second); 24:00: Unsupported (end-of-day).",
+        "Any annotation but one [Area/Location], or a [zone] after Z or -00:00: Unsupported (unsupported-annotation).",
+        "Interval ends reversed: Invalid (reversed-interval); ends of different kinds or forms: Invalid (kind-mismatch).",
+        "T.parse given text of another type: Invalid (kind-mismatch)."
+      ]
+    },
+    {
+      "id": "from-json",
+      "name": "Read UTV JSON into a typed value",
+      "description": "utv.from_json(json) or T.from_json(json), from a dict or JSON text; value.to_json() is the way back.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "from_json"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_Value.from_json"
+        },
+        {
+          "path": "implementations/python/src/utv/values.py",
+          "symbol": "_from_json"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/values.py",
+        "symbol": "from_json"
+      },
+      "action": "query",
+      "transport": "exported function (utv.from_json), and classmethod from_json of each typed value",
+      "authorization": "None: an in-process library call.",
+      "result": "Unique(value) when a typed value holds the JSON exactly; an explicit floating zone counts as no zone.",
+      "failures": [
+        "JSON of the wrong shape, or text that isn't JSON: Invalid (malformed-value), followed by the 0.1 structural codes.",
+        "A value that can't exist: Invalid (day-out-of-range and the like).",
+        "T.from_json given another kind or form: Invalid (kind-mismatch).",
+        "A valid value no typed value holds exactly (a zoned date, a resolutionPolicy, provenance, a recurrence): Unsupported (unsupported-operand); the JSON layer still handles it.",
+        "Another well-formed utv/ version: Unsupported (unsupported-version)."
+      ]
+    },
+    {
+      "id": "from-native",
+      "name": "Bring a datetime value in",
+      "description": "utv.from_native(value[, intent]) turns a date, time, datetime or timedelta into a typed value, with the meaning the caller names.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/interop.py",
+          "symbol": "from_native"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "from_datetime"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/interop.py",
+        "symbol": "from_native"
+      },
+      "action": "query",
+      "transport": "exported function (utv.from_native)",
+      "authorization": "None: an in-process library call.",
+      "result": "Unique(value): a CivilDate, CivilTime, CivilDateTime, Instant, FixedOffsetDateTime, ZonedIntent (with the offset of the datetime's fold asserted), PosixSeconds or Period.",
+      "failures": [
+        "A naive datetime asked for an INSTANT, OFFSET or ZONED: Unsupported (local-zone).",
+        "A datetime with a fixed timezone and no intent, a timedelta with no intent, or an unknown intent: Invalid (intent-required).",
+        "ZoneInfo(\"localtime\"), a file key, or a tzinfo class that is neither timezone nor ZoneInfo: Unsupported (local-zone).",
+        "A ZoneInfo wall time in a gap asked for an INSTANT or OFFSET: NoneOf (gap).",
+        "A time of day with a tzinfo, a fixed timezone asked for ZONED, a sub-second UTC offset, or a PERIOD with microseconds: Unsupported (unsupported-operand).",
+        "Anything but a date, time, datetime or timedelta: TypeError."
+      ]
+    },
+    {
+      "id": "to-native",
+      "name": "Take a value out to datetime",
+      "description": "utv.to_native(value, tz=…, allow_loss=…) turns a typed value into a date, time, datetime or timedelta.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/interop.py",
+          "symbol": "to_native"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "to_datetime"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/interop.py",
+        "symbol": "to_native"
+      },
+      "action": "query",
+      "transport": "exported function (utv.to_native)",
+      "authorization": "None: an in-process library call.",
+      "result": "Unique(native value); for a zoned value in an overlap with no asserted offset, Multiple of the fold-0 and fold-1 datetimes. With allow_loss=True a dropped part is reported as a precision-loss or zone-dropped warning.",
+      "failures": [
+        "A year outside 1–9999: Unsupported (out-of-native-range).",
+        "Nanoseconds that aren't whole microseconds, without allow_loss: Unsupported (out-of-native-range).",
+        "A ZonedIntent without tz: Unsupported (needs-zone-rules); with allow_loss and an asserted offset, a fixed timezone and zone-dropped.",
+        "tz that isn't a ZoneInfo for the same zone id, or a tz for a floating or fixed-offset value: Unsupported (unsupported-operand).",
+        "A wall time the tz says doesn't exist: NoneOf (gap); an asserted offset the tz doesn't have there: Invalid (offset-mismatch).",
+        "A Period, ElapsedSeconds, CivilYearMonth or Interval: Unsupported (unsupported-operand)."
+      ]
+    },
+    {
+      "id": "build",
+      "name": "Build UTV JSON",
+      "description": "date, year_month, time, date_time, in_zone, with_offset, instant, period, posix_seconds, elapsed_seconds and interval (with UNBOUNDED and UNKNOWN) assemble the canonical everyday shapes as plain dicts. They don't judge the value: date(2026, 2, 30) is built, and operations report it.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/build.py",
+          "symbol": "date"
+        },
+        {
+          "path": "implementations/python/src/utv/build.py",
+          "symbol": "interval"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/build.py",
+        "symbol": "date"
+      },
+      "action": "query",
+      "transport": "exported function (utv.date and the other builders)",
+      "authorization": "None: an in-process library call.",
+      "result": "A UTV JSON value (a dict).",
+      "failures": [
+        "A field of the wrong Python type: TypeError.",
+        "interval with no point and no domain=: ValueError."
+      ]
+    },
+    {
+      "id": "parse-iso",
+      "name": "Parse ISO 8601 text (JSON layer)",
+      "description": "parse_iso(text): ISO 8601 extended format, RFC 3339 and RFC 9557 forms into UTV JSON.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/iso.py",
+          "symbol": "parse_iso"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/iso.py",
+        "symbol": "parse_iso"
+      },
+      "action": "query",
+      "transport": "exported function (utv.parse_iso)",
+      "authorization": "None: an in-process library call.",
+      "result": "A unique Result whose candidate is the value: a date, year-month, time, unzoned or fixed-offset date-time, zoned date-time (with offsetAssertion when an offset precedes the zone), or an instant for Z and -00:00.",
+      "failures": [
+        "Not a str: invalid (malformed-value).",
+        "Outside the grammar, or -0000: invalid (syntax).",
+        "A field out of range: invalid (month-out-of-range, day-out-of-range, field-out-of-range, offset-out-of-range).",
+        "Week dates, ordinal dates, basic format: unsupported (unsupported-form).",
+        "Second 60: unsupported (leap-second); 24:00: unsupported (end-of-day).",
+        "Critical or other annotations, more than one, or a [zone] after Z or -00:00: unsupported (unsupported-annotation)."
+      ]
+    },
+    {
+      "id": "format-iso",
+      "name": "Format ISO 8601 text (JSON layer)",
+      "description": "format_iso(value): the inverse of parse_iso for the everyday shapes.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/iso.py",
+          "symbol": "format_iso"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/iso.py",
+        "symbol": "format_iso"
+      },
+      "action": "query",
+      "transport": "exported function (utv.format_iso)",
+      "authorization": "None: an in-process library call.",
+      "result": "A unique Result whose candidate is the text; instants always print in UTC with seconds.",
+      "failures": [
+        "A kind other than civil or instant: unsupported (unsupported-operand).",
+        "A zoned date, an offset that isn't whole minutes, or an instant fraction needing more than 9 digits: unsupported (no-text-form).",
+        "An invalid or malformed value: invalid, with its code."
+      ]
+    },
+    {
+      "id": "parse-text",
+      "name": "Parse the text form (JSON layer)",
+      "description": "parse_text(text): points as in parse_iso, ISO durations (P1M, -P1DT2H), bracket intervals with explicit endpoint state, and EDTF slash intervals on input.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "parse_text"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/text.py",
+        "symbol": "parse_text"
+      },
+      "action": "query",
+      "transport": "exported function (utv.parse_text)",
+      "authorization": "None: an in-process library call.",
+      "result": "A unique Result whose candidate is the UTV value; operation parseText.",
+      "failures": [
+        "Not a str: invalid (malformed-value).",
+        "Bad duration or interval syntax, '..' or '?' on a closed bracket, more than one '/': invalid (syntax).",
+        "Decimal period components, EDTF qualifiers or unspecified digits, an interval with no point: unsupported (unsupported-form).",
+        "Reversed ends: invalid (reversed-interval); ends of different kinds or forms: invalid (kind-mismatch).",
+        "Any failure of parse_iso for a point."
+      ]
+    },
+    {
+      "id": "format-text",
+      "name": "Format the text form (JSON layer)",
+      "description": "format_text(value): the text form of a civil value, instant, calendar period or start-end interval.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/text.py",
+          "symbol": "format_text"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/text.py",
+        "symbol": "format_text"
+      },
+      "action": "query",
+      "transport": "exported function (utv.format_text)",
+      "authorization": "None: an in-process library call.",
+      "result": "A unique Result whose candidate is the text; operation formatText.",
+      "failures": [
+        "A period with mixed signs, components other than whole Y/M/W/D/H/M/S, a start-amount or amount-end interval, a reversed interval, second counts, and every other kind: unsupported (no-text-form).",
+        "Any failure of format_iso for a point."
+      ]
+    },
+    {
+      "id": "fields",
+      "name": "Derive date fields (JSON layer)",
+      "description": "fields(value) of a Gregorian date or date-time: dayOfWeek (Monday = 1), dayOfYear, isoWeekYear (a string), isoWeek, daysInMonth, isLeapYear.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "fields"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/ops.py",
+        "symbol": "fields"
+      },
+      "action": "query",
+      "transport": "exported function (utv.fields)",
+      "authorization": "None: an in-process library call.",
+      "result": "A unique Result whose candidate is the field object.",
+      "failures": [
+        "A form other than date or datetime: unsupported (unsupported-operand).",
+        "A non-Gregorian calendar: unsupported (unsupported-calendar).",
+        "A date that doesn't exist: invalid (day-out-of-range).",
+        "Malformed input: invalid (malformed-value)."
+      ]
+    },
+    {
+      "id": "add-json",
+      "name": "Add an amount (JSON layer)",
+      "description": "add(value, amount[, policy]): years and months first, then the month-end rule, then weeks and days, then hours, minutes and seconds as wall-clock time. An instant takes only POSIX seconds, exactly.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "_components"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "_month_end"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/ops.py",
+        "symbol": "add"
+      },
+      "action": "query",
+      "transport": "exported function (utv.add)",
+      "authorization": "None: an in-process library call.",
+      "result": "A unique Result with the new value; a dropped offsetAssertion is reported as offset-assertion-dropped (info).",
+      "failures": [
+        "The day is missing from the target month under reject: none (month-end).",
+        "A second argument that isn't an amount, a calendar amount on an instant, a non-calendar amount on a civil value, or a component the form doesn't have: invalid (kind-mismatch).",
+        "SI seconds on an instant: unsupported (needs-leap-seconds).",
+        "A time of day, other kinds, fractional or unknown components: unsupported (unsupported-operand).",
+        "A monthEnd policy other than reject or constrain: unsupported (unsupported-policy)."
+      ]
+    },
+    {
+      "id": "compare-json",
+      "name": "Compare two values (JSON layer)",
+      "description": "compare(a, b): before, equal or after, for unzoned civil values of one form, instants, and fixed-offset date-times.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "compare"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/ops.py",
+        "symbol": "compare"
+      },
+      "action": "query",
+      "transport": "exported function (utv.compare)",
+      "authorization": "None: an in-process library call.",
+      "result": "A unique Result whose candidate is \"before\", \"equal\" or \"after\".",
+      "failures": [
+        "A value with a named zone: unsupported (needs-zone-rules): resolve first.",
+        "Different kinds or forms, or a floating value against one with an offset: unsupported (unsupported-operand)."
+      ]
+    },
+    {
+      "id": "days-between",
+      "name": "Count days (JSON layer)",
+      "description": "days_between(a, b): b − a in whole days, for two Gregorian dates.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "days_between"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/ops.py",
+        "symbol": "days_between"
+      },
+      "action": "query",
+      "transport": "exported function (utv.days_between)",
+      "authorization": "None: an in-process library call.",
+      "result": "A unique Result whose candidate is an integer.",
+      "failures": [
+        "Dates in different zones, or one zoned and one not: unsupported (different-zones).",
+        "A form other than date: unsupported (unsupported-operand)."
+      ]
+    },
+    {
+      "id": "posix-seconds-between",
+      "name": "Measure between instants (JSON layer)",
+      "description": "posix_seconds_between(a, b): b − a as an exact POSIX-seconds amount.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "posix_seconds_between"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/ops.py",
+        "symbol": "posix_seconds_between"
+      },
+      "action": "query",
+      "transport": "exported function (utv.posix_seconds_between)",
+      "authorization": "None: an in-process library call.",
+      "result": "A unique Result whose candidate is a clock-ticks amount with a reduced rational.",
+      "failures": [
+        "Anything but a tick-based unix-posix instant: unsupported (unsupported-operand)."
+      ]
+    },
+    {
+      "id": "contains-json",
+      "name": "Relate a range and a point or range (JSON layer)",
+      "description": "contains(interval, point) and overlaps(a, b) on civil-date and instant intervals, in three-valued logic.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "contains"
+        },
+        {
+          "path": "implementations/python/src/utv/ops.py",
+          "symbol": "overlaps"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/ops.py",
+        "symbol": "contains"
+      },
+      "action": "query",
+      "transport": "exported function (utv.contains, utv.overlaps)",
+      "authorization": "None: an in-process library call.",
+      "result": "A unique Result whose candidate is \"definitely\", \"possibly\" or \"impossible\".",
+      "failures": [
+        "A first argument that isn't an interval: invalid (kind-mismatch).",
+        "Mixed domains, another domain, non-date civil points, or an interval that isn't start-end: unsupported (unsupported-operand).",
+        "Dates in different zones: unsupported (different-zones)."
+      ]
+    },
+    {
+      "id": "resolve-json",
+      "name": "Resolve a local date-time (JSON layer)",
+      "description": "resolve(value, rules[, policy]): a civil date-time to instant(s) under a rule bundle. Without a policy, the value's own resolutionPolicy applies, then reject for both.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "resolve"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/zones.py",
+        "symbol": "resolve"
+      },
+      "action": "query",
+      "transport": "exported function (utv.resolve)",
+      "authorization": "None: an in-process library call.",
+      "result": "unique or multiple instants; manifest.dependencies names the rule set and loss is information-losing (zone, zoneIntent). A fixed-offset date-time resolves without rules.",
+      "failures": [
+        "A form other than datetime: unsupported (unsupported-operand); second 60: unsupported (leap-second).",
+        "An unzoned date-time: symbolic (no-zone, info).",
+        "A zone not in the bundle: unsupported (unknown-zone); a wall time within a day of the window's edge: unsupported (outside-rule-window).",
+        "A policy value not implemented: unsupported (unsupported-policy).",
+        "An asserted offset that matches no candidate: invalid (offset-mismatch).",
+        "A gap: none (gap) unless shift-forward-by-gap; an overlap: multiple (ambiguous under reject).",
+        "A malformed rule bundle: invalid (malformed-value)."
+      ]
+    },
+    {
+      "id": "to-zone-json",
+      "name": "Convert an instant to a zone or offset (JSON layer)",
+      "description": "to_zone(instant, zone_id, rules) and to_offset(instant, seconds): an instant as a civil date-time in a named zone (with offsetAssertion) or at a fixed offset.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "to_zone"
+        },
+        {
+          "path": "implementations/python/src/utv/zones.py",
+          "symbol": "to_offset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/zones.py",
+        "symbol": "to_zone"
+      },
+      "action": "query",
+      "transport": "exported function (utv.to_zone, utv.to_offset)",
+      "authorization": "None: an in-process library call.",
+      "result": "A unique Result with the date-time, always with second; to_zone's manifest names the rule set.",
+      "failures": [
+        "A zone not in the bundle: unsupported (unknown-zone); an instant outside validFrom ≤ t < validUntil: unsupported (outside-rule-window).",
+        "to_offset with an offset beyond ±18:00: invalid (offset-out-of-range); one that isn't an int: invalid (malformed-value)."
+      ]
+    },
+    {
+      "id": "validate-structural",
+      "name": "Validate UTV JSON text",
+      "description": "validate_structural(text): the envelope and structure of one UTV JSON document against the bundled utv-1.0 schema.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "validate_structural"
+        },
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "validate_value"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/validate.py",
+        "symbol": "validate_structural"
+      },
+      "action": "query",
+      "transport": "exported function (utv.validate_structural)",
+      "authorization": "None: an in-process library call.",
+      "result": "A Result with status valid, operation validate.",
+      "failures": [
+        "A repeated object key: invalid (duplicate-key).",
+        "Text that isn't JSON, or NaN / Infinity: invalid (malformed-json).",
+        "Another well-formed version identifier, such as utv/1.1 or utv/2.0: unsupported (unsupported-version).",
+        "Any other schema identifier, such as utv/4: invalid (unknown-schema).",
+        "An unknown kind: invalid (unknown-kind); an unknown property: invalid (unknown-property); other schema violations: invalid with the keyword's code."
+      ]
+    },
+    {
+      "id": "validate-gregorian-date",
+      "name": "Check a civil value's date",
+      "description": "validate_gregorian_date(text): after structural validation, whether the year, month and day of a proleptic Gregorian civil value name a real date. Any form with those fields is checked, month-day included.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/gregorian.py",
+          "symbol": "validate_gregorian_date"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/gregorian.py",
+        "symbol": "validate_gregorian_date"
+      },
+      "action": "query",
+      "transport": "exported function (utv.validate_gregorian_date)",
+      "authorization": "None: an in-process library call.",
+      "result": "A Result with status valid.",
+      "failures": [
+        "Any structural failure, as from validate_structural.",
+        "A kind other than civil: unsupported (unsupported-kind).",
+        "Another calendar: unsupported (unsupported-calendar).",
+        "Month outside 1–12: invalid (month-out-of-range); day outside the month: invalid (day-out-of-range)."
+      ]
+    },
+    {
+      "id": "native-from",
+      "name": "Convert a datetime value to UTV JSON",
+      "description": "from_date, from_time, from_datetime(dt[, intent]) and from_timedelta(td, intent) in utv.native: the JSON-level adapters under from_native.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "from_datetime"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "from_timedelta"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/native.py",
+        "symbol": "from_datetime"
+      },
+      "action": "query",
+      "transport": "exported function (utv.from_datetime and the other from_ adapters)",
+      "authorization": "None: an in-process library call.",
+      "result": "A unique Result, operation convert, with the UTV value; an ambiguous ZoneInfo wall time adds ambiguous (info), and a ZONED wall time in a gap is kept without an asserted offset with a gap warning.",
+      "failures": [
+        "As from_native: local-zone, intent-required, gap, unsupported-operand, TypeError."
+      ]
+    },
+    {
+      "id": "native-to",
+      "name": "Convert UTV JSON to a datetime value",
+      "description": "to_date, to_time(value[, allow_loss]), to_datetime(value[, tz[, allow_loss]]) and to_timedelta(amount[, allow_loss]) in utv.native: the JSON-level adapters under to_native.",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "to_datetime"
+        },
+        {
+          "path": "implementations/python/src/utv/native.py",
+          "symbol": "to_timedelta"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/python/src/utv/native.py",
+        "symbol": "to_datetime"
+      },
+      "action": "query",
+      "transport": "exported function (utv.to_datetime and the other to_ adapters)",
+      "authorization": "None: an in-process library call.",
+      "result": "A Result, operation convert, whose candidates are datetime objects, with loss lossless, or information-losing naming the dropped fields.",
+      "failures": [
+        "As to_native: out-of-native-range, needs-zone-rules, unsupported-operand, gap, offset-mismatch.",
+        "A calendar period to timedelta: unsupported (unsupported-operand)."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/python/src/utv",
+      "path": "implementations/python/src/utv/.dev/capability.json",
+      "relationship": "The capabilities these operations expose."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/python/src/utv",
+      "path": "implementations/python/src/utv/.dev/feature.json",
+      "relationship": "The features these operations carry out."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/python/src/utv",
+      "path": "implementations/python/src/utv/.dev/use-case.json",
+      "relationship": "The use cases that call them."
+    }
+  ]
+}

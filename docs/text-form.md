@@ -76,4 +76,4 @@ These rules apply:
 
 ## Considered and deferred: a shorter JSON authoring form
 
-The review also suggested letting hand-written JSON omit default values, such as the Gregorian calendar and nested `schema` identifiers. Unlike the text form, that changes which JSON a reader must accept. That makes it a minor specification change (1.1), with a new schema file and reader rules. It is tracked as OI-18 in `spec/OPEN-ISSUES.md` rather than done in libraries ahead of the spec.
+The review also suggested letting hand-written JSON omit default values, such as the Gregorian calendar and nested `schema` identifiers. Unlike the text form, that changes which JSON a reader must accept. That makes it a minor specification change (1.1), with a new schema file and reader rules. It is tracked as OI-18 in [`spec/.dev/backlog.json`](../spec/.dev/backlog.json) rather than done in libraries ahead of the spec.

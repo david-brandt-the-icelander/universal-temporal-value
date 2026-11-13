@@ -1,0 +1,1725 @@
+{
+  "$schema": "../../../../Meta/Agents/Skills/describe-class-diagram/schema.json",
+  "kind": "class",
+  "title": "TypeScript library types",
+  "folder": "implementations/typescript/src",
+  "description": "Every type the library's source folder declares, by module (the ID prefix is the file name). The typed layer (values.ts, outcome.ts, context.ts) wraps the JSON layer's plain UTV JSON and utv-result/1.0 results (result.ts, internal.ts, zones.ts, native.ts). Only meaningful public members are listed; internal helper types show their fields. Several names occur twice in different modules (Int, PeriodParts, Interval, Truth, Domain, Outcome, ResolutionPolicy); the qualified IDs tell them apart.",
+  "sources": [
+    {
+      "path": "implementations/typescript/src/index.ts",
+      "symbol": "export"
+    },
+    {
+      "path": "implementations/typescript/src/values.ts",
+      "symbol": "TemporalValue"
+    },
+    {
+      "path": "implementations/typescript/src/outcome.ts",
+      "symbol": "Outcome"
+    },
+    {
+      "path": "implementations/typescript/src/context.ts",
+      "symbol": "TemporalContext"
+    },
+    {
+      "path": "implementations/typescript/src/zones.ts",
+      "symbol": "ZoneRules"
+    },
+    {
+      "path": "implementations/typescript/src/result.ts",
+      "symbol": "UtvResult"
+    },
+    {
+      "path": "implementations/typescript/src/internal.ts",
+      "symbol": "Civil"
+    }
+  ],
+  "types": [
+    {
+      "id": "values.TemporalValue",
+      "name": "TemporalValue",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "abstract",
+        "protected constructor(json: Json)",
+        "toJSON(): Json",
+        "toString(): string",
+        "equals(other: unknown): boolean",
+        "[Symbol.for(\"nodejs.util.inspect.custom\")](): string"
+      ]
+    },
+    {
+      "id": "values.Ordered",
+      "name": "Ordered<Self extends TemporalValue>",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "abstract",
+        "compare(other: Self): -1 | 0 | 1",
+        "isBefore(other: Self): boolean",
+        "isAfter(other: Self): boolean"
+      ]
+    },
+    {
+      "id": "values.CivilDate",
+      "name": "CivilDate",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "private constructor(c: Civil)",
+        "static of(year: Int, month: number, day: number): CivilDate",
+        "static tryOf(year: Int, month: number, day: number): Outcome<CivilDate>",
+        "static parse(text: string): Outcome<CivilDate>",
+        "static fromJson(json: Json | string): Outcome<CivilDate>",
+        "get year(): bigint",
+        "get month(): number",
+        "get day(): number",
+        "get dayOfWeek(): Weekday",
+        "get dayOfYear(): number",
+        "get isoWeek(): number",
+        "get isoWeekYear(): bigint",
+        "get daysInMonth(): number",
+        "get isLeapYear(): boolean",
+        "addDays(days: Int): CivilDate",
+        "addWeeks(weeks: Int): CivilDate",
+        "addMonths(months: Int): Outcome<CivilDate>",
+        "addMonths(months: Int, monthEnd: typeof MonthEnd.Constrain): CivilDate",
+        "addYears(years: Int): Outcome<CivilDate>",
+        "addYears(years: Int, monthEnd: typeof MonthEnd.Constrain): CivilDate",
+        "add(period: Period, monthEnd?: MonthEnd): Outcome<CivilDate>",
+        "daysUntil(other: CivilDate): number",
+        "at(time: CivilTime): CivilDateTime"
+      ]
+    },
+    {
+      "id": "values.CivilYearMonth",
+      "name": "CivilYearMonth",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "private constructor(c: Civil)",
+        "static of(year: Int, month: number): CivilYearMonth",
+        "static tryOf(year: Int, month: number): Outcome<CivilYearMonth>",
+        "static parse(text: string): Outcome<CivilYearMonth>",
+        "static fromJson(json: Json | string): Outcome<CivilYearMonth>",
+        "get year(): bigint",
+        "get month(): number",
+        "addMonths(months: Int): CivilYearMonth",
+        "addYears(years: Int): CivilYearMonth"
+      ]
+    },
+    {
+      "id": "values.CivilTime",
+      "name": "CivilTime",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "private constructor(c: Civil)",
+        "static of(hour: number, minute: number, second?: number, nanosecond?: number): CivilTime",
+        "static tryOf(hour: number, minute: number, second?: number, nanosecond?: number): Outcome<CivilTime>",
+        "static parse(text: string): Outcome<CivilTime>",
+        "static fromJson(json: Json | string): Outcome<CivilTime>",
+        "get hour(): number",
+        "get minute(): number",
+        "get second(): number",
+        "get nanosecond(): number"
+      ]
+    },
+    {
+      "id": "values.CivilDateTime",
+      "name": "CivilDateTime",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "private constructor(c: Civil)",
+        "static of(year: Int, month: number, day: number, hour: number, minute: number, second?: number, nanosecond?: number): CivilDateTime",
+        "static tryOf(year: Int, month: number, day: number, hour: number, minute: number, second?: number, nanosecond?: number): Outcome<CivilDateTime>",
+        "static parse(text: string): Outcome<CivilDateTime>",
+        "static fromJson(json: Json | string): Outcome<CivilDateTime>",
+        "get date(): CivilDate",
+        "get time(): CivilTime",
+        "addDays(days: Int): CivilDateTime",
+        "addWeeks(weeks: Int): CivilDateTime",
+        "addHours(hours: Int): CivilDateTime",
+        "addMinutes(minutes: Int): CivilDateTime",
+        "addSeconds(seconds: Int): CivilDateTime",
+        "addMonths(months: Int): Outcome<CivilDateTime>",
+        "addMonths(months: Int, monthEnd: typeof MonthEnd.Constrain): CivilDateTime",
+        "add(period: Period, monthEnd?: MonthEnd): Outcome<CivilDateTime>",
+        "inZone(zoneId: string): ZonedIntent",
+        "atOffset(offsetSeconds: number): FixedOffsetDateTime"
+      ]
+    },
+    {
+      "id": "values.FixedOffsetDateTime",
+      "name": "FixedOffsetDateTime",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "private constructor(c: Civil)",
+        "static parse(text: string): Outcome<FixedOffsetDateTime>",
+        "static fromJson(json: Json | string): Outcome<FixedOffsetDateTime>",
+        "get dateTime(): CivilDateTime",
+        "get offsetSeconds(): number",
+        "toInstant(): Instant"
+      ]
+    },
+    {
+      "id": "values.ZonedIntent",
+      "name": "ZonedIntent",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "private constructor(c: Civil)",
+        "static parse(text: string): Outcome<ZonedIntent>",
+        "static fromJson(json: Json | string): Outcome<ZonedIntent>",
+        "get dateTime(): CivilDateTime",
+        "get zoneId(): string",
+        "get assertedOffsetSeconds(): number | undefined",
+        "addDays(days: Int): ZonedIntent",
+        "addWeeks(weeks: Int): ZonedIntent",
+        "addHours(hours: Int): ZonedIntent",
+        "addMinutes(minutes: Int): ZonedIntent",
+        "addSeconds(seconds: Int): ZonedIntent",
+        "addMonths(months: Int): Outcome<ZonedIntent>",
+        "addMonths(months: Int, monthEnd: typeof MonthEnd.Constrain): ZonedIntent",
+        "resolve(ctx: TemporalContext, policy?: ResolutionPolicy): Outcome<Instant>"
+      ]
+    },
+    {
+      "id": "values.Instant",
+      "name": "Instant",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "private constructor(t: Rational)",
+        "static fromUnixSeconds(seconds: Int, nanoseconds?: Int): Instant",
+        "static fromUnixNanoseconds(nanoseconds: bigint): Instant",
+        "static fromUnixMilliseconds(milliseconds: Int): Instant",
+        "static fromDate(date: Date): Instant",
+        "static parse(text: string): Outcome<Instant>",
+        "static fromJson(json: Json | string): Outcome<Instant>",
+        "get unixSeconds(): bigint",
+        "get nanoseconds(): number",
+        "get subSecond(): SubSecond",
+        "add(amount: PosixSeconds): Instant",
+        "add(amount: ElapsedSeconds): Outcome<Instant>",
+        "until(other: Instant): PosixSeconds",
+        "atOffset(offsetSeconds: number): FixedOffsetDateTime",
+        "inZone(zoneId: string, ctx: TemporalContext): Outcome<ZonedIntent>",
+        "toDate(): Outcome<Date>"
+      ]
+    },
+    {
+      "id": "values.Period",
+      "name": "Period",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "private constructor(c: Record<Component, bigint>)",
+        "static of(parts: PeriodParts): Period",
+        "static years(n: Int): Period",
+        "static months(n: Int): Period",
+        "static weeks(n: Int): Period",
+        "static days(n: Int): Period",
+        "static hours(n: Int): Period",
+        "static minutes(n: Int): Period",
+        "static seconds(n: Int): Period",
+        "static parse(text: string): Outcome<Period>",
+        "static fromJson(json: Json | string): Outcome<Period>",
+        "get years(): bigint",
+        "get months(): bigint",
+        "get weeks(): bigint",
+        "get days(): bigint",
+        "get hours(): bigint",
+        "get minutes(): bigint",
+        "get seconds(): bigint",
+        "negate(): Period"
+      ]
+    },
+    {
+      "id": "values.PosixSeconds",
+      "name": "PosixSeconds",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "private constructor(s: Rational)",
+        "static of(numerator: Int, denominator?: Int): PosixSeconds",
+        "static fromJson(json: Json | string): Outcome<PosixSeconds>",
+        "get numerator(): bigint",
+        "get denominator(): bigint",
+        "negate(): PosixSeconds",
+        "toString(): string"
+      ]
+    },
+    {
+      "id": "values.ElapsedSeconds",
+      "name": "ElapsedSeconds",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "private constructor(s: Rational)",
+        "static of(numerator: Int, denominator?: Int): ElapsedSeconds",
+        "static fromJson(json: Json | string): Outcome<ElapsedSeconds>",
+        "get numerator(): bigint",
+        "get denominator(): bigint",
+        "negate(): ElapsedSeconds",
+        "toString(): string"
+      ]
+    },
+    {
+      "id": "values.Interval",
+      "name": "Interval<T extends IntervalPoint>",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "private constructor(readonly start: Bound<T>, readonly end: Bound<T>, domain: Domain)",
+        "static halfOpen<T extends IntervalPoint>(start: T, end: T): Interval<T>",
+        "static closed<T extends IntervalPoint>(start: T, end: T): Interval<T>",
+        "static of<T extends IntervalPoint>(start: Bound<T>, end: Bound<T>): Interval<T>",
+        "static tryOf<T extends IntervalPoint>(start: Bound<T>, end: Bound<T>): Outcome<Interval<T>>",
+        "static parse(text: string): Outcome<Interval<CivilDate> | Interval<Instant>>",
+        "static fromJson(json: Json | string): Outcome<Interval<CivilDate> | Interval<Instant>>",
+        "contains(point: T): Truth",
+        "overlaps(other: Interval<T>): Truth"
+      ]
+    },
+    {
+      "id": "values.Bound",
+      "name": "Bound<T>",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "{ state: \"included\"; value: T } | { state: \"excluded\"; value: T } | { state: \"unbounded\" } | { state: \"unknown\" }",
+        "Bound.included<T>(value: T): Bound<T>",
+        "Bound.excluded<T>(value: T): Bound<T>",
+        "Bound.unbounded",
+        "Bound.unknown"
+      ]
+    },
+    {
+      "id": "values.IntervalPoint",
+      "name": "IntervalPoint",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "CivilDate | Instant"
+      ]
+    },
+    {
+      "id": "values.Domain",
+      "name": "Domain",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "\"civil/gregory\" | \"physical\" (not exported)"
+      ]
+    },
+    {
+      "id": "values.UtvValue",
+      "name": "UtvValue",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "CivilDate | CivilYearMonth | CivilTime | CivilDateTime | FixedOffsetDateTime | ZonedIntent | Instant | Period | PosixSeconds | ElapsedSeconds | Interval<CivilDate> | Interval<Instant>"
+      ]
+    },
+    {
+      "id": "values.Int",
+      "name": "Int",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "number | bigint (a number must be a safe integer)"
+      ]
+    },
+    {
+      "id": "values.SubSecond",
+      "name": "SubSecond",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "readonly numerator: bigint",
+        "readonly denominator: bigint"
+      ]
+    },
+    {
+      "id": "values.PeriodParts",
+      "name": "PeriodParts",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "years?: Int",
+        "months?: Int",
+        "weeks?: Int",
+        "days?: Int",
+        "hours?: Int",
+        "minutes?: Int",
+        "seconds?: Int"
+      ]
+    },
+    {
+      "id": "values.DateFacts",
+      "name": "DateFacts",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "dayOfWeek: number",
+        "dayOfYear: number",
+        "isoWeekYear: string",
+        "isoWeek: number",
+        "daysInMonth: number",
+        "isLeapYear: boolean"
+      ]
+    },
+    {
+      "id": "values.Class",
+      "name": "Class<T>",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/values.ts"
+      ],
+      "members": [
+        "{ prototype: T; name: string } (not exported)"
+      ]
+    },
+    {
+      "id": "context.TemporalContext",
+      "name": "TemporalContext",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/context.ts"
+      ],
+      "members": [
+        "private constructor(readonly rules: ZoneRules)",
+        "static with(rules: ZoneRules): TemporalContext",
+        "resolve(zoned: ZonedIntent, policy?: ResolutionPolicy): Outcome<Instant>",
+        "inZone(instant: Instant, zoneId: string): Outcome<ZonedIntent>",
+        "compare(a: ZonedIntent | Instant, b: ZonedIntent | Instant): Outcome<Ordering>"
+      ]
+    },
+    {
+      "id": "outcome.OutcomeBase",
+      "name": "OutcomeBase<T>",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "abstract (not exported)",
+        "abstract readonly status: OutcomeStatus",
+        "readonly diagnostics: readonly Diagnostic[]",
+        "uniqueOr<F>(fallback: F): T | F",
+        "single(): T",
+        "toString(): string",
+        "toResult(): UtvResult"
+      ]
+    },
+    {
+      "id": "outcome.Unique",
+      "name": "Unique<T>",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "readonly status = \"unique\"",
+        "readonly value: T",
+        "constructor(value: T, diagnostics?: readonly Diagnostic[], operation?: string)"
+      ]
+    },
+    {
+      "id": "outcome.Multiple",
+      "name": "Multiple<T>",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "readonly status = \"multiple\"",
+        "readonly values: readonly T[]",
+        "constructor(values: readonly T[], diagnostics?: readonly Diagnostic[], operation?: string)"
+      ]
+    },
+    {
+      "id": "outcome.None",
+      "name": "None<T>",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "readonly status = \"none\"",
+        "constructor(diagnostics?: readonly Diagnostic[], operation?: string)"
+      ]
+    },
+    {
+      "id": "outcome.Unsupported",
+      "name": "Unsupported<T>",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "readonly status = \"unsupported\"",
+        "constructor(diagnostics?: readonly Diagnostic[], operation?: string)"
+      ]
+    },
+    {
+      "id": "outcome.Invalid",
+      "name": "Invalid<T>",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "readonly status = \"invalid\"",
+        "constructor(diagnostics?: readonly Diagnostic[], operation?: string)"
+      ]
+    },
+    {
+      "id": "outcome.Outcome",
+      "name": "Outcome<T>",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "Unique<T> | Multiple<T> | None<T> | Unsupported<T> | Invalid<T>, discriminated on status",
+        "assertNever(x: never, message?: string): never"
+      ]
+    },
+    {
+      "id": "outcome.OutcomeStatus",
+      "name": "OutcomeStatus",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "\"unique\" | \"multiple\" | \"none\" | \"unsupported\" | \"invalid\""
+      ]
+    },
+    {
+      "id": "outcome.OutcomeError",
+      "name": "OutcomeError",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "readonly name = \"OutcomeError\"",
+        "constructor(readonly status: OutcomeStatus, readonly diagnostics: readonly Diagnostic[])"
+      ]
+    },
+    {
+      "id": "outcome.Truth",
+      "name": "Truth",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "\"definitely\" | \"possibly\" | \"impossible\"",
+        "Truth.Definitely, Truth.Possibly, Truth.Impossible"
+      ]
+    },
+    {
+      "id": "outcome.Ordering",
+      "name": "Ordering",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "\"before\" | \"equal\" | \"after\"",
+        "Ordering.Before, Ordering.Equal, Ordering.After"
+      ]
+    },
+    {
+      "id": "outcome.Weekday",
+      "name": "Weekday",
+      "kind": "enum",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "Monday = 1",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ]
+    },
+    {
+      "id": "outcome.MonthEnd",
+      "name": "MonthEnd",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "\"reject\" | \"constrain\"",
+        "MonthEnd.Reject, MonthEnd.Constrain"
+      ]
+    },
+    {
+      "id": "outcome.Gap",
+      "name": "Gap",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "\"reject\" | \"preserve-unresolved\" | \"shift-forward-by-gap\"",
+        "Gap.Reject, Gap.PreserveUnresolved, Gap.ShiftForward"
+      ]
+    },
+    {
+      "id": "outcome.Overlap",
+      "name": "Overlap",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "\"reject\" | \"all\" | \"earliest\" | \"latest\"",
+        "Overlap.Reject, Overlap.All, Overlap.Earliest, Overlap.Latest"
+      ]
+    },
+    {
+      "id": "outcome.ResolutionPolicy",
+      "name": "ResolutionPolicy",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/outcome.ts"
+      ],
+      "members": [
+        "readonly gap?: Gap",
+        "readonly overlap?: Overlap",
+        "ResolutionPolicy.Strict",
+        "ResolutionPolicy.AllCandidates",
+        "ResolutionPolicy.of(gap: Gap, overlap: Overlap): ResolutionPolicy"
+      ]
+    },
+    {
+      "id": "zones.ZoneRules",
+      "name": "ZoneRules",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/zones.ts"
+      ],
+      "members": [
+        "constructor(readonly ruleSet: Json, readonly validFrom: bigint, readonly validUntil: bigint, zones: ReadonlyMap<string, ZoneData>)",
+        "static load(path: string | URL): ZoneRules",
+        "static parse(text: string): ZoneRules",
+        "has(zoneId: string): boolean",
+        "get zoneIds(): string[]",
+        "covers(t: Rational): boolean",
+        "offsetAt(zoneId: string, t: Rational): number",
+        "transitions(zoneId: string): { at: bigint; before: number; after: number }[]"
+      ]
+    },
+    {
+      "id": "zones.RulesError",
+      "name": "RulesError",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/zones.ts"
+      ],
+      "members": [
+        "thrown by loadRules, ZoneRules.load and ZoneRules.parse for a malformed bundle"
+      ]
+    },
+    {
+      "id": "zones.ZoneData",
+      "name": "ZoneData",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/zones.ts"
+      ],
+      "members": [
+        "initialOffset: number",
+        "transitions: Transition[]"
+      ]
+    },
+    {
+      "id": "zones.Transition",
+      "name": "Transition",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/zones.ts"
+      ],
+      "members": [
+        "at: bigint",
+        "offset: number"
+      ]
+    },
+    {
+      "id": "zones.ResolutionPolicy",
+      "name": "ResolutionPolicy",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/zones.ts"
+      ],
+      "members": [
+        "gap?: GapPolicy",
+        "overlap?: OverlapPolicy"
+      ]
+    },
+    {
+      "id": "zones.GapPolicy",
+      "name": "GapPolicy",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/zones.ts"
+      ],
+      "members": [
+        "\"reject\" | \"preserve-unresolved\" | \"shift-forward-by-gap\""
+      ]
+    },
+    {
+      "id": "zones.OverlapPolicy",
+      "name": "OverlapPolicy",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/zones.ts"
+      ],
+      "members": [
+        "\"reject\" | \"all\" | \"earliest\" | \"latest\""
+      ]
+    },
+    {
+      "id": "native.NativeResult",
+      "name": "NativeResult<T>",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/native.ts"
+      ],
+      "members": [
+        "status: Status",
+        "value?: T",
+        "loss: { classification: LossClassification; fields: string[] }",
+        "diagnostics: Diagnostic[]"
+      ]
+    },
+    {
+      "id": "native.DateIntent",
+      "name": "DateIntent",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/native.ts"
+      ],
+      "members": [
+        "\"instant\" | \"local\" | { offsetSeconds: number } | { zone: string; rules: ZoneRules | string | Json }"
+      ]
+    },
+    {
+      "id": "native.PlainDate",
+      "name": "PlainDate",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/native.ts"
+      ],
+      "members": [
+        "year: number",
+        "month: number",
+        "day: number"
+      ]
+    },
+    {
+      "id": "result.UtvResult",
+      "name": "UtvResult",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/result.ts"
+      ],
+      "members": [
+        "schema: \"utv-result/1.0\"",
+        "operation: string",
+        "status: Status",
+        "candidates: Json[]",
+        "manifest: { dependencies: Json[] }",
+        "assumptions: unknown[]",
+        "loss: { classification: LossClassification; fields: string[] }",
+        "diagnostics: Diagnostic[]"
+      ]
+    },
+    {
+      "id": "result.Diagnostic",
+      "name": "Diagnostic",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/result.ts"
+      ],
+      "members": [
+        "code: string",
+        "severity: Severity",
+        "path: string",
+        "message: string",
+        "evidenceRefs?: string[]"
+      ]
+    },
+    {
+      "id": "result.ResultOptions",
+      "name": "ResultOptions",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/result.ts"
+      ],
+      "members": [
+        "operation?: string",
+        "candidates?: Json[]",
+        "dependencies?: Json[]",
+        "loss?: { classification: LossClassification; fields: string[] }"
+      ]
+    },
+    {
+      "id": "result.Status",
+      "name": "Status",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/result.ts"
+      ],
+      "members": [
+        "\"invalid\" | \"unsupported\" | \"indeterminate\" | \"none\" | \"unique\" | \"multiple\" | \"range\" | \"symbolic\" | \"resource-limit\" | \"error\" | \"valid\""
+      ]
+    },
+    {
+      "id": "result.Severity",
+      "name": "Severity",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/result.ts"
+      ],
+      "members": [
+        "\"error\" | \"warning\" | \"info\""
+      ]
+    },
+    {
+      "id": "result.LossClassification",
+      "name": "LossClassification",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/result.ts"
+      ],
+      "members": [
+        "\"lossless\" | \"information-losing\" | \"assumption-dependent\" | \"unrepresentable\""
+      ]
+    },
+    {
+      "id": "json.Json",
+      "name": "Json",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/json.ts"
+      ],
+      "members": [
+        "null | boolean | number | string | Json[] | { [k: string]: Json }"
+      ]
+    },
+    {
+      "id": "json.JsonError",
+      "name": "JsonError",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/json.ts"
+      ],
+      "members": [
+        "constructor(message: string, readonly code: \"duplicate-key\" | \"malformed-json\", readonly path: string)"
+      ]
+    },
+    {
+      "id": "structural.Ctx",
+      "name": "Ctx",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/structural.ts"
+      ],
+      "members": [
+        "invalid: Diagnostic[]",
+        "unsupported: Diagnostic[]",
+        "err(code: string, path: string, message: string): void"
+      ]
+    },
+    {
+      "id": "structural.KindSpec",
+      "name": "KindSpec",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/structural.ts"
+      ],
+      "members": [
+        "required: string[]",
+        "allowed: string[]"
+      ]
+    },
+    {
+      "id": "builders.Int",
+      "name": "Int",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/builders.ts"
+      ],
+      "members": [
+        "number | bigint | string (a decimal string)"
+      ]
+    },
+    {
+      "id": "builders.PeriodParts",
+      "name": "PeriodParts",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/builders.ts"
+      ],
+      "members": [
+        "years?: Int",
+        "months?: Int",
+        "weeks?: Int",
+        "days?: Int",
+        "hours?: Int",
+        "minutes?: Int",
+        "seconds?: Int"
+      ]
+    },
+    {
+      "id": "builders.OpenEnd",
+      "name": "OpenEnd",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/builders.ts"
+      ],
+      "members": [
+        "\"unbounded\" | \"unknown\""
+      ]
+    },
+    {
+      "id": "ops.AddPolicy",
+      "name": "AddPolicy",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/ops.ts"
+      ],
+      "members": [
+        "monthEnd?: \"reject\" | \"constrain\""
+      ]
+    },
+    {
+      "id": "ops.Interval",
+      "name": "Interval",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/ops.ts"
+      ],
+      "members": [
+        "domain: Domain",
+        "start: End",
+        "end: End",
+        "empty: boolean",
+        "(not exported)"
+      ]
+    },
+    {
+      "id": "ops.End",
+      "name": "End",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/ops.ts"
+      ],
+      "members": [
+        "{ state: \"included\" | \"excluded\"; p: Rational } | { state: \"unbounded\" } | { state: \"unknown\" } (not exported)"
+      ]
+    },
+    {
+      "id": "ops.Domain",
+      "name": "Domain",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/ops.ts"
+      ],
+      "members": [
+        "\"date\" | \"instant\" (not exported)"
+      ]
+    },
+    {
+      "id": "ops.Truth",
+      "name": "Truth",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/ops.ts"
+      ],
+      "members": [
+        "boolean | undefined: three-valued logic, undefined is unknown (not exported)"
+      ]
+    },
+    {
+      "id": "text.Endpoint",
+      "name": "Endpoint",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/text.ts"
+      ],
+      "members": [
+        "{ state: \"included\" | \"excluded\"; point: Obj } | { state: \"unbounded\" | \"unknown\" } (not exported)"
+      ]
+    },
+    {
+      "id": "internal.Civil",
+      "name": "Civil",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/internal.ts"
+      ],
+      "members": [
+        "form: Form",
+        "year: bigint",
+        "month: number",
+        "day: number",
+        "hour: number",
+        "minute: number",
+        "second: number",
+        "nano: number",
+        "hasSecond: boolean",
+        "zone: Zone",
+        "offsetAssertion?: number",
+        "resolutionPolicy?: Obj"
+      ]
+    },
+    {
+      "id": "internal.Zone",
+      "name": "Zone",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/internal.ts"
+      ],
+      "members": [
+        "{ type: \"floating\" } | { type: \"iana\"; id: string } | { type: \"fixed-offset\"; seconds: number }"
+      ]
+    },
+    {
+      "id": "internal.Form",
+      "name": "Form",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/internal.ts"
+      ],
+      "members": [
+        "\"date\" | \"year-month\" | \"time\" | \"datetime\""
+      ]
+    },
+    {
+      "id": "internal.Amount",
+      "name": "Amount",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/internal.ts"
+      ],
+      "members": [
+        "{ basis: \"calendar\"; c: Record<Component, bigint> } | { basis: \"clock-ticks\"; seconds: Rational } | { basis: \"elapsed\" }"
+      ]
+    },
+    {
+      "id": "internal.Component",
+      "name": "Component",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/internal.ts"
+      ],
+      "members": [
+        "\"years\" | \"months\" | \"weeks\" | \"days\" | \"hours\" | \"minutes\" | \"seconds\""
+      ]
+    },
+    {
+      "id": "internal.Outcome",
+      "name": "Outcome",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/internal.ts"
+      ],
+      "members": [
+        "status: Status",
+        "candidates?: Json[]",
+        "diagnostics?: Diagnostic[]",
+        "dependencies?: Json[]",
+        "loss?: { classification: LossClassification; fields: string[] }"
+      ]
+    },
+    {
+      "id": "internal.Fail",
+      "name": "Fail",
+      "kind": "class",
+      "sources": [
+        "implementations/typescript/src/internal.ts"
+      ],
+      "members": [
+        "constructor(readonly status: Status, readonly diagnostic: Diagnostic)",
+        "thrown inside an operation; never escapes run()"
+      ]
+    },
+    {
+      "id": "internal.Obj",
+      "name": "Obj",
+      "kind": "type",
+      "sources": [
+        "implementations/typescript/src/internal.ts",
+        "implementations/typescript/src/structural.ts",
+        "implementations/typescript/src/civil.ts",
+        "implementations/typescript/src/builders.ts"
+      ],
+      "members": [
+        "{ [k: string]: Json }",
+        "exported from internal.ts; structural.ts, civil.ts and builders.ts each declare the same local alias"
+      ]
+    },
+    {
+      "id": "rational.Rational",
+      "name": "Rational",
+      "kind": "interface",
+      "sources": [
+        "implementations/typescript/src/rational.ts"
+      ],
+      "members": [
+        "n: bigint",
+        "d: bigint",
+        "always in lowest terms with a positive denominator"
+      ]
+    },
+    {
+      "id": "ext.Error",
+      "name": "Error",
+      "kind": "class",
+      "sources": [],
+      "members": [
+        "JavaScript built-in"
+      ],
+      "external": true
+    },
+    {
+      "id": "ext.Date",
+      "name": "Date",
+      "kind": "class",
+      "sources": [],
+      "members": [
+        "JavaScript built-in: milliseconds since 1970, between ±8.64e15"
+      ],
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "values.Ordered",
+      "to": "values.TemporalValue",
+      "kind": "inherits",
+      "description": "A value with a total order is a value."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "values.Ordered",
+      "kind": "inherits",
+      "description": "Ordered<CivilDate>."
+    },
+    {
+      "from": "values.CivilYearMonth",
+      "to": "values.Ordered",
+      "kind": "inherits",
+      "description": "Ordered<CivilYearMonth>."
+    },
+    {
+      "from": "values.CivilTime",
+      "to": "values.Ordered",
+      "kind": "inherits",
+      "description": "Ordered<CivilTime>; a missing second compares as 0."
+    },
+    {
+      "from": "values.CivilDateTime",
+      "to": "values.Ordered",
+      "kind": "inherits",
+      "description": "Ordered<CivilDateTime>."
+    },
+    {
+      "from": "values.FixedOffsetDateTime",
+      "to": "values.Ordered",
+      "kind": "inherits",
+      "description": "Ordered by the instant it names."
+    },
+    {
+      "from": "values.Instant",
+      "to": "values.Ordered",
+      "kind": "inherits",
+      "description": "Ordered<Instant>."
+    },
+    {
+      "from": "values.ZonedIntent",
+      "to": "values.TemporalValue",
+      "kind": "inherits",
+      "description": "No compare: ordering needs zone rules."
+    },
+    {
+      "from": "values.Period",
+      "to": "values.TemporalValue",
+      "kind": "inherits",
+      "description": "A calendar amount; not ordered."
+    },
+    {
+      "from": "values.PosixSeconds",
+      "to": "values.TemporalValue",
+      "kind": "inherits",
+      "description": "Overrides toString with a display string."
+    },
+    {
+      "from": "values.ElapsedSeconds",
+      "to": "values.TemporalValue",
+      "kind": "inherits",
+      "description": "Overrides toString with a display string."
+    },
+    {
+      "from": "values.Interval",
+      "to": "values.TemporalValue",
+      "kind": "inherits",
+      "description": "A start-end interval value."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "internal.Civil",
+      "kind": "depends-on",
+      "description": "Holds its fields as a Civil record."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "values.CivilDateTime",
+      "kind": "depends-on",
+      "description": "at(time) returns a date-time."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "values.CivilTime",
+      "kind": "depends-on",
+      "description": "at(time) takes a time of day."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "values.Period",
+      "kind": "depends-on",
+      "description": "add(period)."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "outcome.MonthEnd",
+      "kind": "depends-on",
+      "description": "addMonths and addYears take MonthEnd.Constrain for the total overload."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "outcome.Weekday",
+      "kind": "depends-on",
+      "description": "dayOfWeek."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "outcome.Outcome",
+      "kind": "depends-on",
+      "description": "Partial operations return an Outcome."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "values.DateFacts",
+      "kind": "depends-on",
+      "description": "Caches the JSON layer's fields answer."
+    },
+    {
+      "from": "values.CivilDateTime",
+      "to": "values.ZonedIntent",
+      "kind": "depends-on",
+      "description": "inZone(zoneId)."
+    },
+    {
+      "from": "values.CivilDateTime",
+      "to": "values.FixedOffsetDateTime",
+      "kind": "depends-on",
+      "description": "atOffset(seconds)."
+    },
+    {
+      "from": "values.CivilDateTime",
+      "to": "values.CivilDate",
+      "kind": "depends-on",
+      "description": "The date getter."
+    },
+    {
+      "from": "values.FixedOffsetDateTime",
+      "to": "values.Instant",
+      "kind": "depends-on",
+      "description": "toInstant() needs no rules."
+    },
+    {
+      "from": "values.ZonedIntent",
+      "to": "context.TemporalContext",
+      "kind": "depends-on",
+      "description": "resolve(ctx) reads the context's rules."
+    },
+    {
+      "from": "values.ZonedIntent",
+      "to": "outcome.ResolutionPolicy",
+      "kind": "depends-on",
+      "description": "The optional gap and overlap policy."
+    },
+    {
+      "from": "values.ZonedIntent",
+      "to": "values.Instant",
+      "kind": "depends-on",
+      "description": "resolve returns Outcome<Instant>."
+    },
+    {
+      "from": "values.Instant",
+      "to": "rational.Rational",
+      "kind": "depends-on",
+      "description": "Holds exact seconds since the epoch."
+    },
+    {
+      "from": "values.Instant",
+      "to": "values.PosixSeconds",
+      "kind": "depends-on",
+      "description": "add and until."
+    },
+    {
+      "from": "values.Instant",
+      "to": "values.ElapsedSeconds",
+      "kind": "depends-on",
+      "description": "add(ElapsedSeconds) is unsupported without leap seconds."
+    },
+    {
+      "from": "values.Instant",
+      "to": "values.ZonedIntent",
+      "kind": "depends-on",
+      "description": "inZone(zoneId, ctx)."
+    },
+    {
+      "from": "values.Instant",
+      "to": "values.FixedOffsetDateTime",
+      "kind": "depends-on",
+      "description": "atOffset(seconds)."
+    },
+    {
+      "from": "values.Instant",
+      "to": "values.SubSecond",
+      "kind": "depends-on",
+      "description": "The exact fraction of the second."
+    },
+    {
+      "from": "values.Instant",
+      "to": "ext.Date",
+      "kind": "depends-on",
+      "description": "fromDate and toDate."
+    },
+    {
+      "from": "values.Period",
+      "to": "values.PeriodParts",
+      "kind": "depends-on",
+      "description": "Period.of(parts)."
+    },
+    {
+      "from": "values.Period",
+      "to": "internal.Component",
+      "kind": "depends-on",
+      "description": "One bigint per component."
+    },
+    {
+      "from": "values.Interval",
+      "to": "values.Bound",
+      "kind": "depends-on",
+      "description": "Its start and end."
+    },
+    {
+      "from": "values.Interval",
+      "to": "values.IntervalPoint",
+      "kind": "depends-on",
+      "description": "Points are dates or instants."
+    },
+    {
+      "from": "values.Interval",
+      "to": "values.Domain",
+      "kind": "depends-on",
+      "description": "civil/gregory or physical."
+    },
+    {
+      "from": "values.Interval",
+      "to": "outcome.Truth",
+      "kind": "depends-on",
+      "description": "contains and overlaps answer with a Truth."
+    },
+    {
+      "from": "values.IntervalPoint",
+      "to": "values.CivilDate",
+      "kind": "depends-on",
+      "description": "A date point."
+    },
+    {
+      "from": "values.IntervalPoint",
+      "to": "values.Instant",
+      "kind": "depends-on",
+      "description": "An instant point."
+    },
+    {
+      "from": "values.UtvValue",
+      "to": "values.TemporalValue",
+      "kind": "depends-on",
+      "description": "The union of every concrete typed value, returned by parse and fromJson."
+    },
+    {
+      "from": "values.PeriodParts",
+      "to": "values.Int",
+      "kind": "depends-on",
+      "description": "Each part is an Int."
+    },
+    {
+      "from": "context.TemporalContext",
+      "to": "zones.ZoneRules",
+      "kind": "depends-on",
+      "description": "Holds the rules once."
+    },
+    {
+      "from": "context.TemporalContext",
+      "to": "values.ZonedIntent",
+      "kind": "depends-on",
+      "description": "Resolves and compares zoned values."
+    },
+    {
+      "from": "context.TemporalContext",
+      "to": "values.Instant",
+      "kind": "depends-on",
+      "description": "Compares and converts instants."
+    },
+    {
+      "from": "context.TemporalContext",
+      "to": "outcome.Ordering",
+      "kind": "depends-on",
+      "description": "compare returns Outcome<Ordering>."
+    },
+    {
+      "from": "outcome.Unique",
+      "to": "outcome.OutcomeBase",
+      "kind": "inherits",
+      "description": "Exactly one answer."
+    },
+    {
+      "from": "outcome.Multiple",
+      "to": "outcome.OutcomeBase",
+      "kind": "inherits",
+      "description": "Several answers, ascending."
+    },
+    {
+      "from": "outcome.None",
+      "to": "outcome.OutcomeBase",
+      "kind": "inherits",
+      "description": "Proven: no answer."
+    },
+    {
+      "from": "outcome.Unsupported",
+      "to": "outcome.OutcomeBase",
+      "kind": "inherits",
+      "description": "The library cannot answer."
+    },
+    {
+      "from": "outcome.Invalid",
+      "to": "outcome.OutcomeBase",
+      "kind": "inherits",
+      "description": "The input contradicts itself or the rules."
+    },
+    {
+      "from": "outcome.Outcome",
+      "to": "outcome.Unique",
+      "kind": "depends-on",
+      "description": "Union member."
+    },
+    {
+      "from": "outcome.Outcome",
+      "to": "outcome.Multiple",
+      "kind": "depends-on",
+      "description": "Union member."
+    },
+    {
+      "from": "outcome.Outcome",
+      "to": "outcome.None",
+      "kind": "depends-on",
+      "description": "Union member."
+    },
+    {
+      "from": "outcome.Outcome",
+      "to": "outcome.Unsupported",
+      "kind": "depends-on",
+      "description": "Union member."
+    },
+    {
+      "from": "outcome.Outcome",
+      "to": "outcome.Invalid",
+      "kind": "depends-on",
+      "description": "Union member."
+    },
+    {
+      "from": "outcome.OutcomeBase",
+      "to": "outcome.OutcomeError",
+      "kind": "depends-on",
+      "description": "single() throws it unless the outcome is unique."
+    },
+    {
+      "from": "outcome.OutcomeBase",
+      "to": "result.UtvResult",
+      "kind": "depends-on",
+      "description": "toResult() builds the utv-result/1.0 envelope."
+    },
+    {
+      "from": "outcome.OutcomeBase",
+      "to": "result.Diagnostic",
+      "kind": "depends-on",
+      "description": "Every case carries diagnostics."
+    },
+    {
+      "from": "outcome.OutcomeBase",
+      "to": "outcome.OutcomeStatus",
+      "kind": "depends-on",
+      "description": "Its status."
+    },
+    {
+      "from": "outcome.OutcomeError",
+      "to": "ext.Error",
+      "kind": "inherits",
+      "description": "An ordinary JavaScript error."
+    },
+    {
+      "from": "outcome.ResolutionPolicy",
+      "to": "outcome.Gap",
+      "kind": "depends-on",
+      "description": "The gap policy."
+    },
+    {
+      "from": "outcome.ResolutionPolicy",
+      "to": "outcome.Overlap",
+      "kind": "depends-on",
+      "description": "The overlap policy."
+    },
+    {
+      "from": "zones.ZoneRules",
+      "to": "zones.ZoneData",
+      "kind": "depends-on",
+      "description": "One record per zone."
+    },
+    {
+      "from": "zones.ZoneData",
+      "to": "zones.Transition",
+      "kind": "depends-on",
+      "description": "Ascending transitions."
+    },
+    {
+      "from": "zones.ZoneRules",
+      "to": "rational.Rational",
+      "kind": "depends-on",
+      "description": "covers and offsetAt take exact instants."
+    },
+    {
+      "from": "zones.ZoneRules",
+      "to": "zones.RulesError",
+      "kind": "depends-on",
+      "description": "load and parse throw it for a malformed bundle."
+    },
+    {
+      "from": "zones.RulesError",
+      "to": "ext.Error",
+      "kind": "inherits",
+      "description": "An ordinary JavaScript error."
+    },
+    {
+      "from": "zones.ResolutionPolicy",
+      "to": "zones.GapPolicy",
+      "kind": "depends-on",
+      "description": "The gap policy."
+    },
+    {
+      "from": "zones.ResolutionPolicy",
+      "to": "zones.OverlapPolicy",
+      "kind": "depends-on",
+      "description": "The overlap policy."
+    },
+    {
+      "from": "native.DateIntent",
+      "to": "zones.ZoneRules",
+      "kind": "depends-on",
+      "description": "A named zone comes with explicit rules."
+    },
+    {
+      "from": "native.NativeResult",
+      "to": "result.Status",
+      "kind": "depends-on",
+      "description": "Its status."
+    },
+    {
+      "from": "native.NativeResult",
+      "to": "result.Diagnostic",
+      "kind": "depends-on",
+      "description": "Loss warnings and refusals."
+    },
+    {
+      "from": "native.NativeResult",
+      "to": "result.LossClassification",
+      "kind": "depends-on",
+      "description": "What the conversion lost."
+    },
+    {
+      "from": "native.NativeResult",
+      "to": "ext.Date",
+      "kind": "depends-on",
+      "description": "toDate returns NativeResult<Date>."
+    },
+    {
+      "from": "result.UtvResult",
+      "to": "result.Status",
+      "kind": "depends-on",
+      "description": "Its status."
+    },
+    {
+      "from": "result.UtvResult",
+      "to": "result.Diagnostic",
+      "kind": "depends-on",
+      "description": "Its diagnostics."
+    },
+    {
+      "from": "result.UtvResult",
+      "to": "result.LossClassification",
+      "kind": "depends-on",
+      "description": "Its loss report."
+    },
+    {
+      "from": "result.Diagnostic",
+      "to": "result.Severity",
+      "kind": "depends-on",
+      "description": "Its severity."
+    },
+    {
+      "from": "json.JsonError",
+      "to": "ext.Error",
+      "kind": "inherits",
+      "description": "Thrown by parseStrict."
+    },
+    {
+      "from": "structural.Ctx",
+      "to": "result.Diagnostic",
+      "kind": "depends-on",
+      "description": "Collects invalid and unsupported diagnostics."
+    },
+    {
+      "from": "structural.Ctx",
+      "to": "structural.KindSpec",
+      "kind": "depends-on",
+      "description": "Checks each kind's value against its KindSpec."
+    },
+    {
+      "from": "builders.PeriodParts",
+      "to": "builders.Int",
+      "kind": "depends-on",
+      "description": "Each part is an Int."
+    },
+    {
+      "from": "ops.Interval",
+      "to": "ops.End",
+      "kind": "depends-on",
+      "description": "Its start and end."
+    },
+    {
+      "from": "ops.Interval",
+      "to": "ops.Domain",
+      "kind": "depends-on",
+      "description": "Date or instant."
+    },
+    {
+      "from": "ops.End",
+      "to": "rational.Rational",
+      "kind": "depends-on",
+      "description": "A point as an epoch day or exact seconds."
+    },
+    {
+      "from": "text.Endpoint",
+      "to": "internal.Obj",
+      "kind": "depends-on",
+      "description": "A point as UTV JSON."
+    },
+    {
+      "from": "internal.Civil",
+      "to": "internal.Form",
+      "kind": "depends-on",
+      "description": "Its civil form."
+    },
+    {
+      "from": "internal.Civil",
+      "to": "internal.Zone",
+      "kind": "depends-on",
+      "description": "Its zone."
+    },
+    {
+      "from": "internal.Amount",
+      "to": "internal.Component",
+      "kind": "depends-on",
+      "description": "Calendar components."
+    },
+    {
+      "from": "internal.Amount",
+      "to": "rational.Rational",
+      "kind": "depends-on",
+      "description": "Exact clock-tick seconds."
+    },
+    {
+      "from": "internal.Outcome",
+      "to": "result.Status",
+      "kind": "depends-on",
+      "description": "What an operation body returns to run()."
+    },
+    {
+      "from": "internal.Fail",
+      "to": "result.Diagnostic",
+      "kind": "depends-on",
+      "description": "Carries the status and diagnostic that end an operation."
+    }
+  ]
+}

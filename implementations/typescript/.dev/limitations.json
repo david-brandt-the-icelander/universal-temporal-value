@@ -1,0 +1,242 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/limitations.schema.json",
+  "kind": "limitations",
+  "title": "TypeScript library limitations",
+  "folder": "implementations/typescript",
+  "entities": [
+    {
+      "id": "everyday-subset-only",
+      "title": "Operations cover the everyday kinds only",
+      "summary": "All 26 kinds are validated structurally, but operations and typed values exist only for civil values, POSIX instants, calendar and second amounts and start-end intervals.",
+      "impact": "Recurrences, uncertain values, sets, clocks, logical clocks and the other kinds can be checked for shape and nothing more; an operation given one answers unsupported (unsupported-operand), and fromJson gives unsupported (unsupported-operand) for any value no typed class can hold.",
+      "workaround": "Keep such values as UTV JSON; validateStructural still checks them.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "decode"
+        },
+        {
+          "path": "implementations/typescript/src/structural.ts",
+          "symbol": "KINDS"
+        },
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "readCivil"
+        }
+      ]
+    },
+    {
+      "id": "gregorian-only",
+      "title": "Proleptic Gregorian calendar only",
+      "summary": "Civil values in any other calendar or chronology are unsupported (unsupported-calendar).",
+      "impact": "A Hebrew, Julian or other calendar date can be validated structurally but not checked, compared or converted.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "readCivil"
+        },
+        {
+          "path": "implementations/typescript/src/civil.ts",
+          "symbol": "validateSemantic"
+        }
+      ]
+    },
+    {
+      "id": "civil-forms",
+      "title": "Four civil forms, without location or quality",
+      "summary": "Only date, year-month, time and datetime forms are read; week and ordinal dates are unsupported (unsupported-form in text, unsupported-operand in JSON), and so are civil location and quality.",
+      "impact": "Values in other civil forms, or carrying location or quality, can't be used in operations.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "FORM_FIELDS"
+        },
+        {
+          "path": "implementations/typescript/src/iso.ts",
+          "symbol": "UNSUPPORTED_FORMS"
+        }
+      ]
+    },
+    {
+      "id": "no-leap-seconds",
+      "title": "No leap-second table and no end-of-day policy",
+      "summary": "Second 60 is unsupported (leap-second), 24:00 is unsupported (end-of-day), and SI seconds can't be added to a POSIX instant (needs-leap-seconds).",
+      "impact": "23:59:60 can be validated structurally but not built, parsed or resolved; ElapsedSeconds can be held but not applied to an Instant.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "readCivil"
+        },
+        {
+          "path": "implementations/typescript/src/iso.ts",
+          "symbol": "checkTime"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        }
+      ]
+    },
+    {
+      "id": "posix-timescale-only",
+      "title": "POSIX instants only",
+      "summary": "Instants must be on the unix-posix timescale with ticks; another timescale, a coordinate or quality is unsupported (unsupported-operand).",
+      "impact": "TAI, GPS, TT and other timescales can't be compared or converted.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "readInstant"
+        }
+      ]
+    },
+    {
+      "id": "zones-from-supplied-rules",
+      "title": "Zones only from a supplied rule bundle, inside its window",
+      "summary": "Named zones resolve only under a rule bundle the caller passes, and only for zones and dates it covers; there is no bundled tz database.",
+      "impact": "A zone missing from the bundle is unsupported (unknown-zone), a date outside its window is unsupported (outside-rule-window), and zone rules embedded in a value (zone.rules) are unsupported (unsupported-operand). The only bundle in the repository is the demo bundle: New York, Paris and Reykjavik for 2026–2027.",
+      "workaround": "Pass a rule bundle in the format of conformance/rules/demo-zones.json that covers the zones and years needed.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "resolve"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "toZone"
+        },
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "readZone"
+        },
+        {
+          "path": "implementations/typescript/README.md",
+          "symbol": "Policies and the context"
+        }
+      ]
+    },
+    {
+      "id": "intervals-start-end",
+      "title": "Start-end intervals of dates or instants only",
+      "summary": "contains, overlaps, the typed Interval and the text form handle only start-end intervals in the civil/gregory and physical domains.",
+      "impact": "start-amount and amount-end intervals and other domains are unsupported (unsupported-operand) and have no text form (no-text-form). An interval marked empty works in contains and overlaps (impossible) but has no typed value and no text form.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "readInterval"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "intervalValue"
+        },
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "formatInterval"
+        }
+      ]
+    },
+    {
+      "id": "amounts",
+      "title": "Calendar, clock-tick and elapsed amounts with whole components",
+      "summary": "Amount sequences, other bases, other clock-tick rules and fractional calendar components are unsupported.",
+      "impact": "P1.5M can't be parsed (unsupported-form) or added (unsupported-operand).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "readAmount"
+        },
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "periodOf"
+        }
+      ]
+    },
+    {
+      "id": "number-results",
+      "title": "Some answers are JavaScript numbers",
+      "summary": "Day counts, months, days, hours and the other civil fields are numbers, and a civil date-time holds whole nanoseconds.",
+      "impact": "daysBetween beyond Number.MAX_SAFE_INTEGER days is unsupported (implementation-limit); an instant finer than a nanosecond can't become a civil date-time (implementation-limit) or be formatted (no-text-form); toPlainDate and toEpochMilliseconds refuse values beyond a safe integer (out-of-native-range).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "daysBetween"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "civilAt"
+        },
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "toPlainDate"
+        }
+      ]
+    },
+    {
+      "id": "text-form-gaps",
+      "title": "Values without a text form",
+      "summary": "Exact second counts, mixed-sign periods, zoned dates and times, offsets with seconds and EDTF qualifiers have no text form.",
+      "impact": "formatText answers unsupported (no-text-form) and a typed value's toString prints its JSON; PosixSeconds and ElapsedSeconds print a display string that parse does not read; 1347~ and 134X parse as unsupported (unsupported-form).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "formatPeriod"
+        },
+        {
+          "path": "implementations/typescript/src/iso.ts",
+          "symbol": "formatOffset"
+        },
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "EDTF_QUALIFIED"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "TemporalValue.toString"
+        }
+      ]
+    },
+    {
+      "id": "extensions-not-interpreted",
+      "title": "Extensions are not interpreted",
+      "summary": "Structural validation checks only that extensions is an object; extension names, types and criticality are not read.",
+      "impact": "A value with an unknown critical extension passes structural validation instead of failing closed.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/structural.ts",
+          "symbol": "checkEnvelope"
+        },
+        {
+          "path": "spec/SPECIFICATION.md",
+          "symbol": "2. Serialization and profiles"
+        }
+      ]
+    },
+    {
+      "id": "node-runtime",
+      "title": "Needs Node.js's file system module",
+      "summary": "zones.ts imports node:fs, so the package loads only where node:fs exists.",
+      "impact": "A runtime that provides no node:fs module (a browser without a bundler that supplies one) cannot load the package, even for code that never loads a rule file.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "readFileSync"
+        },
+        {
+          "path": "implementations/typescript/src/node.d.ts",
+          "symbol": "node:fs"
+        }
+      ]
+    }
+  ]
+}

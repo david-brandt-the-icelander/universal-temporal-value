@@ -1,0 +1,136 @@
+{
+  "$schema": "../../../Meta/Agents/Skills/describe-use-case/schema.json",
+  "kind": "use-case",
+  "title": "CI use cases",
+  "folder": ".github/workflows",
+  "description": "What happens to a contributor's change on GitHub.",
+  "sources": [
+    {
+      "path": ".github/workflows/validate.yml",
+      "symbol": "jobs.structural"
+    }
+  ],
+  "entities": [
+    {
+      "id": "check-a-change",
+      "name": "Have a pushed change checked",
+      "description": "A contributor pushes a branch or opens a pull request, and GitHub Actions runs the structural checks on it.",
+      "sources": [
+        {
+          "path": ".github/workflows/validate.yml",
+          "symbol": "on"
+        },
+        {
+          "path": ".github/workflows/validate.yml",
+          "symbol": "jobs.structural.steps"
+        }
+      ],
+      "actor": "Contributor",
+      "actorDocument": "Actors/contributor.md",
+      "goal": "See on the commit or the pull request whether the change keeps the specification material consistent and the side-by-side page current.",
+      "preconditions": [
+        "The change is pushed to the GitHub repository."
+      ],
+      "postconditions": [
+        "The Validate specification run has passed or failed on the commit, and on the pull request if there is one."
+      ],
+      "flow": [
+        {
+          "id": "push",
+          "actor": "Contributor",
+          "participantKind": "actor",
+          "actorDocument": "Actors/contributor.md",
+          "action": "Pushes a commit, or opens or updates a pull request.",
+          "sources": [
+            {
+              "path": ".github/workflows/validate.yml",
+              "symbol": "on"
+            }
+          ]
+        },
+        {
+          "id": "install",
+          "actor": "Validate specification",
+          "participantKind": "system",
+          "action": "Checks out the commit on ubuntu-latest, sets up Python 3.12 and installs tools/requirements.txt.",
+          "sources": [
+            {
+              "path": ".github/workflows/validate.yml",
+              "symbol": "jobs.structural.steps"
+            }
+          ]
+        },
+        {
+          "id": "validate",
+          "actor": "Validate specification",
+          "participantKind": "system",
+          "action": "Runs python3 tools/validate.py.",
+          "sources": [
+            {
+              "path": ".github/workflows/validate.yml",
+              "symbol": "jobs.structural.steps"
+            },
+            {
+              "path": "tools/validate.py",
+              "symbol": "main"
+            }
+          ]
+        },
+        {
+          "id": "side-by-side",
+          "actor": "Validate specification",
+          "participantKind": "system",
+          "action": "Runs python3 tools/side_by_side.py --check.",
+          "sources": [
+            {
+              "path": ".github/workflows/validate.yml",
+              "symbol": "jobs.structural.steps"
+            },
+            {
+              "path": "tools/side_by_side.py",
+              "symbol": "main"
+            }
+          ]
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "validate",
+          "condition": "A structural check fails.",
+          "outcome": "The run fails with the FAIL lines in its log; the side-by-side check does not run.",
+          "sources": [
+            {
+              "path": "tools/validate.py",
+              "symbol": "main"
+            }
+          ]
+        },
+        {
+          "atStep": "side-by-side",
+          "condition": "docs/side-by-side.md does not match the marked example tests.",
+          "outcome": "The run fails with \"docs/side-by-side.md is out of date\"; the contributor regenerates the page and pushes again (tools/.dev/use-case.json, update-the-side-by-side-page).",
+          "sources": [
+            {
+              "path": "tools/side_by_side.py",
+              "symbol": "main"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "use-case",
+      "folder": "tools",
+      "path": "tools/.dev/use-case.json",
+      "relationship": "The same checks, run locally before pushing."
+    },
+    {
+      "kind": "operation",
+      "folder": "tools",
+      "path": "tools/.dev/operation.json",
+      "relationship": "The commands the job runs."
+    }
+  ]
+}

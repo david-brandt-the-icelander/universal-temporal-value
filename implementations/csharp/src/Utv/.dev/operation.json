@@ -1,0 +1,580 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-operation/schema.json",
+  "kind": "operation",
+  "title": "JSON layer operations",
+  "folder": "implementations/csharp/src/Utv",
+  "description": "The public entrypoints on UTV JSON (library 0.1 and 0.2): validation, builders, ISO and text-form parsing and formatting, calendar operations, ranges, zones, zone rules and .NET interop. Each takes and returns JsonElement values; each operation of docs/everyday-api.md returns a UtvResult and never throws for a semantic outcome. Every UTV argument is first checked structurally, so any operation can also answer invalid (malformed-value with the structural codes) or unsupported (unsupported-version).",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+      "symbol": "Values.RequireStructural"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+      "symbol": "Op.Run"
+    },
+    {
+      "path": "implementations/csharp/README.md",
+      "symbol": "The JSON layer (0.1 and 0.2)"
+    }
+  ],
+  "entities": [
+    {
+      "id": "validate-structural",
+      "name": "Validate UTV JSON structurally",
+      "description": "UtvValidator.ValidateStructural(json): strict JSON, the version identifier first, the envelope, then every value against the embedded schema.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+          "symbol": "UtvValidator.ValidateStructural"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+        "symbol": "UtvValidator.ValidateStructural"
+      },
+      "action": "query",
+      "transport": "static method of UtvValidator",
+      "authorization": "None: an in-process library call.",
+      "result": "A validate result with status valid.",
+      "failures": [
+        "invalid (malformed-json) for comments, trailing commas, NaN, trailing content, unpaired surrogates or nesting deeper than 128.",
+        "invalid (duplicate-key) for a key repeated at any depth, with its JSON Pointer.",
+        "invalid (not-an-object) when the document is not an object.",
+        "unsupported (unsupported-version) for a well-formed identifier other than utv/1.0, such as utv/1.3 or utv/2.0, checked before anything else.",
+        "invalid (unknown-schema) for a missing, non-string or malformed identifier such as utv/4 or utv/1.",
+        "invalid (unknown-property, unknown-kind, missing-property, wrong-type, const-mismatch, enum-mismatch, too-short, pattern-mismatch, too-few-items, schema-violation) for schema violations."
+      ]
+    },
+    {
+      "id": "validate-gregorian",
+      "name": "Validate a Gregorian civil date",
+      "description": "GregorianCivil.Validate(json): a semantic check after structural validation. Only year, month and day of proleptic Gregorian civil values are judged.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+          "symbol": "GregorianCivil.Validate"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+        "symbol": "GregorianCivil.Validate"
+      },
+      "action": "query",
+      "transport": "static method of GregorianCivil",
+      "authorization": "None: an in-process library call.",
+      "result": "valid; missing fields are not required (a month-day 29 February is valid).",
+      "failures": [
+        "The structural result, unchanged, when it is not valid.",
+        "unsupported (unsupported-kind) for kinds other than civil.",
+        "unsupported (unsupported-calendar) for other calendars or chronologies.",
+        "invalid (month-out-of-range) for a month outside 1..12.",
+        "invalid (day-out-of-range) for a day the month does not have, such as 29 February in a common year."
+      ]
+    },
+    {
+      "id": "build",
+      "name": "Build a canonical value",
+      "description": "Build.Date, YearMonth, Time, DateTime, InZone, WithOffset, Instant, Period, PosixSeconds and Interval write the canonical shapes of docs/everyday-api.md. They produce shapes; they do not judge them.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Build.cs",
+          "symbol": "Build"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Build.cs",
+        "symbol": "Build.Date"
+      },
+      "action": "query",
+      "transport": "static methods of Build",
+      "authorization": "None: an in-process library call.",
+      "result": "A UTV JSON value. Build.Date(2026, 2, 30) is well-formed and names no real day.",
+      "failures": [
+        "ArgumentException from InZone and WithOffset for a value that is not civil, and from InZone for an empty zone id.",
+        "ArgumentException from Interval when neither bound holds a point, a point is neither civil nor an instant, or the two differ."
+      ]
+    },
+    {
+      "id": "parse-iso",
+      "name": "Parse ISO 8601 / RFC 3339 / RFC 9557 text",
+      "description": "Iso.ParseIso(text) (operation parseIso): extended format only.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Iso.cs",
+          "symbol": "Iso.ParseIso"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Iso.cs",
+        "symbol": "Iso.ParseIso"
+      },
+      "action": "query",
+      "transport": "static method of Iso",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with a date, year-month, time, floating date-time, fixed-offset date-time, zoned date-time (with offsetAssertion when an offset precedes the zone), or an instant for Z and -00:00.",
+      "failures": [
+        "invalid (syntax) outside the grammar, including lower-case t or z and a space for T.",
+        "invalid (day-out-of-range, month-out-of-range, field-out-of-range, offset-out-of-range) for out-of-range fields.",
+        "unsupported (leap-second) for second 60, (end-of-day) for 24:00.",
+        "unsupported (unsupported-form) for week dates, ordinal dates, basic format, a year alone, a decimal comma, a time with T or an offset, and basic-format offsets.",
+        "unsupported (unsupported-annotation) for annotations other than one [Area/Location], and for a zone after Z or -00:00.",
+        "unsupported (implementation-limit) for more than nine fraction digits."
+      ]
+    },
+    {
+      "id": "format-iso",
+      "name": "Format as ISO 8601 / RFC 3339 / RFC 9557 text",
+      "description": "Iso.FormatIso(value) (operation formatIso): the inverse of parseIso.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Iso.cs",
+          "symbol": "Iso.FormatIso"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Iso.cs",
+        "symbol": "Iso.FormatIso"
+      },
+      "action": "query",
+      "transport": "static method of Iso",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the text as a JSON string; instants always as UTC with seconds.",
+      "failures": [
+        "invalid for a value that names no real date or time.",
+        "unsupported (unsupported-operand) for amounts, intervals, other forms and zoned dates.",
+        "unsupported (no-text-form) for fractions finer than a nanosecond and offsets that are not whole minutes."
+      ]
+    },
+    {
+      "id": "parse-text",
+      "name": "Parse the text form",
+      "description": "TextForm.Parse(text) (operation parseText): ISO points, ISO periods, bracket intervals, and EDTF slash intervals as input.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/TextForm.cs",
+          "symbol": "TextForm.Parse"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/TextForm.cs",
+        "symbol": "TextForm.Parse"
+      },
+      "action": "query",
+      "transport": "static method of TextForm",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the UTV value.",
+      "failures": [
+        "invalid (syntax) for text outside the grammar.",
+        "invalid (reversed-interval) for an interval that ends before it starts; (kind-mismatch) for an interval whose points differ in kind or form.",
+        "unsupported (unsupported-form) for decimal period components, EDTF qualifiers and unspecified digits, and intervals with no point.",
+        "Every failure of parseIso for the points."
+      ]
+    },
+    {
+      "id": "format-text",
+      "name": "Format as the text form",
+      "description": "TextForm.Format(value) (operation formatText): defined only where lossless; the text is parsed back and compared with the value.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/TextForm.cs",
+          "symbol": "TextForm.Format"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/TextForm.cs",
+        "symbol": "TextForm.Format"
+      },
+      "action": "query",
+      "transport": "static method of TextForm",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the text as a JSON string.",
+      "failures": [
+        "invalid for a value that names no real date or time.",
+        "unsupported (no-text-form) for POSIX or SI second counts, periods with mixed signs, start-amount and amount-end intervals, values with extra properties and anything else whose text would not read back as the same JSON."
+      ]
+    },
+    {
+      "id": "fields",
+      "name": "Derive calendar fields",
+      "description": "Calendar.Fields(value) (operation fields) for a Gregorian date or date-time.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.Fields"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Calendar.cs",
+        "symbol": "Calendar.Fields"
+      },
+      "action": "query",
+      "transport": "static method of Calendar",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with {dayOfWeek (Monday = 1), dayOfYear, isoWeekYear (a string), isoWeek, daysInMonth, isLeapYear}.",
+      "failures": [
+        "invalid (day-out-of-range and the like) for a date that does not exist.",
+        "unsupported (unsupported-operand) for other kinds and forms; (unsupported-calendar) for other calendars."
+      ]
+    },
+    {
+      "id": "add",
+      "name": "Add an amount",
+      "description": "Calendar.Add(value, amount, monthEnd) (operation add): a calendar period on a date, year-month or date-time; POSIX seconds on an instant.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.Add"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.AddToCivil"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.AddToInstant"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Calendar.cs",
+        "symbol": "Calendar.Add"
+      },
+      "action": "query",
+      "transport": "static method of Calendar",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with the new value; a zone is kept, and a dropped offsetAssertion is reported with info offset-assertion-dropped.",
+      "failures": [
+        "none (month-end) when the day does not exist in the resulting month and the policy is MonthEndPolicy.Reject (the default).",
+        "invalid (kind-mismatch) for a second argument that is not an amount, hours on a date, days on a year-month, a calendar amount on an instant, or a non-calendar amount on a civil value.",
+        "invalid (day-out-of-range and the like) for an input date that does not exist.",
+        "unsupported (needs-leap-seconds) for SI (elapsed) seconds on a POSIX instant.",
+        "unsupported (unsupported-operand) for time values, other kinds, unknown or fractional components and non-POSIX clock ticks."
+      ]
+    },
+    {
+      "id": "compare",
+      "name": "Compare two values",
+      "description": "Calendar.Compare(a, b) (operation compare): a relative to b.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.Compare"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.CompareCivil"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Calendar.cs",
+        "symbol": "Calendar.Compare"
+      },
+      "action": "query",
+      "transport": "static method of Calendar",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with \"before\", \"equal\" or \"after\", for two unzoned civil values of the same form, two POSIX instants, or two fixed-offset date-times (compared as instants).",
+      "failures": [
+        "unsupported (needs-zone-rules) when either value has a named zone: resolve it first.",
+        "unsupported (unsupported-operand) for different kinds, forms or zone kinds."
+      ]
+    },
+    {
+      "id": "days-between",
+      "name": "Count days between dates",
+      "description": "Calendar.DaysBetween(a, b) (operation daysBetween): b minus a.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.DaysBetween"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Calendar.cs",
+        "symbol": "Calendar.DaysBetween"
+      },
+      "action": "query",
+      "transport": "static method of Calendar",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with a JSON integer.",
+      "failures": [
+        "unsupported (different-zones) unless both dates are unzoned or in the same zone.",
+        "unsupported (unsupported-operand) for anything but two Gregorian dates.",
+        "invalid for a date that does not exist."
+      ]
+    },
+    {
+      "id": "posix-seconds-between",
+      "name": "Measure POSIX seconds between instants",
+      "description": "Calendar.PosixSecondsBetween(a, b) (operation posixSecondsBetween): b minus a, exactly.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.PosixSecondsBetween"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Calendar.cs",
+        "symbol": "Calendar.PosixSecondsBetween"
+      },
+      "action": "query",
+      "transport": "static method of Calendar",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with a clock-ticks amount whose seconds are a reduced rational.",
+      "failures": [
+        "unsupported (unsupported-operand) for anything but two POSIX instants given as ticks."
+      ]
+    },
+    {
+      "id": "contains",
+      "name": "Ask whether an interval contains a point",
+      "description": "Ranges.Contains(interval, point) (operation contains), in three-valued logic.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Ranges.cs",
+          "symbol": "Ranges.Contains"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Ranges.cs",
+        "symbol": "Ranges.Contains"
+      },
+      "action": "query",
+      "transport": "static method of Ranges",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with \"definitely\", \"possibly\" (an unknown end decides it) or \"impossible\".",
+      "failures": [
+        "unsupported (unsupported-operand) when the point's domain differs from the interval's, for domains other than civil/gregory and physical, and for constructions other than start-end.",
+        "unsupported (different-zones) for dates in different zones."
+      ]
+    },
+    {
+      "id": "overlaps",
+      "name": "Ask whether two intervals overlap",
+      "description": "Ranges.Overlaps(a, b) (operation overlaps). Date intervals are made half-open first, since dates are discrete.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Ranges.cs",
+          "symbol": "Ranges.Overlaps"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Ranges.cs",
+        "symbol": "Ranges.Overlaps"
+      },
+      "action": "query",
+      "transport": "static method of Ranges",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with \"definitely\", \"possibly\" or \"impossible\"; a provably empty interval overlaps nothing.",
+      "failures": [
+        "unsupported (unsupported-operand) when the domains differ.",
+        "unsupported (different-zones) for dates in different zones."
+      ]
+    },
+    {
+      "id": "resolve",
+      "name": "Resolve a local date-time to instants",
+      "description": "Zones.Resolve(dateTime, rules, policy) (operation resolve). The policy is the argument, else the value's own resolutionPolicy, else reject both.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.Resolve"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.ResolveCore"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Zones.cs",
+        "symbol": "Zones.Resolve"
+      },
+      "action": "query",
+      "transport": "static method of Zones",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with one instant (also for a fixed-offset date-time, which needs no rules).",
+      "failures": [
+        "unsupported (unsupported-operand) for forms other than datetime and for zone types other than iana and fixed-offset; (leap-second) for second 60.",
+        "symbolic (no-zone) for an unzoned date-time.",
+        "unsupported (unknown-zone) for a zone not in the rules; (outside-rule-window) within a day of the rules' window or outside it.",
+        "unsupported (unsupported-policy) for gap or overlap policies that are not implemented; invalid (malformed-value) for a resolutionPolicy on the value that is not a policy.",
+        "invalid (offset-mismatch) when the value's offsetAssertion matches no candidate.",
+        "none (gap) in a gap unless the policy is shift-forward-by-gap.",
+        "multiple with both instants, ascending, in an overlap unless the policy is earliest or latest; ambiguous under reject."
+      ]
+    },
+    {
+      "id": "to-zone",
+      "name": "Show an instant's wall time in a zone",
+      "description": "Zones.ToZone(instant, zoneId, rules) (operation toZone).",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.ToZone"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Zones.cs",
+        "symbol": "Zones.ToZone"
+      },
+      "action": "query",
+      "transport": "static method of Zones",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with a zoned datetime, second always present, offsetAssertion set to the offset in force.",
+      "failures": [
+        "unsupported (unknown-zone) for a zone not in the rules.",
+        "unsupported (outside-rule-window) outside validFrom ≤ t < validUntil."
+      ]
+    },
+    {
+      "id": "to-offset",
+      "name": "Show an instant's wall time at a fixed offset",
+      "description": "Zones.ToOffset(instant, offsetSeconds) (operation toOffset). No rules are needed.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.ToOffset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Zones.cs",
+        "symbol": "Zones.ToOffset"
+      },
+      "action": "query",
+      "transport": "static method of Zones",
+      "authorization": "None: an in-process library call.",
+      "result": "unique with a fixed-offset datetime.",
+      "failures": [
+        "invalid (offset-out-of-range) for an offset beyond ±18:00."
+      ]
+    },
+    {
+      "id": "load-zone-rules",
+      "name": "Load a zone-rule bundle",
+      "description": "ZoneRules.Load(path) and ZoneRules.Parse(json): a bundle in the format of conformance/rules/demo-zones.json, from a path or text the caller chooses.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+          "symbol": "ZoneRules.Load"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+          "symbol": "ZoneRules.Parse"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+        "symbol": "ZoneRules.Load"
+      },
+      "action": "query",
+      "transport": "static method of ZoneRules",
+      "authorization": "None: an in-process library call. Load reads the file the caller names; nothing is looked up on the host.",
+      "result": "An immutable ZoneRules with its rule-set identity, validity window and zone ids.",
+      "failures": [
+        "FormatException for text that is not JSON, a missing member, validFrom not before validUntil, transitions out of order, or a zone listed twice.",
+        "The file system's exceptions from Load for a path that cannot be read."
+      ]
+    },
+    {
+      "id": "native-in",
+      "name": "Convert a .NET value into UTV JSON",
+      "description": "Interop.FromDateOnly, FromTimeOnly, FromDateTime, FromDateTimeOffset(value, intent) and PosixSecondsFromTimeSpan.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop.FromDateTime"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop.FromDateTimeOffset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Interop.cs",
+        "symbol": "Interop.FromDateTimeOffset"
+      },
+      "action": "query",
+      "transport": "static methods of Interop",
+      "authorization": "None: an in-process library call.",
+      "result": "A UTV value. A DateTimeOffset is an instant (the offset is discarded) or a fixed-offset date-time, as the intent says; a DateTime of Kind Unspecified is a floating date-time and of Kind Utc an instant.",
+      "failures": [
+        "unsupported (local-zone) from FromDateTime for DateTimeKind.Local.",
+        "ArgumentOutOfRangeException from FromDateTimeOffset for an intent that is not defined."
+      ]
+    },
+    {
+      "id": "native-out",
+      "name": "Convert UTV JSON back to .NET",
+      "description": "Interop.ToDateOnly, ToTimeOnly, ToDateTime, ToDateTimeOffset and ToTimeSpan, each returning a NativeResult<T>.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop.ToDateTimeOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "NativeResult"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/Interop.cs",
+        "symbol": "Interop.ToDateTimeOffset"
+      },
+      "action": "query",
+      "transport": "static methods of Interop",
+      "authorization": "None: an in-process library call.",
+      "result": "NativeResult<T> with status unique and the value. A zoned date-time with an offsetAssertion converts to a DateTimeOffset with IsLossy and a zone-dropped warning; an instant converts at +00:00 with an offset-not-known note.",
+      "failures": [
+        "unsupported (out-of-native-range) for years outside 1..9999, nanoseconds that are not a multiple of 100, offsets that are not whole minutes or beyond ±14:00, and amounts beyond TimeSpan.",
+        "unsupported (needs-zone-rules) from ToDateTimeOffset for a zoned date-time without an asserted offset, or an unzoned one.",
+        "unsupported (unsupported-operand) from ToDateTime for a zoned or fixed-offset date-time, from ToTimeSpan for calendar periods, and for the wrong form.",
+        "invalid for a value that names no real date or time."
+      ]
+    },
+    {
+      "id": "result-to-json",
+      "name": "Write a result as utv-result/1.0 JSON",
+      "description": "UtvResult.ToJson(): a compact utv-result/1.0 object.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/UtvResult.cs",
+          "symbol": "UtvResult.ToJson"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/csharp/src/Utv/UtvResult.cs",
+        "symbol": "UtvResult.ToJson"
+      },
+      "action": "query",
+      "transport": "method of UtvResult",
+      "authorization": "None: an in-process library call.",
+      "result": "JSON text with schema, operation, status, candidates, manifest, assumptions, loss and diagnostics.",
+      "failures": []
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/capability.json",
+      "relationship": "The capabilities these operations expose."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/feature.json",
+      "relationship": "The features these operations carry out."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/csharp/src/Utv/Typed",
+      "path": "implementations/csharp/src/Utv/Typed/.dev/operation.json",
+      "relationship": "The typed operations built on these."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/use-case.json",
+      "relationship": "The application developer's goals that reach these operations."
+    }
+  ]
+}

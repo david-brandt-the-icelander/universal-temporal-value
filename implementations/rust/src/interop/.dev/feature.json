@@ -1,0 +1,179 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-feature/schema.json",
+  "kind": "feature",
+  "title": "Native interop features",
+  "folder": "implementations/rust/src/interop",
+  "description": "The rules every native conversion follows (docs/everyday-api.md, Native interop), as this crate carries them out.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/interop/mod.rs",
+      "symbol": "module documentation"
+    },
+    {
+      "path": "implementations/rust/src/interop/chrono.rs",
+      "symbol": "module documentation"
+    }
+  ],
+  "entities": [
+    {
+      "id": "intent-named-by-target",
+      "name": "The caller names the intent",
+      "description": "A DateTime<FixedOffset> becomes an instant or a fixed-offset date-time only because the caller said which.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "OffsetIntent"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "impl TryFrom<DateTime<FixedOffset>> for Instant"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "impl TryFrom<DateTime<FixedOffset>> for FixedOffsetDateTime"
+        }
+      ],
+      "behavior": "At the JSON layer, from_fixed_offset takes an OffsetIntent (Instant or OffsetDateTime). For typed values the target type is the intent: Instant::try_from(dt) keeps only the point on the timeline, FixedOffsetDateTime::try_from(dt) keeps the wall time and the offset. Each other native type maps to exactly one kind of UTV value.",
+      "outcome": "No conversion picks a meaning for the caller, and the shared code intent-required never arises: a call without an intent doesn't compile.",
+      "constraints": [
+        "FixedOffsetDateTime::try_from refuses chrono offsets beyond ±18:00 (invalid, offset-out-of-range), which chrono itself allows.",
+        "NaiveDateTime becomes an unzoned date-time; it is never read as local time or as UTC."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_fixed_offset"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_naive_date_time"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "typed"
+        }
+      ]
+    },
+    {
+      "id": "no-local-zone",
+      "name": "No host-local values",
+      "description": "A chrono DateTime<Local> is refused, never interpreted with the machine's zone.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_local"
+        }
+      ],
+      "behavior": "from_local answers unsupported with diagnostic local-zone for every value, and its message points to from_fixed_offset or from_utc. No typed value has a From or TryFrom for DateTime<Local>.",
+      "outcome": "A result never depends on the time zone of the machine it ran on.",
+      "constraints": [
+        "The caller converts a local reading with an explicit intent first, for example dt.fixed_offset() and from_fixed_offset(.., OffsetIntent::Instant)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "from_local"
+        }
+      ]
+    },
+    {
+      "id": "lossy-back-refused",
+      "name": "Lossy conversions back to native are refused",
+      "description": "Converting a UTV value to a native type that can't hold it exactly gives an error naming the loss, never an approximation.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "to_utc"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "read_form"
+        },
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "to_system_time"
+        }
+      ],
+      "behavior": "The to_* functions return Err(UtvResult) with status unsupported, and the TryFrom impls Err(Diagnostics), when the value is outside the native range (out-of-native-range), finer than a nanosecond or than the platform's SystemTime (precision-loss), or has a zone or offset the native type would drop (zone-dropped). Coming in, chrono's leap-second representation is refused with leap-second.",
+      "outcome": "A native value that comes back from UTV is the value UTV held.",
+      "constraints": [
+        "chrono's dates reach about ±262 000 years; UTV's go to the i128 range.",
+        "SystemTime is checked by a round trip, so a platform with a coarser clock than nanoseconds refuses what it can't hold.",
+        "To NaiveTime a time without a second gets second 0 (From<CivilTime> for NaiveTime), which loses no value, only the written form.",
+        "The info code offset-not-known never arises: there is no conversion from an instant to a native type that needs an offset."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "naive_date"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "to_fixed_offset"
+        },
+        {
+          "path": "implementations/rust/src/interop/chrono.rs",
+          "symbol": "to_utc"
+        },
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "system_time_of"
+        },
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "lossy"
+        }
+      ]
+    },
+    {
+      "id": "clock-as-input",
+      "name": "\"Now\" is an input",
+      "description": "The library never reads the clock; the caller passes the reading in.",
+      "sources": [
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "from_system_time"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::from_system_time"
+        }
+      ],
+      "behavior": "from_system_time and Instant::from_system_time take a SystemTime the caller read (SystemTime::now(), or any fixed value in a test) and keep it exactly, before or after the epoch.",
+      "outcome": "The dependency on the host clock is visible in the caller's code, and a test can fix \"now\".",
+      "constraints": [
+        "Nothing in src/ calls ::now(); tests/purity.rs searches the sources for it."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/rust/src/interop/mod.rs",
+          "symbol": "from_system_time"
+        },
+        {
+          "path": "implementations/rust/src/typed/instant.rs",
+          "symbol": "Instant::from_system_time"
+        }
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/rust/src/interop",
+      "path": "implementations/rust/src/interop/.dev/capability.json",
+      "relationship": "The capability these features make up."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/rust/src/interop",
+      "path": "implementations/rust/src/interop/.dev/operation.json",
+      "relationship": "The operations that carry them out."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/rust/src/interop",
+      "path": "implementations/rust/src/interop/.dev/use-case.json",
+      "relationship": "The use case that exercises them."
+    }
+  ]
+}

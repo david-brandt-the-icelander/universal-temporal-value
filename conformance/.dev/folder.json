@@ -1,0 +1,33 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Conformance material",
+  "folder": "conformance",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Conformance material",
+      "summary": "Language-neutral test material shared by every implementation: structural examples, executable operation fixtures, a demo zone-rule bundle and semantic scenarios.",
+      "purpose": "Holds what every implementation is tested against, so that the five libraries, and any outside implementation, agree. The libraries read these files in place from the repository root; nothing here is copied into a library.",
+      "boundaries": [
+        "Part of the specification: it moves with the specification's version number (VERSIONING.md).",
+        "Data only: tools/validate.py checks its structure, and each library's own tests check behaviour against it."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "conformance/README.md",
+          "symbol": "Conformance material (UTV 1.0)"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Versioning"
+        },
+        {
+          "path": "implementations/README.md",
+          "symbol": "Shared conformance material"
+        }
+      ]
+    }
+  ]
+}

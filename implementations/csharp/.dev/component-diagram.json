@@ -1,0 +1,168 @@
+{
+  "$schema": "../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "C# library component diagram",
+  "folder": "implementations/csharp",
+  "description": "The C# library: one solution with the library project, two test projects and the engine-interface sketch. The library embeds the repository's schema; the tests read the schema and conformance material in place.",
+  "sources": [
+    {
+      "path": "implementations/csharp/Utv.sln",
+      "symbol": "Utv"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Utv.csproj",
+      "symbol": "EmbeddedResource"
+    },
+    {
+      "path": "implementations/csharp/tests/Utv.Tests/Utv.Tests.csproj",
+      "symbol": "UtvRepositoryRoot"
+    },
+    {
+      "path": "implementations/csharp/tests/Utv.Examples.Tests/Utv.Examples.Tests.csproj",
+      "symbol": "demo-zones.json"
+    }
+  ],
+  "components": [
+    {
+      "id": "csharp",
+      "name": "C# library",
+      "responsibility": "The solution Utv.sln and the library's README and CHANGELOG.",
+      "folder": "implementations/csharp"
+    },
+    {
+      "id": "library",
+      "name": "Utv library",
+      "responsibility": "The package: validation, the JSON layer, the text form, zone rules, interop and the typed layer.",
+      "folder": "implementations/csharp/src/Utv",
+      "diagram": "implementations/csharp/src/Utv/.dev/component-diagram.json"
+    },
+    {
+      "id": "tests",
+      "name": "Library tests",
+      "responsibility": "xUnit tests of the shared fixtures, structural examples, schema, results, JSON layer, interop and typed layer.",
+      "folder": "implementations/csharp/tests/Utv.Tests"
+    },
+    {
+      "id": "examples",
+      "name": "Example tests",
+      "responsibility": "The examples as unit tests: UTV first and native first.",
+      "folder": "implementations/csharp/tests/Utv.Examples.Tests"
+    },
+    {
+      "id": "docs",
+      "name": "Engine-interface sketch",
+      "responsibility": "The C# interface sketch of the planned engine.",
+      "folder": "implementations/csharp/docs"
+    },
+    {
+      "id": "schema",
+      "name": "Structural schema",
+      "responsibility": "schema/utv-1.0.schema.json, embedded into the library at build time and compared with the embedded copy by the tests.",
+      "folder": "schema"
+    },
+    {
+      "id": "conformance",
+      "name": "Conformance material",
+      "responsibility": "Structural examples, the everyday and text-form fixtures, and the demo zone rules, read in place by the tests.",
+      "folder": "conformance"
+    },
+    {
+      "id": "bcl",
+      "name": ".NET 8 base class library",
+      "responsibility": "System.Text.Json, System.Numerics, System.Text.RegularExpressions, and DateOnly, TimeOnly, DateTime, DateTimeOffset, TimeSpan, TimeZoneInfo and System.Globalization for interop and the native-first examples. The library's only runtime dependency.",
+      "external": true
+    },
+    {
+      "id": "xunit",
+      "name": "xUnit and the .NET test SDK",
+      "responsibility": "xunit 2.9.3, xunit.runner.visualstudio 2.8.2 and Microsoft.NET.Test.Sdk 17.12.0, referenced by both test projects only.",
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "csharp",
+      "to": "library",
+      "kind": "contains",
+      "description": "src/Utv/Utv.csproj in the solution."
+    },
+    {
+      "from": "csharp",
+      "to": "tests",
+      "kind": "contains",
+      "description": "tests/Utv.Tests/Utv.Tests.csproj in the solution."
+    },
+    {
+      "from": "csharp",
+      "to": "examples",
+      "kind": "contains",
+      "description": "tests/Utv.Examples.Tests/Utv.Examples.Tests.csproj in the solution."
+    },
+    {
+      "from": "csharp",
+      "to": "docs",
+      "kind": "contains",
+      "description": "docs/engine-interface.md."
+    },
+    {
+      "from": "library",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "Embedded resource Utv.utv-1.0.schema.json, linked from the repository file."
+    },
+    {
+      "from": "library",
+      "to": "bcl",
+      "kind": "depends-on",
+      "description": "No other runtime dependency."
+    },
+    {
+      "from": "tests",
+      "to": "library",
+      "kind": "depends-on",
+      "description": "Project reference; sees internal members."
+    },
+    {
+      "from": "tests",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "SchemaTests compares the embedded copy with the repository file."
+    },
+    {
+      "from": "tests",
+      "to": "conformance",
+      "kind": "depends-on",
+      "description": "Reads examples/*.json, operations/everyday.json, operations/text-form.json and the rule bundles they name, from the repository root."
+    },
+    {
+      "from": "examples",
+      "to": "library",
+      "kind": "depends-on",
+      "description": "Project reference; public API only."
+    },
+    {
+      "from": "examples",
+      "to": "conformance",
+      "kind": "depends-on",
+      "description": "Links conformance/rules/demo-zones.json next to the test assembly; Fixtures.DemoZoneRules loads it."
+    },
+    {
+      "from": "tests",
+      "to": "xunit",
+      "kind": "depends-on",
+      "description": "Test framework."
+    },
+    {
+      "from": "examples",
+      "to": "xunit",
+      "kind": "depends-on",
+      "description": "Test framework."
+    },
+    {
+      "from": "examples",
+      "to": "bcl",
+      "kind": "depends-on",
+      "description": "The native-first suite exercises .NET's own date and time API, which reads the host's tz database and clock."
+    }
+  ]
+}

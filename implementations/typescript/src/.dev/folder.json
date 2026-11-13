@@ -1,0 +1,42 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "TypeScript library source",
+  "folder": "implementations/typescript/src",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "TypeScript library source",
+      "summary": "The source of @utv/core: the typed layer (0.3) over the JSON-level everyday API (0.2), the text form, validation (0.1) and native interop.",
+      "purpose": "Holds every module the package compiles from. index.ts is the one entry point. values.ts, outcome.ts and context.ts are the typed layer; builders.ts, iso.ts, text.ts, ops.ts, zones.ts and native.ts the JSON layer; json.ts, structural.ts and civil.ts validation; result.ts the result envelope; internal.ts and rational.ts the shared readers, writers and exact numbers.",
+      "boundaries": [
+        "Every typed operation calls the JSON layer underneath, so both layers give the same answers as the shared fixtures.",
+        "No runtime dependencies: the only Node built-in is node:fs readFileSync, for the rule file a caller names (declared in node.d.ts so no @types/node is needed).",
+        "Never reads the clock, the host's time zone or tz database, or its locale; test/native.test.ts checks the sources for it.",
+        "The contracts it implements are defined in docs/ and spec/; the rule data it is given is the caller's."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/index.ts",
+          "symbol": "export"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "total"
+        },
+        {
+          "path": "implementations/typescript/src/node.d.ts",
+          "symbol": "node:fs"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/typescript/.dev/contracts.json",
+          "entityId": "utv-core-package"
+        }
+      ]
+    }
+  ]
+}

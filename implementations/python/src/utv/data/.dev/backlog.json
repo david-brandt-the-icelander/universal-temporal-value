@@ -1,0 +1,56 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Bundled schema backlog",
+  "folder": "implementations/python/src/utv/data",
+  "entities": [
+    {
+      "id": "schema-copy-outside-ci",
+      "title": "Keep the bundled schema identical to schema/ in CI",
+      "summary": "The package carries a copy of schema/utv-1.0.schema.json. Only the Python tests compare the two, and CI does not run them.",
+      "type": "debt",
+      "compromise": "validate_structural reads a copy of the schema, so that an installed package works without the repository. The copy is kept identical by one test, tests/test_conformance.py BundledSchema, which runs only when someone runs the Python tests.",
+      "cost": "A change to schema/utv-1.0.schema.json that nobody follows with the Python tests leaves validate_structural checking values against the old schema, while every other check in the repository passes. It is also the one place where a library reads a copy of shared material instead of the file at the repository root (implementations/.dev/requirements.json, shared-conformance-material).",
+      "acceptanceCriteria": [
+        "A check that CI runs fails when the two files differ, or the package build copies the file from schema/ so there is nothing to keep in step.",
+        "PYTHONPATH=src python3 -m unittest discover -s tests still passes from implementations/python."
+      ],
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/python/tests/test_conformance.py",
+        "description": "BundledSchema.test_bundled_schema_matches_repository, and the README's \"a bundled copy in src/utv/data/, kept identical by a test\"."
+      },
+      "status": "open",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/src/utv/data/utv-1.0.schema.json"
+        },
+        {
+          "path": "implementations/python/src/utv/validate.py",
+          "symbol": "_schema"
+        },
+        {
+          "path": "implementations/python/tests/test_conformance.py",
+          "symbol": "BundledSchema"
+        },
+        {
+          "path": ".github/workflows/validate.yml",
+          "symbol": "jobs"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "shared-conformance-material"
+        },
+        {
+          "relation": "depends-on",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema"
+        }
+      ]
+    }
+  ]
+}

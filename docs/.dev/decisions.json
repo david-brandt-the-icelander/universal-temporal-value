@@ -1,0 +1,147 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Library contract decisions",
+  "folder": "docs",
+  "entities": [
+    {
+      "id": "fixtures-are-the-arbiter",
+      "title": "The shared fixtures decide what the everyday API returns",
+      "summary": "Every library must produce exactly the outcomes in conformance/operations/everyday.json; if the prose and the fixtures disagree, the disagreement is raised rather than settled by picking one.",
+      "status": "accepted",
+      "context": "Five libraries implement the same contract independently, and prose leaves gaps: the first implementation (TypeScript) found the contract silent in five places, settled in the Clarifications section and covered by fixtures.",
+      "decision": "The fixture file is the arbiter of the everyday API. Libraries read it in place and never copy it.",
+      "rationale": "Executable expectations, computed independently of the implementations, are what keep five libraries giving the same answers.",
+      "origin": {
+        "kind": "document",
+        "reference": "docs/everyday-api.md",
+        "description": "Opening section and Clarifications."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "docs/everyday-api.md",
+          "symbol": "Clarifications"
+        },
+        {
+          "path": "docs/rationale.md",
+          "symbol": "5. How the design was developed"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        }
+      ]
+    },
+    {
+      "id": "typed-layer-over-json-layer",
+      "title": "A typed layer on top of the JSON layer, not instead of it",
+      "summary": "Libraries 0.3 add one immutable type per everyday value over the 0.2 JSON-level API, which stays as the wire boundary that the fixtures test.",
+      "status": "accepted",
+      "context": "The review of the 0.2 libraries found that every UTV value was the language's generic JSON type: no types, no properties, no printing (aesthetics-review.md, F2). That was a deliberate 0.1/0.2 choice.",
+      "decision": "Each library adds the types of library-api.md §1, valid by construction, with ToJson and FromJson at the edges. The JSON layer and its fixtures stay unchanged.",
+      "rationale": "Typed values make a date and an instant different types at compile time and let values print as text, while the shared fixtures keep testing the same wire boundary.",
+      "origin": {
+        "kind": "document",
+        "reference": "docs/aesthetics-review.md",
+        "description": "Recommendation R1, implemented in libraries 0.3."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "docs/library-api.md",
+          "symbol": "1. Types"
+        },
+        {
+          "path": "docs/aesthetics-review.md",
+          "symbol": "F2. Values are raw JSON"
+        }
+      ]
+    },
+    {
+      "id": "outcomes-only-for-partial-operations",
+      "title": "Plain values from total operations, Outcome only from partial ones",
+      "summary": "An operation that cannot fail for valid inputs returns its value; only a question time can refuse to answer returns an Outcome.",
+      "status": "accepted",
+      "context": "In 0.2 every call returned the same result envelope, even when it could not fail, so the calls that genuinely can (month arithmetic, DST resolution, comparing zoned values) looked like everything else (aesthetics-review.md, F3).",
+      "decision": "Total operations return plain values; partial ones return the language's own sum type Outcome<T> (unique, multiple, none, unsupported, invalid), matched exhaustively. Helpers never pick an answer silently.",
+      "rationale": "Every Outcome in user code then marks a question time can refuse to answer, which is UTV's point, now visible in the types.",
+      "origin": {
+        "kind": "document",
+        "reference": "docs/aesthetics-review.md",
+        "description": "Recommendations R2 and R3, implemented in libraries 0.3."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "docs/library-api.md",
+          "symbol": "2. Total operations return values; partial ones return Outcome"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "3. Outcome<T>"
+        }
+      ]
+    },
+    {
+      "id": "text-form-brackets",
+      "title": "Intervals in the text form use brackets, not EDTF's slash",
+      "summary": "The canonical interval notation is [start, end) and its variants; EDTF slash forms are accepted as input.",
+      "status": "accepted",
+      "context": "The review proposed EDTF / ISO 8601-2 slash notation for intervals (R5). EDTF's a/b can't say whether an end is excluded, and UTV intervals record each boundary's state.",
+      "decision": "formatText writes brackets; parseText also reads EDTF slash forms such as 2026-11-01/2026-11-30 and ../2026-12-01 (parse-only fixtures).",
+      "rationale": "The text form is defined only where it is lossless, and the slash form loses whether an end is included.",
+      "origin": {
+        "kind": "document",
+        "reference": "docs/aesthetics-review.md",
+        "description": "Status note on R5."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "docs/text-form.md",
+          "symbol": "Intervals"
+        },
+        {
+          "path": "conformance/operations/text-form.json",
+          "symbol": "fixtures"
+        }
+      ]
+    },
+    {
+      "id": "examples-are-unit-tests",
+      "title": "Examples are unit tests, not programs",
+      "summary": "Every library shows its use through two example suites of unit tests, UTV first and native first, instead of example programs with snapshot tests.",
+      "status": "accepted",
+      "context": "The review recommended plain, copyable example programs verified by snapshot tests (R6). The 0.2 examples had been test harnesses that wrote every call twice and buried it in helpers (F1).",
+      "decision": "Example programs, their snapshot tests and the traditional catalog tour were replaced by example unit tests in every library, organized UTV first and native first, and the side-by-side page is generated from the UTV-first tests.",
+      "rationale": "A unit test runs with the library's normal test command, so an example can't drift from what the library does.",
+      "origin": {
+        "kind": "document",
+        "reference": "docs/aesthetics-review.md",
+        "description": "Status note: R6's example programs were superseded."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "AGENTS.md",
+          "symbol": "2. Examples are unit tests"
+        },
+        {
+          "path": "docs/example-tests.md",
+          "symbol": "Examples as unit tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    }
+  ]
+}

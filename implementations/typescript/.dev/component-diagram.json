@@ -1,0 +1,81 @@
+{
+  "$schema": "../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "TypeScript library component diagram",
+  "folder": "implementations/typescript",
+  "description": "@utv/core, the TypeScript library: its source and its tests, the shared conformance material the tests read in place, and what the library and tests depend on outside the repository.",
+  "sources": [
+    {
+      "path": "implementations/typescript/package.json",
+      "symbol": "scripts"
+    },
+    {
+      "path": "implementations/typescript/src/zones.ts",
+      "symbol": "readFileSync"
+    },
+    {
+      "path": "implementations/typescript/test/everyday.test.ts",
+      "symbol": "repo"
+    },
+    {
+      "path": "implementations/typescript/test/examples/fixtures.ts",
+      "symbol": "demoZoneRules"
+    }
+  ],
+  "components": [
+    {
+      "id": "library",
+      "name": "@utv/core (TypeScript)",
+      "responsibility": "One npm project: the library, its tests and its package files.",
+      "folder": "implementations/typescript"
+    },
+    {
+      "id": "src",
+      "name": "Library source",
+      "responsibility": "The typed layer over the JSON-level everyday API, the text form, validation and native interop.",
+      "folder": "implementations/typescript/src",
+      "diagram": "implementations/typescript/src/.dev/component-diagram.json"
+    },
+    {
+      "id": "test",
+      "name": "Tests and example tests",
+      "responsibility": "The shared fixtures, typed-layer, interop and validation tests, and the UTV-first and native-first example suites.",
+      "folder": "implementations/typescript/test"
+    },
+    {
+      "id": "conformance",
+      "name": "Shared conformance material",
+      "responsibility": "The everyday and text-form fixtures, the structural examples and the demo zone rules every library reads.",
+      "folder": "conformance"
+    },
+    {
+      "id": "node",
+      "name": "Node.js",
+      "responsibility": "The runtime: node:fs for reading files, and node:test and node:assert/strict for the tests.",
+      "external": true
+    },
+    {
+      "id": "js-date-api",
+      "name": "JavaScript Date, Intl.DateTimeFormat and JSON",
+      "responsibility": "The language's standard date/time API, which the native adapters bridge and the examples compare with.",
+      "external": true
+    },
+    {
+      "id": "tsc",
+      "name": "TypeScript compiler 6.0.2",
+      "responsibility": "The only devDependency: compiles src/ and test/ into dist/.",
+      "external": true
+    }
+  ],
+  "relationships": [
+    { "from": "library", "to": "src", "kind": "contains", "description": "The package's source." },
+    { "from": "library", "to": "test", "kind": "contains", "description": "The test suites npm test runs." },
+    { "from": "library", "to": "tsc", "kind": "depends-on", "description": "npm run build and npm test run tsc -p ." },
+    { "from": "test", "to": "src", "kind": "depends-on", "description": "Imports ../src/index.js." },
+    { "from": "test", "to": "conformance", "kind": "depends-on", "description": "Reads operations/everyday.json, operations/text-form.json, examples/valid.json, examples/invalid-structural.json and rules/demo-zones.json from the repository root." },
+    { "from": "test", "to": "node", "kind": "depends-on", "description": "node --test runs the compiled suites with node:test and node:assert/strict." },
+    { "from": "test", "to": "js-date-api", "kind": "depends-on", "description": "The examples compute expected values with Date, Intl.DateTimeFormat (the host's tz database) and JSON." },
+    { "from": "src", "to": "node", "kind": "depends-on", "description": "ZoneRules.load reads the rule file a caller names with node:fs readFileSync." },
+    { "from": "src", "to": "js-date-api", "kind": "depends-on", "description": "The native adapters convert to and from Date." }
+  ]
+}

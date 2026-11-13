@@ -1,0 +1,94 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Internals decisions",
+  "folder": "implementations/csharp/src/Utv/Internal",
+  "entities": [
+    {
+      "id": "own-schema-interpreter",
+      "title": "Interpret exactly the keywords the UTV schema uses",
+      "summary": "Structural validation runs on a small JSON Schema interpreter of its own, which knows only the keywords schema/utv-1.0.schema.json uses and refuses to load if the schema uses any other.",
+      "status": "accepted",
+      "context": "Every value, top-level and nested, must be checked against the repository's structural schema (JSON Schema 2020-12). The library has no runtime dependencies beyond the BCL.",
+      "decision": "SchemaInterpreter evaluates $ref, type, const, enum, minLength, pattern, items, minItems, required, properties, additionalProperties, oneOf, anyOf and not, and treats $schema, $id, $defs, title, description and format as annotations. Any other keyword makes loading fail. JSON Schema semantics are kept where .NET differs: $ in a pattern is rewritten to \\z (ECMA-262 anchoring), minLength counts code points, integer accepts 2.0, and numbers compare exactly.",
+      "rationale": "The class comment: loading fails on any other keyword, so a schema change can never be silently ignored. Patterns run with RegexOptions.NonBacktracking, which guarantees matching time linear in the input length.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Internal/SchemaInterpreter.cs",
+          "symbol": "SchemaInterpreter.AssertionKeywords"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/SchemaInterpreter.cs",
+          "symbol": "SchemaInterpreter.CompilePattern"
+        },
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "Validation (0.1)"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Tests/SchemaTests.cs",
+          "symbol": "SchemaTests.InterpreterLoadsTheSchemaAndKnowsEveryKeyword"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema"
+        }
+      ]
+    },
+    {
+      "id": "dispatch-on-kind",
+      "title": "Check #/$defs/value by dispatching on kind",
+      "summary": "Instead of evaluating the schema's oneOf over the 26 per-kind schemas, the interpreter picks the one per-kind schema the value's kind names.",
+      "status": "accepted",
+      "context": "#/$defs/value is a oneOf over the 26 per-kind schemas, each pinning kind with const. Evaluating the oneOf reports only that no branch matched.",
+      "decision": "CheckUtvValue reports missing-property for a missing kind, unknown-kind for a kind outside the 26, and otherwise checks the value against #/$defs/<kind>Value.",
+      "rationale": "It is equivalent to the oneOf and gives the diagnostics of the one applicable branch. A test checks that the schema keeps that shape.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Internal/SchemaInterpreter.cs",
+          "symbol": "SchemaInterpreter.CheckUtvValue"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Tests/SchemaTests.cs",
+          "symbol": "SchemaTests.ValueDispatchIsEquivalentToTheSchemaOneOf"
+        }
+      ]
+    },
+    {
+      "id": "own-duplicate-key-detection",
+      "title": "Detect duplicate keys in the library itself",
+      "summary": "JSON is tokenized by JsonDocument but converted into the library's own node tree, which rejects a repeated key at any depth, after unescaping.",
+      "status": "accepted",
+      "context": "UTV fails closed on duplicate JSON keys. System.Text.Json's JsonDocument accepts them and keeps the last value (shown by the native-first test JsonDocumentTests).",
+      "decision": "StrictJson.Parse reads with JsonDocument (no comments, no trailing commas, MaxDepth 128) and converts every element to JNode; a key already present in the object, compared after unescaping, throws duplicate-key with its JSON Pointer. Unpaired surrogates are malformed-json.",
+      "rationale": "Fail closed on duplicate keys (implementations/README.md obligation 7), at every depth, and report where.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Internal/StrictJson.cs",
+          "symbol": "StrictJson.Parse"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/Text/Json/JsonDocumentTests.cs",
+          "symbol": "JsonDocumentTests.Test_Parse_KeepsTheLastValue_WhenAKeyAppearsTwice"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Tests/EnvelopeTests.cs",
+          "symbol": "EnvelopeTests.DuplicateKeysAreInvalidAtEveryDepth"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed"
+        }
+      ]
+    }
+  ]
+}

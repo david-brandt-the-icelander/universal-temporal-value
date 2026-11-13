@@ -1,0 +1,89 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "Internals component diagram",
+  "folder": "implementations/csharp/src/Utv/Internal",
+  "description": "The internals of the C# library: strict JSON reading and schema interpretation for structural validation, and the helpers the everyday operations share.",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/Internal/StrictJson.cs",
+      "symbol": "StrictJson"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Internal/SchemaInterpreter.cs",
+      "symbol": "SchemaInterpreter"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+      "symbol": "Values.RequireStructural"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Utv.csproj",
+      "symbol": "EmbeddedResource"
+    }
+  ],
+  "components": [
+    {
+      "id": "internal",
+      "name": "Structural validation internals",
+      "responsibility": "Reads JSON strictly (StrictJson) and checks it against the embedded UTV schema (SchemaInterpreter).",
+      "folder": "implementations/csharp/src/Utv/Internal"
+    },
+    {
+      "id": "everyday",
+      "name": "Everyday internals",
+      "responsibility": "Day arithmetic, exact rationals, UTV JSON reading and writing, and semantic failures turned into results.",
+      "folder": "implementations/csharp/src/Utv/Internal/Everyday"
+    },
+    {
+      "id": "schema",
+      "name": "UTV 1.0 structural schema",
+      "responsibility": "schema/utv-1.0.schema.json, embedded into the assembly as resource Utv.utv-1.0.schema.json at build time.",
+      "folder": "schema"
+    },
+    {
+      "id": "validator",
+      "name": "UtvValidator",
+      "responsibility": "The public entrypoint of structural validation, in the library's source root.",
+      "folder": "implementations/csharp/src/Utv"
+    },
+    {
+      "id": "bcl",
+      "name": ".NET base class library",
+      "responsibility": "System.Text.Json (JsonDocument underneath StrictJson), System.Text.RegularExpressions (schema patterns) and System.Numerics (BigInteger).",
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "internal",
+      "to": "everyday",
+      "kind": "contains",
+      "description": "The everyday helpers are a sub-namespace, Utv.Internal.Everyday."
+    },
+    {
+      "from": "internal",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "SchemaInterpreter reads the embedded copy of the schema once, on first use."
+    },
+    {
+      "from": "validator",
+      "to": "internal",
+      "kind": "depends-on",
+      "description": "ValidateStructural parses with StrictJson and checks with SchemaInterpreter."
+    },
+    {
+      "from": "everyday",
+      "to": "validator",
+      "kind": "depends-on",
+      "description": "Values.RequireStructural validates every operation argument first."
+    },
+    {
+      "from": "internal",
+      "to": "bcl",
+      "kind": "depends-on",
+      "description": "JsonDocument does the tokenizing; Regex with NonBacktracking runs schema patterns."
+    }
+  ]
+}

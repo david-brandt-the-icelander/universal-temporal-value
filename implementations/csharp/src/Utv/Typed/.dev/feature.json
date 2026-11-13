@@ -1,0 +1,281 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Skills/describe-feature/schema.json",
+  "kind": "feature",
+  "title": "Typed layer features",
+  "folder": "implementations/csharp/src/Utv/Typed",
+  "description": "What the typed API offers on top of the JSON layer: values that cannot be wrong, outcomes only where time can refuse to answer, and no order without rules.",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+      "symbol": "Typed"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+      "symbol": "Outcome"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+      "symbol": "TemporalContext.Compare"
+    }
+  ],
+  "entities": [
+    {
+      "id": "valid-by-construction",
+      "name": "Values that are valid by construction",
+      "description": "A typed value always names something that exists.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.OrThrow"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Interval.cs",
+          "symbol": "Interval.Of"
+        }
+      ],
+      "behavior": "Constructors are internal; values come from Of, TryOf, Parse, FromJson, the From… interop methods and operations. Of throws ArgumentOutOfRangeException naming the field for 30 February, month 13, hour 25 or second 60; TryOf, Parse and FromJson return the same refusal as an outcome. Interval.Of throws ArgumentException for a reversed interval or one with no point. AtOffset throws for an offset beyond ±18:00, and InZone for a name that is not an IANA zone name.",
+      "outcome": "Code that holds a CivilDate never has to ask whether it is a real day.",
+      "constraints": [
+        "Years are BigInteger: year 275760 and year -500 are valid dates.",
+        "A typed value holds only the everyday shapes; a value with properties the type does not hold is refused, not trimmed."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.TryOf"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.Read"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.OrThrow"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "FixedOffsetDateTime.CheckOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.InZone"
+        }
+      ]
+    },
+    {
+      "id": "outcomes-only-for-partial-operations",
+      "name": "Outcomes only where time can refuse to answer",
+      "description": "Total operations return plain values; partial ones return Outcome<T>.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.Total"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.ToOutcome"
+        }
+      ],
+      "behavior": "AddDays, AddWeeks, wall-clock additions, DaysUntil, Until, Add(PosixSeconds), ToInstant, Contains and Overlaps return values. AddMonths(n), AddYears(n), Add(Period), Resolve, InZone(id, ctx), Add(ElapsedSeconds), TemporalContext.Compare and the To… interop methods return Outcome<T>: an abstract record with the nested sealed records Unique, Multiple (ascending), None, Unsupported and Invalid, each with its Diagnostics. A total operation whose JSON-layer call ever failed would throw InvalidOperationException, since that would be a library bug.",
+      "outcome": "Every Outcome in the caller's code marks a question that can have no answer, or several, and the compiler makes the caller look.",
+      "constraints": [
+        "C# does not know the five cases are all there are, so a switch expression needs a final _ => arm.",
+        "Outcome.ToString() is the value's text for Unique, otherwise the status and the codes, such as none (month-end)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.Total"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.ToOutcome"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.Failure"
+        }
+      ]
+    },
+    {
+      "id": "helpers-never-pick-silently",
+      "name": "Outcome helpers that never pick an answer",
+      "description": "Getting a value out of an outcome never chooses among several.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome.Single"
+        }
+      ],
+      "behavior": "TryGetUnique is true only for Unique; UniqueOr returns the fallback for anything else; Single throws OutcomeException with the status and diagnostics for anything but Unique. Diagnostics has Codes, Has(code) and readable text.",
+      "outcome": "Both instants of a DST overlap stay visible until the caller chooses a policy.",
+      "constraints": [],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome.TryGetUnique"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome.UniqueOr"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "OutcomeException"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Diagnostics"
+        }
+      ]
+    },
+    {
+      "id": "total-overloads-take-constrain-only",
+      "name": "Total policy overloads accept only Constrain",
+      "description": "A policy argument cannot change a method's return type.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.AddMonths"
+        }
+      ],
+      "behavior": "AddMonths(n, MonthEnd) and AddYears(n, MonthEnd) on CivilDate, and AddMonths(n, MonthEnd) on CivilDateTime, return a plain value clamped to the month's last day. Passing MonthEnd.Reject throws ArgumentException; the rejecting form is the overload without a policy.",
+      "outcome": "Clamping happens only where the caller wrote MonthEnd.Constrain.",
+      "constraints": [
+        "Add(Period, MonthEnd) returns an Outcome and accepts both policies."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.AddMonths"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.AddYears"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+          "symbol": "CivilDateTime.AddMonths"
+        }
+      ]
+    },
+    {
+      "id": "zoned-order-needs-a-context",
+      "name": "No order for zoned values without rules",
+      "description": "Zoned intentions are ordered only through a context, and the answer can be several orderings.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "ZonedIntent"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext.Compare"
+        }
+      ],
+      "behavior": "ZonedIntent has no CompareTo and no comparison operators. TemporalContext.Compare resolves both sides with ResolutionPolicy.Strict and compares every pair of candidates. One ordering is Unique; more than one is Multiple with an ambiguous diagnostic, as for 01:30 and 01:45 on the night New York's clocks go back. A side that does not resolve passes its outcome on.",
+      "outcome": "Nobody sorts meetings by a guess about which side of an overlap was meant.",
+      "constraints": [
+        "TemporalContext holds the rules once; there is no default or ambient context."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext.Compare"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext.With"
+        }
+      ]
+    },
+    {
+      "id": "representation-equality",
+      "name": "Representation equality",
+      "description": "Two typed values are equal when their JSON is the same.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilTime.cs",
+          "symbol": "CivilTime"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome.Equals"
+        }
+      ],
+      "behavior": "Every value is an immutable sealed record, so == compares what it holds. CivilTime remembers whether a second was given: 09:30 and 09:30:00 are not equal, though CompareTo puts them level. Outcomes are equal when their case, values and diagnostics are. [DebuggerDisplay] shows CivilDate(2026-11-05).",
+      "outcome": "Values can be keys in dictionaries and sets, and round-trip through JSON unchanged.",
+      "constraints": [
+        "Sameness in meaning (the same instant written two ways) is not equality."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilTime.cs",
+          "symbol": "CivilTime.Second"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome.Equals"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Outcome.cs",
+          "symbol": "Outcome.Multiple.Equals"
+        }
+      ]
+    },
+    {
+      "id": "text-from-tostring",
+      "name": "ToString is the text form",
+      "description": "Each value prints as the text Parse reads back.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.Text"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+          "symbol": "SecondsDisplay.Of"
+        }
+      ],
+      "behavior": "ToString() formats the value's JSON with TextForm.Format. A value with no text form, such as a period with mixed signs, prints its JSON instead. PosixSeconds and ElapsedSeconds print a display string that cannot be parsed: a decimal when the fraction terminates (3600.75 s (POSIX)), otherwise a fraction (1/3 s (POSIX)).",
+      "outcome": "Logs and test output show 2026-11-05, P1M or [2026-11-01, 2026-12-01), never a type name.",
+      "constraints": [
+        "Only start-end intervals of dates or instants have a text form."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.Text"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+          "symbol": "SecondsDisplay.Of"
+        }
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/csharp/src/Utv/Typed",
+      "path": "implementations/csharp/src/Utv/Typed/.dev/operation.json",
+      "relationship": "The operations that carry these features out."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/feature.json",
+      "relationship": "The JSON-layer features these build on."
+    },
+    {
+      "kind": "capability",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/capability.json",
+      "relationship": "The capabilities these features belong to."
+    }
+  ]
+}

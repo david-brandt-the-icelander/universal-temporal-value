@@ -1,0 +1,108 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/requirements.schema.json",
+  "kind": "requirements",
+  "title": "Library requirements set by the documents",
+  "folder": "docs",
+  "entities": [
+    {
+      "id": "example-scenario-catalog",
+      "title": "Every library covers the example scenario catalog",
+      "summary": "Each library shows how it is used through two example suites of unit tests, UTV first and native first, covering every scenario in docs/example-tests.md.",
+      "statement": "Every library covers every scenario of docs/example-tests.md in its UTV-first suite, and in its native-first suite every scenario the language's standard API can express at all. Each test's doc comment says \"Verifies that …\" and \"Compared with: …\"; where the two sides agree the expected value is computed with the other side, otherwise it is a literal.",
+      "rationale": "An example that is a unit test runs with the library's normal test command and cannot drift from what the library does.",
+      "priority": "must",
+      "acceptanceCriteria": [
+        "Every row of the catalog has a UTV-first test in every language.",
+        "Tests of partial operations assert the outcome's status and its diagnostic code, at least for month-end, dst-gap and dst-overlap.",
+        "UTV zone operations in the examples use conformance/rules/demo-zones.json through a shared fixture, never the host's tz database."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "docs/example-tests.md",
+        "description": "The catalog, and AGENTS.md section 2, Examples are unit tests."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "docs/example-tests.md",
+          "symbol": "Scenario catalog"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "7. Examples (all five languages)"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "2. Examples are unit tests"
+        }
+      ]
+    },
+    {
+      "id": "side-by-side-task-markers",
+      "title": "Every library marks every side-by-side task",
+      "summary": "UTV-first tests that illustrate a task of docs/side-by-side.md are wrapped in BEGIN <task-id> / END <task-id> comments, and every library marks every one of the 18 tasks.",
+      "statement": "In the UTV-first suite of every library, the tests that illustrate each task id listed in docs/library-api.md §7 are wrapped in // BEGIN <task-id> … // END <task-id> (# in Python), so tools/side_by_side.py can lay them out across the five languages.",
+      "rationale": "The page shows one task in five languages side by side from code that is compiled and run, so it cannot drift.",
+      "priority": "must",
+      "acceptanceCriteria": [
+        "python3 tools/side_by_side.py --check passes.",
+        "docs/side-by-side.md has no Missing section: every task has code from all five languages. The check does not enforce this yet (tools/.dev/backlog.json, side-by-side-missing-tasks-pass)."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "docs/library-api.md",
+        "description": "§7, Task markers."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "MARKER"
+        },
+        {
+          "path": "tools/side_by_side.py",
+          "symbol": "LANGUAGES"
+        },
+        {
+          "path": "docs/library-api.md",
+          "symbol": "7. Examples (all five languages)"
+        }
+      ]
+    },
+    {
+      "id": "library-test-obligations",
+      "title": "Tests each library must have",
+      "summary": "The 0.2 tests with every everyday fixture and its diagnostic codes, every text-form fixture, typed-layer tests and the two example suites.",
+      "statement": "Every library runs all of conformance/operations/everyday.json, checking statuses and expect.diagnostics codes; all of conformance/operations/text-form.json through parseText and formatText; at least one typed-layer test per row of the table in docs/library-api.md §2, plus ToString/Parse and ToJson/FromJson round trips and constructor rejection; and the example suites.",
+      "priority": "must",
+      "acceptanceCriteria": [
+        "Each library's test command (AGENTS.md section 3) runs every fixture in both fixture files.",
+        "Each library has typed-layer tests for every row of §2."
+      ],
+      "origin": {
+        "kind": "document",
+        "reference": "docs/library-api.md",
+        "description": "§8, Tests each library must have."
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "docs/library-api.md",
+          "symbol": "8. Tests each library must have"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "depends-on",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "everyday-fixtures"
+        },
+        {
+          "relation": "depends-on",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "text-form-fixtures"
+        }
+      ]
+    }
+  ]
+}

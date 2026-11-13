@@ -1,0 +1,531 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Native-first example verification",
+  "folder": "implementations/python/tests/examples/native_first",
+  "entities": [
+    {
+      "id": "datetime-date",
+      "title": "datetime.date examples",
+      "summary": "What datetime.date does for each date task (construction, range, parsing, weekday numbering, ISO week, arithmetic, ordering), compared with CivilDate.",
+      "criteria": [
+        "The date constructor creates the date when the fields name a real day.",
+        "The date constructor raises a ValueError when the day does not exist in the month.",
+        "The date constructor raises a ValueError when the month is 13.",
+        "The date constructor raises a ValueError when the year is beyond 9999.",
+        "The date constructor raises a ValueError when the year is before year 1.",
+        "date.max is the last day of year 9999.",
+        "date.fromisoformat reads the date when the text is an ISO 8601 calendar date.",
+        "date.fromisoformat raises a ValueError when the text names a day that does not exist.",
+        "date.weekday numbers Sunday 6, counting from Monday 0, when the date is a Sunday.",
+        "date.isoweekday numbers Sunday 7, as ISO 8601 does, when the date is a Sunday.",
+        "date.isocalendar returns the ISO 8601 week number of the date.",
+        "Adding a timedelta to a date returns the date that many days later, carrying into the next month.",
+        "date.replace raises a ValueError when the day is missing from the target month.",
+        "Subtracting two dates gives a timedelta whose days are the number of days between them.",
+        "date's less-than operator is true when the left date comes first."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestConstructor",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestMax",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestFromisoformat",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestWeekday",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestIsoweekday",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestIsocalendar",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestAdd",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestReplace",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestSub",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestLt",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "month-end-returns-none"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "arbitrary-precision-years"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestConstructor"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestMax"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestFromisoformat"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestWeekday"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestIsoweekday"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestIsocalendar"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestAdd"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestReplace"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestSub"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_date.py",
+          "symbol": "TestLt"
+        }
+      ]
+    },
+    {
+      "id": "calendar",
+      "title": "calendar examples",
+      "summary": "calendar.isleap and monthrange agree with UTV's leap-year rule and month lengths.",
+      "criteria": [
+        "calendar.isleap follows the Gregorian leap-year rules for every kind of year.",
+        "calendar.monthrange returns the number of days in the month when given February 2026."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_calendar.py",
+          "symbol": "TestIsleap",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_calendar.py",
+          "symbol": "TestMonthrange",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/native_first/test_calendar.py",
+          "symbol": "TestIsleap"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_calendar.py",
+          "symbol": "TestMonthrange"
+        }
+      ]
+    },
+    {
+      "id": "datetime-time",
+      "title": "datetime.time examples",
+      "summary": "datetime.time always writes seconds and has no arithmetic.",
+      "criteria": [
+        "time.isoformat writes seconds even when none were given.",
+        "Adding a timedelta to a time raises a TypeError, because time has no arithmetic."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_time.py",
+          "symbol": "TestIsoformat",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_time.py",
+          "symbol": "TestAdd",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_time.py",
+          "symbol": "TestIsoformat"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_time.py",
+          "symbol": "TestAdd"
+        }
+      ]
+    },
+    {
+      "id": "datetime-datetime",
+      "title": "datetime.datetime examples",
+      "summary": "Naive and aware datetimes, now, parsing Z and +00:00, timestamps, arithmetic across DST, astimezone in gaps and overlaps, ordering and the round trip through UTV.",
+      "criteria": [
+        "The datetime constructor creates a naive wall time when given no tzinfo.",
+        "The datetime constructor raises a ValueError when the second is a leap second, 60.",
+        "The datetime constructor pins the wall time to the offset when given a fixed timezone.",
+        "datetime.now returns a naive wall time, of this machine's zone, when given no tz.",
+        "datetime.now with timezone.utc returns a reading that UTV takes as an input without changing it.",
+        "datetime.fromisoformat gives the same value for text ending in Z and text ending in +00:00.",
+        "datetime.fromtimestamp returns the Unix epoch when given zero seconds and timezone.utc.",
+        "datetime.fromtimestamp keeps only six fractional digits, rounded, when given a timestamp with nine.",
+        "datetime.timestamp returns the seconds since the epoch as a float.",
+        "Subtracting two datetimes gives a timedelta whose total_seconds is a float.",
+        "Subtracting two datetimes with the same ZoneInfo subtracts their wall times, ignoring a daylight-saving change between them.",
+        "Adding a timedelta to a datetime carries into the next day when the hours pass midnight.",
+        "Adding a day to a datetime with a ZoneInfo keeps the wall time and takes the new offset when the day crosses a daylight-saving change.",
+        "Adding a day to a datetime with a fixed timezone keeps the offset, so across a daylight-saving change the wall time in New York becomes 13:00.",
+        "datetime.astimezone(timezone.utc) returns the instant when the wall time happens exactly once.",
+        "datetime.astimezone returns the local wall time when given a ZoneInfo.",
+        "datetime.astimezone converts a wall time that falls in a daylight-saving gap without a word, as if the clocks had not changed yet.",
+        "datetime.astimezone picks the earlier, daylight-time instant through fold=0, silently, when the wall time happens twice.",
+        "datetime's less-than operator compares wall times, ignoring fold, when both datetimes share a ZoneInfo.",
+        "datetime's == is true when the value made a round trip through UTV."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestConstructor",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestNow",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestFromisoformat",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestFromtimestamp",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestTimestamp",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestSub",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestAdd",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestAstimezone",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestLt",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestEq",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "native-interop-intent"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "no-host-environment"
+        },
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestConstructor"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestNow"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestFromisoformat"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestFromtimestamp"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestTimestamp"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestSub"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestAdd"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestAstimezone"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestLt"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_datetime.py",
+          "symbol": "TestEq"
+        },
+        {
+          "path": "implementations/python/tests/examples/fixtures.py",
+          "symbol": "demo_zone_rules"
+        }
+      ],
+      "details": "TestNow reads the real clock on purpose; its docstrings say why the outcome can't depend on the time read. TestFromisoformat's Z test is skipped on Python 3.10, which can't read Z. The ZoneInfo tests read this machine's tz database, which must know the 2026–2027 rules of New York and Paris; they are not skipped without one."
+    },
+    {
+      "id": "datetime-timedelta",
+      "title": "datetime.timedelta examples",
+      "summary": "A timedelta of one day equals 86,400 seconds, where UTV keeps three kinds of amount.",
+      "criteria": [
+        "timedelta(days=1) equals 86,400 seconds.",
+        "timedelta.total_seconds counts 60 seconds to the minute."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_timedelta.py",
+          "symbol": "TestConstructor",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        },
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_datetime_timedelta.py",
+          "symbol": "TestTotalSeconds",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "exact-timeline"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_timedelta.py",
+          "symbol": "TestConstructor"
+        },
+        {
+          "path": "implementations/python/tests/examples/native_first/test_datetime_timedelta.py",
+          "symbol": "TestTotalSeconds"
+        }
+      ]
+    },
+    {
+      "id": "zoneinfo",
+      "title": "zoneinfo.ZoneInfo examples",
+      "summary": "ZoneInfo.utcoffset in a gap and on both folds of an overlap, compared with ZonedIntent.resolve.",
+      "criteria": [
+        "ZoneInfo.utcoffset returns the offset in force before the change, without a word, when the wall time falls in a daylight-saving gap.",
+        "ZoneInfo.utcoffset returns the daylight-time offset when the wall time happens twice and fold is 0, the default.",
+        "ZoneInfo.utcoffset returns the standard-time offset when the wall time happens twice and fold is 1."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_zoneinfo_zone_info.py",
+          "symbol": "TestUtcoffset",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "dst-gap-and-overlap"
+        },
+        {
+          "relation": "verifies",
+          "path": "conformance/.dev/contracts.json",
+          "entityId": "demo-zone-rules"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/native_first/test_zoneinfo_zone_info.py",
+          "symbol": "TestUtcoffset"
+        },
+        {
+          "path": "implementations/python/tests/examples/fixtures.py",
+          "symbol": "demo_zone_rules"
+        }
+      ],
+      "details": "The ZoneInfo tests read this machine's tz database, which must know the 2026–2027 rules of New York and Paris; they are not skipped without one."
+    },
+    {
+      "id": "json",
+      "title": "json examples",
+      "summary": "json.loads keeps the last value of a repeated key, where validate_structural refuses it.",
+      "criteria": [
+        "json.loads accepts duplicate keys and keeps the last one."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/python/tests/examples/native_first/test_json.py",
+          "symbol": "TestLoads",
+          "command": "cd implementations/python && PYTHONPATH=src python3 -m unittest discover -s tests"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/python/src/utv/.dev/feature.json",
+          "entityId": "fail-closed-json"
+        },
+        {
+          "relation": "verifies",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "fail-closed"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/python/tests/examples/native_first/test_json.py",
+          "symbol": "TestLoads"
+        }
+      ]
+    }
+  ]
+}

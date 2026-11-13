@@ -1,0 +1,160 @@
+{
+  "$schema": "../../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "TypeScript library source component diagram",
+  "folder": "implementations/typescript/src",
+  "description": "The library's modules. The typed layer (0.3) sits on the JSON layer (0.2): every typed operation calls a JSON-layer function on its value's UTV JSON and turns the utv-result/1.0 answer into an Outcome. index.ts is the package's only entry point.",
+  "sources": [
+    {
+      "path": "implementations/typescript/src/index.ts",
+      "symbol": "export"
+    },
+    {
+      "path": "implementations/typescript/src/values.ts",
+      "symbol": "total"
+    },
+    {
+      "path": "implementations/typescript/src/internal.ts",
+      "symbol": "run"
+    },
+    {
+      "path": "implementations/typescript/src/zones.ts",
+      "symbol": "ZoneRules.load"
+    },
+    {
+      "path": "implementations/typescript/src/native.ts",
+      "symbol": "fromDate"
+    }
+  ],
+  "components": [
+    {
+      "id": "library",
+      "name": "@utv/core source",
+      "responsibility": "Everything the package compiles from: typed values and outcomes over the JSON-level everyday API, text form, validation and native interop.",
+      "folder": "implementations/typescript/src"
+    },
+    {
+      "id": "entry",
+      "name": "Entry point (index.ts)",
+      "responsibility": "Re-exports the public API of every module, and SPEC_VERSION and LIBRARY_VERSION.",
+      "folder": "implementations/typescript/src"
+    },
+    {
+      "id": "typed",
+      "name": "Typed values and context (values.ts, context.ts)",
+      "responsibility": "One immutable class per everyday value, valid by construction; parse and fromJson; TemporalContext, which holds the zone rules and orders zoned values.",
+      "folder": "implementations/typescript/src"
+    },
+    {
+      "id": "outcome",
+      "name": "Outcomes and policies (outcome.ts)",
+      "responsibility": "Outcome<T> and its helpers, OutcomeError, assertNever, and the typed vocabularies Truth, Ordering, Weekday, MonthEnd, Gap, Overlap and ResolutionPolicy.",
+      "folder": "implementations/typescript/src"
+    },
+    {
+      "id": "text",
+      "name": "ISO text and text form (iso.ts, text.ts)",
+      "responsibility": "parseIso and formatIso for points; parseText and formatText add ISO 8601 periods, bracket intervals and EDTF slash intervals on input.",
+      "folder": "implementations/typescript/src"
+    },
+    {
+      "id": "ops",
+      "name": "Calendar and instant operations (ops.ts)",
+      "responsibility": "fields, add, compare, daysBetween, posixSecondsBetween, contains and overlaps on UTV JSON.",
+      "folder": "implementations/typescript/src"
+    },
+    {
+      "id": "zones",
+      "name": "Zone rules and resolution (zones.ts)",
+      "responsibility": "Parses rule bundles into ZoneRules; resolve, toZone and toOffset between wall times and instants, never outside the bundle's window.",
+      "folder": "implementations/typescript/src"
+    },
+    {
+      "id": "native",
+      "name": "Native interop (native.ts)",
+      "responsibility": "Explicit adapters to and from Date, epoch milliseconds and plain {year, month, day} objects, with the intent named and loss reported.",
+      "folder": "implementations/typescript/src"
+    },
+    {
+      "id": "builders",
+      "name": "Builders (builders.ts)",
+      "responsibility": "Assemble the canonical everyday JSON shapes; they do not validate.",
+      "folder": "implementations/typescript/src"
+    },
+    {
+      "id": "validation",
+      "name": "Strict JSON and validation (json.ts, structural.ts, civil.ts)",
+      "responsibility": "A JSON parser that rejects duplicate keys; structural validation of utv/1.0 envelopes; semantic validation of proleptic Gregorian civil values and the calendar arithmetic it rests on.",
+      "folder": "implementations/typescript/src"
+    },
+    {
+      "id": "result",
+      "name": "Result envelope (result.ts)",
+      "responsibility": "The utv-result/1.0 UtvResult, Diagnostic and makeResult.",
+      "folder": "implementations/typescript/src"
+    },
+    {
+      "id": "internal",
+      "name": "Readers, writers and exact numbers (internal.ts, rational.ts)",
+      "responsibility": "Reads UTV JSON into checked internal records and writes it back; runs each operation so that failures become results; exact bigint rationals.",
+      "folder": "implementations/typescript/src"
+    },
+    {
+      "id": "node-fs",
+      "name": "Node.js file system (node:fs)",
+      "responsibility": "readFileSync, the one Node built-in the library uses, declared in src/node.d.ts.",
+      "external": true
+    },
+    {
+      "id": "js-date",
+      "name": "JavaScript Date",
+      "responsibility": "The standard date type the native adapters convert to and from.",
+      "external": true
+    }
+  ],
+  "relationships": [
+    { "from": "library", "to": "entry", "kind": "contains", "description": "The package's main module." },
+    { "from": "library", "to": "typed", "kind": "contains", "description": "The typed layer." },
+    { "from": "library", "to": "outcome", "kind": "contains", "description": "The typed layer's outcomes and policies." },
+    { "from": "library", "to": "text", "kind": "contains", "description": "JSON layer: text." },
+    { "from": "library", "to": "ops", "kind": "contains", "description": "JSON layer: operations." },
+    { "from": "library", "to": "zones", "kind": "contains", "description": "JSON layer: zones." },
+    { "from": "library", "to": "native", "kind": "contains", "description": "JSON layer: native interop." },
+    { "from": "library", "to": "builders", "kind": "contains", "description": "JSON layer: builders." },
+    { "from": "library", "to": "validation", "kind": "contains", "description": "Validation (0.1)." },
+    { "from": "library", "to": "result", "kind": "contains", "description": "The result envelope." },
+    { "from": "library", "to": "internal", "kind": "contains", "description": "Shared internals, not exported." },
+    { "from": "entry", "to": "typed", "kind": "depends-on", "description": "Re-exports the typed values, parse, fromJson and TemporalContext." },
+    { "from": "entry", "to": "outcome", "kind": "depends-on", "description": "Re-exports Outcome and the policies." },
+    { "from": "entry", "to": "text", "kind": "depends-on", "description": "Re-exports parseIso, formatIso, parseText, formatText." },
+    { "from": "entry", "to": "ops", "kind": "depends-on", "description": "Re-exports the operations." },
+    { "from": "entry", "to": "zones", "kind": "depends-on", "description": "Re-exports ZoneRules, loadRules, resolve, toZone, toOffset." },
+    { "from": "entry", "to": "native", "kind": "depends-on", "description": "Re-exports the native adapters." },
+    { "from": "entry", "to": "builders", "kind": "depends-on", "description": "Re-exports the builders." },
+    { "from": "entry", "to": "validation", "kind": "depends-on", "description": "Re-exports parseStrict, validateStructural, validateSemantic and the calendar functions." },
+    { "from": "entry", "to": "result", "kind": "depends-on", "description": "Re-exports makeResult, candidate and the result types." },
+    { "from": "typed", "to": "ops", "kind": "depends-on", "description": "add, compare, fields, daysBetween, posixSecondsBetween, contains, overlaps." },
+    { "from": "typed", "to": "zones", "kind": "depends-on", "description": "resolve, toZone, toOffset; TemporalContext holds a ZoneRules." },
+    { "from": "typed", "to": "native", "kind": "depends-on", "description": "Instant.fromUnixMilliseconds, fromDate and toDate." },
+    { "from": "typed", "to": "text", "kind": "depends-on", "description": "toString is formatText; parse is parseText; inZone checks the zone name with ZONE_NAME." },
+    { "from": "typed", "to": "builders", "kind": "depends-on", "description": "Builds each value's JSON before reading it back." },
+    { "from": "typed", "to": "validation", "kind": "depends-on", "description": "fromJson parses text strictly and reports structural failures." },
+    { "from": "typed", "to": "internal", "kind": "depends-on", "description": "Reads and writes values; turns a Fail into an Outcome." },
+    { "from": "typed", "to": "outcome", "kind": "depends-on", "description": "Partial operations return Outcome<T>." },
+    { "from": "outcome", "to": "result", "kind": "depends-on", "description": "toResult builds a UtvResult." },
+    { "from": "text", "to": "ops", "kind": "depends-on", "description": "parseText and formatText use compare to reject reversed intervals." },
+    { "from": "text", "to": "internal", "kind": "depends-on", "description": "Readers, writers and run." },
+    { "from": "ops", "to": "internal", "kind": "depends-on", "description": "Readers, writers and run." },
+    { "from": "ops", "to": "validation", "kind": "depends-on", "description": "daysFromCivil, civilFromDays, daysInMonth, isLeapYear." },
+    { "from": "zones", "to": "internal", "kind": "depends-on", "description": "Readers, writers and run." },
+    { "from": "zones", "to": "validation", "kind": "depends-on", "description": "parseStrict for rule bundles; civilFromDays." },
+    { "from": "zones", "to": "node-fs", "kind": "depends-on", "description": "ZoneRules.load reads the file the caller names with readFileSync." },
+    { "from": "native", "to": "zones", "kind": "depends-on", "description": "fromDate with an offset or a zone uses toOffset and toZone." },
+    { "from": "native", "to": "internal", "kind": "depends-on", "description": "Readers and writers." },
+    { "from": "native", "to": "js-date", "kind": "depends-on", "description": "fromDate reads getTime(); toDate constructs a Date from milliseconds." },
+    { "from": "internal", "to": "validation", "kind": "depends-on", "description": "Every reader checks the value structurally first (validateParsed)." },
+    { "from": "internal", "to": "result", "kind": "depends-on", "description": "run wraps every outcome in makeResult." },
+    { "from": "internal", "to": "builders", "kind": "depends-on", "description": "SCHEMA, GREGORY and POSIX." },
+    { "from": "validation", "to": "result", "kind": "depends-on", "description": "Validation answers with a UtvResult." }
+  ]
+}

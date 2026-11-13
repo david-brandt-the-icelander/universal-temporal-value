@@ -1,0 +1,87 @@
+{
+  "$schema": "../../../Meta/Agents/Skills/describe-deployment-diagram/schema.json",
+  "kind": "deployment",
+  "title": "utv for Python deployment diagram",
+  "folder": "implementations/python",
+  "description": "How the library reaches a program: a setuptools package that the application's own Python interpreter imports and runs in-process, given zone rules the application loads. Nothing in the repository publishes it to a package index or tags a release of it; the repository's tests import it from src/ with PYTHONPATH=src.",
+  "sources": [
+    {
+      "path": "implementations/python/pyproject.toml",
+      "symbol": "build-system"
+    },
+    {
+      "path": "implementations/python/pyproject.toml",
+      "symbol": "tool.setuptools.package-data"
+    },
+    {
+      "path": "implementations/python/src/utv/validate.py",
+      "symbol": "_schema"
+    },
+    {
+      "path": "implementations/python/src/utv/zones.py",
+      "symbol": "load_rules"
+    },
+    {
+      "path": "implementations/python/src/utv/native.py",
+      "symbol": "to_datetime"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "interpreter",
+      "name": "Python 3.10+ interpreter",
+      "kind": "host",
+      "description": "The interpreter the application runs in (pyproject.toml: requires-python >= 3.10)."
+    },
+    {
+      "id": "application",
+      "name": "Application process",
+      "kind": "process",
+      "description": "The application developer's program. It imports utv and calls it; every operation is an in-process function call with no I/O of its own."
+    },
+    {
+      "id": "tzdb",
+      "name": "Host tz database",
+      "kind": "database",
+      "description": "The tz data zoneinfo reads for a ZoneInfo the application constructs. utv never opens it; utv.native only calls utcoffset and astimezone on such a ZoneInfo.",
+      "condition": "Only when the application passes a ZoneInfo, or a datetime carrying one, to from_native or to_native."
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "package",
+      "name": "utv 0.3.0",
+      "source": "implementations/python/pyproject.toml",
+      "deployedTo": "application",
+      "description": "The package built by setuptools from src/utv, standard library only (dependencies = [])."
+    },
+    {
+      "id": "schema",
+      "name": "Bundled schema",
+      "source": "implementations/python/src/utv/data/utv-1.0.schema.json",
+      "deployedTo": "application",
+      "description": "Package data (data/*.json), read at run time by validate_structural through importlib.resources."
+    },
+    {
+      "id": "rules",
+      "name": "Zone-rule bundle",
+      "source": "conformance/rules/demo-zones.json",
+      "deployedTo": "application",
+      "description": "Rule data the application loads with ZoneRules.load(path) or ZoneRules.parse(text) and holds in a TemporalContext. The package ships none; this demo bundle (three zones, 2026–2027) is the only one in the repository and is what the tests use."
+    }
+  ],
+  "relationships": [
+    {
+      "from": "interpreter",
+      "to": "application",
+      "kind": "hosts",
+      "description": "Runs the application, and utv inside it."
+    },
+    {
+      "from": "application",
+      "to": "tzdb",
+      "kind": "connects-to",
+      "description": "Through zoneinfo.ZoneInfo objects the application creates."
+    }
+  ]
+}

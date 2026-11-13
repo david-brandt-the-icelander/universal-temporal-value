@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../../../../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "UTV-first examples",
+  "folder": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "UTV-first examples",
+      "summary": "One test class per UTV class, one @Nested class per method: each test does a task with UTV and compares the result with java.time.",
+      "purpose": "Shows how to do each task of the scenario catalog with UTV. Expected values come from java.time wherever the two agree; otherwise they are literals, and the Javadoc's 'Compared with:' sentence says what java.time does. Tests that illustrate a task of docs/side-by-side.md sit between // BEGIN <task-id> and // END <task-id> markers.",
+      "boundaries": [
+        "UTV zone operations use only the pinned demo rules, through Fixtures.demoZoneRules.",
+        "Where the java.time side of an expectation reads the host's tz database, the class comment says so.",
+        "Tests mirror production (AGENTS.md 1.9): each test class is named after the class it exercises, and verification.json names it."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/test/java/net/icelander/utv/examples/utvfirst/CivilDateTest.java",
+          "symbol": "CivilDateTest"
+        },
+        {
+          "path": "docs/example-tests.md",
+          "symbol": "Scenario catalog"
+        }
+      ]
+    }
+  ]
+}

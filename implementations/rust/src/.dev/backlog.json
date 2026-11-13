@@ -1,0 +1,71 @@
+{
+  "$schema": "../../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Library source backlog",
+  "folder": "implementations/rust/src",
+  "entities": [
+    {
+      "id": "stale-range-code-comment",
+      "title": "num.rs names the old diagnostic code range",
+      "type": "defect",
+      "status": "proposed",
+      "summary": "The module documentation of num.rs says an overflow is reported as unsupported with diagnostic range; since 0.3.0 the code is implementation-limit.",
+      "expected": "The comment names the code the library reports: implementation-limit (model.rs range_err; CHANGELOG 0.3.0 renamed range to implementation-limit).",
+      "observed": "\"An overflow gives None, which the operations report as unsupported (diagnostic range) rather than wrapping or rounding.\"",
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/rust/src/num.rs",
+        "description": "Module documentation, line 4."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/num.rs",
+          "symbol": "module documentation"
+        },
+        {
+          "path": "implementations/rust/src/model.rs",
+          "symbol": "range_err"
+        },
+        {
+          "path": "implementations/rust/CHANGELOG.md",
+          "symbol": "0.3.0, Shared diagnostic codes"
+        }
+      ]
+    },
+    {
+      "id": "duplicated-gregorian-rules",
+      "title": "Two copies of the leap-year and month-length rules",
+      "type": "debt",
+      "status": "proposed",
+      "summary": "lib.rs and num.rs each define is_leap and days_in_month, and the two days_in_month differ for months outside 1 to 12.",
+      "details": "lib.rs's public `days_in_month(year, month) -> Option<u32>` answers None for a month outside 1 to 12; num.rs's crate-internal `days_in_month(year, month) -> u32` answers 28 or 29 for it (its last match arm). lib.rs uses its own copy in check_civil; model.rs, iso.rs and ops.rs use num.rs's, after checking the month.",
+      "compromise": "The public helpers in lib.rs were kept beside the crate-internal ones in num.rs instead of one calling the other.",
+      "cost": "A fix to the calendar rules has to be made twice, and a caller of num::days_in_month that skips the month check gets a plausible wrong answer.",
+      "origin": {
+        "kind": "code",
+        "reference": "implementations/rust/src/lib.rs",
+        "description": "is_leap and days_in_month at the end of lib.rs, and the same names in num.rs."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "days_in_month"
+        },
+        {
+          "path": "implementations/rust/src/num.rs",
+          "symbol": "days_in_month"
+        },
+        {
+          "path": "implementations/rust/src/lib.rs",
+          "symbol": "is_leap"
+        },
+        {
+          "path": "implementations/rust/src/num.rs",
+          "symbol": "is_leap"
+        }
+      ]
+    }
+  ]
+}

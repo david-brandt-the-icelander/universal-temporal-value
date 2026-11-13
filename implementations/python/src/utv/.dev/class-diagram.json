@@ -1,0 +1,1149 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-class-diagram/schema.json",
+  "kind": "class",
+  "title": "utv package classes",
+  "folder": "implementations/python/src/utv",
+  "description": "Every class, enum and type alias declared in the utv package: the typed values and their outcomes, policies and context, the zone rules, the result envelope, and the internal helpers of the JSON layer. Frozen dataclasses are drawn as records.",
+  "sources": [
+    {
+      "path": "implementations/python/src/utv/values.py",
+      "symbol": "CivilDate"
+    },
+    {
+      "path": "implementations/python/src/utv/outcome.py",
+      "symbol": "Outcome"
+    },
+    {
+      "path": "implementations/python/src/utv/policy.py",
+      "symbol": "ResolutionPolicy"
+    },
+    {
+      "path": "implementations/python/src/utv/context.py",
+      "symbol": "TemporalContext"
+    },
+    {
+      "path": "implementations/python/src/utv/zones.py",
+      "symbol": "ZoneRules"
+    },
+    {
+      "path": "implementations/python/src/utv/result.py",
+      "symbol": "Result"
+    },
+    {
+      "path": "implementations/python/src/utv/native.py",
+      "symbol": "Intent"
+    },
+    {
+      "path": "implementations/python/src/utv/_core.py",
+      "symbol": "Civil"
+    }
+  ],
+  "types": [
+    {
+      "id": "values._Value",
+      "name": "_Value",
+      "kind": "class",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "to_json() -> dict[str, Any]",
+        "__str__() -> str  (the text form)",
+        "__repr__() -> str  (CivilDate(2026-11-05))",
+        "from_json(value: Any) -> Outcome[Self]  [classmethod]",
+        "parse(text: str) -> Outcome[Self]  [classmethod]"
+      ]
+    },
+    {
+      "id": "values._Ordered",
+      "name": "_Ordered",
+      "kind": "class",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "__lt__(other) -> bool",
+        "__le__(other) -> bool",
+        "__gt__(other) -> bool",
+        "__ge__(other) -> bool"
+      ]
+    },
+    {
+      "id": "values.Weekday",
+      "name": "Weekday",
+      "kind": "enum",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "MONDAY = 1",
+        "…",
+        "SUNDAY = 7"
+      ]
+    },
+    {
+      "id": "values.CivilDate",
+      "name": "CivilDate",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "year: int",
+        "month: int",
+        "day: int",
+        "of(year, month, day) -> CivilDate  [classmethod]",
+        "try_of(year, month, day) -> Outcome[CivilDate]  [classmethod]",
+        "day_of_week: Weekday",
+        "day_of_year: int",
+        "iso_week: int",
+        "iso_week_year: int",
+        "days_in_month: int",
+        "is_leap_year: bool",
+        "add_days(n: int) -> CivilDate",
+        "add_weeks(n: int) -> CivilDate",
+        "add_months(n: int) -> Outcome[CivilDate]",
+        "add_months(n: int, month_end: Constrain) -> CivilDate",
+        "add_years(n: int) -> Outcome[CivilDate]",
+        "add_years(n: int, month_end: Constrain) -> CivilDate",
+        "add(period: Period, month_end: MonthEndLike = REJECT) -> Outcome[CivilDate]",
+        "days_until(other: CivilDate) -> int",
+        "at(time: CivilTime) -> CivilDateTime"
+      ]
+    },
+    {
+      "id": "values.CivilYearMonth",
+      "name": "CivilYearMonth",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "year: int",
+        "month: int",
+        "of(year, month) -> CivilYearMonth  [classmethod]",
+        "try_of(year, month) -> Outcome[CivilYearMonth]  [classmethod]",
+        "add_months(n: int) -> CivilYearMonth",
+        "add_years(n: int) -> CivilYearMonth"
+      ]
+    },
+    {
+      "id": "values.CivilTime",
+      "name": "CivilTime",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "hour: int",
+        "minute: int",
+        "second: Optional[int] = None",
+        "nanosecond: int = 0",
+        "of(hour, minute, second=None, nanosecond=0) -> CivilTime  [classmethod]",
+        "try_of(hour, minute, second=None, nanosecond=0) -> Outcome[CivilTime]  [classmethod]"
+      ]
+    },
+    {
+      "id": "values.CivilDateTime",
+      "name": "CivilDateTime",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "date: CivilDate",
+        "time: CivilTime",
+        "of(year, month, day, hour, minute, second=None, nanosecond=0) -> CivilDateTime  [classmethod]",
+        "try_of(…) -> Outcome[CivilDateTime]  [classmethod]",
+        "year, month, day, hour, minute, second, nanosecond",
+        "add_days / add_weeks / add_hours / add_minutes / add_seconds(n: int) -> CivilDateTime",
+        "add_months(n: int) -> Outcome[CivilDateTime]",
+        "add_months(n: int, month_end: Constrain) -> CivilDateTime",
+        "add(period: Period, month_end: MonthEndLike = REJECT) -> Outcome[CivilDateTime]",
+        "in_zone(zone_id: str) -> ZonedIntent",
+        "at_offset(seconds: int) -> FixedOffsetDateTime"
+      ]
+    },
+    {
+      "id": "values.FixedOffsetDateTime",
+      "name": "FixedOffsetDateTime",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "date_time: CivilDateTime",
+        "offset_seconds: int",
+        "to_instant() -> Instant"
+      ]
+    },
+    {
+      "id": "values.ZonedIntent",
+      "name": "ZonedIntent",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "date_time: CivilDateTime",
+        "zone_id: str",
+        "asserted_offset_seconds: Optional[int] = None",
+        "add_days / add_weeks / add_hours / add_minutes / add_seconds(n: int) -> ZonedIntent",
+        "add_months(n: int) -> Outcome[ZonedIntent]",
+        "add_months(n: int, month_end: Constrain) -> ZonedIntent",
+        "add(period: Period, month_end: MonthEndLike = REJECT) -> Outcome[ZonedIntent]",
+        "resolve(ctx: TemporalContext, policy: ResolutionPolicy = STRICT) -> Outcome[Instant]"
+      ]
+    },
+    {
+      "id": "values.Instant",
+      "name": "Instant",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "epoch_seconds: Fraction",
+        "from_unix_seconds(seconds: int, nanoseconds: int = 0) -> Instant  [classmethod]",
+        "from_unix_nanoseconds(nanoseconds: int) -> Instant  [classmethod]",
+        "unix_seconds: int",
+        "nanoseconds: int  (floor)",
+        "sub_second: Fraction",
+        "add(amount: PosixSeconds) -> Instant",
+        "add(amount: ElapsedSeconds) -> Outcome[Instant]",
+        "until(other: Instant) -> PosixSeconds",
+        "at_offset(seconds: int) -> FixedOffsetDateTime",
+        "in_zone(zone_id: str, ctx: TemporalContext) -> Outcome[ZonedIntent]"
+      ]
+    },
+    {
+      "id": "values.Period",
+      "name": "Period",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "years, months, weeks, days, hours, minutes, seconds: int = 0",
+        "of(years=0, months=0, weeks=0, days=0, hours=0, minutes=0, seconds=0) -> Period  [classmethod]",
+        "of_years / of_months / of_weeks / of_days(n: int) -> Period  [classmethod]",
+        "negate() -> Period"
+      ]
+    },
+    {
+      "id": "values.PosixSeconds",
+      "name": "PosixSeconds",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "seconds: Fraction",
+        "of(numerator: int, denominator: int = 1) -> PosixSeconds  [classmethod]",
+        "negate() -> PosixSeconds"
+      ]
+    },
+    {
+      "id": "values.ElapsedSeconds",
+      "name": "ElapsedSeconds",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "seconds: Fraction",
+        "of(numerator: int, denominator: int = 1) -> ElapsedSeconds  [classmethod]",
+        "negate() -> ElapsedSeconds"
+      ]
+    },
+    {
+      "id": "values.Bound",
+      "name": "Bound[P]",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "state: Literal['included', 'excluded', 'unbounded', 'unknown']",
+        "value: Optional[P] = None",
+        "included(value: P) -> Bound[P]  [classmethod]",
+        "excluded(value: P) -> Bound[P]  [classmethod]",
+        "UNBOUNDED: Bound  [class constant]",
+        "UNKNOWN: Bound  [class constant]"
+      ]
+    },
+    {
+      "id": "values.Interval",
+      "name": "Interval[P]",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "start: Bound[P]",
+        "end: Bound[P]",
+        "of(start: Bound[P], end: Bound[P]) -> Interval[P]  [classmethod]",
+        "try_of(start, end) -> Outcome[Interval[P]]  [classmethod]",
+        "half_open(start: P, end: P) -> Interval[P]  [classmethod]",
+        "closed(start: P, end: P) -> Interval[P]  [classmethod]",
+        "contains(point: P) -> Truth",
+        "overlaps(other: Interval[P]) -> Truth"
+      ]
+    },
+    {
+      "id": "values.Value",
+      "name": "Value",
+      "kind": "type",
+      "sources": [
+        "implementations/python/src/utv/values.py"
+      ],
+      "members": [
+        "Union[CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime, ZonedIntent, Instant, Period, PosixSeconds, ElapsedSeconds, Interval[Any]]"
+      ]
+    },
+    {
+      "id": "outcome.OutcomeError",
+      "name": "OutcomeError",
+      "kind": "class",
+      "sources": [
+        "implementations/python/src/utv/outcome.py"
+      ],
+      "members": [
+        "status: str",
+        "diagnostics: tuple[Diagnostic, ...]"
+      ]
+    },
+    {
+      "id": "outcome._Case",
+      "name": "_Case[T]",
+      "kind": "class",
+      "sources": [
+        "implementations/python/src/utv/outcome.py"
+      ],
+      "members": [
+        "status: ClassVar[str]",
+        "codes: tuple[str, ...]",
+        "unique_or(fallback: U) -> T | U",
+        "single() -> T",
+        "to_result() -> Result",
+        "__str__() -> str"
+      ]
+    },
+    {
+      "id": "outcome.Unique",
+      "name": "Unique[T]",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/outcome.py"
+      ],
+      "members": [
+        "value: T",
+        "diagnostics: tuple[Diagnostic, ...] = ()"
+      ]
+    },
+    {
+      "id": "outcome.Multiple",
+      "name": "Multiple[T]",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/outcome.py"
+      ],
+      "members": [
+        "values: tuple[T, ...]",
+        "diagnostics: tuple[Diagnostic, ...] = ()"
+      ]
+    },
+    {
+      "id": "outcome.NoneOf",
+      "name": "NoneOf[T]",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/outcome.py"
+      ],
+      "members": [
+        "diagnostics: tuple[Diagnostic, ...] = ()"
+      ]
+    },
+    {
+      "id": "outcome.Unsupported",
+      "name": "Unsupported[T]",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/outcome.py"
+      ],
+      "members": [
+        "diagnostics: tuple[Diagnostic, ...] = ()"
+      ]
+    },
+    {
+      "id": "outcome.Invalid",
+      "name": "Invalid[T]",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/outcome.py"
+      ],
+      "members": [
+        "diagnostics: tuple[Diagnostic, ...] = ()"
+      ]
+    },
+    {
+      "id": "outcome.Outcome",
+      "name": "Outcome[T]",
+      "kind": "type",
+      "sources": [
+        "implementations/python/src/utv/outcome.py"
+      ],
+      "members": [
+        "Union[Unique[T], Multiple[T], NoneOf[T], Unsupported[T], Invalid[T]]"
+      ]
+    },
+    {
+      "id": "outcome.Truth",
+      "name": "Truth",
+      "kind": "enum",
+      "sources": [
+        "implementations/python/src/utv/outcome.py"
+      ],
+      "members": [
+        "DEFINITELY",
+        "POSSIBLY",
+        "IMPOSSIBLE"
+      ]
+    },
+    {
+      "id": "outcome.Ordering",
+      "name": "Ordering",
+      "kind": "enum",
+      "sources": [
+        "implementations/python/src/utv/outcome.py"
+      ],
+      "members": [
+        "BEFORE",
+        "EQUAL",
+        "AFTER"
+      ]
+    },
+    {
+      "id": "policy.MonthEnd",
+      "name": "MonthEnd",
+      "kind": "enum",
+      "sources": [
+        "implementations/python/src/utv/policy.py"
+      ],
+      "members": [
+        "REJECT",
+        "CONSTRAIN"
+      ]
+    },
+    {
+      "id": "policy.Gap",
+      "name": "Gap",
+      "kind": "enum",
+      "sources": [
+        "implementations/python/src/utv/policy.py"
+      ],
+      "members": [
+        "REJECT",
+        "PRESERVE_UNRESOLVED",
+        "SHIFT_FORWARD"
+      ]
+    },
+    {
+      "id": "policy.Overlap",
+      "name": "Overlap",
+      "kind": "enum",
+      "sources": [
+        "implementations/python/src/utv/policy.py"
+      ],
+      "members": [
+        "REJECT",
+        "ALL",
+        "EARLIEST",
+        "LATEST"
+      ]
+    },
+    {
+      "id": "policy.ResolutionPolicy",
+      "name": "ResolutionPolicy",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/policy.py"
+      ],
+      "members": [
+        "gap: Gap",
+        "overlap: Overlap",
+        "STRICT: ResolutionPolicy  [class constant]",
+        "ALL_CANDIDATES: ResolutionPolicy  [class constant]",
+        "to_json() -> dict[str, str]"
+      ]
+    },
+    {
+      "id": "policy.Likes",
+      "name": "MonthEndLike, GapLike, OverlapLike",
+      "kind": "type",
+      "sources": [
+        "implementations/python/src/utv/policy.py"
+      ],
+      "members": [
+        "Union[<enum>, Literal[<wire strings>]]"
+      ]
+    },
+    {
+      "id": "context.TemporalContext",
+      "name": "TemporalContext",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/context.py"
+      ],
+      "members": [
+        "rules: ZoneRules",
+        "with_rules(rules: ZoneRules) -> TemporalContext  [classmethod]",
+        "resolve(zoned: ZonedIntent, policy: ResolutionPolicy = STRICT) -> Outcome[Instant]",
+        "in_zone(instant: Instant, zone_id: str) -> Outcome[ZonedIntent]",
+        "compare(a: Timed, b: Timed) -> Outcome[Ordering]"
+      ]
+    },
+    {
+      "id": "context.Timed",
+      "name": "Timed",
+      "kind": "type",
+      "sources": [
+        "implementations/python/src/utv/context.py"
+      ],
+      "members": [
+        "Union[ZonedIntent, Instant, FixedOffsetDateTime]"
+      ]
+    },
+    {
+      "id": "zones.Zone",
+      "name": "Zone",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/zones.py"
+      ],
+      "members": [
+        "initial_offset: int",
+        "transitions: tuple[tuple[int, int], ...]",
+        "offset_at(t: Fraction) -> int",
+        "gap_offset_before(local: Fraction) -> Optional[int]",
+        "offsets_near(lo: Fraction, hi: Fraction) -> list[int]"
+      ]
+    },
+    {
+      "id": "zones.ZoneRules",
+      "name": "ZoneRules",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/zones.py"
+      ],
+      "members": [
+        "rule_set: dict[str, Any]",
+        "valid_from: int",
+        "valid_until: int",
+        "zones: Mapping[str, Zone]",
+        "manifest() -> dict[str, Any]",
+        "load(path) -> ZoneRules  [classmethod]",
+        "parse(source) -> ZoneRules  [classmethod]"
+      ]
+    },
+    {
+      "id": "result.Status",
+      "name": "Status",
+      "kind": "enum",
+      "sources": [
+        "implementations/python/src/utv/result.py"
+      ],
+      "members": [
+        "INVALID",
+        "UNSUPPORTED",
+        "INDETERMINATE",
+        "NONE",
+        "UNIQUE",
+        "MULTIPLE",
+        "RANGE",
+        "SYMBOLIC",
+        "RESOURCE_LIMIT",
+        "ERROR",
+        "VALID"
+      ]
+    },
+    {
+      "id": "result.Diagnostic",
+      "name": "Diagnostic",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/result.py"
+      ],
+      "members": [
+        "code: str",
+        "severity: str",
+        "path: str",
+        "message: str",
+        "to_dict() -> dict[str, Any]"
+      ]
+    },
+    {
+      "id": "result.Result",
+      "name": "Result",
+      "kind": "class",
+      "sources": [
+        "implementations/python/src/utv/result.py"
+      ],
+      "members": [
+        "operation: str",
+        "status: Status",
+        "diagnostics: list[Diagnostic]",
+        "candidates: list[Any]",
+        "manifest: dict[str, Any]",
+        "assumptions: list[Any]",
+        "loss: dict[str, Any]",
+        "schema: str = 'utv-result/1.0'",
+        "value: Any  (the single candidate of a unique result)",
+        "to_dict() -> dict[str, Any]"
+      ]
+    },
+    {
+      "id": "native.Intent",
+      "name": "Intent",
+      "kind": "enum",
+      "sources": [
+        "implementations/python/src/utv/native.py"
+      ],
+      "members": [
+        "FLOATING",
+        "INSTANT",
+        "OFFSET",
+        "ZONED",
+        "POSIX_SECONDS",
+        "PERIOD"
+      ]
+    },
+    {
+      "id": "interop.Native",
+      "name": "Native",
+      "kind": "type",
+      "sources": [
+        "implementations/python/src/utv/interop.py"
+      ],
+      "members": [
+        "Union[date, time, datetime, timedelta]"
+      ]
+    },
+    {
+      "id": "core.Outcome",
+      "name": "_core.Outcome",
+      "kind": "class",
+      "sources": [
+        "implementations/python/src/utv/_core.py"
+      ],
+      "members": [
+        "status: Status",
+        "diagnostic: Diagnostic",
+        "diagnostics: list[Diagnostic]"
+      ]
+    },
+    {
+      "id": "core.Civil",
+      "name": "_core.Civil",
+      "kind": "record",
+      "sources": [
+        "implementations/python/src/utv/_core.py"
+      ],
+      "members": [
+        "form: str",
+        "year, month, day, hour, minute, second, nano: int | None",
+        "zone: str",
+        "offset: int | None",
+        "zone_id: str | None",
+        "zone_key: tuple",
+        "day_number: int",
+        "wall_seconds() -> Fraction",
+        "order_key() -> tuple[int, ...]"
+      ]
+    },
+    {
+      "id": "ops._Bound",
+      "name": "ops._Bound",
+      "kind": "class",
+      "sources": [
+        "implementations/python/src/utv/ops.py"
+      ],
+      "members": [
+        "state: str",
+        "point: Any",
+        "date: Optional[Civil]"
+      ]
+    },
+    {
+      "id": "validate._DuplicateKey",
+      "name": "validate._DuplicateKey",
+      "kind": "class",
+      "sources": [
+        "implementations/python/src/utv/validate.py"
+      ],
+      "members": []
+    },
+    {
+      "id": "ext.ValueError",
+      "name": "ValueError",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    },
+    {
+      "id": "ext.Exception",
+      "name": "Exception",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    },
+    {
+      "id": "ext.Enum",
+      "name": "enum.Enum (with str)",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    },
+    {
+      "id": "ext.IntEnum",
+      "name": "enum.IntEnum",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    },
+    {
+      "id": "ext.Fraction",
+      "name": "fractions.Fraction",
+      "kind": "class",
+      "sources": [],
+      "members": [],
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "values._Ordered",
+      "to": "values._Value",
+      "kind": "inherits",
+      "description": "Adds comparison operators through ops.compare."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "values._Ordered",
+      "kind": "inherits",
+      "description": "Has comparison operators."
+    },
+    {
+      "from": "values.CivilYearMonth",
+      "to": "values._Ordered",
+      "kind": "inherits",
+      "description": "Has comparison operators."
+    },
+    {
+      "from": "values.CivilTime",
+      "to": "values._Ordered",
+      "kind": "inherits",
+      "description": "Has comparison operators."
+    },
+    {
+      "from": "values.CivilDateTime",
+      "to": "values._Ordered",
+      "kind": "inherits",
+      "description": "Has comparison operators."
+    },
+    {
+      "from": "values.FixedOffsetDateTime",
+      "to": "values._Ordered",
+      "kind": "inherits",
+      "description": "Has comparison operators."
+    },
+    {
+      "from": "values.Instant",
+      "to": "values._Ordered",
+      "kind": "inherits",
+      "description": "Has comparison operators."
+    },
+    {
+      "from": "values.ZonedIntent",
+      "to": "values._Value",
+      "kind": "inherits",
+      "description": "JSON, text and parsing; no comparison operators."
+    },
+    {
+      "from": "values.Period",
+      "to": "values._Value",
+      "kind": "inherits",
+      "description": "JSON, text and parsing; no comparison operators."
+    },
+    {
+      "from": "values.PosixSeconds",
+      "to": "values._Value",
+      "kind": "inherits",
+      "description": "JSON, text and parsing; no comparison operators."
+    },
+    {
+      "from": "values.ElapsedSeconds",
+      "to": "values._Value",
+      "kind": "inherits",
+      "description": "JSON, text and parsing; no comparison operators."
+    },
+    {
+      "from": "values.Interval",
+      "to": "values._Value",
+      "kind": "inherits",
+      "description": "JSON, text and parsing; no comparison operators."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "values.Weekday",
+      "kind": "depends-on",
+      "description": "day_of_week."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "policy.MonthEnd",
+      "kind": "depends-on",
+      "description": "The month-end policy of add_months, add_years and add."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "values.Period",
+      "kind": "depends-on",
+      "description": "add(period)."
+    },
+    {
+      "from": "values.CivilDate",
+      "to": "values.CivilDateTime",
+      "kind": "depends-on",
+      "description": "at(time)."
+    },
+    {
+      "from": "values.CivilDateTime",
+      "to": "values.CivilDate",
+      "kind": "depends-on",
+      "description": "Its date."
+    },
+    {
+      "from": "values.CivilDateTime",
+      "to": "values.CivilTime",
+      "kind": "depends-on",
+      "description": "Its time of day."
+    },
+    {
+      "from": "values.CivilDateTime",
+      "to": "values.ZonedIntent",
+      "kind": "depends-on",
+      "description": "in_zone(zone_id)."
+    },
+    {
+      "from": "values.CivilDateTime",
+      "to": "values.FixedOffsetDateTime",
+      "kind": "depends-on",
+      "description": "at_offset(seconds)."
+    },
+    {
+      "from": "values.FixedOffsetDateTime",
+      "to": "values.CivilDateTime",
+      "kind": "depends-on",
+      "description": "Its wall time."
+    },
+    {
+      "from": "values.FixedOffsetDateTime",
+      "to": "values.Instant",
+      "kind": "depends-on",
+      "description": "to_instant()."
+    },
+    {
+      "from": "values.ZonedIntent",
+      "to": "values.CivilDateTime",
+      "kind": "depends-on",
+      "description": "Its wall time."
+    },
+    {
+      "from": "values.ZonedIntent",
+      "to": "context.TemporalContext",
+      "kind": "depends-on",
+      "description": "resolve(ctx) delegates to ctx.resolve."
+    },
+    {
+      "from": "values.ZonedIntent",
+      "to": "policy.ResolutionPolicy",
+      "kind": "depends-on",
+      "description": "The gap and overlap policy of resolve."
+    },
+    {
+      "from": "values.Instant",
+      "to": "ext.Fraction",
+      "kind": "depends-on",
+      "description": "Exact POSIX seconds since 1970-01-01T00:00:00Z."
+    },
+    {
+      "from": "values.Instant",
+      "to": "values.PosixSeconds",
+      "kind": "depends-on",
+      "description": "add and until."
+    },
+    {
+      "from": "values.Instant",
+      "to": "values.ElapsedSeconds",
+      "kind": "depends-on",
+      "description": "add answers Unsupported (needs-leap-seconds)."
+    },
+    {
+      "from": "values.Instant",
+      "to": "values.ZonedIntent",
+      "kind": "depends-on",
+      "description": "in_zone(zone_id, ctx)."
+    },
+    {
+      "from": "values.PosixSeconds",
+      "to": "ext.Fraction",
+      "kind": "depends-on",
+      "description": "Exact seconds."
+    },
+    {
+      "from": "values.ElapsedSeconds",
+      "to": "ext.Fraction",
+      "kind": "depends-on",
+      "description": "Exact seconds."
+    },
+    {
+      "from": "values.Bound",
+      "to": "values.CivilDate",
+      "kind": "depends-on",
+      "description": "A date endpoint."
+    },
+    {
+      "from": "values.Bound",
+      "to": "values.Instant",
+      "kind": "depends-on",
+      "description": "An instant endpoint."
+    },
+    {
+      "from": "values.Interval",
+      "to": "values.Bound",
+      "kind": "depends-on",
+      "description": "Its start and end."
+    },
+    {
+      "from": "values.Interval",
+      "to": "outcome.Truth",
+      "kind": "depends-on",
+      "description": "contains and overlaps answer with it."
+    },
+    {
+      "from": "values._Value",
+      "to": "outcome.Outcome",
+      "kind": "depends-on",
+      "description": "from_json and parse return outcomes."
+    },
+    {
+      "from": "values.Value",
+      "to": "values.CivilDate",
+      "kind": "depends-on",
+      "description": "One member of the union; the others are the typed values above."
+    },
+    {
+      "from": "outcome.Unique",
+      "to": "outcome._Case",
+      "kind": "inherits",
+      "description": "The shared helpers."
+    },
+    {
+      "from": "outcome.Multiple",
+      "to": "outcome._Case",
+      "kind": "inherits",
+      "description": "The shared helpers."
+    },
+    {
+      "from": "outcome.NoneOf",
+      "to": "outcome._Case",
+      "kind": "inherits",
+      "description": "The shared helpers."
+    },
+    {
+      "from": "outcome.Unsupported",
+      "to": "outcome._Case",
+      "kind": "inherits",
+      "description": "The shared helpers."
+    },
+    {
+      "from": "outcome.Invalid",
+      "to": "outcome._Case",
+      "kind": "inherits",
+      "description": "The shared helpers."
+    },
+    {
+      "from": "outcome.Outcome",
+      "to": "outcome._Case",
+      "kind": "depends-on",
+      "description": "The union of the five cases."
+    },
+    {
+      "from": "outcome._Case",
+      "to": "outcome.OutcomeError",
+      "kind": "depends-on",
+      "description": "single() raises it for anything but Unique."
+    },
+    {
+      "from": "outcome._Case",
+      "to": "result.Result",
+      "kind": "depends-on",
+      "description": "to_result() returns the JSON layer's envelope."
+    },
+    {
+      "from": "outcome._Case",
+      "to": "result.Diagnostic",
+      "kind": "depends-on",
+      "description": "Every case carries diagnostics."
+    },
+    {
+      "from": "outcome.OutcomeError",
+      "to": "ext.ValueError",
+      "kind": "inherits",
+      "description": "A constructor error is an ordinary ValueError."
+    },
+    {
+      "from": "outcome.OutcomeError",
+      "to": "result.Diagnostic",
+      "kind": "depends-on",
+      "description": "Says why."
+    },
+    {
+      "from": "outcome.Truth",
+      "to": "ext.Enum",
+      "kind": "inherits",
+      "description": "A str enum whose values are the wire strings."
+    },
+    {
+      "from": "outcome.Ordering",
+      "to": "ext.Enum",
+      "kind": "inherits",
+      "description": "A str enum whose values are the wire strings."
+    },
+    {
+      "from": "policy.MonthEnd",
+      "to": "ext.Enum",
+      "kind": "inherits",
+      "description": "A str enum whose values are the wire strings."
+    },
+    {
+      "from": "policy.Gap",
+      "to": "ext.Enum",
+      "kind": "inherits",
+      "description": "A str enum whose values are the wire strings."
+    },
+    {
+      "from": "policy.Overlap",
+      "to": "ext.Enum",
+      "kind": "inherits",
+      "description": "A str enum whose values are the wire strings."
+    },
+    {
+      "from": "policy.ResolutionPolicy",
+      "to": "policy.Gap",
+      "kind": "depends-on",
+      "description": "Its gap policy."
+    },
+    {
+      "from": "policy.ResolutionPolicy",
+      "to": "policy.Overlap",
+      "kind": "depends-on",
+      "description": "Its overlap policy."
+    },
+    {
+      "from": "policy.Likes",
+      "to": "policy.MonthEnd",
+      "kind": "depends-on",
+      "description": "An enum member or its wire string."
+    },
+    {
+      "from": "context.TemporalContext",
+      "to": "zones.ZoneRules",
+      "kind": "depends-on",
+      "description": "The rules every zone operation uses."
+    },
+    {
+      "from": "context.TemporalContext",
+      "to": "values.ZonedIntent",
+      "kind": "depends-on",
+      "description": "resolve, in_zone and compare."
+    },
+    {
+      "from": "context.TemporalContext",
+      "to": "outcome.Ordering",
+      "kind": "depends-on",
+      "description": "compare answers with it."
+    },
+    {
+      "from": "context.Timed",
+      "to": "values.Instant",
+      "kind": "depends-on",
+      "description": "One member of the union, with ZonedIntent and FixedOffsetDateTime."
+    },
+    {
+      "from": "zones.ZoneRules",
+      "to": "zones.Zone",
+      "kind": "depends-on",
+      "description": "One per zone id."
+    },
+    {
+      "from": "result.Result",
+      "to": "result.Status",
+      "kind": "depends-on",
+      "description": "Its status."
+    },
+    {
+      "from": "result.Result",
+      "to": "result.Diagnostic",
+      "kind": "depends-on",
+      "description": "Its diagnostics."
+    },
+    {
+      "from": "result.Status",
+      "to": "ext.Enum",
+      "kind": "inherits",
+      "description": "A str enum of the wire statuses."
+    },
+    {
+      "from": "native.Intent",
+      "to": "ext.Enum",
+      "kind": "inherits",
+      "description": "A str enum, so a wire string works too."
+    },
+    {
+      "from": "values.Weekday",
+      "to": "ext.IntEnum",
+      "kind": "inherits",
+      "description": "ISO numbering, Monday = 1."
+    },
+    {
+      "from": "core.Outcome",
+      "to": "ext.Exception",
+      "kind": "inherits",
+      "description": "Raised inside a JSON-layer operation; _core.operation turns it into a Result."
+    },
+    {
+      "from": "core.Outcome",
+      "to": "result.Status",
+      "kind": "depends-on",
+      "description": "The status to stop with."
+    },
+    {
+      "from": "ops._Bound",
+      "to": "core.Civil",
+      "kind": "depends-on",
+      "description": "A date endpoint's checked value, for the same-zone rule."
+    },
+    {
+      "from": "validate._DuplicateKey",
+      "to": "ext.ValueError",
+      "kind": "inherits",
+      "description": "Raised by the JSON parser hook on a repeated key."
+    }
+  ]
+}

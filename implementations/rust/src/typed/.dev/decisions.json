@@ -1,0 +1,163 @@
+{
+  "$schema": "../../../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Typed layer decisions",
+  "folder": "implementations/rust/src/typed",
+  "entities": [
+    {
+      "id": "typed-over-json-layer",
+      "title": "Every typed operation calls the JSON layer",
+      "summary": "A typed operation writes its operands as UTV JSON, calls the 0.2 function and reads the answer back, rather than computing on the Rust fields.",
+      "status": "accepted",
+      "context": "docs/library-api.md section 2: every typed operation must agree with the JSON-level everyday API, and so with the shared fixtures; implementations should call the 0.2 functions underneath rather than re-implement them.",
+      "decision": "The typed layer has no arithmetic of its own. Constructors validate by reading their own JSON back (read_as over read_civil), and operations call ops::add, ops::fields, ops::days_between, ops::contains, ops::overlaps, zones::resolve, zones::to_zone and text::parse_text / format_text.",
+      "rationale": "\"Every operation calls the 0.2 JSON layer underneath, so the typed layer and the shared fixtures can't disagree\" (typed/mod.rs). The cost is a JSON round trip per call.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "module documentation"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "add"
+        },
+        {
+          "path": "implementations/rust/src/typed/context.rs",
+          "symbol": "TemporalContext::resolve_with"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "docs/.dev/contracts.json",
+          "entityId": "library-api"
+        }
+      ]
+    },
+    {
+      "id": "result-constructors",
+      "title": "Constructors return Result<T, Diagnostics>",
+      "summary": "of(...) returns Result, so there is no panicking Of and no separate TryOf.",
+      "status": "accepted",
+      "context": "The library contract has a raising Of and a non-raising TryOf. Rust has no exceptions.",
+      "decision": "Every constructor that can refuse (of, of_hms, of_hms_nano, at_offset, Interval::of, of_ratio) returns Result<T, Diagnostics>; Diagnostics implements std::error::Error, so ? works in a main returning Result<(), Box<dyn Error>>.",
+      "rationale": "\"Rust has no exceptions, so its of returns Result<T, Diagnostics>\" (docs/library-api.md section 1); the README says the same.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::of"
+        },
+        {
+          "path": "implementations/rust/src/typed/outcome.rs",
+          "symbol": "impl std::error::Error for Diagnostics"
+        },
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "Typed values"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "idiomatic-api"
+        }
+      ]
+    },
+    {
+      "id": "constrained-methods",
+      "title": "The clamping month arithmetic is a separate method",
+      "summary": "add_months_constrained and add_years_constrained are their own methods, and add_with(Period, MonthEnd) takes a policy.",
+      "status": "accepted",
+      "context": "The contract's total overload AddMonths(n, MonthEnd.Constrain) must reject MonthEnd.Reject, because a policy can't change the return type. Rust has no overloads.",
+      "decision": "add_months(n) and add_years(n) reject and return an Outcome; add_months_constrained(n) and add_years_constrained(n) clamp and return the value; add(Period) rejects and add_with(Period, MonthEnd) takes either policy and returns an Outcome.",
+      "rationale": "\"Rust: no overloads, so the total forms are separate methods\" (docs/library-api.md section 6); a Reject policy can't be passed where a plain value is returned (README).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_months_constrained"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilDate::add_with"
+        },
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "Typed values (Month-end policy)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "truthful-non-answers"
+        }
+      ]
+    },
+    {
+      "id": "total-operations-panic-on-overflow",
+      "title": "Total operations panic beyond i128",
+      "summary": "A total operation whose result leaves the i128 range panics, the way integer overflow does in Rust; constructors refuse such values up front.",
+      "status": "accepted",
+      "context": "Total operations return plain values, but the JSON layer answers unsupported (implementation-limit) when arithmetic leaves i128. A plain value has no room for that answer.",
+      "decision": "total() panics with the operation, status and diagnostics if the JSON layer refuses; constructors refuse years whose day numbers or local seconds leave i128 with implementation-limit.",
+      "rationale": "\"Total operations that would leave this library's i128 range panic, the way integer overflow does in Rust\" (typed/mod.rs; total's # Panics section).",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/mod.rs",
+          "symbol": "module documentation"
+        },
+        {
+          "path": "implementations/rust/src/typed/outcome.rs",
+          "symbol": "total"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "read_as"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": "implementations/rust/.dev/limitations.json",
+          "entityId": "i128-range"
+        }
+      ]
+    },
+    {
+      "id": "ord-agrees-with-eq",
+      "title": "Ord only where rules can't change the order, and in agreement with Eq",
+      "summary": "Ord is implemented for every type whose order is rule-free, with ties broken by representation; ZonedIntent has none.",
+      "status": "accepted",
+      "context": "Rust requires Ord to agree with Eq, but equality is representation (09:30 is not 09:30:00) while the contract compares a missing second as 0. And a < on two values must not exist unless it can say \"unknown\" (implementations/README.md, Idiomatic APIs).",
+      "decision": "Compare with a missing second as 0, then put the value without a second first (CivilTime::key); FixedOffsetDateTime orders by instant, then offset, then wall time. ZonedIntent implements no Ord; TemporalContext::compare answers Outcome<Ordering>.",
+      "rationale": "\"Where a language requires ordering to agree with equality (Rust's Ord ...), ties between equal times break by representation\" (docs/library-api.md section 1); the README's Order paragraph says the same.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "CivilTime::key"
+        },
+        {
+          "path": "implementations/rust/src/typed/civil.rs",
+          "symbol": "impl Ord for FixedOffsetDateTime"
+        },
+        {
+          "path": "implementations/rust/README.md",
+          "symbol": "Typed values (Order)"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "implements",
+          "path": "implementations/.dev/requirements.json",
+          "entityId": "idiomatic-api"
+        }
+      ]
+    }
+  ]
+}

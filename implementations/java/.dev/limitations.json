@@ -1,0 +1,261 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/limitations.schema.json",
+  "kind": "limitations",
+  "title": "utv-core (Java) limitations",
+  "folder": "implementations/java",
+  "entities": [
+    {
+      "id": "no-conformance-profile",
+      "title": "No conformance profile claimed",
+      "summary": "The library claims none of the spec's conformance profiles yet; it implements the everyday subset of library-api 0.3.",
+      "impact": "Code that needs a whole profile (core-civil, zoned, …) cannot rely on this library for it.",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/java/README.md",
+          "symbol": "Conformance profiles claimed"
+        },
+        {
+          "path": "VERSIONING.md",
+          "symbol": "Implementation versions"
+        }
+      ]
+    },
+    {
+      "id": "no-registries",
+      "title": "No rules shipped",
+      "summary": "The library ships no zone rules, leap-second table or calendars. Zone rules are always loaded by the caller, and there is no default context.",
+      "impact": "A caller must find, version and load rule data itself; resolving without it is impossible by design.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZoneRules.java",
+          "symbol": "ZoneRules"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext.with"
+        }
+      ]
+    },
+    {
+      "id": "partial-structural-validation",
+      "title": "Structural validation is partial",
+      "summary": "Utv.validateStructural checks the envelope, the version, the 26 kinds and their required and allowed properties, interval constructions and series samples. Nested value types, enums, $ref sub-schemas and oneOf alternatives are not fully enforced.",
+      "impact": "Some values the schema rejects pass this validator as valid.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+          "symbol": "Utv.check"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/KindTable.java",
+          "symbol": "KindTable.RULES"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/KindRules.java",
+          "symbol": "KindRules.check"
+        },
+        {
+          "path": "implementations/java/README.md",
+          "symbol": "The JSON layer (0.2, unchanged)"
+        }
+      ]
+    },
+    {
+      "id": "everyday-subset-only",
+      "title": "Only the everyday subset",
+      "summary": "Everything outside the everyday API (conversion between domains, recurrence expansion, other kinds and calendars) is unsupported. Typed values exist only for civil date, year-month, time and date-time, instants, calendar, POSIX and SI amounts, and start-end intervals of dates or instants.",
+      "impact": "Other UTV values can be validated and held as JSON, but not computed with.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.anyFromJson"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Civil.java",
+          "symbol": "Civil.decode"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+          "symbol": "Interval.fromJson"
+        }
+      ]
+    },
+    {
+      "id": "proleptic-gregorian-only",
+      "title": "Proleptic Gregorian only",
+      "summary": "Civil values in any other calendar or chronology are unsupported (unsupported-calendar in operations, utv.unsupported from GregorianCivil.validate).",
+      "impact": "A Hebrew or Hijrah date cannot be checked or computed with.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Civil.java",
+          "symbol": "Civil.decode"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/GregorianCivil.java",
+          "symbol": "GregorianCivil.validate"
+        }
+      ]
+    },
+    {
+      "id": "posix-only",
+      "title": "POSIX timescale only",
+      "summary": "Instants must be on the unix-posix timescale, without coordinate or quality; anything else is unsupported (unsupported-operand).",
+      "impact": "TAI, GPS or UTC instants with leap seconds cannot be used.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instants.java",
+          "symbol": "Instants.decode"
+        }
+      ]
+    },
+    {
+      "id": "no-leap-seconds",
+      "title": "No leap seconds",
+      "summary": "Second 60 is unsupported (leap-second) everywhere but structural and Gregorian validation, and adding SI seconds to an instant is unsupported (needs-leap-seconds).",
+      "impact": "23:59:60 can be stored as JSON but not used; ElapsedSeconds cannot move an Instant.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.civil"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.doAddFields"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+          "symbol": "Iso.Parts.time"
+        }
+      ]
+    },
+    {
+      "id": "iso-forms",
+      "title": "ISO 8601 extended forms only",
+      "summary": "Week dates, ordinal dates and the basic format are unsupported (unsupported-form); 24:00 is unsupported (end-of-day); annotations other than one [Area/Location], and a [zone] after Z or -00:00, are unsupported (unsupported-annotation); EDTF qualifiers and decimal period components are unsupported (unsupported-form).",
+      "impact": "Such text has to be converted before it reaches the library.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+          "symbol": "Iso.parse"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+          "symbol": "TextForm.parse"
+        }
+      ]
+    },
+    {
+      "id": "no-text-form",
+      "title": "Some values have no text form",
+      "summary": "Mixed-sign periods, exact second counts, offsets with seconds, start-amount intervals and every other kind have no text form (no-text-form). Their toString() is JSON or, for second counts, a display string that cannot be parsed.",
+      "impact": "Such values round-trip only as JSON.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+          "symbol": "TextForm.format"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+          "symbol": "Iso.offset"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.text"
+        }
+      ]
+    },
+    {
+      "id": "rule-window",
+      "title": "Never beyond the rules' window",
+      "summary": "Zone operations answer unsupported (outside-rule-window) outside a bundle's validFrom..validUntil; resolve also needs a day's margin on each side of the wall time. Zones missing from the bundle are unsupported (unknown-zone).",
+      "impact": "With the demo rules, only 2026 and 2027 in New York, Paris and Reykjavik resolve.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.doResolve"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.toZone"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/RuleBundle.java",
+          "symbol": "RuleBundle.covers"
+        }
+      ]
+    },
+    {
+      "id": "sixty-four-bit-edges",
+      "title": "A few 64-bit edges",
+      "summary": "Years and instants are arbitrary precision, but Period components are longs (beyond them fromJson is unsupported, implementation-limit), Instant.unixSeconds() throws ArithmeticException beyond a long, Instant.atOffset throws ArithmeticException and Instant.inZone answers unsupported (implementation-limit) for a fraction finer than a nanosecond.",
+      "impact": "Extreme values must stay in the JSON layer.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.exactLong"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.unixSeconds"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.atOffset"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Civil.java",
+          "symbol": "Civil.datetimeAt"
+        }
+      ]
+    },
+    {
+      "id": "intervals",
+      "title": "Intervals of dates or instants",
+      "summary": "contains and overlaps handle start-end intervals of civil/gregory dates or physical instants only; mixing domains or zones is unsupported.",
+      "impact": "Date-time or start-amount ranges cannot be tested.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+          "symbol": "Intervals.decode"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+          "symbol": "Intervals.sameZone"
+        }
+      ]
+    },
+    {
+      "id": "native-range",
+      "title": "java.time's range",
+      "summary": "Converting back to java.time is unsupported (out-of-native-range) beyond LocalDate's years (±999,999,999), Period's int components or Duration's range.",
+      "impact": "Values beyond those ranges stay UTV values.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.year"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.toPeriod"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.toDuration"
+        }
+      ]
+    }
+  ]
+}

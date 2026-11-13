@@ -1,43 +1,11 @@
-# C# engine interface (plan)
+# C# engine interface (sketch)
 
-Status: **design plan** for the C# library after 0.1.0. Nothing here is implemented yet beyond validation. The interface below compiles against .NET 8 with nullable reference types and warnings as errors; it was checked that way when this plan was written.
-
-> **What 0.3 realizes (note added in 0.3.0; the plan below is unchanged).** Library 0.3 implements a first slice of this plan, shaped by the shared contract in [`docs/library-api.md`](../../../docs/library-api.md) rather than by this sketch:
->
-> - **Part of M2 (typed model):** immutable `sealed record` types with representation equality for the everyday kinds only (`CivilDate`, `CivilYearMonth`, `CivilTime`, `CivilDateTime`, `FixedOffsetDateTime`, `ZonedIntent`, `Instant`, `Period`, `PosixSeconds`, `ElapsedSeconds`, `Interval<T>`), with `Parse`/`FromJson`/`ToJson`. Not the 26 kinds, and no RFC 8785 canonical JSON.
-> - **Decision 3, in a different form:** answers to partial questions are `Outcome<T>` (an `abstract record` with `Unique`, `Multiple`, `None`, `Unsupported` and `Invalid` cases) rather than `UtvResult<T>`. Total operations return plain values. `TryGetUnique` exists as planned; `Single()` throws `OutcomeException` by design.
-> - **Decision 5:** `Truth` (`Definitely`, `Possibly`, `Impossible`) for `Contains` and `Overlaps`.
-> - **Decision 7, in part:** `TemporalContext` holds the zone rules once. It has no reference observation, location or budget yet, and there is no `ITemporalEngine`.
-> - **Decisions 10 and 12:** `ResolutionPolicy.Strict` and `ResolutionPolicy.AllCandidates`; typed .NET interop where the target type names the intent.
-> - **Decision 1 is relaxed:** typed values do carry rule-free operations (`AddDays`, `CompareTo` on types whose order needs no rules). Anything needing rules still takes them explicitly (`zoned.Resolve(ctx)`), and `ZonedIntent` has no comparison operators.
-
-The questions this interface answers, and why each one needs care, are catalogued language-neutrally in [`docs/operations.md`](../../../docs/operations.md). This document is the C# shape of that catalog.
-
-## Design decisions
-
-1. **Values are data; questions go to an engine.** Each of the 26 kinds is an immutable `sealed record` deriving from `UtvValue`. Values have no `CompareTo`, no `<`/`>` operators, no implicit conversions and no methods that need rule data. Every question that depends on rules (time zones, calendars, leap seconds, holidays) goes through an `ITemporalEngine`. That way, the dependency on rule data always shows up in the method signature.
-
-2. **One engine object, segregated interfaces.** `ITemporalEngine` is the facade most code uses. It is composed of one interface per question family (`IResolution`, `IComparison`, `IArithmetic`, …), so a consumer that only compares values can depend on `IComparison`, and an implementation can grow profile by profile. The concrete `TemporalEngine` is immutable and thread-safe. It is constructed from an `IRuleRegistry` and has no static state.
-
-3. **Every answer is a `UtvResult<T>`.** It mirrors the `utv-result/1.0` envelope: `Status`, `Candidates`, `Cardinality`, `Manifest`, `Assumptions`, `Loss`, `Diagnostics`, `ContextDigest`. It has no `.Value` property that throws. To get a single answer, use `TryGetUnique(out T)`, or `switch` on `Status`. That makes the honest outcomes (`None`, `Multiple`, `Indeterminate`, `Unsupported`, `ResourceLimit`) impossible to miss by accident. A Roslyn analyzer (`UTV001: result status not inspected`) is planned to flag results whose `Status` is never read.
-
-4. **Exceptions only for programmer errors.** Semantic outcomes are statuses. Exceptions are reserved for `ArgumentNullException` and the like, and for `OperationCanceledException` from the `CancellationToken`. Running out of budget is `UtvStatus.ResourceLimit`, never an exception.
-
-5. **Yes/no questions return `UtvResult<Truth>`.** `Truth` is `Definitely`, `Possibly` or `Impossible`. "We can't tell" is the result status `Indeterminate`, and "this engine can't tell" is `Unsupported`. A bare `bool` can't express either, so none of these methods returns one.
-
-6. **Comparison returns a set of relations.** `Compare` returns a `[Flags] RelationSet` covering Allen's 13 interval relations (point relations are the degenerate cases). A certain answer has exactly one flag set; uncertainty sets several. `Holds(a, relations, b)` is the convenience form: is the true relation inside this set?
-
-7. **`EvaluationContext` is the only source of outside facts.** It carries the pinned rules (`RuleManifest`), an optional `ReferenceObservation` standing in for "now", an optional location, a deterministic `Budget` and the assumptions the caller approves. There is no `DateTime.Now`, `TimeZoneInfo.Local`, `CultureInfo.CurrentCulture` or installed tzdb anywhere in the library.
-
-8. **Budgets count steps, not milliseconds.** That keeps results reproducible. Wall-clock limits belong to the caller, through `CancellationToken`.
-
-9. **Rules load asynchronously; evaluation is synchronous.** Loading TZif files, leap tables or CLDR data into an `IRuleRegistry` is I/O and may be `async`. Evaluation is pure CPU work over immutable data, so engine methods are synchronous. Long enumerations are paged (`PageRequest` → `Page<T>` + `ContinuationToken`), and a token is bound to the manifest it was issued under.
-
-10. **Policies are explicit objects with named presets.** `ResolutionPolicy.Strict` (reject gaps and overlaps) is the recommended preset whenever one exact instant is required. `ResolutionPolicy.AllCandidates` reports everything. `ArithmeticPolicy.Strict` rejects month-end ambiguity instead of clamping. Results record which policy was used.
-
-11. **Record equality means representation equality.** Two values are `==` only if their canonical forms are identical. Semantic sameness ("the same instant", "the same meeting") is `Equivalent(a, b, mode)`, because it depends on rules and on which notion of "same" is meant. Values use `ImmutableArray<T>` internally and override equality over canonical form, since the default record equality would compare collection references.
-
-12. **BCL interop is explicit and lossy where it must be.** The `Bcl` adapters make the caller choose an intent. A `DateTimeOffset` can become an *instant* (the offset is reported as lost) or a *civil value with a fixed offset* (lossless). Going back to `DateTimeOffset` returns `Unrepresentable` for leap-second labels, years outside 1–9999 and precision finer than 100 ns.
+This is the C# shape of the question catalog in [`docs/operations.md`](../../../docs/operations.md): a design sketch
+written after library 0.1.0, not the library's API. Its twelve design decisions, each with what library 0.3 realizes,
+are in [`.dev/decisions.json`](../.dev/decisions.json) (`engine-1-values-are-data` … `engine-12-bcl-interop`); the
+milestones M2–M10 are in [`.dev/roadmap.json`](../.dev/roadmap.json); the planned evolution of the 0.1.0 types, the
+analyzer `UTV001` and `Format` (I3) are in [`.dev/backlog.json`](../.dev/backlog.json) and, where they wait on the owner,
+in the open records of `.dev/decisions.json`. The API library 0.3 does have is in [`../README.md`](../README.md).
 
 ## Using it
 
@@ -70,33 +38,6 @@ var over = engine.Holds(meeting, RelationSet.Before | RelationSet.Meets, now.Rea
                         context with { ReferenceObservation = now });
 if (over.TryGetUnique(out var truth) && truth == Truth.Definitely) Archive(meeting);
 ```
-
-## How 0.1.0 evolves into this
-
-| 0.1.0 (now) | Planned |
-|---|---|
-| `sealed class UtvResult` with a constructor and `IReadOnlyList<JsonElement> Candidates` | Unsealed and made the abstract base of `UtvResult<T>`, with typed candidates on the generic class. This breaks the 0.x API, which is acceptable before 1.0.0 and must be recorded in the library's CHANGELOG |
-| `UtvValidator.ValidateStructural(string)` | Becomes `IValidation.Parse`, returning a typed `UtvValue`. The static method stays as a thin wrapper |
-| `GregorianCivil.Validate(string)` | Becomes the Gregorian `ICalendarSystem` behind `IValidation.Validate` |
-| JSON-level values | Typed `sealed record` per kind, with canonical-form equality |
-
-## Milestones
-
-Each milestone adds a conformance profile (spec §2). Anything outside the profiles a milestone claims keeps returning `Unsupported`.
-
-| Milestone | Delivers | Questions answered (`docs/operations.md`) |
-|---|---|---|
-| M2 typed model | 26 record types, `Parse`, canonical JSON (RFC 8785), `Canonicalize`, representation equality | A1, I4 |
-| M3 `core-civil` | Gregorian + ISO week rules, `Validate`, `Fields`, civil `Compare`, `Add`/`Difference` on calendar amounts | A2, B4, C1 (civil), D2, E1 |
-| M4 `global-instant` | Timescale registry (POSIX, UTC with leap table, TAI), instant `Compare`, elapsed `Difference` | C1, D1 |
-| M5 `zoned` | TZif loader, `Resolve`, `Convert` instant↔civil, `DayBounds`, `Truncate`, `Bcl` adapters | B1, B2, B5, E3, I5 |
-| M6 intervals & sets | Interval algebra, `Contains`, set operations, `Equivalent` modes | C2, C3, C5, F5 |
-| M7 `recurrence` | RFC 5545 (+ erratum 4271) expansion, occurrence IDs, `Select`, iCalendar adapter | F1–F4, I1–I2 |
-| M8 `history` | `AsOf`, `Append`, `IsStale` | G1–G3 |
-| M9 `business`, `distributed` | Business calendars, logical clocks, `MatchEvents` | C6, D3, E2, F6 |
-| M10 `scientific` | Uncertainty propagation, ordinal systems, graphs, series | C7, H1–H2, J1–J4 |
-
-`Format` (I3) depends on a CLDR data source and is scheduled once one is chosen.
 
 ## Interface
 

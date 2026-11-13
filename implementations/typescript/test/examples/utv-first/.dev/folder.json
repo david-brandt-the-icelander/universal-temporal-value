@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "UTV-first examples",
+  "folder": "implementations/typescript/test/examples/utv-first",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "UTV-first examples",
+      "summary": "Examples organized by UTV class and function: each test does a task with UTV and compares the result with Date, Intl.DateTimeFormat or JSON.",
+      "purpose": "One file per UTV class or JSON-layer function (civil-date.test.ts, zoned-intent.test.ts, validate-structural.test.ts, …), with a describe per class and per function. Where UTV and the standard API agree, the expected value is computed with the standard API; where they differ, it is a literal and the doc comment says what the standard API does. Tests wrapped in // BEGIN <task-id> … // END <task-id> are laid out on docs/side-by-side.md.",
+      "boundaries": [
+        "The catalog of scenarios is docs/example-tests.md, owned by docs/.",
+        "The expected values computed with Intl.DateTimeFormat need a host tz database that knows the 2026–2027 rules of New York and Paris."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/typescript/test/examples/utv-first/zoned-intent.test.ts",
+          "symbol": "ZonedIntent"
+        },
+        {
+          "path": "implementations/typescript/README.md",
+          "symbol": "Examples"
+        }
+      ]
+    }
+  ]
+}

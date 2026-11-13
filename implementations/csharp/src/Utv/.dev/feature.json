@@ -1,0 +1,361 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-feature/schema.json",
+  "kind": "feature",
+  "title": "Utv library features",
+  "folder": "implementations/csharp/src/Utv",
+  "description": "The behaviour the library offers on UTV JSON, which the typed layer inherits: honest answers about missing days, DST gaps and overlaps, exact numbers, fail-closed reading and no hidden environment.",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/Calendar.cs",
+      "symbol": "Calendar.Add"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Zones.cs",
+      "symbol": "Zones.Resolve"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+      "symbol": "UtvValidator.ValidateStructural"
+    }
+  ],
+  "entities": [
+    {
+      "id": "month-end-returns-none",
+      "name": "Month arithmetic that refuses a missing day",
+      "description": "Adding months never moves a day silently.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.AddToCivil"
+        }
+      ],
+      "behavior": "Years and months are added together as 12·years + months. If the day does not exist in the resulting month, MonthEndPolicy.Reject (the default) answers none with a month-end warning such as 2026-02 has no day 31; MonthEndPolicy.Constrain clamps to the month's last day. Weeks and days are added next, then hours, minutes and seconds as wall-clock arithmetic that carries into days. Every component may be negative.",
+      "outcome": "31 January plus one month is not 28 February unless the caller asked for it.",
+      "constraints": [
+        "A date takes years, months, weeks and days; a year-month only years and months; a time nothing (unsupported, since wrapping loses the day).",
+        "A zone on the value is kept; an offsetAssertion is dropped with an info diagnostic offset-assertion-dropped."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.Add"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.AddToCivil"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.WithFields"
+        }
+      ]
+    },
+    {
+      "id": "dst-gap-and-overlap",
+      "name": "DST gaps and overlaps with explicit policies",
+      "description": "A local time in a named zone resolves to zero, one or two instants, and the policy says what to do with zero or two.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.ResolveCore"
+        }
+      ],
+      "behavior": "The wall time is read as if it were UTC (L). For each offset in force within a day of L, L − offset is a candidate when the zone's offset at that instant is exactly that offset. One candidate is unique. None is a gap: reject and preserve-unresolved answer none with a gap warning that names the transition (clocks jump from 02:00 to 03:00 in America/New_York); shift-forward-by-gap uses the offset before the gap, so 02:30 gives the instant labelled 03:30. Two candidates are an overlap: reject answers multiple with an ambiguous warning, all answers multiple, earliest and latest pick one. An offsetAssertion on the value keeps only the candidate with that offset before the policy applies, and a mismatch is invalid (offset-mismatch).",
+      "outcome": "02:30 on 8 March 2026 in New York is reported as a time that never happens, and 01:30 on 1 November 2026 as one that happens twice, unless the caller chose a policy.",
+      "constraints": [
+        "Without a policy argument, the value's own resolutionPolicy applies, else reject both (ResolutionPolicy.Strict).",
+        "shift-backward-by-gap, next-valid-boundary, previous-valid-boundary, offset-match and occurrence-index are unsupported (unsupported-policy)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.ResolveCore"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.FindTransition"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Policies.cs",
+          "symbol": "ResolutionPolicy"
+        }
+      ]
+    },
+    {
+      "id": "rules-never-extrapolated",
+      "name": "Zone rules from the caller, never extrapolated",
+      "description": "Zone operations use only the rule bundle passed in, and only inside its validity window.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+          "symbol": "ZoneRules"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.OutsideWindow"
+        }
+      ],
+      "behavior": "ZoneRules holds, for each zone, an initial offset and transitions, valid from validFrom (inclusive) to validUntil (exclusive). Resolve answers unsupported (outside-rule-window) unless the wall time lies at least a day inside the window; ToZone unless the instant is inside it. A zone not in the bundle is unsupported (unknown-zone), with the bundle's zone ids in the message. Fixed-offset date-times need no rules.",
+      "outcome": "An answer about 2030 never comes from rules that only know 2026 and 2027.",
+      "constraints": [
+        "The bundle format is that of conformance/rules/demo-zones.json; no TZif or tzdb source is read.",
+        "No rules ship with the library."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+          "symbol": "ZoneRules.Parse"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.ResolveCore"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.ToZone"
+        }
+      ]
+    },
+    {
+      "id": "exact-rationals",
+      "name": "Exact years, instants and second counts",
+      "description": "Nothing goes through floating point or a fixed-width integer that could overflow a valid value.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Rational.cs",
+          "symbol": "Rational"
+        }
+      ],
+      "behavior": "Years and ticks are BigInteger; instants and second amounts are reduced rationals, so a quarter second stays 1/4 and a third of a second stays 1/3. posixSecondsBetween answers b − a exactly, and subTick is nano/10⁹ in lowest terms. The schema interpreter compares JSON numbers exactly, never via floating point.",
+      "outcome": "A quarter of a second stays exact: the gap between two instants is 14403/4 s, not a rounded double.",
+      "constraints": [
+        "A fraction of a second with no exact nanosecond count has no ISO or text form (no-text-form).",
+        "The builders in Build take long years and seconds; the values they produce are not limited."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Rational.cs",
+          "symbol": "Rational"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.PosixSecondsBetween"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+          "symbol": "Values.ReadPosixInstant"
+        }
+      ]
+    },
+    {
+      "id": "fail-closed-json",
+      "name": "Fail-closed reading of UTV JSON",
+      "description": "What the library does not understand, it refuses.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+          "symbol": "UtvValidator.ValidateStructural"
+        }
+      ],
+      "behavior": "Structural validation rejects malformed JSON, duplicate keys at any depth, unknown top-level properties, kinds outside the 26 core kinds and every schema violation as invalid. The version identifier is checked first: a well-formed utv/MAJOR.MINOR other than utv/1.0 is unsupported, so a newer version's vocabulary is never called invalid. Every everyday operation validates its UTV arguments this way before doing anything else, and reports wrong shapes as malformed-value followed by the structural codes.",
+      "outcome": "A value from a newer or broken writer is never half-read.",
+      "constraints": [
+        "Nesting deeper than 128 levels is invalid.",
+        "When a oneOf fails, only a schema-violation at the oneOf is reported, not the failures inside each alternative."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+          "symbol": "UtvValidator.ValidateStructural"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/StrictJson.cs",
+          "symbol": "StrictJson.Parse"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/SchemaInterpreter.cs",
+          "symbol": "SchemaInterpreter.CheckUtvValue"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+          "symbol": "Values.RequireStructural"
+        }
+      ]
+    },
+    {
+      "id": "separate-validity-checks",
+      "name": "Structural and semantic validity, checked apart",
+      "description": "A well-formed value can still name a day that does not exist.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+          "symbol": "GregorianCivil.Validate"
+        }
+      ],
+      "behavior": "UtvValidator.ValidateStructural judges shapes only; GregorianCivil.Validate runs it first and then judges a Gregorian civil value's year, month and day. Build.Date(2026, 2, 30) is structurally valid and semantically invalid (day-out-of-range). Resolvability is a third question, answered by Zones.Resolve.",
+      "outcome": "Callers can tell \"badly written\" from \"no such date\" from \"cannot be placed on the timeline\".",
+      "constraints": [
+        "Semantic validation exists only for proleptic Gregorian civil values; other kinds and calendars are unsupported."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+          "symbol": "GregorianCivil.Validate"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+          "symbol": "UtvValidator.ValidateStructural"
+        }
+      ]
+    },
+    {
+      "id": "three-valued-ranges",
+      "name": "Ranges with unbounded and unknown ends",
+      "description": "Containment and overlap answer definitely, possibly or impossible.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Ranges.cs",
+          "symbol": "Ranges"
+        }
+      ],
+      "behavior": "Each endpoint condition is true, false or unknown (included ≤, excluded <, unbounded always true, unknown unknown) and the conditions combine with three-valued AND. For overlap, date intervals are normalized to half-open first, and an interval that is provably empty overlaps nothing.",
+      "outcome": "A contract with an unknown end date possibly covers next June; one with no end definitely does.",
+      "constraints": [
+        "Only start-end intervals over civil/gregory dates or physical instants.",
+        "Dates must all be unzoned or all in the same zone (different-zones)."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/Ranges.cs",
+          "symbol": "Ranges.Contains"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Ranges.cs",
+          "symbol": "Ranges.Overlaps"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "ZoneAgreement"
+        }
+      ]
+    },
+    {
+      "id": "lossless-text-form",
+      "name": "A text form only where it is lossless",
+      "description": "Text output is checked by reading it back.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/TextForm.cs",
+          "symbol": "TextForm.Format"
+        }
+      ],
+      "behavior": "TextForm.Format writes the text, parses it back and compares the result with the value; if they differ, it answers unsupported (no-text-form). Z and +00:00 stay different: Z is an instant, +00:00 a fixed-offset date-time. EDTF slash intervals are read and written back in bracket notation, with endpoint state explicit.",
+      "outcome": "parseText(formatText(v)) == v for every value that has text.",
+      "constraints": [
+        "POSIX and SI second counts, mixed-sign periods and start-amount intervals have no text form."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/TextForm.cs",
+          "symbol": "TextForm.Format"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/TextForm.cs",
+          "symbol": "TextForm.ParseNode"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Iso.cs",
+          "symbol": "Iso.Parse"
+        }
+      ]
+    },
+    {
+      "id": "native-intent-required",
+      "name": ".NET interop that names the intent",
+      "description": "Converting to and from .NET's own types never chooses a meaning silently.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop"
+        }
+      ],
+      "behavior": "A DateTimeOffset becomes an instant or a fixed-offset date-time as the caller's DateTimeOffsetIntent says. A DateTime of Kind Local is refused (local-zone) and never read with the host's zone. Conversions back return NativeResult<T>: unsupported (out-of-native-range) for what .NET cannot hold, and IsLossy with a zone-dropped warning when a zoned value keeps only its asserted offset.",
+      "outcome": "A value that crossed into .NET and back either came back whole or says what it lost.",
+      "constraints": [
+        ".NET holds years 1..9999, 100 ns ticks and whole-minute offsets within ±14:00."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop.FromDateTime"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop.ToDateTimeOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "NativeResult"
+        }
+      ]
+    },
+    {
+      "id": "no-hidden-environment",
+      "name": "No clock, host zone or locale",
+      "description": "The same inputs give the same answer on every machine.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/.editorconfig",
+          "symbol": "CA1304"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Tests/EverydayApiTests.cs",
+          "symbol": "EverydayApiTests.LibraryNeverReadsClockZoneOrCulture"
+        }
+      ],
+      "behavior": "Library code never reads the system clock, the host time zone, the culture or the network. \"Now\" is a DateTimeOffset the caller reads and passes in; zone rules are a bundle the caller loads. All number and string formatting uses CultureInfo.InvariantCulture, and the analyzer rules CA1304, CA1305, CA1307, CA1309, CA1310 and CA1311 are errors in src/Utv/.editorconfig.",
+      "outcome": "Results are reproducible and do not change with the server's region or settings.",
+      "constraints": [],
+      "implementation": [
+        {
+          "path": "implementations/csharp/src/Utv/.editorconfig",
+          "symbol": "CA1304"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Utv.csproj",
+          "symbol": "TreatWarningsAsErrors"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+          "symbol": "ZoneRules.Load"
+        }
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/capability.json",
+      "relationship": "The capabilities these features belong to."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/operation.json",
+      "relationship": "The JSON-layer operations that carry them out."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/csharp/src/Utv/Typed",
+      "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+      "relationship": "The typed layer's features, built on these."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/use-case.json",
+      "relationship": "The goals that exercise them."
+    }
+  ]
+}

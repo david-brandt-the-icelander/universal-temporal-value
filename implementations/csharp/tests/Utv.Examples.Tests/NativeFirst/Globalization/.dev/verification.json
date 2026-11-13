@@ -1,0 +1,70 @@
+{
+  "$schema": "../../../../../../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "System.Globalization example verification",
+  "folder": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/Globalization",
+  "entities": [
+    {
+      "id": "hebrew-calendar",
+      "title": "HebrewCalendar",
+      "summary": "What System.Globalization.HebrewCalendar does with a Hebrew date.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "ToDateTime converts a Hebrew date to a Gregorian date"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/Globalization/HebrewCalendarTests.cs",
+          "symbol": "HebrewCalendarTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    },
+    {
+      "id": "iso-week",
+      "title": "ISOWeek",
+      "summary": "What System.Globalization.ISOWeek says about 5 November 2026.",
+      "subject": [
+        {
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ],
+      "criteria": [
+        "GetWeekOfYear returns 45"
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/Globalization/ISOWeekTests.cs",
+          "symbol": "ISOWeekTests",
+          "command": "dotnet test",
+          "description": "Run from implementations/csharp."
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "docs/.dev/requirements.json",
+          "entityId": "example-scenario-catalog"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,505 @@
+{
+  "$schema": "../../../../../../../../../Meta/Agents/Skills/describe-feature/schema.json",
+  "kind": "feature",
+  "title": "net.icelander.utv features",
+  "folder": "implementations/java/src/main/java/net/icelander/utv",
+  "description": "The behaviour the Java library offers, with its outcomes and limits.",
+  "sources": [
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Outcome.java",
+      "symbol": "Outcome"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+      "symbol": "Typed"
+    },
+    {
+      "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+      "symbol": "Zones"
+    }
+  ],
+  "entities": [
+    {
+      "id": "valid-by-construction",
+      "name": "Values that can exist",
+      "description": "A typed value is valid when it exists; a value that cannot exist is never built.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.argument"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Civil.java",
+          "symbol": "Civil.decode"
+        }
+      ],
+      "behavior": "of builds the value or throws IllegalArgumentException with the reason; tryOf returns an Outcome instead (invalid: day-out-of-range, month-out-of-range, field-out-of-range; unsupported: leap-second for second 60). The civil constructors build the value's UTV JSON and decode it with the same checks as the JSON layer. Values are immutable and equal only when their JSON is the same, so 09:30 and 09:30:00 are different values.",
+      "outcome": "Code that holds a CivilDate holds a real day; a refused value says why.",
+      "constraints": [
+        "Years are BigInteger; month, day and time fields are ints.",
+        "Second 60 is never a typed value."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.tryOf"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilTime.java",
+          "symbol": "CivilTime.tryOf"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.tryOf"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.argument"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.decode"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.civil"
+        }
+      ]
+    },
+    {
+      "id": "month-end-none",
+      "name": "Month arithmetic that admits a missing day",
+      "description": "Adding months or years never moves a day silently.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.doAddFields"
+        }
+      ],
+      "behavior": "addMonths(n) and addYears(n) on dates, date-times and zoned values add 12·years + months, and answer none (month-end) when the day does not exist in the target month. addMonths(n, MonthEnd.CONSTRAIN) clamps to the month's last day; passing MonthEnd.REJECT to that total overload throws IllegalArgumentException. add(Period) adds years and months first, then weeks and days, then wall-clock time.",
+      "outcome": "31 January + 1 month is a question the caller answers, not a hidden 28 February.",
+      "constraints": [
+        "A date refuses time components (invalid, kind-mismatch).",
+        "CivilYearMonth arithmetic always has an answer."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.addMonths"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDate.java",
+          "symbol": "CivilDate.constrained"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.addMonths"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.addMonths"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.doAddFields"
+        }
+      ]
+    },
+    {
+      "id": "wall-clock-arithmetic",
+      "name": "Wall-clock arithmetic",
+      "description": "Adding days or hours to a civil value moves the wall clock, not the timeline.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.doAddFields"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.doAdd"
+        }
+      ],
+      "behavior": "addDays, addWeeks, addHours, addMinutes and addSeconds on CivilDateTime and ZonedIntent carry into days. A ZonedIntent keeps its zone, so noon plus one day is noon the next day across a DST change; an asserted offset is dropped (the JSON layer reports offset-assertion-dropped). CivilTime has no arithmetic, because wrapping past midnight loses the day.",
+      "outcome": "Calendar intent stays intent until it is resolved with rules.",
+      "constraints": [
+        "Elapsed time on the timeline is Instant.add(PosixSeconds), not these methods."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/CivilDateTime.java",
+          "symbol": "CivilDateTime.addHours"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.addDays"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.doAdd"
+        }
+      ]
+    },
+    {
+      "id": "explicit-zone-rules",
+      "name": "Zone rules only from the caller",
+      "description": "No zone operation reads the host's time zone or tz database.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZoneRules.java",
+          "symbol": "ZoneRules"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext"
+        }
+      ],
+      "behavior": "Rules are a bundle the caller loads with ZoneRules.load or parse and holds in TemporalContext.with(rules); there is no default context. A zone the bundle lacks is unsupported (unknown-zone), and a time outside its validFrom..validUntil window, with a day's margin for resolve, is unsupported (outside-rule-window): the library never extrapolates.",
+      "outcome": "Results depend only on rule data the caller can see, version and pin in tests.",
+      "constraints": [
+        "The only exception is toZonedDateTime, which checks an asserted offset against the JDK's tz database."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZoneRules.java",
+          "symbol": "ZoneRules.load"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext.with"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/RuleBundle.java",
+          "symbol": "RuleBundle.covers"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.doResolve"
+        }
+      ]
+    },
+    {
+      "id": "dst-gap-and-overlap",
+      "name": "DST gaps and overlaps as answers",
+      "description": "A wall time can name no instant or two, and resolve says which.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.doResolve"
+        }
+      ],
+      "behavior": "resolve finds every offset in force within a day of the wall time and keeps each candidate whose offset holds. With the default ResolutionPolicy.STRICT a gap gives none (gap) and an overlap gives multiple with both instants ascending (ambiguous). Gap.SHIFT_FORWARD moves forward by the gap's length; Overlap.EARLIEST and LATEST pick one; Overlap.ALL gives both without the diagnostic. An asserted offset (09:00+02:00[Europe/Paris]) keeps only that candidate and is invalid (offset-mismatch) when it is not in force, even in a gap.",
+      "outcome": "02:30 on 8 March 2026 in New York is reported as skipped, not quietly moved to 03:30.",
+      "constraints": [
+        "PRESERVE_UNRESOLVED gives none, like REJECT."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ZonedIntent.java",
+          "symbol": "ZonedIntent.resolve"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/ResolutionPolicy.java",
+          "symbol": "ResolutionPolicy"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Gap.java",
+          "symbol": "Gap"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Overlap.java",
+          "symbol": "Overlap"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Zones.java",
+          "symbol": "Zones.doResolve"
+        }
+      ]
+    },
+    {
+      "id": "zoned-order-needs-context",
+      "name": "Ordering zoned values needs rules",
+      "description": "Zoned values have no compareTo; the context orders them and may answer 'it depends'.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext.compare"
+        }
+      ],
+      "behavior": "ZonedIntent is not Comparable. TemporalContext.compare resolves each zoned side strictly and collects every order its instants allow: one order is Unique; several give Multiple with the possible orders and one ambiguous warning. A side that cannot be resolved passes its outcome on (none, unsupported, invalid).",
+      "outcome": "01:30 and 01:45 on the night New York's clocks go back are reported as possibly in either order.",
+      "constraints": [
+        "A zoned value orders only against an Instant, a FixedOffsetDateTime or another ZonedIntent."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext.compare"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalContext.java",
+          "symbol": "TemporalContext.instants"
+        }
+      ]
+    },
+    {
+      "id": "exact-instants-and-seconds",
+      "name": "Exact instants and three kinds of seconds",
+      "description": "Instants and second counts are exact rationals, and POSIX seconds, SI seconds and calendar periods stay apart.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Rational.java",
+          "symbol": "Rational"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant"
+        }
+      ],
+      "behavior": "An Instant holds seconds since the epoch as a reduced fraction; until returns exact PosixSeconds (14403/4 s for 3600.75 s), and add(PosixSeconds) keeps a third of a second a third. add(ElapsedSeconds) is unsupported (needs-leap-seconds). nanoseconds() is the floor of the sub-second part; subSecond() is exact. Period.days(1) is a calendar day, never 86,400 seconds. PosixSeconds and ElapsedSeconds print display strings such as 3600.75 s (POSIX) and 1/3 s (POSIX).",
+      "outcome": "No floating point and no confusion between a day, 86,400 POSIX seconds and 86,400 SI seconds.",
+      "constraints": [
+        "Only the unix-posix timescale.",
+        "Period components are 64-bit."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.add"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.until"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Instant.java",
+          "symbol": "Instant.subSecond"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Operations.java",
+          "symbol": "Operations.doAddFields"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.seconds"
+        }
+      ]
+    },
+    {
+      "id": "three-valued-ranges",
+      "name": "Ranges with three-valued answers",
+      "description": "Intervals say definitely, possibly or impossible.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+          "symbol": "Intervals"
+        }
+      ],
+      "behavior": "An Interval of dates or instants has Bound ends: included, excluded, unbounded (no end) or unknown (an end nobody knows). contains and overlaps combine the end conditions with three-valued AND; date intervals are normalized to half-open before overlaps, and a provably empty interval overlaps nothing. A reversed interval is a constructor error (reversed-interval), and one with no point at all is unsupported-form.",
+      "outcome": "An open-ended range and a range with an unknown end are different things, and answers say so.",
+      "constraints": [
+        "start-end intervals of civil dates or POSIX instants only."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+          "symbol": "Interval.contains"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+          "symbol": "Interval.overlaps"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Interval.java",
+          "symbol": "Interval.build"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+          "symbol": "Intervals.contains"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Intervals.java",
+          "symbol": "Intervals.overlaps"
+        }
+      ]
+    },
+    {
+      "id": "lossless-text-form",
+      "name": "Lossless text form",
+      "description": "toString() is UTV's text form, and parse reads it back to an equal value.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+          "symbol": "TextForm"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+          "symbol": "Iso"
+        }
+      ],
+      "behavior": "Points are ISO 8601 / RFC 9557 text: Z (or -00:00) parses as an Instant and +00:00 as a FixedOffsetDateTime. Periods are ISO durations with a leading minus when all components are negative. Intervals use brackets with .. for unbounded and ? for unknown; EDTF slash forms are accepted on input. parse never throws for bad text: syntax is invalid, and valid notation outside the profile is unsupported (unsupported-form, unsupported-annotation, leap-second, end-of-day).",
+      "outcome": "Values in logs and tests read naturally and round-trip exactly.",
+      "constraints": [
+        "A value without a text form prints its JSON, or a display string for second counts, which cannot be parsed."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+          "symbol": "TextForm.parse"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TextForm.java",
+          "symbol": "TextForm.format"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Iso.java",
+          "symbol": "Iso.parse"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.text"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/TemporalValue.java",
+          "symbol": "TemporalValue.parse"
+        }
+      ]
+    },
+    {
+      "id": "fail-closed-json",
+      "name": "Fail-closed JSON",
+      "description": "JSON that is not exactly a UTV value the library understands is refused, never guessed at.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+          "symbol": "Utv"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.decode"
+        }
+      ],
+      "behavior": "Utv.parse rejects duplicate keys, and validateStructural reports them as duplicate-key at the repeated key. A well-formed version other than utv/1.0 is unsupported; a malformed one is invalid; unknown kinds and properties are invalid. fromJson validates structure first, answers kind-mismatch for another kind or form and malformed-value for the wrong shape, and compares the decoded value's own JSON with the input: anything it could not hold (a resolutionPolicy, a zoned date) is unsupported (unsupported-operand) rather than dropped.",
+      "outcome": "Reading JSON either gives exactly the value it says or tells the caller why not.",
+      "constraints": [
+        "Structural validation does not enforce nested value types, enums, $ref or oneOf."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+          "symbol": "Utv.parse"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+          "symbol": "Utv.validateStructural"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Utv.java",
+          "symbol": "Utv.check"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.decode"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Civil.java",
+          "symbol": "Civil.structural"
+        }
+      ]
+    },
+    {
+      "id": "explicit-native-interop",
+      "name": "Explicit java.time interop",
+      "description": "Conversions to and from java.time name their reading and report their losses.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime"
+        }
+      ],
+      "behavior": "The target type names the reading of a native value (FixedOffsetDateTime.from vs Instant.from for an OffsetDateTime; JavaTime.As in the JSON layer). java.util.Date is accepted only as an instant: its civil reading is unsupported (local-zone). Conversions back return an Outcome: unsupported (out-of-native-range) when java.time cannot hold the value, Unique with a precision-loss or zone-dropped warning when it holds it lossily. The library never reads the clock: the caller passes Instant.from(java.time.Instant.now()).",
+      "outcome": "Native values cross the boundary without a silent choice or a silent loss.",
+      "constraints": [
+        "ZonedIntent.from refuses a ZoneOffset zone.",
+        "toZonedDateTime needs an asserted offset and checks it against the JDK's tz database."
+      ],
+      "implementation": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.fromDate"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.fromOffsetDateTime"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/JavaTime.java",
+          "symbol": "JavaTime.toZonedDateTime"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/NativeResult.java",
+          "symbol": "NativeResult.lossy"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Typed.java",
+          "symbol": "Typed.fromNative"
+        }
+      ]
+    },
+    {
+      "id": "outcomes-never-guess",
+      "name": "Outcomes that never guess",
+      "description": "Only partial operations return an Outcome, and no helper picks an answer silently.",
+      "sources": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Outcome.java",
+          "symbol": "Outcome"
+        }
+      ],
+      "behavior": "Outcome is a sealed interface with five record cases, each carrying diagnostics with the shared codes. single() throws OutcomeException unless Unique; tryGetUnique() and uniqueOr(fallback) never choose among several answers; why() gives \"message (code)\"; toString() is the value's text or, say, none (month-end); toResult() is the 0.2 UtvResult.",
+      "outcome": "Every Outcome in user code marks a question time can refuse to answer.",
+      "constraints": [],
+      "implementation": [
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Outcome.java",
+          "symbol": "Outcome.single"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Outcome.java",
+          "symbol": "Outcome.tryGetUnique"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Outcome.java",
+          "symbol": "Outcome.uniqueOr"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/Outcome.java",
+          "symbol": "Outcome.toResult"
+        },
+        {
+          "path": "implementations/java/src/main/java/net/icelander/utv/OutcomeException.java",
+          "symbol": "OutcomeException"
+        }
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/java/src/main/java/net/icelander/utv",
+      "path": "implementations/java/src/main/java/net/icelander/utv/.dev/capability.json",
+      "relationship": "The capabilities these features make up."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/java/src/main/java/net/icelander/utv",
+      "path": "implementations/java/src/main/java/net/icelander/utv/.dev/operation.json",
+      "relationship": "The operations that carry them out."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/java/src/main/java/net/icelander/utv",
+      "path": "implementations/java/src/main/java/net/icelander/utv/.dev/use-case.json",
+      "relationship": "The use cases that exercise them."
+    }
+  ]
+}

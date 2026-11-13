@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../../../../../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Library tests",
+  "folder": "implementations/java/src/test/java/net/icelander/utv",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Library tests",
+      "summary": "JUnit tests of the library itself: the shared fixture runners, the typed layer, structural and Gregorian validation, and java.time interop.",
+      "purpose": "Checks the library against the shared conformance material, read in place from ../../conformance, and against the obligations of library-api §8. The example suites live in examples/.",
+      "boundaries": [
+        "Most tests here predate AGENTS.md section 1 and are brought in line when next changed (UtvTest and TemporalContextTest already follow it).",
+        "Tests mirror production (AGENTS.md 1.9): each test class is named after the class it exercises, and verification.json names it."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/java/src/test/java/net/icelander/utv/ConformanceTest.java",
+          "symbol": "ConformanceTest.ROOT"
+        },
+        {
+          "path": "implementations/java/src/test/java/net/icelander/utv/EverydayFixturesTest.java",
+          "symbol": "EverydayFixturesTest"
+        }
+      ]
+    }
+  ]
+}

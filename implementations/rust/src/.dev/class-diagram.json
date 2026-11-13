@@ -1,0 +1,529 @@
+{
+  "$schema": "../../../../Meta/Agents/Skills/describe-class-diagram/schema.json",
+  "kind": "class",
+  "title": "Library source classes",
+  "folder": "implementations/rust/src",
+  "description": "Every type declared in the files of src/ itself (not in typed/ or interop/): the public result types and Rules, the builders' Endpoint, and the crate-internal readers, arithmetic and helpers. Status, Severity, Diagnostic, UtvResult, Endpoint and Rules are public; the rest (lib.rs's Strict, StrictVisitor and SchemaCx, everything in model.rs and num.rs, zones.rs's ZoneRules, ops.rs's interval types and text.rs's End) are crate-internal. Only meaningful members are listed.",
+  "sources": [
+    {
+      "path": "implementations/rust/src/lib.rs",
+      "symbol": "UtvResult"
+    },
+    {
+      "path": "implementations/rust/src/model.rs",
+      "symbol": "Civil"
+    },
+    {
+      "path": "implementations/rust/src/num.rs",
+      "symbol": "Q"
+    },
+    {
+      "path": "implementations/rust/src/zones.rs",
+      "symbol": "Rules"
+    },
+    {
+      "path": "implementations/rust/src/ops.rs",
+      "symbol": "Interval"
+    }
+  ],
+  "types": [
+    {
+      "id": "utv.Status",
+      "name": "Status",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/lib.rs"
+      ],
+      "members": [
+        "Invalid",
+        "Unsupported",
+        "Indeterminate",
+        "None",
+        "Unique",
+        "Multiple",
+        "Range",
+        "Symbolic",
+        "ResourceLimit",
+        "Error",
+        "Valid",
+        "pub fn as_str(&self) -> &'static str",
+        "impl Display"
+      ]
+    },
+    {
+      "id": "utv.Severity",
+      "name": "Severity",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/lib.rs"
+      ],
+      "members": [
+        "Error",
+        "Warning",
+        "Info",
+        "pub fn as_str(&self) -> &'static str"
+      ]
+    },
+    {
+      "id": "utv.Diagnostic",
+      "name": "Diagnostic",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/lib.rs"
+      ],
+      "members": [
+        "pub code: String",
+        "pub severity: Severity",
+        "pub path: String",
+        "pub message: String"
+      ]
+    },
+    {
+      "id": "utv.UtvResult",
+      "name": "UtvResult",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/lib.rs"
+      ],
+      "members": [
+        "pub operation: String",
+        "pub status: Status",
+        "pub diagnostics: Vec<Diagnostic>",
+        "pub candidates: Vec<Json>",
+        "pub fn new(status: Status, candidates: Vec<Json>) -> Self",
+        "pub fn unique(candidate: Json) -> Self",
+        "pub fn value(&self) -> Option<&Json>",
+        "pub fn as_str(&self) -> Option<&str>",
+        "pub fn to_json(&self) -> Json",
+        "impl Display: the status, then the candidates as ISO 8601 text or JSON"
+      ]
+    },
+    {
+      "id": "utv.Strict",
+      "name": "Strict",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/lib.rs"
+      ],
+      "members": [
+        "Strict(Json)",
+        "impl Deserialize: through StrictVisitor"
+      ]
+    },
+    {
+      "id": "utv.StrictVisitor",
+      "name": "StrictVisitor",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/lib.rs"
+      ],
+      "members": [
+        "fn visit_map<A: MapAccess<'de>>(self, a: A) -> Result<Json, A::Error>: refuses a key it has already seen"
+      ]
+    },
+    {
+      "id": "utv.SchemaCx",
+      "name": "SchemaCx",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/lib.rs"
+      ],
+      "members": [
+        "root: Json",
+        "fn validate(&self, s: &Json, v: &Json, path: &str, errs: &mut Vec<(String, String)>)",
+        "fn ok(&self, s: &Json, v: &Json, path: &str) -> bool"
+      ]
+    },
+    {
+      "id": "model.R",
+      "name": "R<T>",
+      "kind": "type",
+      "sources": [
+        "implementations/rust/src/model.rs"
+      ],
+      "members": [
+        "pub(crate) type R<T> = Result<T, UtvResult>"
+      ]
+    },
+    {
+      "id": "model.Form",
+      "name": "Form",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/model.rs"
+      ],
+      "members": [
+        "Date",
+        "YearMonth",
+        "Time",
+        "DateTime",
+        "pub fn as_str(self) -> &'static str",
+        "pub fn has_date(self) -> bool"
+      ]
+    },
+    {
+      "id": "model.Zone",
+      "name": "Zone",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/model.rs"
+      ],
+      "members": [
+        "Floating",
+        "Iana(String)",
+        "Fixed(i64)",
+        "Other(String)"
+      ]
+    },
+    {
+      "id": "model.Civil",
+      "name": "Civil",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/model.rs"
+      ],
+      "members": [
+        "pub form: Form",
+        "pub year: i128",
+        "pub month: u32, day: u32, hour: u32, minute: u32",
+        "pub second: Option<u32>",
+        "pub nano: Option<u32>",
+        "pub zone: Zone",
+        "pub offset_assertion: Option<i64>",
+        "pub fn day_number(&self) -> R<i128>",
+        "pub fn local_seconds(&self) -> R<Q>",
+        "pub fn set_from_seconds(&mut self, q: Q) -> R<()>",
+        "pub fn key(&self) -> (i128, u32, u32, u32, u32, u32, u32)",
+        "pub fn to_json(&self) -> Value"
+      ]
+    },
+    {
+      "id": "model.Components",
+      "name": "Components",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/model.rs"
+      ],
+      "members": [
+        "pub years: i128, months, weeks, days, hours, minutes, seconds"
+      ]
+    },
+    {
+      "id": "model.Amount",
+      "name": "Amount",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/model.rs"
+      ],
+      "members": [
+        "Calendar(Components)",
+        "PosixSeconds(Q)",
+        "Elapsed(Option<Q>)",
+        "Other(String)"
+      ]
+    },
+    {
+      "id": "num.Q",
+      "name": "Q",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/num.rs"
+      ],
+      "members": [
+        "pub n: i128",
+        "pub d: i128 (positive, reduced)",
+        "pub fn new(n: i128, d: i128) -> Option<Q>",
+        "pub fn add(self, o: Q) -> Option<Q>",
+        "pub fn sub(self, o: Q) -> Option<Q>",
+        "pub fn cmp(self, o: Q) -> Option<Ordering>",
+        "pub fn cmp_exact(self, o: Q) -> Ordering",
+        "pub fn floor(self) -> i128",
+        "pub fn frac(self) -> Q",
+        "pub fn frac_nanos(self) -> Option<u32>"
+      ]
+    },
+    {
+      "id": "build.Endpoint",
+      "name": "Endpoint",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/build.rs"
+      ],
+      "members": [
+        "Included(Value)",
+        "Excluded(Value)",
+        "Unbounded",
+        "Unknown"
+      ]
+    },
+    {
+      "id": "zones.ZoneRules",
+      "name": "ZoneRules",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/zones.rs"
+      ],
+      "members": [
+        "initial_offset: i64",
+        "transitions: Vec<(i128, i64)>",
+        "fn offset_at(&self, t: Q) -> i64"
+      ]
+    },
+    {
+      "id": "zones.Rules",
+      "name": "Rules",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/zones.rs"
+      ],
+      "members": [
+        "pub rule_set: Value",
+        "pub valid_from: i128",
+        "pub valid_until: i128",
+        "zones: BTreeMap<String, ZoneRules>",
+        "pub fn parse(text: &str) -> Result<Rules, String>",
+        "pub fn from_json(v: &Value) -> Result<Rules, String>",
+        "pub fn load(path: impl AsRef<Path>) -> Result<Rules, Diagnostics>",
+        "pub fn zone_ids(&self) -> impl Iterator<Item = &str>"
+      ]
+    },
+    {
+      "id": "ops.Domain",
+      "name": "Domain",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/ops.rs"
+      ],
+      "members": [
+        "Dates",
+        "Instants"
+      ]
+    },
+    {
+      "id": "ops.Bound",
+      "name": "Bound",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/ops.rs"
+      ],
+      "members": [
+        "Point { at: Q, included: bool }",
+        "Unbounded",
+        "Unknown"
+      ]
+    },
+    {
+      "id": "ops.Interval",
+      "name": "Interval",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/ops.rs"
+      ],
+      "members": [
+        "domain: Domain",
+        "zones: Vec<Zone>",
+        "start: Bound",
+        "end: Bound",
+        "empty_flag: bool",
+        "fn half_open(self) -> R<Interval>",
+        "fn provably_empty(&self) -> R<bool>"
+      ]
+    },
+    {
+      "id": "ops.T3",
+      "name": "T3",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/ops.rs"
+      ],
+      "members": [
+        "True",
+        "False",
+        "Unknown"
+      ]
+    },
+    {
+      "id": "text.End",
+      "name": "End",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/text.rs"
+      ],
+      "members": [
+        "Point(Value, bool)",
+        "Unbounded",
+        "Unknown"
+      ]
+    },
+    {
+      "id": "serde_json.Value",
+      "name": "serde_json::Value",
+      "kind": "enum",
+      "sources": [
+        "implementations/rust/src/lib.rs"
+      ],
+      "members": [
+        "(a JSON value; Json in lib.rs)"
+      ],
+      "external": true
+    },
+    {
+      "id": "serde.Visitor",
+      "name": "serde::de::Visitor",
+      "kind": "interface",
+      "sources": [
+        "implementations/rust/src/lib.rs"
+      ],
+      "members": [
+        "(serde's deserialization visitor)"
+      ],
+      "external": true
+    },
+    {
+      "id": "typed.Diagnostics",
+      "name": "Diagnostics",
+      "kind": "struct",
+      "sources": [
+        "implementations/rust/src/typed/outcome.rs"
+      ],
+      "members": [
+        "(the typed layer's diagnostics; see src/typed)"
+      ],
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "utv.UtvResult",
+      "to": "utv.Status",
+      "kind": "depends-on",
+      "description": "Its status."
+    },
+    {
+      "from": "utv.UtvResult",
+      "to": "utv.Diagnostic",
+      "kind": "depends-on",
+      "description": "Its diagnostics."
+    },
+    {
+      "from": "utv.UtvResult",
+      "to": "serde_json.Value",
+      "kind": "depends-on",
+      "description": "Candidates are JSON values."
+    },
+    {
+      "from": "utv.Diagnostic",
+      "to": "utv.Severity",
+      "kind": "depends-on",
+      "description": "Its severity."
+    },
+    {
+      "from": "utv.StrictVisitor",
+      "to": "serde.Visitor",
+      "kind": "implements",
+      "description": "Builds a JSON value, refusing duplicate keys."
+    },
+    {
+      "from": "utv.Strict",
+      "to": "utv.StrictVisitor",
+      "kind": "depends-on",
+      "description": "Deserializes through it."
+    },
+    {
+      "from": "utv.SchemaCx",
+      "to": "serde_json.Value",
+      "kind": "depends-on",
+      "description": "Holds the parsed schema."
+    },
+    {
+      "from": "model.R",
+      "to": "utv.UtvResult",
+      "kind": "depends-on",
+      "description": "The error side is a finished result."
+    },
+    {
+      "from": "model.Civil",
+      "to": "model.Form",
+      "kind": "depends-on",
+      "description": "Its form."
+    },
+    {
+      "from": "model.Civil",
+      "to": "model.Zone",
+      "kind": "depends-on",
+      "description": "Its zone."
+    },
+    {
+      "from": "model.Civil",
+      "to": "num.Q",
+      "kind": "depends-on",
+      "description": "local_seconds and set_from_seconds are exact."
+    },
+    {
+      "from": "model.Amount",
+      "to": "model.Components",
+      "kind": "depends-on",
+      "description": "A calendar amount's components."
+    },
+    {
+      "from": "model.Amount",
+      "to": "num.Q",
+      "kind": "depends-on",
+      "description": "Exact seconds."
+    },
+    {
+      "from": "build.Endpoint",
+      "to": "serde_json.Value",
+      "kind": "depends-on",
+      "description": "An endpoint's point is a UTV value."
+    },
+    {
+      "from": "zones.Rules",
+      "to": "zones.ZoneRules",
+      "kind": "depends-on",
+      "description": "One per zone id."
+    },
+    {
+      "from": "zones.Rules",
+      "to": "typed.Diagnostics",
+      "kind": "depends-on",
+      "description": "load's error."
+    },
+    {
+      "from": "zones.ZoneRules",
+      "to": "num.Q",
+      "kind": "depends-on",
+      "description": "offset_at takes an exact time."
+    },
+    {
+      "from": "ops.Interval",
+      "to": "ops.Domain",
+      "kind": "depends-on",
+      "description": "Its domain."
+    },
+    {
+      "from": "ops.Interval",
+      "to": "ops.Bound",
+      "kind": "depends-on",
+      "description": "Its two ends."
+    },
+    {
+      "from": "ops.Interval",
+      "to": "model.Zone",
+      "kind": "depends-on",
+      "description": "Zones of its date points."
+    },
+    {
+      "from": "ops.Bound",
+      "to": "num.Q",
+      "kind": "depends-on",
+      "description": "A point as days or seconds."
+    },
+    {
+      "from": "text.End",
+      "to": "serde_json.Value",
+      "kind": "depends-on",
+      "description": "A parsed point."
+    }
+  ]
+}

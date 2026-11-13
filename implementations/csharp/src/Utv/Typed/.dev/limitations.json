@@ -1,0 +1,74 @@
+{
+  "$schema": "../../../../../../Meta/Agents/Knowledge/schemas/limitations.schema.json",
+  "kind": "limitations",
+  "title": "Typed layer limitations",
+  "folder": "implementations/csharp/src/Utv/Typed",
+  "entities": [
+    {
+      "id": "everyday-shapes-only",
+      "title": "Only the everyday shapes have a type",
+      "summary": "Typed values exist for Gregorian dates, year-months, times and date-times (unzoned, fixed-offset or IANA-zoned), POSIX instants, calendar periods, POSIX and SI second counts, and start-end intervals of dates or instants.",
+      "impact": "Any other valid UTV value (recurrences, other calendars, a zoned date, a floating date-time with a resolutionPolicy, extra properties) gives unsupported (unsupported-operand) from FromJson and Parse.",
+      "workaround": "Use the JSON layer, which holds any UTV value as a JsonElement.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.ReadCore"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.ReadCivil"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.Read"
+        }
+      ]
+    },
+    {
+      "id": "period-components-64-bit",
+      "title": "Period components are 64-bit",
+      "summary": "Period holds each component as a long, unlike years, which are BigInteger.",
+      "impact": "A calendar amount whose component does not fit in a long gives unsupported (implementation-limit) from Period.FromJson and Period.Parse. Period.Negate throws OverflowException for long.MinValue.",
+      "workaround": "The JSON layer's Calendar.Add reads components as BigInteger.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+          "symbol": "PeriodComponents"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Typed.ReadAmount"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+          "symbol": "Period.Negate"
+        }
+      ]
+    },
+    {
+      "id": "zoned-typed-gap-overlap-subset",
+      "title": "The typed policies name only what is implemented",
+      "summary": "Gap has Reject, PreserveUnresolved and ShiftForward; Overlap has Reject, All, Earliest and Latest.",
+      "impact": "The schema's other policies (shift-backward-by-gap, next-valid-boundary, previous-valid-boundary, offset-match, occurrence-index) have no typed name. Built through the JSON-layer GapPolicy and OverlapPolicy enums, they give unsupported (unsupported-policy).",
+      "workaround": "An offsetAssertion on the value picks one side of an overlap, as offset-match would.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Enums.cs",
+          "symbol": "Gap"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Enums.cs",
+          "symbol": "Overlap"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.ResolveCore"
+        }
+      ]
+    }
+  ]
+}

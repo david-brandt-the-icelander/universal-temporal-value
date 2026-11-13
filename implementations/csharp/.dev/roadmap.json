@@ -1,0 +1,354 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/roadmap.schema.json",
+  "kind": "roadmap",
+  "title": "C# library roadmap",
+  "folder": "implementations/csharp",
+  "description": "Milestones M2–M10 of the C# engine-interface plan, with the questions of docs/operations.md each answers and what library 0.3 already has.",
+  "entities": [
+    {
+      "id": "m2-typed-model",
+      "title": "M2 typed model",
+      "summary": "One typed record per kind, parsing, canonical JSON and representation equality.",
+      "target": "next",
+      "goals": [
+        "26 record types, one per kind",
+        "Parse",
+        "Canonical JSON (RFC 8785) and Canonicalize",
+        "Representation equality"
+      ],
+      "answers": [
+        "A1 Is this well-formed UTV?",
+        "I4 Canonical bytes / hash / signature for storage and dedup"
+      ],
+      "status": "in-progress",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "The question catalog"
+        }
+      ],
+      "progress": "Library 0.3 did part of M2 (the plan's note): immutable sealed records with representation equality for the everyday kinds only (CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime, ZonedIntent, Instant, Period, PosixSeconds, ElapsedSeconds, Interval<T>), with Parse, FromJson and ToJson. Not the 26 kinds, and no RFC 8785 canonical JSON.",
+      "items": [
+        {
+          "path": "implementations/csharp/.dev/backlog.json",
+          "entityId": "typed-records-for-every-kind"
+        }
+      ],
+      "details": "Each milestone adds a conformance profile (spec §2); anything outside the profiles a milestone claims keeps returning Unsupported. Targets are the plan's order: it gives no dates."
+    },
+    {
+      "id": "m3-core-civil",
+      "title": "M3 core-civil",
+      "summary": "The core-civil profile: Gregorian and ISO week rules, validation, fields, civil comparison and calendar arithmetic.",
+      "target": "after M2",
+      "goals": [
+        "Gregorian and ISO week rules",
+        "Validate",
+        "Fields",
+        "Civil Compare",
+        "Add and Difference on calendar amounts",
+        "Claim the core-civil profile"
+      ],
+      "answers": [
+        "A2 Does it make sense (Feb 30? 25:00?)",
+        "B4 What day of the week / ISO week / quarter is it?",
+        "C1 Did A happen before B? (civil)",
+        "D2 How many months/days between two dates?",
+        "E1 What is A plus one month / minus a day?"
+      ],
+      "status": "planned",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "The question catalog"
+        }
+      ],
+      "profile": "core-civil",
+      "progress": "Parts exist in the 0.2 JSON layer and the 0.3 typed layer: GregorianCivil.Validate, Calendar.Fields (ISO week, day of week), Calendar.Compare for civil values, Calendar.Add for calendar amounts and Calendar.DaysBetween. There is no Difference on calendar amounts (only days between dates), and the profile is not claimed.",
+      "details": "Each milestone adds a conformance profile (spec §2); anything outside the profiles a milestone claims keeps returning Unsupported. Targets are the plan's order: it gives no dates."
+    },
+    {
+      "id": "m4-global-instant",
+      "title": "M4 global-instant",
+      "summary": "The global-instant profile: a timescale registry, instant comparison and elapsed differences.",
+      "target": "after M3",
+      "goals": [
+        "Timescale registry (POSIX, UTC with leap table, TAI)",
+        "Instant Compare",
+        "Elapsed Difference"
+      ],
+      "answers": [
+        "C1 Did A happen before B?",
+        "D1 How much time elapsed between A and B?"
+      ],
+      "status": "planned",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "The question catalog"
+        }
+      ],
+      "profile": "global-instant",
+      "progress": "POSIX instants only today: Calendar.Compare and Calendar.PosixSecondsBetween on the unix-posix timescale. Elapsed (SI) seconds are unsupported (needs-leap-seconds).",
+      "details": "Each milestone adds a conformance profile (spec §2); anything outside the profiles a milestone claims keeps returning Unsupported. Targets are the plan's order: it gives no dates."
+    },
+    {
+      "id": "m5-zoned",
+      "title": "M5 zoned",
+      "summary": "The zoned profile: TZif rules, resolution, conversion between instants and civil values, day bounds, truncation and BCL adapters.",
+      "target": "after M4",
+      "goals": [
+        "TZif loader",
+        "Resolve",
+        "Convert instant↔civil",
+        "DayBounds",
+        "Truncate",
+        "Bcl adapters"
+      ],
+      "answers": [
+        "B1 Which instant(s) does this local date-time denote?",
+        "B2 What does the wall clock read at instant t in zone/place Z?",
+        "B5 When does this day start and end here?",
+        "E3 Round/truncate to the hour, day or week?",
+        "I5 Convert from/to a platform type"
+      ],
+      "status": "planned",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "The question catalog"
+        }
+      ],
+      "profile": "zoned",
+      "progress": "Resolve and instant-to-civil conversion exist with caller-supplied rules in the demo-zones.json format, not TZif (Zones.Resolve, Zones.ToZone, Zones.ToOffset, ZonedIntent.Resolve, Instant.InZone), and .NET interop exists (Interop and the typed From…/To… methods). There is no TZif loader, DayBounds or Truncate.",
+      "details": "Each milestone adds a conformance profile (spec §2); anything outside the profiles a milestone claims keeps returning Unsupported. Targets are the plan's order: it gives no dates."
+    },
+    {
+      "id": "m6-intervals-and-sets",
+      "title": "M6 intervals & sets",
+      "summary": "Interval algebra, containment, set operations and equivalence modes.",
+      "target": "after M5",
+      "goals": [
+        "Interval algebra",
+        "Contains",
+        "Set operations",
+        "Equivalent modes"
+      ],
+      "answers": [
+        "C2 Do these intervals overlap / meet / contain?",
+        "C3 Is X inside interval/set S?",
+        "C5 Are these the same?",
+        "F5 Union/intersection/difference of availability windows"
+      ],
+      "status": "planned",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "The question catalog"
+        }
+      ],
+      "progress": "Contains and Overlaps with three-valued answers exist for start-end intervals of dates or instants (Ranges, Interval<T>). There is no Allen algebra, set operation or Equivalent.",
+      "details": "Each milestone adds a conformance profile (spec §2); anything outside the profiles a milestone claims keeps returning Unsupported. Targets are the plan's order: it gives no dates."
+    },
+    {
+      "id": "m7-recurrence",
+      "title": "M7 recurrence",
+      "summary": "The recurrence profile: RFC 5545 expansion, occurrence IDs, selection and an iCalendar adapter.",
+      "target": "after M6",
+      "goals": [
+        "RFC 5545 (+ erratum 4271) expansion",
+        "Occurrence IDs",
+        "Select",
+        "iCalendar adapter"
+      ],
+      "answers": [
+        "F1 When are the next N occurrences / those within a window?",
+        "F2 Is date X an occurrence of this schedule?",
+        "F3 Which original occurrence is this (after it was moved)?",
+        "F4 Third Wednesday, last business day, first match in a window?",
+        "I1 Parse this ISO 8601 / RFC 3339 / RFC 9557 / iCalendar text",
+        "I2 Export to those formats"
+      ],
+      "status": "planned",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "The question catalog"
+        }
+      ],
+      "profile": "recurrence",
+      "details": "Each milestone adds a conformance profile (spec §2); anything outside the profiles a milestone claims keeps returning Unsupported. Targets are the plan's order: it gives no dates."
+    },
+    {
+      "id": "m8-history",
+      "title": "M8 history",
+      "summary": "The history profile: as-of queries, appending corrections and staleness of cached answers.",
+      "target": "after M7",
+      "goals": [
+        "AsOf",
+        "Append",
+        "IsStale"
+      ],
+      "answers": [
+        "G1 When did event E happen, according to what we knew at time K?",
+        "G2 Record a correction without losing the original",
+        "G3 Is this cached resolved answer still valid?"
+      ],
+      "status": "planned",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "The question catalog"
+        }
+      ],
+      "profile": "history",
+      "details": "Each milestone adds a conformance profile (spec §2); anything outside the profiles a milestone claims keeps returning Unsupported. Targets are the plan's order: it gives no dates."
+    },
+    {
+      "id": "m9-business-distributed",
+      "title": "M9 business, distributed",
+      "summary": "The business and distributed profiles: business calendars, logical clocks and matching events.",
+      "target": "after M8",
+      "goals": [
+        "Business calendars",
+        "Logical clocks",
+        "MatchEvents"
+      ],
+      "answers": [
+        "C6 Could A have caused B?",
+        "D3 How many business days/hours between?",
+        "E2 What is the next business day / end of month / start of quarter?",
+        "F6 Does this \"3 times a day\" obligation hold for these observations?"
+      ],
+      "status": "planned",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "The question catalog"
+        }
+      ],
+      "profile": "business, distributed",
+      "details": "Each milestone adds a conformance profile (spec §2); anything outside the profiles a milestone claims keeps returning Unsupported. Targets are the plan's order: it gives no dates."
+    },
+    {
+      "id": "m10-scientific",
+      "title": "M10 scientific",
+      "summary": "The scientific profile: uncertainty propagation, ordinal systems, graphs and series.",
+      "target": "after M9",
+      "goals": [
+        "Uncertainty propagation",
+        "Ordinal systems",
+        "Graphs",
+        "Series"
+      ],
+      "answers": [
+        "C7 Is this set of before/after facts consistent?",
+        "H1 What are the bounds or distribution of a derived value?",
+        "H2 What is the probability that A precedes B?",
+        "J1 Values of a series within a window, by a chosen time axis",
+        "J2 Value at a time between samples",
+        "J3 Daily/hourly aggregates in a civil zone",
+        "J4 Ordering of named periods (eras, dynasties)"
+      ],
+      "status": "planned",
+      "origin": {
+        "kind": "document",
+        "reference": "implementations/csharp/docs/engine-interface.md",
+        "description": "The C# engine-interface design plan, written after library 0.1.0, with a note added in 0.3.0 on what 0.3 realizes. Its prose sections (design decisions, evolution table, milestones, 0.3 note) moved into these .dev files; the file keeps the interface sketch, and git history keeps the original text."
+      },
+      "evidenceStatus": "proposed",
+      "sources": [
+        {
+          "path": "implementations/csharp/docs/engine-interface.md",
+          "symbol": "Interface"
+        },
+        {
+          "path": "docs/operations.md",
+          "symbol": "The question catalog"
+        }
+      ],
+      "profile": "scientific",
+      "details": "Each milestone adds a conformance profile (spec §2); anything outside the profiles a milestone claims keeps returning Unsupported. Targets are the plan's order: it gives no dates."
+    }
+  ]
+}

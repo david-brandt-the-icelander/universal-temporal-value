@@ -3,8 +3,8 @@
 > **Status: implemented in libraries 0.3** (all five languages).
 > - **R1–R4, R6–R9:** see [`library-api.md`](library-api.md) and [`side-by-side.md`](side-by-side.md).
 > - **R5, text form:** see [`text-form.md`](text-form.md). The canonical interval notation uses brackets instead of EDTF's slash, because EDTF's `a/b` can't say whether an end is excluded; EDTF slash forms are accepted as input.
-> - **Deferred:** the shorter JSON *authoring* form, also proposed under R5, needs spec 1.1 (OI-18).
-> - **Deferred:** EDTF qualifiers (`1347~`) need a mapping to the `uncertain` kind.
+> - **Deferred:** the shorter JSON *authoring* form, also proposed under R5, needs spec 1.1 (OI-18, in [`spec/.dev/backlog.json`](../spec/.dev/backlog.json)).
+> - **Deferred:** EDTF qualifiers (`1347~`) need a mapping to the `uncertain` kind (`edtf-qualifiers`, in [`.dev/backlog.json`](.dev/backlog.json)).
 > - **Superseded:** R6's example programs and their snapshot tests, and the traditional catalog tour, were later
 >   replaced by example unit tests in every library; see [`example-tests.md`](example-tests.md).
 >
@@ -55,7 +55,7 @@ Every UTV value is the language's generic JSON type: `JsonElement` in C#, `JsonN
   using JsonDocument si = JsonDocument.Parse("""{"schema":"utv/1.0","kind":"amount","value":{"basis":"elapsed",...}}""");
   ```
 
-This was a deliberate 0.1/0.2 choice (milestone M2 in `implementations/csharp/docs/engine-interface.md` adds typed records). The examples show that it is now the main thing that makes UTV look worse than the native APIs it's compared with.
+This was a deliberate 0.1/0.2 choice (milestone M2 of the C# engine plan, now `m2-typed-model` in [`implementations/csharp/.dev/roadmap.json`](../implementations/csharp/.dev/roadmap.json), adds typed records). The examples show that it is now the main thing that makes UTV look worse than the native APIs it's compared with.
 
 ### F3. Every operation returns a result envelope, even when it can't fail
 

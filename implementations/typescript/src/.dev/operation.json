@@ -1,0 +1,1834 @@
+{
+  "$schema": "../../../../Meta/Agents/Skills/describe-operation/schema.json",
+  "kind": "operation",
+  "title": "TypeScript library operations",
+  "folder": "implementations/typescript/src",
+  "description": "The public entrypoints of @utv/core: the typed layer's factories and methods, then the JSON layer's exported functions. Every one is a pure in-process call; none changes anything outside the values it returns, so all are queries. Typed factories throw a RangeError for a value that can't exist; partial typed operations return an Outcome; JSON-layer functions return a utv-result/1.0 result and never throw for a semantic outcome.",
+  "sources": [
+    {
+      "path": "implementations/typescript/src/index.ts",
+      "symbol": "export"
+    },
+    {
+      "path": "implementations/typescript/src/internal.ts",
+      "symbol": "run"
+    },
+    {
+      "path": "implementations/typescript/src/values.ts",
+      "symbol": "orThrow"
+    }
+  ],
+  "entities": [
+    {
+      "id": "civil-date-of",
+      "name": "Make a date",
+      "description": "A proleptic Gregorian date from a year, a 1-based month and a day. CivilDate.tryOf takes the same arguments and returns an Outcome instead of throwing.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.of"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.tryOf"
+        },
+        {
+          "path": "implementations/typescript/src/internal.ts",
+          "symbol": "readCivil"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilDate.of"
+      },
+      "action": "query",
+      "transport": "static method of CivilDate",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A CivilDate; tryOf returns Outcome<CivilDate>.",
+      "failures": [
+        "The day does not exist in that month (30 February, 29 February in a common year): RangeError (day-out-of-range); tryOf gives invalid.",
+        "The month is outside 1–12: RangeError (month-out-of-range); tryOf gives invalid.",
+        "The year is a number that is not a safe integer: RangeError (field-out-of-range); tryOf gives invalid."
+      ]
+    },
+    {
+      "id": "civil-year-month-of",
+      "name": "Make a year-month",
+      "description": "A month of a proleptic Gregorian year, without a day. CivilYearMonth.tryOf returns an Outcome instead.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilYearMonth.of"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilYearMonth.tryOf"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilYearMonth.of"
+      },
+      "action": "query",
+      "transport": "static method of CivilYearMonth",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A CivilYearMonth.",
+      "failures": [
+        "The month is outside 1–12: RangeError (month-out-of-range).",
+        "The year is a number that is not a safe integer: RangeError (field-out-of-range)."
+      ]
+    },
+    {
+      "id": "civil-time-of",
+      "name": "Make a time of day",
+      "description": "A wall-clock time with no date and no zone. It remembers whether a second was given; a nanosecond without a second sets the second to 0. CivilTime.tryOf returns an Outcome instead.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilTime.of"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilTime.tryOf"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilTime.of"
+      },
+      "action": "query",
+      "transport": "static method of CivilTime",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A CivilTime.",
+      "failures": [
+        "Hour, minute, second or nanosecond out of range (hour 24, minute 60): RangeError (field-out-of-range).",
+        "Second 60: RangeError (leap-second); tryOf gives unsupported."
+      ]
+    },
+    {
+      "id": "civil-date-time-of",
+      "name": "Make a date-time",
+      "description": "A wall-clock date and time with no zone. CivilDateTime.tryOf returns an Outcome instead.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDateTime.of"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDateTime.tryOf"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilDateTime.of"
+      },
+      "action": "query",
+      "transport": "static method of CivilDateTime",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A CivilDateTime.",
+      "failures": [
+        "A field out of range: RangeError (day-out-of-range, month-out-of-range or field-out-of-range).",
+        "Second 60: RangeError (leap-second); tryOf gives unsupported."
+      ]
+    },
+    {
+      "id": "civil-date-add-days",
+      "name": "Add days or weeks to a date",
+      "description": "Calendar days (addDays) or weeks (addWeeks), carrying across months and years.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.addDays"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.addWeeks"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilDate.addDays"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "The later or earlier CivilDate.",
+      "failures": []
+    },
+    {
+      "id": "civil-date-add-months",
+      "name": "Add months or years to a date",
+      "description": "Months (addMonths) or years (addYears). Without a policy the day may be missing from the target month; with MonthEnd.Constrain it is clamped to the month's last day.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.addMonths"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.addYears"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "constrainOnly"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilDate.addMonths"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "Outcome<CivilDate> without a policy; a plain CivilDate with MonthEnd.Constrain.",
+      "failures": [
+        "The day is missing from the target month (31 January + 1 month): none (month-end).",
+        "A policy other than MonthEnd.Constrain passed to the total overload: RangeError."
+      ]
+    },
+    {
+      "id": "civil-date-add-period",
+      "name": "Add a period to a date",
+      "description": "A calendar Period: years and months first, then the month-end rule, then weeks and days. An optional MonthEnd policy applies.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.add"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilDate.add"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "Outcome<CivilDate>.",
+      "failures": [
+        "The day is missing after the months are added: none (month-end), unless MonthEnd.Constrain is passed.",
+        "The period has hours, minutes or seconds: invalid (kind-mismatch)."
+      ]
+    },
+    {
+      "id": "civil-date-days-until",
+      "name": "Count the days to another date",
+      "description": "Whole days from this date to the other, negative when the other is earlier.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.daysUntil"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "daysBetween"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilDate.daysUntil"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A number of days.",
+      "failures": [
+        "The count is beyond Number.MAX_SAFE_INTEGER: an Error is thrown (the JSON layer's daysBetween answers unsupported, implementation-limit)."
+      ]
+    },
+    {
+      "id": "civil-date-at",
+      "name": "Put a date at a time of day",
+      "description": "The date and a CivilTime combined into a CivilDateTime, still without a zone.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.at"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilDate.at"
+      },
+      "action": "query",
+      "transport": "method of CivilDate",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A CivilDateTime.",
+      "failures": []
+    },
+    {
+      "id": "civil-year-month-add-months",
+      "name": "Add months or years to a year-month",
+      "description": "Month arithmetic with no day, so it cannot miss a month end.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilYearMonth.addMonths"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilYearMonth.addYears"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilYearMonth.addMonths"
+      },
+      "action": "query",
+      "transport": "method of CivilYearMonth",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A CivilYearMonth.",
+      "failures": []
+    },
+    {
+      "id": "civil-date-time-add",
+      "name": "Add wall-clock time to a date-time",
+      "description": "addDays, addWeeks, addHours, addMinutes and addSeconds move the wall clock and carry into days. There is no zone, so there is no DST.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDateTime.addHours"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDateTime.addDays"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDateTime.addMinutes"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDateTime.addSeconds"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilDateTime.addHours"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A CivilDateTime.",
+      "failures": []
+    },
+    {
+      "id": "civil-date-time-add-months",
+      "name": "Add months or a period to a date-time",
+      "description": "addMonths(n) and add(period), with the same month-end rule as dates; addMonths(n, MonthEnd.Constrain) is total.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDateTime.addMonths"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDateTime.add"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilDateTime.addMonths"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "Outcome<CivilDateTime>; a plain CivilDateTime with MonthEnd.Constrain.",
+      "failures": [
+        "The day is missing from the target month: none (month-end).",
+        "A policy other than MonthEnd.Constrain passed to the total overload: RangeError."
+      ]
+    },
+    {
+      "id": "civil-date-time-in-zone",
+      "name": "Mean a date-time in a zone",
+      "description": "The same wall clock as an intention in an IANA zone. Nothing is resolved yet, so no rules are needed.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDateTime.inZone"
+        },
+        {
+          "path": "implementations/typescript/src/iso.ts",
+          "symbol": "ZONE_NAME"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilDateTime.inZone"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A ZonedIntent.",
+      "failures": [
+        "The text does not look like an IANA zone name: RangeError."
+      ]
+    },
+    {
+      "id": "civil-date-time-at-offset",
+      "name": "Pin a date-time to an offset",
+      "description": "The same wall clock at a fixed UTC offset, in seconds east of UTC.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDateTime.atOffset"
+        },
+        {
+          "path": "implementations/typescript/src/builders.ts",
+          "symbol": "withOffset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilDateTime.atOffset"
+      },
+      "action": "query",
+      "transport": "method of CivilDateTime",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A FixedOffsetDateTime.",
+      "failures": [
+        "The offset is beyond ±18:00 or not whole seconds: RangeError (offset-out-of-range)."
+      ]
+    },
+    {
+      "id": "fixed-offset-to-instant",
+      "name": "Get the instant of a fixed-offset date-time",
+      "description": "The one instant a wall clock at a fixed offset names. No rules are needed.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "FixedOffsetDateTime.toInstant"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "resolve"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "FixedOffsetDateTime.toInstant"
+      },
+      "action": "query",
+      "transport": "method of FixedOffsetDateTime",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "An Instant.",
+      "failures": []
+    },
+    {
+      "id": "zoned-add",
+      "name": "Add wall-clock time to a zoned value",
+      "description": "addDays, addWeeks, addHours, addMinutes and addSeconds on the wall clock; the zone is kept and an asserted offset is dropped.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "ZonedIntent.addDays"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "ZonedIntent.addHours"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "ZonedIntent.addDays"
+      },
+      "action": "query",
+      "transport": "method of ZonedIntent",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A ZonedIntent with no asserted offset.",
+      "failures": []
+    },
+    {
+      "id": "zoned-add-months",
+      "name": "Add months to a zoned value",
+      "description": "Month arithmetic on the wall clock, with the month-end rule.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "ZonedIntent.addMonths"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "ZonedIntent.addMonths"
+      },
+      "action": "query",
+      "transport": "method of ZonedIntent",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "Outcome<ZonedIntent>; a plain ZonedIntent with MonthEnd.Constrain.",
+      "failures": [
+        "The day is missing from the target month: none (month-end).",
+        "A policy other than MonthEnd.Constrain passed to the total overload: RangeError."
+      ]
+    },
+    {
+      "id": "zoned-resolve",
+      "name": "Resolve a zoned wall time",
+      "description": "The instant(s) a wall time in a zone names, under the context's rules and an optional gap and overlap policy (strict by default). TemporalContext.resolve(zoned, policy) is the same operation.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "ZonedIntent.resolve"
+        },
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "TemporalContext.resolve"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "resolve"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "ZonedIntent.resolve"
+      },
+      "action": "query",
+      "transport": "method of ZonedIntent",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "Outcome<Instant>: unique, or multiple (ascending) in an overlap.",
+      "failures": [
+        "The wall time falls in a gap: none (gap); with Gap.ShiftForward, unique (shifted by the gap).",
+        "The wall time happens twice: multiple (ambiguous); Overlap.All gives multiple without the diagnostic; Earliest and Latest give unique.",
+        "The zone is not in the rules: unsupported (unknown-zone).",
+        "The wall time is within a day of the rules' window edges or outside it: unsupported (outside-rule-window).",
+        "An asserted offset is not in force at that wall time: invalid (offset-mismatch).",
+        "A policy value the library doesn't know: unsupported (unsupported-policy)."
+      ]
+    },
+    {
+      "id": "instant-from-unix-seconds",
+      "name": "Make an instant from Unix seconds",
+      "description": "Whole seconds since 1970-01-01T00:00:00Z plus optional nanoseconds; Instant.fromUnixNanoseconds takes a bigint count of nanoseconds.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.fromUnixSeconds"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.fromUnixNanoseconds"
+        },
+        {
+          "path": "implementations/typescript/src/builders.ts",
+          "symbol": "instant"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "Instant.fromUnixSeconds"
+      },
+      "action": "query",
+      "transport": "static method of Instant",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "An Instant.",
+      "failures": [
+        "An argument is a number that is not a safe integer: RangeError (field-out-of-range)."
+      ]
+    },
+    {
+      "id": "instant-from-unix-milliseconds",
+      "name": "Make an instant from a clock reading",
+      "description": "Milliseconds since the epoch, as Date.now() or date.getTime() give them. The caller reads the clock; the library never does.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.fromUnixMilliseconds"
+        },
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromEpochMilliseconds"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "Instant.fromUnixMilliseconds"
+      },
+      "action": "query",
+      "transport": "static method of Instant",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "An Instant.",
+      "failures": [
+        "A number that is not a safe integer: RangeError (not-an-integer)."
+      ]
+    },
+    {
+      "id": "instant-from-date",
+      "name": "Make an instant from a Date",
+      "description": "The instant a Date holds.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.fromDate"
+        },
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromDate"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "Instant.fromDate"
+      },
+      "action": "query",
+      "transport": "static method of Instant",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "An Instant.",
+      "failures": [
+        "An Invalid Date: RangeError (invalid-date)."
+      ]
+    },
+    {
+      "id": "instant-add",
+      "name": "Add seconds to an instant",
+      "description": "PosixSeconds are added exactly; ElapsedSeconds (SI) would need a leap-second table.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.add"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "Instant.add"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "An Instant for PosixSeconds; Outcome<Instant> for ElapsedSeconds.",
+      "failures": [
+        "ElapsedSeconds: unsupported (needs-leap-seconds)."
+      ]
+    },
+    {
+      "id": "instant-until",
+      "name": "Measure the time to another instant",
+      "description": "The exact POSIX seconds from this instant to the other.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.until"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "posixSecondsBetween"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "Instant.until"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A PosixSeconds, an exact rational.",
+      "failures": []
+    },
+    {
+      "id": "instant-at-offset",
+      "name": "See an instant at a fixed offset",
+      "description": "The wall clock at a fixed UTC offset for this instant.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.atOffset"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "toOffset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "Instant.atOffset"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A FixedOffsetDateTime.",
+      "failures": [
+        "The offset is beyond ±18:00: RangeError (offset-out-of-range).",
+        "The instant is finer than a nanosecond: RangeError (implementation-limit)."
+      ]
+    },
+    {
+      "id": "instant-in-zone",
+      "name": "See an instant in a zone",
+      "description": "The wall clock in an IANA zone for this instant, with the offset in force asserted. TemporalContext.inZone(instant, zoneId) is the same operation.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.inZone"
+        },
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "TemporalContext.inZone"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "toZone"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "Instant.inZone"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "Outcome<ZonedIntent>.",
+      "failures": [
+        "The zone is not in the rules: unsupported (unknown-zone).",
+        "The instant is outside the rules' window: unsupported (outside-rule-window).",
+        "The instant is finer than a nanosecond: unsupported (implementation-limit)."
+      ]
+    },
+    {
+      "id": "instant-to-date",
+      "name": "Convert an instant to a Date",
+      "description": "A Date for this instant.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Instant.toDate"
+        },
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "toDate"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "Instant.toDate"
+      },
+      "action": "query",
+      "transport": "method of Instant",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "Outcome<Date>; unique with a precision-loss warning when sub-millisecond digits were floored.",
+      "failures": [
+        "Beyond the ±8.64e15 ms a Date can hold: unsupported (out-of-native-range)."
+      ]
+    },
+    {
+      "id": "period-of",
+      "name": "Make a calendar period",
+      "description": "Years, months, weeks, days and wall-clock hours, minutes and seconds; Period.years(n) … Period.seconds(n) make one-component periods.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Period.of"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Period.days"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Period.months"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "Period.of"
+      },
+      "action": "query",
+      "transport": "static method of Period",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A Period. Components may be negative.",
+      "failures": [
+        "A component is a number that is not a safe integer (1.5 days): RangeError (field-out-of-range)."
+      ]
+    },
+    {
+      "id": "posix-seconds-of",
+      "name": "Make an amount of POSIX seconds",
+      "description": "An exact amount numerator/denominator, reduced to lowest terms.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "PosixSeconds.of"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "PosixSeconds.of"
+      },
+      "action": "query",
+      "transport": "static method of PosixSeconds",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A PosixSeconds.",
+      "failures": [
+        "A zero denominator or a number that is not a safe integer: RangeError (field-out-of-range)."
+      ]
+    },
+    {
+      "id": "elapsed-seconds-of",
+      "name": "Make an amount of SI seconds",
+      "description": "An exact amount of elapsed SI seconds, as a stopwatch measures them.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "ElapsedSeconds.of"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "ElapsedSeconds.of"
+      },
+      "action": "query",
+      "transport": "static method of ElapsedSeconds",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "An ElapsedSeconds.",
+      "failures": [
+        "A zero denominator or a number that is not a safe integer: RangeError (field-out-of-range)."
+      ]
+    },
+    {
+      "id": "ordered-compare",
+      "name": "Compare two values of one type",
+      "description": "compare, isBefore and isAfter on CivilDate, CivilYearMonth, CivilTime, CivilDateTime, FixedOffsetDateTime (by instant) and Instant. ZonedIntent has none.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Ordered.compare"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Ordered.isBefore"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "compare"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "Ordered.compare"
+      },
+      "action": "query",
+      "transport": "method of Ordered",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "-1, 0 or 1; true or false for isBefore and isAfter.",
+      "failures": []
+    },
+    {
+      "id": "interval-of",
+      "name": "Make an interval",
+      "description": "Interval.halfOpen(a, b), Interval.closed(a, b) and Interval.of(start, end) with Bounds: included, excluded, unbounded or unknown. Interval.tryOf returns an Outcome instead.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Interval.of"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Interval.halfOpen"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Interval.tryOf"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "checkInterval"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "Interval.of"
+      },
+      "action": "query",
+      "transport": "static method of Interval",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "An Interval<CivilDate> or Interval<Instant>.",
+      "failures": [
+        "The end is before the start: RangeError (reversed-interval).",
+        "Neither end is a point: RangeError (unsupported-form).",
+        "The points are of different kinds: RangeError (kind-mismatch)."
+      ]
+    },
+    {
+      "id": "interval-contains",
+      "name": "Ask whether an interval contains a point",
+      "description": "Three-valued membership of a date or an instant.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Interval.contains"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "contains"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "Interval.contains"
+      },
+      "action": "query",
+      "transport": "method of Interval",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A Truth: definitely, possibly or impossible.",
+      "failures": [
+        "A point of the other domain (which the type parameter rules out): an Error is thrown."
+      ]
+    },
+    {
+      "id": "interval-overlaps",
+      "name": "Ask whether two intervals overlap",
+      "description": "Three-valued overlap of two intervals of the same domain.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "Interval.overlaps"
+        },
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "overlaps"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "Interval.overlaps"
+      },
+      "action": "query",
+      "transport": "method of Interval",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A Truth: definitely, possibly or impossible.",
+      "failures": []
+    },
+    {
+      "id": "parse",
+      "name": "Parse any text-form value",
+      "description": "Reads the UTV text form and returns the typed value the text describes.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "parse"
+        },
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "parseText"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "parse"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "Outcome<UtvValue>.",
+      "failures": [
+        "Text outside the grammar: invalid (syntax), or the field's range code.",
+        "Valid notation outside the profile: unsupported (unsupported-form, unsupported-annotation, leap-second or end-of-day).",
+        "A valid value with no typed class: unsupported (unsupported-operand)."
+      ]
+    },
+    {
+      "id": "typed-parse",
+      "name": "Parse text as one type",
+      "description": "CivilDate.parse, Instant.parse and the other T.parse methods read the text form and check that it describes a T.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.parse"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "typedParse"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilDate.parse"
+      },
+      "action": "query",
+      "transport": "static method of each typed value",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "Outcome<T>.",
+      "failures": [
+        "The text describes another type (an offset where an Instant is expected): invalid (kind-mismatch).",
+        "Anything parse refuses, with the same codes."
+      ]
+    },
+    {
+      "id": "from-json",
+      "name": "Read UTV JSON into a typed value",
+      "description": "fromJson takes a JSON value or its text and returns the typed value it holds.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "fromJson"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "typedFromJson"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "decode"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "fromJson"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "Outcome<UtvValue>.",
+      "failures": [
+        "Text that is not JSON or repeats a key: invalid (malformed-json or duplicate-key).",
+        "UTV JSON that fails the structural check: invalid with its structural code (duplicate-key, unknown-kind, missing-property, …), or unsupported (unsupported-version) for another well-formed utv/M.N.",
+        "A valid value no typed class can hold (a zoned date, a floating date-time with a resolutionPolicy, a start-amount interval): unsupported (unsupported-operand)."
+      ]
+    },
+    {
+      "id": "typed-from-json",
+      "name": "Read UTV JSON as one type",
+      "description": "CivilDate.fromJson and the other T.fromJson methods check that the JSON holds a T.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "CivilDate.fromJson"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "typedFromJson"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "CivilDate.fromJson"
+      },
+      "action": "query",
+      "transport": "static method of each typed value",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "Outcome<T>.",
+      "failures": [
+        "The JSON holds another kind or form: invalid (kind-mismatch).",
+        "Anything fromJson refuses, with the same codes."
+      ]
+    },
+    {
+      "id": "to-string",
+      "name": "Write a value as text",
+      "description": "toString (and String(v)) writes the text form; PosixSeconds and ElapsedSeconds write a display string.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "TemporalValue.toString"
+        },
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "formatText"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "PosixSeconds.toString"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/values.ts",
+        "symbol": "TemporalValue.toString"
+      },
+      "action": "query",
+      "transport": "method of TemporalValue",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "The text form, or the value's JSON text when the value has no text form.",
+      "failures": []
+    },
+    {
+      "id": "zone-rules-load",
+      "name": "Load zone rules",
+      "description": "ZoneRules.load(path) reads a rule bundle in the format of conformance/rules/demo-zones.json from a file the caller names; ZoneRules.parse(text) parses one.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "ZoneRules.load"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "ZoneRules.parse"
+        },
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "loadRules"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/zones.ts",
+        "symbol": "ZoneRules.load"
+      },
+      "action": "query",
+      "transport": "static method of ZoneRules",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A ZoneRules.",
+      "failures": [
+        "The bundle is malformed (not JSON, a missing or mistyped field, transitions out of order): RulesError is thrown.",
+        "The file can't be read: the error from node:fs readFileSync is thrown."
+      ]
+    },
+    {
+      "id": "context-with",
+      "name": "Hold zone rules in a context",
+      "description": "A TemporalContext over explicit rules. There is no default context.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "TemporalContext.with"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/context.ts",
+        "symbol": "TemporalContext.with"
+      },
+      "action": "query",
+      "transport": "static method of TemporalContext",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A TemporalContext.",
+      "failures": []
+    },
+    {
+      "id": "context-compare",
+      "name": "Order zoned values",
+      "description": "Resolves zoned values strictly, then compares every pair of candidates.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/context.ts",
+          "symbol": "TemporalContext.compare"
+        },
+        {
+          "path": "implementations/typescript/src/values.ts",
+          "symbol": "ZonedIntent.resolve"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/context.ts",
+        "symbol": "TemporalContext.compare"
+      },
+      "action": "query",
+      "transport": "method of TemporalContext",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "Outcome<Ordering>: unique, or multiple with each possible order when an overlap decides it.",
+      "failures": [
+        "Either side's resolution is none, unsupported or invalid: the comparison is that outcome, with both sides' diagnostics (none (gap), unsupported (unknown-zone), …).",
+        "Either side falls in an overlap: its ambiguous diagnostic is carried, once per side."
+      ]
+    },
+    {
+      "id": "outcome-single",
+      "name": "Take the one answer of an outcome",
+      "description": "single() returns the unique value and throws otherwise; uniqueOr(fallback) and toResult() are the other helpers. None of them picks an answer silently.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "OutcomeBase.single"
+        },
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "OutcomeBase.uniqueOr"
+        },
+        {
+          "path": "implementations/typescript/src/outcome.ts",
+          "symbol": "OutcomeBase.toResult"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/outcome.ts",
+        "symbol": "OutcomeBase.single"
+      },
+      "action": "query",
+      "transport": "method of every Outcome",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "The unique value.",
+      "failures": [
+        "The outcome is not unique: OutcomeError, carrying the status and diagnostics."
+      ]
+    },
+    {
+      "id": "build-json",
+      "name": "Build canonical UTV JSON",
+      "description": "date, yearMonth, time, dateTime, inZone, withOffset, instant, period, posixSeconds and interval assemble the canonical everyday shapes. They do not validate: date(2026, 2, 30) is reported invalid by the operations that read it.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/builders.ts",
+          "symbol": "date"
+        },
+        {
+          "path": "implementations/typescript/src/builders.ts",
+          "symbol": "dateTime"
+        },
+        {
+          "path": "implementations/typescript/src/builders.ts",
+          "symbol": "inZone"
+        },
+        {
+          "path": "implementations/typescript/src/builders.ts",
+          "symbol": "instant"
+        },
+        {
+          "path": "implementations/typescript/src/builders.ts",
+          "symbol": "period"
+        },
+        {
+          "path": "implementations/typescript/src/builders.ts",
+          "symbol": "interval"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/builders.ts",
+        "symbol": "date"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A UTV JSON object.",
+      "failures": []
+    },
+    {
+      "id": "parse-iso",
+      "name": "Parse ISO 8601 text",
+      "description": "ISO 8601 extended, RFC 3339 and RFC 9557 forms to a UTV value.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/iso.ts",
+          "symbol": "parseIso"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/iso.ts",
+        "symbol": "parseIso"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A utv-result/1.0 result with the value as its candidate.",
+      "failures": [
+        "Outside the grammar, or a field out of range: invalid (syntax, month-out-of-range, day-out-of-range, field-out-of-range, offset-out-of-range).",
+        "Second 60 or 24:00: unsupported (leap-second, end-of-day).",
+        "Week dates, ordinal dates, basic format: unsupported (unsupported-form).",
+        "A critical, second or non-zone annotation, or a zone after Z or -00:00: unsupported (unsupported-annotation).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "format-iso",
+      "name": "Format ISO 8601 text",
+      "description": "A civil date, year-month, time or date-time, or a POSIX instant, as ISO 8601 / RFC 9557 text.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/iso.ts",
+          "symbol": "formatIso"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/iso.ts",
+        "symbol": "formatIso"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is the text.",
+      "failures": [
+        "UTV JSON that fails the structural check: invalid with its structural code (duplicate-key, unknown-kind, missing-property, …), or unsupported (unsupported-version) for another well-formed utv/M.N.",
+        "Another kind, a zoned date or time, an offset with seconds, an instant finer than a nanosecond: unsupported (unsupported-operand or no-text-form).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "parse-text",
+      "name": "Parse the text form",
+      "description": "Points, ISO 8601 periods, bracket intervals and EDTF slash intervals.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "parseText"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/text.ts",
+        "symbol": "parseText"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is the UTV value.",
+      "failures": [
+        "Everything parseIso refuses, with its codes.",
+        "A period with decimal components or an EDTF qualifier: unsupported (unsupported-form).",
+        "A reversed interval: invalid (reversed-interval); endpoints of different kinds or forms: invalid (kind-mismatch); an interval with no point: unsupported (unsupported-form).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "format-text",
+      "name": "Format the text form",
+      "description": "A civil value, instant, calendar period or start-end interval in the text form.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/text.ts",
+          "symbol": "formatText"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/text.ts",
+        "symbol": "formatText"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is the text.",
+      "failures": [
+        "UTV JSON that fails the structural check: invalid with its structural code (duplicate-key, unknown-kind, missing-property, …), or unsupported (unsupported-version) for another well-formed utv/M.N.",
+        "A value the notation can't express (exact seconds, a mixed-sign period, a start-amount or empty interval, any other kind): unsupported (no-text-form).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "fields",
+      "name": "Get calendar facts",
+      "description": "Day of week (Monday = 1), day of year, ISO week and week-year, days in month and leap year of a Gregorian date or date-time.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "fields"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/ops.ts",
+        "symbol": "fields"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is an object of facts.",
+      "failures": [
+        "UTV JSON that fails the structural check: invalid with its structural code (duplicate-key, unknown-kind, missing-property, …), or unsupported (unsupported-version) for another well-formed utv/M.N.",
+        "A day that does not exist: invalid (day-out-of-range).",
+        "Another kind or form: unsupported (unsupported-operand).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "add",
+      "name": "Add an amount",
+      "description": "A calendar period to a civil value (wall-clock arithmetic, zone kept), or POSIX seconds to an instant, with an optional monthEnd policy.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "add"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/ops.ts",
+        "symbol": "add"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is the new value; an asserted offset is dropped with an info diagnostic offset-assertion-dropped.",
+      "failures": [
+        "UTV JSON that fails the structural check: invalid with its structural code (duplicate-key, unknown-kind, missing-property, …), or unsupported (unsupported-version) for another well-formed utv/M.N.",
+        "The day is missing after the months are added and monthEnd is reject: none (month-end).",
+        "Time components on a date, anything but years and months on a year-month, a calendar amount on an instant: invalid (kind-mismatch).",
+        "SI seconds on a POSIX instant: unsupported (needs-leap-seconds); a time of day or another kind: unsupported (unsupported-operand); an unknown monthEnd: unsupported (unsupported-policy).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "compare",
+      "name": "Compare two values",
+      "description": "Civil values of one form, instants, or fixed-offset date-times (by instant).",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "compare"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/ops.ts",
+        "symbol": "compare"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is before, equal or after.",
+      "failures": [
+        "UTV JSON that fails the structural check: invalid with its structural code (duplicate-key, unknown-kind, missing-property, …), or unsupported (unsupported-version) for another well-formed utv/M.N.",
+        "Either value is in a named zone: unsupported (needs-zone-rules).",
+        "Different kinds or forms, or an unzoned value against a fixed-offset one: unsupported (unsupported-operand).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "days-between",
+      "name": "Count days between dates",
+      "description": "b − a in days for two Gregorian dates.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "daysBetween"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/ops.ts",
+        "symbol": "daysBetween"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is a number of days.",
+      "failures": [
+        "UTV JSON that fails the structural check: invalid with its structural code (duplicate-key, unknown-kind, missing-property, …), or unsupported (unsupported-version) for another well-formed utv/M.N.",
+        "Dates in different zones: unsupported (different-zones).",
+        "The count is not a safe integer: unsupported (implementation-limit).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "posix-seconds-between",
+      "name": "Measure POSIX seconds between instants",
+      "description": "b − a for two POSIX instants, exactly.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "posixSecondsBetween"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/ops.ts",
+        "symbol": "posixSecondsBetween"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is a posixSeconds amount, reduced.",
+      "failures": [
+        "UTV JSON that fails the structural check: invalid with its structural code (duplicate-key, unknown-kind, missing-property, …), or unsupported (unsupported-version) for another well-formed utv/M.N.",
+        "Another kind or timescale: unsupported (unsupported-operand).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "contains",
+      "name": "Ask whether an interval contains a point",
+      "description": "Three-valued membership for civil-date and instant intervals.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "contains"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/ops.ts",
+        "symbol": "contains"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is definitely, possibly or impossible.",
+      "failures": [
+        "UTV JSON that fails the structural check: invalid with its structural code (duplicate-key, unknown-kind, missing-property, …), or unsupported (unsupported-version) for another well-formed utv/M.N.",
+        "A point of the other domain, another construction or domain: unsupported (unsupported-operand); dates in different zones: unsupported (different-zones).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "overlaps",
+      "name": "Ask whether intervals overlap",
+      "description": "Three-valued overlap of two intervals of one domain.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/ops.ts",
+          "symbol": "overlaps"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/ops.ts",
+        "symbol": "overlaps"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is definitely, possibly or impossible.",
+      "failures": [
+        "UTV JSON that fails the structural check: invalid with its structural code (duplicate-key, unknown-kind, missing-property, …), or unsupported (unsupported-version) for another well-formed utv/M.N.",
+        "Intervals of different domains: unsupported (unsupported-operand).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "resolve",
+      "name": "Resolve a local date-time",
+      "description": "A civil date-time to instant(s) under explicit rules (a ZoneRules, bundle text or a parsed bundle) and an optional policy.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "resolve"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/zones.ts",
+        "symbol": "resolve"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result with the instant(s) as candidates and the bundle's ruleSet as a manifest dependency.",
+      "failures": [
+        "UTV JSON that fails the structural check: invalid with its structural code (duplicate-key, unknown-kind, missing-property, …), or unsupported (unsupported-version) for another well-formed utv/M.N.",
+        "Not a date-time, or second 60: unsupported (unsupported-operand, leap-second).",
+        "No zone: symbolic (no-zone).",
+        "Rules that don't parse: invalid (invalid-rules).",
+        "The zone is not in the rules: unsupported (unknown-zone); outside the window: unsupported (outside-rule-window).",
+        "An asserted offset contradicts the rules: invalid (offset-mismatch).",
+        "A gap: none (gap); an overlap: multiple (ambiguous under reject); an unknown policy: unsupported (unsupported-policy).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "to-zone",
+      "name": "Convert an instant to a zone",
+      "description": "The civil date-time in a named zone, with the offset in force as offsetAssertion.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "toZone"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/zones.ts",
+        "symbol": "toZone"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is a zoned civil date-time.",
+      "failures": [
+        "UTV JSON that fails the structural check: invalid with its structural code (duplicate-key, unknown-kind, missing-property, …), or unsupported (unsupported-version) for another well-formed utv/M.N.",
+        "Rules that don't parse: invalid (invalid-rules).",
+        "Unknown zone: unsupported (unknown-zone); outside the window: unsupported (outside-rule-window).",
+        "Finer than a nanosecond: unsupported (implementation-limit).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "to-offset",
+      "name": "Convert an instant to an offset",
+      "description": "The civil date-time at a fixed offset. No rules needed.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "toOffset"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/zones.ts",
+        "symbol": "toOffset"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is a fixed-offset civil date-time.",
+      "failures": [
+        "UTV JSON that fails the structural check: invalid with its structural code (duplicate-key, unknown-kind, missing-property, …), or unsupported (unsupported-version) for another well-formed utv/M.N.",
+        "The offset is beyond ±18:00 or not whole seconds: invalid (offset-out-of-range).",
+        "Finer than a nanosecond: unsupported (implementation-limit).",
+        "An unexpected exception inside the operation: status error (internal-error), never a thrown exception."
+      ]
+    },
+    {
+      "id": "load-rules",
+      "name": "Parse a rule bundle",
+      "description": "Rule-bundle JSON text, or an already parsed object, to a ZoneRules. Pure: reading the file is the caller's job.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/zones.ts",
+          "symbol": "loadRules"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/zones.ts",
+        "symbol": "loadRules"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A ZoneRules.",
+      "failures": [
+        "A malformed bundle: RulesError is thrown."
+      ]
+    },
+    {
+      "id": "from-date",
+      "name": "Bring a Date in",
+      "description": "A Date to an instant, a fixed-offset date-time or a zoned date-time, as the caller's intent names.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromDate"
+        },
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "DateIntent"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/native.ts",
+        "symbol": "fromDate"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is the UTV value; with a zone, the bundle's ruleSet is a manifest dependency.",
+      "failures": [
+        "An Invalid Date: invalid (invalid-date).",
+        "Intent \"local\" (or any intent other than the three named ones): unsupported (local-zone).",
+        "With a zone or an offset: anything toZone or toOffset refuses, with their codes."
+      ]
+    },
+    {
+      "id": "to-date",
+      "name": "Take a Date out",
+      "description": "An instant or a fixed-offset date-time to a Date.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "toDate"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/native.ts",
+        "symbol": "toDate"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A NativeResult<Date>: unique, with precision-loss and zone-dropped warnings and loss fields subTick and zone where they apply.",
+      "failures": [
+        "A value in a named zone: unsupported (needs-zone-rules); any other civil value that is not a fixed-offset date-time: unsupported (local-zone).",
+        "Beyond ±8.64e15 ms: unsupported (out-of-native-range).",
+        "Another kind: unsupported (unsupported-operand)."
+      ]
+    },
+    {
+      "id": "from-epoch-milliseconds",
+      "name": "Make an instant from epoch milliseconds",
+      "description": "A number or bigint of milliseconds since the epoch.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromEpochMilliseconds"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/native.ts",
+        "symbol": "fromEpochMilliseconds"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is an instant.",
+      "failures": [
+        "A number that is not a safe integer: invalid (not-an-integer)."
+      ]
+    },
+    {
+      "id": "to-epoch-milliseconds",
+      "name": "Take epoch milliseconds out",
+      "description": "An instant as milliseconds since the epoch, floored.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "toEpochMilliseconds"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/native.ts",
+        "symbol": "toEpochMilliseconds"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A NativeResult<number>; information-losing with loss field subTick when digits were floored.",
+      "failures": [
+        "Not a safe integer of milliseconds: unsupported (out-of-native-range)."
+      ]
+    },
+    {
+      "id": "from-plain-date",
+      "name": "Bring a plain date object in",
+      "description": "A {year, month, day} object (months 1-based) to a UTV date, checked.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "fromPlainDate"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/native.ts",
+        "symbol": "fromPlainDate"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result whose candidate is a civil date.",
+      "failures": [
+        "Fields that aren't integers: invalid (type); a day or month that doesn't exist: invalid (day-out-of-range, month-out-of-range), never rolled over."
+      ]
+    },
+    {
+      "id": "to-plain-date",
+      "name": "Take a plain date object out",
+      "description": "An unzoned UTV date to a {year, month, day} object.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/native.ts",
+          "symbol": "toPlainDate"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/native.ts",
+        "symbol": "toPlainDate"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A NativeResult<PlainDate>.",
+      "failures": [
+        "Another kind or form, or a zoned date: unsupported (unsupported-operand).",
+        "A year beyond a safe integer: unsupported (out-of-native-range)."
+      ]
+    },
+    {
+      "id": "validate-structural",
+      "name": "Validate UTV JSON structurally",
+      "description": "Parses text strictly and checks it against utv/1.0's shapes; validateParsed does the same for an already-parsed value.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/structural.ts",
+          "symbol": "validateStructural"
+        },
+        {
+          "path": "implementations/typescript/src/structural.ts",
+          "symbol": "validateParsed"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/structural.ts",
+        "symbol": "validateStructural"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A utv-result/1.0 result with status valid, invalid or unsupported.",
+      "failures": [
+        "Malformed JSON or a repeated key: invalid (malformed-json, duplicate-key).",
+        "A newer or other well-formed utv/M.N: unsupported (unsupported-version); a malformed identifier: invalid (invalid-schema-identifier).",
+        "An unknown kind, a missing or unknown property, a wrong type: invalid (unknown-kind, missing-property, unknown-property, type, one-of, enum)."
+      ]
+    },
+    {
+      "id": "validate-semantic",
+      "name": "Validate a civil value semantically",
+      "description": "Runs the structural check, then checks that a proleptic Gregorian civil value names something that exists.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/civil.ts",
+          "symbol": "validateSemantic"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/civil.ts",
+        "symbol": "validateSemantic"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "A result with status valid, invalid or unsupported.",
+      "failures": [
+        "Anything validateStructural refuses, with its result.",
+        "A day or month that doesn't exist: invalid (day-out-of-range, month-out-of-range).",
+        "Another kind: unsupported (unsupported-operand); another calendar: unsupported (unsupported-calendar)."
+      ]
+    },
+    {
+      "id": "parse-strict",
+      "name": "Parse JSON strictly",
+      "description": "JSON text to a value, rejecting repeated keys.",
+      "sources": [
+        {
+          "path": "implementations/typescript/src/json.ts",
+          "symbol": "parseStrict"
+        }
+      ],
+      "entrypoint": {
+        "path": "implementations/typescript/src/json.ts",
+        "symbol": "parseStrict"
+      },
+      "action": "query",
+      "transport": "exported function",
+      "authorization": "None: an in-process library call. Any code that imports @utv/core may call it.",
+      "result": "The parsed JSON value.",
+      "failures": [
+        "A repeated key: JsonError (duplicate-key) with the JSON pointer of the key.",
+        "Malformed text: JsonError (malformed-json)."
+      ]
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "capability",
+      "folder": "implementations/typescript/src",
+      "path": "implementations/typescript/src/.dev/capability.json",
+      "relationship": "The capabilities these operations expose."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/typescript/src",
+      "path": "implementations/typescript/src/.dev/feature.json",
+      "relationship": "The features these operations carry out."
+    },
+    {
+      "kind": "use-case",
+      "folder": "implementations/typescript/src",
+      "path": "implementations/typescript/src/.dev/use-case.json",
+      "relationship": "The use cases that call them."
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+{
+  "$schema": "../../../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "Rust library component diagram",
+  "folder": "implementations/rust",
+  "description": "The Cargo package utv: the library source and its tests, the shared material they read in place, and the crates they depend on. chrono is an optional dependency of the library (feature chrono) and, with chrono-tz, a dev-dependency of the tests.",
+  "sources": [
+    {
+      "path": "implementations/rust/Cargo.toml",
+      "symbol": "dependencies"
+    },
+    {
+      "path": "implementations/rust/Cargo.toml",
+      "symbol": "dev-dependencies"
+    },
+    {
+      "path": "implementations/rust/src/lib.rs",
+      "symbol": "SCHEMA_TEXT"
+    },
+    {
+      "path": "implementations/rust/tests/everyday.rs",
+      "symbol": "repo"
+    }
+  ],
+  "components": [
+    {
+      "id": "rust",
+      "name": "utv crate (implementations/rust)",
+      "responsibility": "One Cargo package: the library and its tests.",
+      "folder": "implementations/rust"
+    },
+    {
+      "id": "src",
+      "name": "Library source",
+      "responsibility": "The JSON layer, the typed layer and the native adapters.",
+      "folder": "implementations/rust/src",
+      "diagram": "implementations/rust/src/.dev/component-diagram.json"
+    },
+    {
+      "id": "tests",
+      "name": "Tests and example suites",
+      "responsibility": "Fixture runners, typed-layer and JSON-layer tests, the purity check, and the UTV-first and native-first examples.",
+      "folder": "implementations/rust/tests"
+    },
+    {
+      "id": "schema",
+      "name": "Structural schema",
+      "responsibility": "schema/utv-1.0.schema.json, compiled into the library.",
+      "folder": "schema"
+    },
+    {
+      "id": "conformance",
+      "name": "Conformance material",
+      "responsibility": "The everyday and text-form fixtures, the structural examples and the demo zone rules, read by the tests at run time.",
+      "folder": "conformance"
+    },
+    {
+      "id": "serde",
+      "name": "serde_json, serde and regex crates",
+      "responsibility": "JSON values and parsing, and regular expressions: the library's only default dependencies.",
+      "external": true
+    },
+    {
+      "id": "chrono",
+      "name": "chrono crate",
+      "responsibility": "Calendar types for the native adapters (optional feature chrono) and the native side of the examples.",
+      "external": true
+    },
+    {
+      "id": "chrono-tz",
+      "name": "chrono-tz crate",
+      "responsibility": "Named zones for the native side of the examples, with the IANA tz database compiled in (dev-dependency).",
+      "external": true
+    },
+    {
+      "id": "std-time",
+      "name": "std::time::SystemTime",
+      "responsibility": "Rust's standard clock-reading type, which the library converts to and from instants.",
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "rust",
+      "to": "src",
+      "kind": "contains",
+      "description": "The library target."
+    },
+    {
+      "from": "rust",
+      "to": "tests",
+      "kind": "contains",
+      "description": "The integration-test targets."
+    },
+    {
+      "from": "src",
+      "to": "schema",
+      "kind": "depends-on",
+      "description": "include_str! at compile time, three folders up from src/lib.rs."
+    },
+    {
+      "from": "src",
+      "to": "conformance",
+      "kind": "depends-on",
+      "description": "Only a doc test: TemporalContext's example loads conformance/rules/demo-zones.json. Library code reads no rule data of its own."
+    },
+    {
+      "from": "src",
+      "to": "serde",
+      "kind": "depends-on",
+      "description": "serde_json with preserve_order, serde, regex."
+    },
+    {
+      "from": "src",
+      "to": "chrono",
+      "kind": "depends-on",
+      "description": "With the feature chrono only: utv::interop::chrono."
+    },
+    {
+      "from": "src",
+      "to": "std-time",
+      "kind": "depends-on",
+      "description": "utv::interop::from_system_time and to_system_time."
+    },
+    {
+      "from": "tests",
+      "to": "src",
+      "kind": "depends-on",
+      "description": "Through the public API; the crate is its own dev-dependency with the feature chrono on."
+    },
+    {
+      "from": "tests",
+      "to": "conformance",
+      "kind": "depends-on",
+      "description": "Reads everyday.json, text-form.json, examples/ and rules/demo-zones.json relative to CARGO_MANIFEST_DIR."
+    },
+    {
+      "from": "tests",
+      "to": "chrono",
+      "kind": "depends-on",
+      "description": "dev-dependency: the native side of the examples."
+    },
+    {
+      "from": "tests",
+      "to": "chrono-tz",
+      "kind": "depends-on",
+      "description": "dev-dependency: named zones on the native side."
+    }
+  ]
+}

@@ -1,0 +1,1315 @@
+{
+  "$schema": "../../../../../Meta/Agents/Skills/describe-use-case/schema.json",
+  "kind": "use-case",
+  "title": "Utv library use cases",
+  "folder": "implementations/csharp/src/Utv",
+  "description": "What an application developer does with the C# library, step by step: mostly through the typed API in Typed/, which calls the JSON layer in this folder.",
+  "sources": [
+    {
+      "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+      "symbol": "CivilDate"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+      "symbol": "ZonedIntent.Resolve"
+    },
+    {
+      "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+      "symbol": "UtvValidator.ValidateStructural"
+    }
+  ],
+  "entities": [
+    {
+      "id": "create-a-date",
+      "name": "Create a date",
+      "description": "A developer makes a calendar date from its fields or from text, and learns why it cannot exist when it can't (tasks a-date and feb-30).",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.Of"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.TryOf"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.Parse"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Hold a value that names a real day, such as 5 November 2026, or know exactly why the fields or text name none.",
+      "preconditions": [
+        "The application references the Utv package and imports namespace Utv."
+      ],
+      "postconditions": [
+        "The developer holds an immutable CivilDate, or an Invalid or Unsupported outcome whose diagnostic code says why there is none.",
+        "Nothing was read from the host: no clock, zone or culture."
+      ],
+      "flow": [
+        {
+          "id": "ask",
+          "actor": "Application developer",
+          "action": "Calls CivilDate.Of(year, month, day), CivilDate.TryOf(year, month, day) or CivilDate.Parse(text).",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+              "symbol": "CivilDate.Of"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+              "symbol": "CivilDate.TryOf"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+              "symbol": "CivilDate.Parse"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "write-json",
+          "actor": "Library",
+          "action": "Writes the fields as a UTV civil date (or reads the text with the text-form grammar) and checks it structurally.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.FromJson"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/TextForm.cs",
+              "symbol": "TextForm.ParseNode"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+              "symbol": "Values.RequireStructural"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "check-date",
+          "actor": "Library",
+          "action": "Checks the month and that the day exists in that month of the proleptic Gregorian calendar, with the year as a BigInteger.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+              "symbol": "Values.RequireDate"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+              "symbol": "GregorianCivil.DaysInMonth"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "Library",
+          "action": "Returns the CivilDate (Of), or Outcome<CivilDate>.Unique (TryOf, Parse). Its ToString() is the text form, 2026-11-05; years beyond 9999 and before 1 are ordinary dates (+275760-09-13, -0500-03-01).",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.Catch"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+              "symbol": "CivilDate.ToString"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "check-date",
+          "condition": "The day does not exist in the month, such as 30 February 2026 or 29 February 1900.",
+          "outcome": "TryOf and Parse return Invalid with day-out-of-range; Of throws ArgumentOutOfRangeException for parameter day.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+              "symbol": "Values.RequireDate"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.OrThrow"
+            }
+          ]
+        },
+        {
+          "atStep": "check-date",
+          "condition": "The month is outside 1..12, such as 13.",
+          "outcome": "Invalid with month-out-of-range; Of throws ArgumentOutOfRangeException for parameter month.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+              "symbol": "Values.RequireDate"
+            }
+          ]
+        },
+        {
+          "atStep": "write-json",
+          "condition": "The text is not in the grammar.",
+          "outcome": "Parse returns Invalid with syntax.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Iso.cs",
+              "symbol": "Iso.Unrecognized"
+            }
+          ]
+        },
+        {
+          "atStep": "write-json",
+          "condition": "The text is valid ISO 8601 outside this profile: a week date (2026-W45-4), an ordinal date (2026-309) or basic format (20261105).",
+          "outcome": "Parse returns Unsupported with unsupported-form.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Iso.cs",
+              "symbol": "Iso.Unrecognized"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "The text is a valid value of another kind or form, such as a date-time.",
+          "outcome": "CivilDate.Parse returns Invalid with kind-mismatch.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.As"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "add-months",
+      "name": "Add months",
+      "description": "A developer adds months (or years) to a date and finds out when the day is missing from the target month (task month-end).",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.AddMonths"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Calendar.cs",
+          "symbol": "Calendar.Add"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Get the date one or more months later, and decide what to do when that month has no such day.",
+      "preconditions": [
+        "The developer holds a CivilDate (or a CivilDateTime or ZonedIntent, which have the same AddMonths)."
+      ],
+      "postconditions": [
+        "The developer holds the later date, or an Outcome<CivilDate>.None whose diagnostic month-end names the missing day.",
+        "A date was clamped only if the developer passed MonthEnd.Constrain."
+      ],
+      "flow": [
+        {
+          "id": "ask",
+          "actor": "Application developer",
+          "action": "Calls date.AddMonths(n) (or AddYears(n), or Add(Period.Months(n))).",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+              "symbol": "CivilDate.AddMonths"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+              "symbol": "CivilDate.Add"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "add",
+          "actor": "Library",
+          "action": "Adds 12·years + months to the year and month with the JSON layer's add.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Calendar.cs",
+              "symbol": "Calendar.AddToCivil"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Calendar.cs",
+              "symbol": "Calendar.AddMonths"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "check-day",
+          "actor": "Library",
+          "action": "Checks that the day exists in the resulting month.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Calendar.cs",
+              "symbol": "Calendar.AddToCivil"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "Library",
+          "action": "Returns Outcome<CivilDate>.Unique with the later date.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.ToOutcome"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "check-day",
+          "condition": "The day is missing from the target month, as for 31 January 2026 plus one month.",
+          "outcome": "Outcome<CivilDate>.None with a month-end warning, 2026-02 has no day 31. The developer may ask again with date.AddMonths(n, MonthEnd.Constrain), which returns 28 February 2026 as a plain CivilDate.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Calendar.cs",
+              "symbol": "Calendar.AddToCivil"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+              "symbol": "CivilDate.AddMonths"
+            }
+          ]
+        },
+        {
+          "atStep": "ask",
+          "condition": "The developer passes MonthEnd.Reject to the overload that takes a policy.",
+          "outcome": "ArgumentException: that overload always answers, so it takes only MonthEnd.Constrain.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+              "symbol": "CivilDate.AddMonths"
+            }
+          ]
+        },
+        {
+          "atStep": "add",
+          "condition": "The period given to CivilDate.Add has hours, minutes or seconds.",
+          "outcome": "Outcome<CivilDate>.Invalid with kind-mismatch: a date does not take time components.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Calendar.cs",
+              "symbol": "Calendar.AddToCivil"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "resolve-a-zoned-time",
+      "name": "Resolve a zoned time",
+      "description": "A developer turns a wall time in an IANA zone into an instant, and sees it elsewhere, with DST gaps and overlaps reported rather than guessed (tasks meeting-in-paris, dst-gap and dst-overlap).",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "ZonedIntent.Resolve"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Zones.cs",
+          "symbol": "Zones.Resolve"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Find the instant a meeting at 09:00 in Paris happens, and what the clock in New York says then.",
+      "preconditions": [
+        "The developer has a zone-rule bundle in the format of conformance/rules/demo-zones.json that covers the date."
+      ],
+      "postconditions": [
+        "The developer holds the instant, or knows the wall time happens never or twice, or that the rules cannot say.",
+        "The ZonedIntent still holds the wall time and zone as written: resolving does not change it."
+      ],
+      "flow": [
+        {
+          "id": "load-rules",
+          "actor": "Application developer",
+          "action": "Loads the rules with ZoneRules.Load(path) and holds them in TemporalContext.With(rules).",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+              "symbol": "ZoneRules.Load"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+              "symbol": "TemporalContext.With"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "in-zone",
+          "actor": "Application developer",
+          "action": "Makes the wall time a zoned intention: CivilDateTime.Of(2027, 6, 1, 9, 0).InZone(\"Europe/Paris\").",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+              "symbol": "CivilDateTime.InZone"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "resolve",
+          "actor": "Application developer",
+          "action": "Calls zoned.Resolve(ctx), optionally with a Gap, an Overlap or a ResolutionPolicy.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+              "symbol": "ZonedIntent.Resolve"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "check-rules",
+          "actor": "Library",
+          "action": "Checks that the zone is in the rules and that the wall time lies at least a day inside their validity window.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Zones.cs",
+              "symbol": "Zones.ResolveCore"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "candidates",
+          "actor": "Library",
+          "action": "Finds the candidate instants: for each offset in force within a day, the wall time minus that offset, kept when the zone's offset at that instant is that offset.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Zones.cs",
+              "symbol": "Zones.ResolveCore"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "Library",
+          "action": "Returns Outcome<Instant>.Unique for exactly one candidate.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+              "symbol": "TemporalContext.Resolve"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "see-elsewhere",
+          "actor": "Application developer",
+          "action": "Calls instant.InZone(\"America/New_York\", ctx) and reads the wall time there, 03:00, with the offset in force asserted.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+              "symbol": "Instant.InZone"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Zones.cs",
+              "symbol": "Zones.ToZone"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "load-rules",
+          "condition": "The file is not a well-formed rule bundle.",
+          "outcome": "ZoneRules.Load throws FormatException.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/ZoneRules.cs",
+              "symbol": "ZoneRules.Parse"
+            }
+          ]
+        },
+        {
+          "atStep": "in-zone",
+          "condition": "The zone id is empty or is not an IANA zone name.",
+          "outcome": "InZone throws ArgumentException.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+              "symbol": "CivilDateTime.InZone"
+            }
+          ]
+        },
+        {
+          "atStep": "check-rules",
+          "condition": "The zone is not in the rules.",
+          "outcome": "Outcome<Instant>.Unsupported with unknown-zone; the message lists the zones the rules have.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Zones.cs",
+              "symbol": "Zones.UnknownZone"
+            }
+          ]
+        },
+        {
+          "atStep": "check-rules",
+          "condition": "The wall time is less than a day inside the rules' validity window, or outside it.",
+          "outcome": "Outcome<Instant>.Unsupported with outside-rule-window: the rules are never extrapolated.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Zones.cs",
+              "symbol": "Zones.OutsideWindow"
+            }
+          ]
+        },
+        {
+          "atStep": "check-rules",
+          "condition": "The policy names a gap or overlap rule the library does not implement (built from GapPolicy or OverlapPolicy).",
+          "outcome": "Outcome<Instant>.Unsupported with unsupported-policy.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Zones.cs",
+              "symbol": "Zones.ResolveCore"
+            }
+          ]
+        },
+        {
+          "atStep": "candidates",
+          "condition": "The ZonedIntent asserts an offset that no candidate has (including any asserted offset in a gap).",
+          "outcome": "Outcome<Instant>.Invalid with offset-mismatch.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Zones.cs",
+              "symbol": "Zones.ResolveCore"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "No candidate: the wall time falls in a gap, such as 02:30 on 8 March 2026 in New York, and the policy is the default (Strict) or Gap.PreserveUnresolved.",
+          "outcome": "Outcome<Instant>.None with a gap warning naming the transition, clocks jump from 02:00 to 03:00 in America/New_York.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Zones.cs",
+              "symbol": "Zones.ResolveCore"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Zones.cs",
+              "symbol": "Zones.FindTransition"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "No candidate, and the developer passed Gap.ShiftForward.",
+          "outcome": "Outcome<Instant>.Unique: the wall time minus the offset before the gap, which is the instant labelled 03:30 EDT.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Zones.cs",
+              "symbol": "Zones.ResolveCore"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "Two candidates: the wall time falls in an overlap, such as 01:30 on 1 November 2026 in New York, and the policy is the default (Strict).",
+          "outcome": "Outcome<Instant>.Multiple with both instants, ascending, and an ambiguous warning (clocks go back from 02:00 to 01:00). Overlap.All gives the same without the warning.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Zones.cs",
+              "symbol": "Zones.ResolveCore"
+            }
+          ]
+        },
+        {
+          "atStep": "answer",
+          "condition": "Two candidates, and the developer passed Overlap.Earliest or Overlap.Latest.",
+          "outcome": "Outcome<Instant>.Unique with the earlier or the later instant.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Zones.cs",
+              "symbol": "Zones.ResolveCore"
+            }
+          ]
+        },
+        {
+          "atStep": "see-elsewhere",
+          "condition": "The other zone is not in the rules, or the instant is outside their window.",
+          "outcome": "Outcome<ZonedIntent>.Unsupported with unknown-zone or outside-rule-window.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Zones.cs",
+              "symbol": "Zones.ToZone"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "compare-values",
+      "name": "Compare values",
+      "description": "A developer asks which of two values comes first: directly for dates and other values whose order needs no rules, and through a context for zoned values, where the answer may be several (task compare-dates).",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+          "symbol": "CivilDate.CompareTo"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "TemporalContext.Compare"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Know whether one value comes before, with or after another, or that the order cannot be told.",
+      "preconditions": [
+        "The developer holds two values of the same type; for zoned values, a TemporalContext with rules that cover them."
+      ],
+      "postconditions": [
+        "The developer holds an order, or an outcome that lists every possible order, or says why there is none."
+      ],
+      "flow": [
+        {
+          "id": "compare-plain",
+          "actor": "Application developer",
+          "action": "Compares two dates with a < b (or CompareTo); the same works for year-months, times, date-times, fixed-offset date-times and instants.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+              "symbol": "CivilDate.CompareTo"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+              "symbol": "Instant.CompareTo"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "order",
+          "actor": "Library",
+          "action": "Orders them with the JSON layer's compare: civil fields (a missing second counts as 0), POSIX seconds, or fixed-offset date-times as instants.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Calendar.cs",
+              "symbol": "Calendar.Compare"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Calendar.cs",
+              "symbol": "Calendar.CompareCivil"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "compare-zoned",
+          "actor": "Application developer",
+          "action": "For two ZonedIntents, which have no comparison operators, calls ctx.Compare(a, b).",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+              "symbol": "TemporalContext.Compare"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "resolve-both",
+          "actor": "Library",
+          "action": "Resolves both with ResolutionPolicy.Strict and compares every pair of candidate instants.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+              "symbol": "TemporalContext.Compare"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "answer",
+          "actor": "Library",
+          "action": "Returns Outcome<Ordering>.Unique (Before, Equal or After) when every pair agrees.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+              "symbol": "TemporalContext.Compare"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "answer",
+          "condition": "The order depends on which side of a DST overlap is meant, as for 01:30 and 01:45 on 1 November 2026 in New York.",
+          "outcome": "Outcome<Ordering>.Multiple with the possible orderings and an ambiguous warning.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+              "symbol": "TemporalContext.Compare"
+            }
+          ]
+        },
+        {
+          "atStep": "resolve-both",
+          "condition": "A side does not resolve: it falls in a gap, its zone is unknown, or it is outside the rules' window.",
+          "outcome": "That side's None or Unsupported outcome, with its diagnostics (gap, unknown-zone, outside-rule-window), as an Outcome<Ordering>.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+              "symbol": "TemporalContext.Compare"
+            }
+          ]
+        },
+        {
+          "atStep": "order",
+          "condition": "Values held as JSON are compared with Calendar.Compare and one has a named zone.",
+          "outcome": "unsupported with needs-zone-rules: resolve them to instants first.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Calendar.cs",
+              "symbol": "Calendar.CompareCivil"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "convert-native",
+      "name": "Convert to and from .NET",
+      "description": "A developer brings a .NET date or time into UTV, such as a clock reading, and takes it back out (tasks now and round-trip).",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+          "symbol": "Instant.FromDateTimeOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+          "symbol": "FixedOffsetDateTime.ToDateTimeOffset"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Interop.cs",
+          "symbol": "Interop"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Use UTV alongside .NET's own types without either side guessing what a value means.",
+      "preconditions": [
+        "The developer has a .NET value: a DateTimeOffset read from the clock, a DateOnly, a DateTime or a TimeSpan."
+      ],
+      "postconditions": [
+        "The developer holds the UTV value, or the .NET value back, or an outcome that says why it could not be converted.",
+        "The library never read the clock or the host's zone; the developer read the clock and passed the reading in."
+      ],
+      "flow": [
+        {
+          "id": "read-clock",
+          "actor": "Application developer",
+          "action": "Reads the clock in their own code, for example DateTimeOffset.UtcNow.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Interop.cs",
+              "symbol": "Interop"
+            },
+            {
+              "path": "implementations/csharp/tests/Utv.Examples.Tests/UtvFirst/InstantTests.cs",
+              "symbol": "InstantTests.Test_FromDateTimeOffset_ReturnsTheSameMoment_WhenGivenAClockReading"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "bring-in",
+          "actor": "Application developer",
+          "action": "Chooses the type that names the intent: Instant.FromDateTimeOffset for a moment, FixedOffsetDateTime.FromDateTimeOffset for a wall time at an offset, CivilDate.FromDateOnly, CivilDateTime.FromDateTime or Instant.FromDateTime.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+              "symbol": "Instant.FromDateTimeOffset"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+              "symbol": "FixedOffsetDateTime.FromDateTimeOffset"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+              "symbol": "CivilDateTime.FromDateTime"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "convert-in",
+          "actor": "Library",
+          "action": "Converts with Interop: ticks become an exact POSIX instant, or wall fields and an offset in seconds.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Interop.cs",
+              "symbol": "Interop.FromDateTimeOffset"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Interop.cs",
+              "symbol": "Interop.FromDateTime"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "take-out",
+          "actor": "Application developer",
+          "action": "Converts back with ToDateTimeOffset(), ToDateOnly(), ToTimeOnly(), ToDateTime() or ToTimeSpan().",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/ZonedValues.cs",
+              "symbol": "FixedOffsetDateTime.ToDateTimeOffset"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+              "symbol": "CivilDate.ToDateOnly"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "convert-out",
+          "actor": "Library",
+          "action": "Checks that .NET can hold the value and returns Outcome<T>.Unique; a FixedOffsetDateTime that came from a DateTimeOffset gives back an EqualsExact copy.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Interop.cs",
+              "symbol": "Interop.ToDateTimeOffset"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.ToOutcome"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "convert-in",
+          "condition": "A DateTime of Kind Local, as DateTime.Now returns.",
+          "outcome": "Unsupported with local-zone: the host's zone is never read.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Interop.cs",
+              "symbol": "Interop.FromDateTime"
+            }
+          ]
+        },
+        {
+          "atStep": "bring-in",
+          "condition": "A DateTime of Kind Utc given to CivilDateTime.FromDateTime, or of Kind Unspecified given to Instant.FromDateTime.",
+          "outcome": "Invalid with intent-required: the developer must say whether it is a moment or a wall time.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDateTime.cs",
+              "symbol": "CivilDateTime.FromDateTime"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Instant.cs",
+              "symbol": "Instant.FromDateTime"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-out",
+          "condition": "The value is outside what .NET holds: a year outside 1..9999 (CivilDate.Of(10000, 1, 1).ToDateOnly()), nanoseconds that are not a multiple of 100, an offset that is not whole minutes or beyond ±14:00.",
+          "outcome": "Unsupported with out-of-native-range.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Interop.cs",
+              "symbol": "Interop.RequireNativeYear"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Interop.cs",
+              "symbol": "Interop.Offset"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-out",
+          "condition": "An Instant is converted to DateTimeOffset.",
+          "outcome": "Unique at +00:00 with an info diagnostic offset-not-known: a UTV instant knows UTC, not a local offset.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Interop.cs",
+              "symbol": "Interop.ToDateTimeOffset"
+            }
+          ]
+        },
+        {
+          "atStep": "convert-out",
+          "condition": "Through the JSON layer, a zoned date-time with an asserted offset is converted to DateTimeOffset.",
+          "outcome": "NativeResult with IsLossy and a zone-dropped warning; without an asserted offset, unsupported with needs-zone-rules.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Interop.cs",
+              "symbol": "Interop.ToDateTimeOffset"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "read-and-write-text",
+      "name": "Read and write text",
+      "description": "A developer reads ISO 8601 / RFC 9557 text or the UTV text form into values and writes values back as text (task parse-offsets, and every ToString).",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Temporal.Parse"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/TextForm.cs",
+          "symbol": "TextForm"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Turn text from a log, a file or a user into a value without losing what the text says, and print values so that they read back the same.",
+      "preconditions": [
+        "The developer has text, or a typed value to print."
+      ],
+      "postconditions": [
+        "The developer holds the value the text denotes, of the type it denotes, or an outcome that says why there is none.",
+        "Printed text parses back to an equal value, or the value has no text form."
+      ],
+      "flow": [
+        {
+          "id": "parse",
+          "actor": "Application developer",
+          "action": "Calls Temporal.Parse(text) for any value, or T.Parse(text) for one type, such as Instant.Parse.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Temporal.Parse"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.Parse"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "read",
+          "actor": "Library",
+          "action": "Reads the text: brackets as an interval, P… as a period, a slash as an EDTF interval, anything else as an ISO 8601 / RFC 9557 point. Z and -00:00 give an instant; +00:00 gives a fixed-offset date-time; [Area/Location] gives a zoned intention.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/TextForm.cs",
+              "symbol": "TextForm.ParseNode"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Iso.cs",
+              "symbol": "Iso.Parse"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "type",
+          "actor": "Library",
+          "action": "Reads the UTV value into its typed value and returns Outcome<T>.Unique; Temporal.Parse returns an ITemporalValue to switch on.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.Read"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "write",
+          "actor": "Application developer",
+          "action": "Calls value.ToString().",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+              "symbol": "CivilDate.ToString"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "format",
+          "actor": "Library",
+          "action": "Formats the value's JSON as text, parses it back and checks it is the same value, then returns the text.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.Text"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/TextForm.cs",
+              "symbol": "TextForm.Format"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "read",
+          "condition": "The text is outside the grammar, or a field is out of range (2026-02-30, 25:00, +19:00).",
+          "outcome": "Invalid with syntax, day-out-of-range, field-out-of-range or offset-out-of-range.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Iso.cs",
+              "symbol": "Iso.Parse"
+            }
+          ]
+        },
+        {
+          "atStep": "read",
+          "condition": "Valid notation this profile does not handle: week, ordinal and basic-format dates, a decimal period component, an EDTF qualifier (1347~), an interval with no point.",
+          "outcome": "Unsupported with unsupported-form.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/TextForm.cs",
+              "symbol": "TextForm.ParseNode"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Iso.cs",
+              "symbol": "Iso.Unrecognized"
+            }
+          ]
+        },
+        {
+          "atStep": "read",
+          "condition": "An annotation other than one [Area/Location], or a zone after Z; second 60; 24:00; more than nine fraction digits.",
+          "outcome": "Unsupported with unsupported-annotation, leap-second, end-of-day or implementation-limit.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Iso.cs",
+              "symbol": "Iso.ParseDateTime"
+            }
+          ]
+        },
+        {
+          "atStep": "read",
+          "condition": "An interval that ends before it starts, or whose ends are of different kinds.",
+          "outcome": "Invalid with reversed-interval or kind-mismatch.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/TextForm.cs",
+              "symbol": "TextForm.Interval"
+            }
+          ]
+        },
+        {
+          "atStep": "type",
+          "condition": "The text is another kind of value than the type asked for, such as 2026-11-05T13:30:00Z given to FixedOffsetDateTime.Parse.",
+          "outcome": "Invalid with kind-mismatch.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.As"
+            }
+          ]
+        },
+        {
+          "atStep": "format",
+          "condition": "The value has no text form: a period with mixed signs, or a POSIX or SI second count.",
+          "outcome": "A Period prints its UTV JSON instead; PosixSeconds and ElapsedSeconds print a display string such as 3600.75 s (POSIX), which does not parse.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.Text"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Amounts.cs",
+              "symbol": "SecondsDisplay.Of"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    },
+    {
+      "id": "validate-utv-json",
+      "name": "Validate UTV JSON",
+      "description": "A developer receives UTV JSON, checks it structurally and, for dates, semantically, and reads it into typed values.",
+      "sources": [
+        {
+          "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+          "symbol": "UtvValidator.ValidateStructural"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+          "symbol": "GregorianCivil.Validate"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+          "symbol": "Temporal.FromJson"
+        }
+      ],
+      "actor": "Application developer",
+      "goal": "Accept only UTV values this library understands, and tell a malformed value from a newer one and from an impossible date.",
+      "preconditions": [
+        "The developer has JSON text that claims to be a UTV value."
+      ],
+      "postconditions": [
+        "The developer holds a utv-result/1.0 result for the JSON and, when it is valid and of an everyday shape, a typed value.",
+        "Nothing that the library does not understand was accepted."
+      ],
+      "flow": [
+        {
+          "id": "validate",
+          "actor": "Application developer",
+          "action": "Calls UtvValidator.ValidateStructural(json).",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+              "symbol": "UtvValidator.ValidateStructural"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "parse-strictly",
+          "actor": "Library",
+          "action": "Parses the JSON strictly into its own tree.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Internal/StrictJson.cs",
+              "symbol": "StrictJson.Parse"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "check-version",
+          "actor": "Library",
+          "action": "Checks that schema is exactly utv/1.0, before anything else.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+              "symbol": "UtvValidator.ValidateStructural"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "check-schema",
+          "actor": "Library",
+          "action": "Checks the envelope's properties and every value, top-level and nested, against the embedded schema/utv-1.0.schema.json, and returns valid.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Internal/SchemaInterpreter.cs",
+              "symbol": "SchemaInterpreter.CheckUtvValue"
+            }
+          ],
+          "participantKind": "system"
+        },
+        {
+          "id": "validate-date",
+          "actor": "Application developer",
+          "action": "For a civil value, calls GregorianCivil.Validate(json), which repeats the structural check and then judges year, month and day.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+              "symbol": "GregorianCivil.Validate"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "read-typed",
+          "actor": "Application developer",
+          "action": "Reads the value with T.FromJson(json), such as CivilDate.FromJson, or Temporal.FromJson(json) for any type.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Temporal.FromJson"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/CivilDate.cs",
+              "symbol": "CivilDate.FromJson"
+            }
+          ],
+          "participantKind": "actor",
+          "actorDocument": "Actors/application-developer.md"
+        },
+        {
+          "id": "hold",
+          "actor": "Library",
+          "action": "Reads the value into its typed value, checks that ToJson of it gives back the same JSON, and returns Outcome<T>.Unique.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.Read"
+            }
+          ],
+          "participantKind": "system"
+        }
+      ],
+      "alternatives": [
+        {
+          "atStep": "parse-strictly",
+          "condition": "Malformed JSON: comments, trailing commas, NaN, trailing content, unpaired surrogates, nesting deeper than 128, or a key repeated at any depth.",
+          "outcome": "invalid with malformed-json or duplicate-key at the key's JSON Pointer.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Internal/StrictJson.cs",
+              "symbol": "StrictJson.Parse"
+            }
+          ]
+        },
+        {
+          "atStep": "check-version",
+          "condition": "A well-formed identifier other than utv/1.0, such as utv/2.0.",
+          "outcome": "unsupported with unsupported-version; a newer version's unknown kinds and properties are never called invalid.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+              "symbol": "UtvValidator.ValidateStructural"
+            }
+          ]
+        },
+        {
+          "atStep": "check-version",
+          "condition": "A missing, non-string or malformed identifier, such as utv/4.",
+          "outcome": "invalid with unknown-schema.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+              "symbol": "UtvValidator.ValidateStructural"
+            }
+          ]
+        },
+        {
+          "atStep": "check-schema",
+          "condition": "An unknown top-level property, a kind outside the 26 core kinds, or any other schema violation.",
+          "outcome": "invalid with unknown-property, unknown-kind or the schema codes (missing-property, wrong-type, pattern-mismatch, schema-violation, …).",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/UtvValidator.cs",
+              "symbol": "UtvValidator.ValidateStructural"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Internal/SchemaInterpreter.cs",
+              "symbol": "SchemaInterpreter.Check"
+            }
+          ]
+        },
+        {
+          "atStep": "validate-date",
+          "condition": "A well-formed civil value names a missing day, such as 29 February 2026, or a month outside 1..12.",
+          "outcome": "invalid with day-out-of-range or month-out-of-range.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+              "symbol": "GregorianCivil.Validate"
+            }
+          ]
+        },
+        {
+          "atStep": "validate-date",
+          "condition": "Another calendar (a Hebrew date) or another kind.",
+          "outcome": "unsupported with unsupported-calendar or unsupported-kind.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/GregorianCivil.cs",
+              "symbol": "GregorianCivil.Validate"
+            }
+          ]
+        },
+        {
+          "atStep": "hold",
+          "condition": "The value is of another kind or form than the type asked for.",
+          "outcome": "Outcome<T>.Invalid with kind-mismatch.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.As"
+            }
+          ]
+        },
+        {
+          "atStep": "hold",
+          "condition": "A valid UTV value no typed type holds: a recurrence, a zoned date, a floating date-time with a resolutionPolicy, extra properties.",
+          "outcome": "Outcome<T>.Unsupported with unsupported-operand; the JSON layer still handles it.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.Read"
+            },
+            {
+              "path": "implementations/csharp/src/Utv/Typed/Temporal.cs",
+              "symbol": "Typed.ReadCore"
+            }
+          ]
+        },
+        {
+          "atStep": "read-typed",
+          "condition": "FromJson is given JSON that is not structurally valid.",
+          "outcome": "Outcome<T>.Invalid with malformed-value followed by the structural codes.",
+          "sources": [
+            {
+              "path": "implementations/csharp/src/Utv/Internal/Everyday/Values.cs",
+              "symbol": "Values.WithMalformed"
+            }
+          ]
+        }
+      ],
+      "actorDocument": "Actors/application-developer.md"
+    }
+  ],
+  "relatedViews": [
+    {
+      "kind": "operation",
+      "folder": "implementations/csharp/src/Utv/Typed",
+      "path": "implementations/csharp/src/Utv/Typed/.dev/operation.json",
+      "relationship": "The typed operations the steps call."
+    },
+    {
+      "kind": "operation",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/operation.json",
+      "relationship": "The JSON-layer operations the steps call."
+    },
+    {
+      "kind": "capability",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/capability.json",
+      "relationship": "The capabilities these goals use."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/csharp/src/Utv",
+      "path": "implementations/csharp/src/Utv/.dev/feature.json",
+      "relationship": "The features the goals exercise: month-end, DST policies, fail-closed JSON, native intent."
+    },
+    {
+      "kind": "feature",
+      "folder": "implementations/csharp/src/Utv/Typed",
+      "path": "implementations/csharp/src/Utv/Typed/.dev/feature.json",
+      "relationship": "The typed layer's features the goals exercise."
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/runbooks.schema.json",
+  "kind": "runbooks",
+  "title": "C# library runbooks",
+  "folder": "implementations/csharp",
+  "entities": [
+    {
+      "id": "setup",
+      "title": "Build and test the C# library",
+      "summary": "Install the .NET 8 SDK and run dotnet test in implementations/csharp.",
+      "purpose": "setup",
+      "when": "Before changing anything in implementations/csharp.",
+      "steps": [
+        "Install a .NET SDK that builds net8.0 with C# 12 (the projects set TargetFramework net8.0 and LangVersion 12; there is no global.json).",
+        "cd implementations/csharp",
+        "dotnet test (restores the xUnit packages, builds Utv.sln with warnings as errors, and runs Utv.Tests and Utv.Examples.Tests)",
+        "dotnet test tests/Utv.Examples.Tests runs only the examples",
+        "For the native-first zone examples, the host's tz database must know New York's and Paris's 2026–2027 rules"
+      ],
+      "verify": "dotnet test reports no failed tests.",
+      "details": "The tests read schema/ and conformance/ from the repository root, so run them in a full checkout. After changing a UTV-first test inside task markers, regenerate docs/side-by-side.md (tests/Utv.Examples.Tests/UtvFirst/.dev/runbooks.json).",
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "implementations/csharp/README.md",
+          "symbol": "Utv (C#)"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "3. Running the tests"
+        },
+        {
+          "path": "implementations/csharp/src/Utv/Utv.csproj",
+          "symbol": "TargetFramework"
+        },
+        {
+          "path": "implementations/csharp/tests/Utv.Examples.Tests/NativeFirst/TimeZoneInfoTests.cs",
+          "symbol": "TimeZoneInfoTests"
+        }
+      ]
+    }
+  ]
+}

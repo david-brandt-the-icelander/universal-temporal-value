@@ -1,0 +1,45 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/verification.schema.json",
+  "kind": "verification",
+  "title": "Schema verification",
+  "folder": "schema",
+  "entities": [
+    {
+      "id": "schema-is-valid",
+      "title": "Every schema is a valid Draft 2020-12 schema",
+      "summary": "tools/validate.py checks each schema/*.schema.json against the Draft 2020-12 meta-schema, then uses utv-1.0 to check the examples, the specification's embedded examples and the fixtures.",
+      "criteria": [
+        "Each file in schema/ is a valid Draft 2020-12 schema.",
+        "The conformance examples, the complete UTV examples embedded in spec/*.md and every UTV value in the fixtures are accepted or rejected as their files say."
+      ],
+      "checks": [
+        {
+          "type": "automated",
+          "path": "tools/validate.py",
+          "symbol": "check_schemas",
+          "command": "python3 tools/validate.py"
+        },
+        {
+          "type": "automated",
+          "path": "tools/validate.py",
+          "symbol": "check_spec_examples",
+          "command": "python3 tools/validate.py"
+        }
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "tools/validate.py",
+          "symbol": "check_schemas"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "verifies",
+          "path": "schema/.dev/contracts.json",
+          "entityId": "utv-1-0-schema"
+        }
+      ]
+    }
+  ]
+}
